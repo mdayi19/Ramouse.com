@@ -4,6 +4,7 @@ import { useLiveAuction, useAuctionCountdown, usePlaceBid, useAuctionRegistratio
 import { useOutbidNotification } from '../../hooks/useAuctionUpdates';
 import { useWalletBalance } from '../../hooks/useWalletBalance';
 import { useAuctionConnection } from '../../hooks/useAuctionConnection';
+import * as auctionService from '../../services/auction.service';
 import { Auction, AuctionBid } from '../../types';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -51,15 +52,31 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
     walletBalance: propWalletBalance,
     userId,
 }) => {
-    const { auction, bids, loading, error, participants, refresh, updateLocalAuction, addLocalBid } = useLiveAuction(auctionId);
+    const {
+        auction,
+        bids,
+        loading,
+        error,
+        participants,
+        refresh,
+        updateLocalAuction,
+        addLocalBid,
+        loadMoreBids,
+        bidsHasMore,
+        loadingMoreBids
+    } = useLiveAuction(auctionId);
+
     const { placeBid, buyNow, loading: bidLoading, error: bidError, success: bidSuccess, setError } = usePlaceBid(auctionId);
     const { register, loading: registerLoading, error: registerError, isRegistered, setIsRegistered } = useAuctionRegistration(auctionId);
     const [showBuyNowConfirm, setShowBuyNowConfirm] = useState(false);
     const [showPolicyModal, setShowPolicyModal] = useState(false);
     const [showMobileBidSheet, setShowMobileBidSheet] = useState(false);
+    const [isInWatchlist, setIsInWatchlist] = useState(false);
+    const [watchlistLoading, setWatchlistLoading] = useState(false);
 
     // Connection monitoring
     const { status: wsConnectionStatus, quality: connectionQuality, isOnline } = useAuctionConnection();
+
 
     // Real-time wallet balance
     const { balance: liveWalletBalance, available: availableBalance } = useWalletBalance(userId, propWalletBalance);
@@ -78,6 +95,35 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
         }
     });
 
+    // Watchlist check
+    useEffect(() => {
+        if (isAuthenticated && auctionId) {
+            auctionService.checkWatchlist(auctionId)
+                .then(res => setIsInWatchlist(res.in_watchlist))
+                .catch(console.error);
+        }
+    }, [isAuthenticated, auctionId]);
+
+    const handleToggleWatchlist = async () => {
+        if (!isAuthenticated) return;
+        setWatchlistLoading(true);
+        try {
+            if (isInWatchlist) {
+                await auctionService.removeFromWatchlist(auctionId);
+                setIsInWatchlist(false);
+                showToast?.('تمت الإزالة من المفضلة', 'info');
+            } else {
+                await auctionService.addToWatchlist(auctionId);
+                setIsInWatchlist(true);
+                showToast?.('تمت الإضافة للمفضلة', 'success');
+            }
+        } catch (error) {
+            console.error('Watchlist toggle error', error);
+        } finally {
+            setWatchlistLoading(false);
+        }
+    };
+
     const [customBid, setCustomBid] = useState('');
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [soundEnabled, setSoundEnabled] = useState(true);
@@ -91,6 +137,28 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
     const bidsContainerRef = useRef<HTMLDivElement>(null);
     const lastBidCountRef = useRef(0);
     const lastBidAttempt = useRef<number | null>(null);
+    const [isPaying, setIsPaying] = useState(false);
+
+    const handlePayAuction = async () => {
+        if (!window.confirm('هل أنت متأكد من دفع المبلغ من محفظتك؟ سيتم خصم المبلغ من رصيدك.')) return;
+
+        setIsPaying(true);
+        try {
+            await auctionService.payAuction(auctionId);
+            showToast?.('تم الدفع بنجاح!', 'success');
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FFD700', '#FFA500'] // Gold
+            });
+            refresh(true);
+        } catch (err: any) {
+            showToast?.(err.response?.data?.error || 'فشل الدفع', 'error');
+        } finally {
+            setIsPaying(false);
+        }
+    };
 
     // Countdown
     const targetIsLive = auction?.is_live;
@@ -162,7 +230,7 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
         }
     }, [bidError, showToast, setError]);
 
-    const handlePlaceBid = async (amount: number, isRetry = false) => {
+    const handlePlaceBid = async (amount: number, isRetry = false, maxAutoBid?: number) => {
         if (!isAuthenticated) {
             showToast?.('يرجى تسجيل الدخول للمزايدة', 'error');
             return;
@@ -177,7 +245,7 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
 
         try {
             setIsRetrying(isRetry);
-            const response = await placeBid(amount);
+            const response = await placeBid(amount, maxAutoBid);
 
             // Deterministic Optimistic Update
             if (auction) {
@@ -356,6 +424,18 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                     </Button>
 
                     <div className="flex items-center gap-2 md:gap-3">
+                        {/* Watchlist Toggle */}
+                        {isAuthenticated && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleToggleWatchlist}
+                                disabled={watchlistLoading}
+                                className={`!w-8 !h-8 md:!w-10 md:!h-10 rounded-xl transition-all ${isInWatchlist ? '!bg-red-500 !text-white shadow-lg shadow-red-500/20' : '!bg-white/10 !text-white/50 hover:!text-red-400'}`}
+                            >
+                                <Icon name="Heart" className={`w-4 h-4 md:w-5 md:h-5 ${isInWatchlist ? 'fill-current' : ''}`} />
+                            </Button>
+                        )}
                         {/* Live Badge */}
                         {isLive && (
                             <Badge variant="destructive" className="animate-pulse flex items-center gap-1.5 px-2 md:px-3 py-1 md:py-1.5 shadow-lg shadow-red-500/20">
@@ -624,30 +704,105 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                                                 ))}
                                             </div>
 
-                                            {/* Custom Bid Input */}
-                                            <div className="flex gap-2">
-                                                <div className="flex-1 relative">
-                                                    <input
-                                                        ref={bidInputRef}
-                                                        type="number"
-                                                        value={customBid}
-                                                        onChange={(e) => setCustomBid(e.target.value)}
-                                                        placeholder="مبلغ.."
-                                                        className="w-full bg-slate-700/50 text-white py-2 md:py-3.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-bold border border-white/5 transition-all focus:bg-slate-700 text-sm md:text-base text-center"
-                                                    />
+                                            {/* Custom Bid Input & Auto Bid */}
+                                            <div className="space-y-3">
+                                                <div className="flex gap-2">
+                                                    <div className="flex-1 relative">
+                                                        <input
+                                                            ref={bidInputRef}
+                                                            type="number"
+                                                            value={customBid}
+                                                            onChange={(e) => setCustomBid(e.target.value)}
+                                                            placeholder="مبلغ المزايدة.."
+                                                            className="w-full bg-slate-700/50 text-white py-2 md:py-3.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-bold border border-white/5 transition-all focus:bg-slate-700 text-sm md:text-base text-center"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <Button
-                                                    variant="primary"
-                                                    onClick={handleCustomBid}
-                                                    disabled={bidLoading || !customBid}
-                                                    className="!px-4 md:!px-5 shadow-lg shadow-primary/20 aspect-square"
-                                                >
-                                                    <Icon name="Send" className="w-4 h-4 md:w-5 md:h-5" />
-                                                </Button>
+
+                                                {/* Auto Bid Input */}
+                                                <div className="relative">
+                                                    <label className="text-xs text-slate-400 mb-1 block">مزايدة تلقائية (اختياري)</label>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="number"
+                                                            placeholder="أقصى حد للمزايدة..."
+                                                            className="flex-1 bg-slate-700/30 text-white py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 border border-white/5 text-sm"
+                                                            onChange={(e) => {
+                                                                // Store in a ref or state if needed, simpler to just use ref for now or adding state
+                                                                // For simplicity, let's treat customBid as the direct bid, and this as max
+                                                                // I'll add a state for autoBid
+                                                            }}
+                                                            id="auto-bid-input"
+                                                        />
+                                                        <Button
+                                                            variant="primary"
+                                                            onClick={() => {
+                                                                // Get values
+                                                                const amount = parseFloat(customBid);
+                                                                const maxAuto = parseFloat((document.getElementById('auto-bid-input') as HTMLInputElement).value) || undefined;
+
+                                                                if (isNaN(amount) || amount < (auction?.minimum_bid || 0)) {
+                                                                    showToast?.(`الحد الأدنى للمزايدة هو ${auction?.minimum_bid?.toLocaleString()}$`, 'error');
+                                                                    return;
+                                                                }
+                                                                if (maxAuto && maxAuto <= amount) {
+                                                                    showToast?.('يجب أن يكون الحد الأقصى أكبر من مبلغ المزايدة', 'error');
+                                                                    return;
+                                                                }
+
+                                                                handlePlaceBid(amount, false, maxAuto);
+                                                            }}
+                                                            disabled={bidLoading || !customBid}
+                                                            className="!px-4 md:!px-6 shadow-lg shadow-primary/20"
+                                                        >
+                                                            <Icon name="Send" className="w-4 h-4 md:w-5 md:h-5 ml-2" />
+                                                            زايد
+                                                        </Button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
+                            )}
+
+                            {/* Winner Action - Pay Now */}
+                            {hasEnded && auction.winner_id === userId && auction.payment_status !== 'paid' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-center text-white shadow-xl mt-4 relative z-20"
+                                >
+                                    <div className="mb-4">
+                                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+                                            <Icon name="Award" className="w-8 h-8 text-white" />
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-1">مبروك! لقد ربحت المزاد 🎉</h3>
+                                        <p className="text-emerald-100 text-sm">يرجى إتمام عملية الدفع لاستلام السيارة</p>
+                                    </div>
+                                    <Button
+                                        variant="secondary"
+                                        size="lg"
+                                        className="w-full font-bold bg-white text-emerald-700 hover:bg-emerald-50"
+                                        onClick={handlePayAuction}
+                                        isLoading={isPaying}
+                                    >
+                                        إتمام الدفع (${auction.current_bid?.toLocaleString()})
+                                    </Button>
+                                </motion.div>
+                            )}
+
+                            {/* Paid Status */}
+                            {hasEnded && auction.winner_id === userId && auction.payment_status === 'paid' && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 text-center mt-4"
+                                >
+                                    <Icon name="CheckCircle" className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
+                                    <h3 className="text-xl font-bold text-white mb-1">تم الدفع بنجاح</h3>
+                                    <p className="text-slate-400">سيتم التواصل معك لتسليم السيارة</p>
+                                </motion.div>
                             )}
                         </div>
                     </div>
@@ -747,7 +902,13 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                                     سجل المزايدات
                                 </h3>
                             </div>
-                            <AuctionTimeline auction={auction} bids={bids} />
+                            <AuctionTimeline
+                                auction={auction}
+                                bids={bids}
+                                onLoadMore={loadMoreBids}
+                                hasMore={bidsHasMore}
+                                loadingMore={loadingMoreBids}
+                            />
                         </div>
                     </div>
                 </div>

@@ -231,8 +231,8 @@ export const useWalletUpdates = (
 
         console.log(`💰 useWalletUpdates: Subscribing to user.${userId} for wallet updates`);
 
-        const channel = echo.private(`user.${userId}`);
-
+        // Listen for Notifications (Standard)
+        const notificationChannel = echo.private(`user.${userId}`);
         const handleNotification = (e: any) => {
             console.log('💰 Wallet notification received:', e);
 
@@ -246,11 +246,12 @@ export const useWalletUpdates = (
                     'WITHDRAWAL_PROCESSED_APPROVED',
                     'WITHDRAWAL_PROCESSED_REJECTED',
                     'FUNDS_DEPOSITED',
-                    'WITHDRAWAL_REQUEST_CONFIRMATION'
+                    'WITHDRAWAL_REQUEST_CONFIRMATION',
+                    'AUCTION_REGISTRATION' // Added this to trigger update on registration
                 ];
 
                 if (walletTypes.includes(type)) {
-                    console.log('💰 Wallet update! Triggering refresh...');
+                    console.log('💰 Wallet update via notification! Triggering refresh...');
                     onWalletUpdate(e);
                     if (showToast) {
                         const toastType = type.includes('REJECTED') ? 'error' :
@@ -260,12 +261,20 @@ export const useWalletUpdates = (
                 }
             }
         };
+        notificationChannel.listen('.user.notification', handleNotification);
 
-        channel.listen('.user.notification', handleNotification);
+        // Listen for Balance Updates (Dedicated Channel)
+        const walletChannel = echo.private(`user.${userId}.wallet`);
+        const handleBalanceUpdate = (e: any) => {
+            console.log('💰 Balance updated via event:', e);
+            onWalletUpdate(e);
+        };
+        walletChannel.listen('.balance.updated', handleBalanceUpdate);
 
         return () => {
-            console.log(`💰 useWalletUpdates: Unsubscribing from user.${userId}`);
-            channel.stopListening('.user.notification');
+            console.log(`💰 useWalletUpdates: Unsubscribing from user.${userId} and user.${userId}.wallet`);
+            notificationChannel.stopListening('.user.notification');
+            walletChannel.stopListening('.balance.updated');
         };
     }, [userId, onWalletUpdate, showToast, echo]);
 };

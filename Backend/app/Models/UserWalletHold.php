@@ -43,6 +43,44 @@ class UserWalletHold extends Model
                 $model->id = (string) Str::uuid();
             }
         });
+
+        $broadcastUpdate = function ($model) {
+            try {
+                // Get active holds count
+                $holds = \App\Models\UserWalletHold::where('user_id', $model->user_id)
+                    ->where('user_type', $model->user_type)
+                    ->where('status', 'active')
+                    ->sum('amount');
+
+                // Get current balance (we need to fetch the user profile)
+                $profile = null;
+                switch ($model->user_type) {
+                    case 'customer':
+                        $profile = \App\Models\Customer::find($model->user_id);
+                        break;
+                    case 'technician':
+                        $profile = \App\Models\Technician::find($model->user_id);
+                        break;
+                    case 'tow_truck':
+                        $profile = \App\Models\TowTruck::find($model->user_id);
+                        break;
+                }
+
+                if ($profile) {
+                    // Broadcast update
+                    event(new \App\Events\WalletBalanceUpdated(
+                        $model->user_id,
+                        $profile->wallet_balance,
+                        (float) $holds
+                    ));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to broadcast wallet hold update: ' . $e->getMessage());
+            }
+        };
+
+        static::saved($broadcastUpdate);
+        static::deleted($broadcastUpdate);
     }
 
     public function user()

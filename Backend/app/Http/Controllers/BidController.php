@@ -113,6 +113,8 @@ class BidController extends Controller
                 event(new \App\Events\UserOutbid($previousBid, $auction, $bidAmount));
             }
 
+            // ... (Existing validation code) ...
+
             // Create the new bid
             $bid = AuctionBid::create([
                 'auction_id' => $auction->id,
@@ -121,6 +123,7 @@ class BidController extends Controller
                 'bidder_name' => $profile->name,
                 'bidder_phone' => $user->phone,
                 'amount' => $bidAmount,
+                'max_auto_bid' => $request->input('max_auto_bid'), // Store max auto bid limit
                 'bid_time' => now(),
                 'wallet_hold_id' => $registration->wallet_hold_id,
                 'status' => 'valid',
@@ -133,6 +136,56 @@ class BidController extends Controller
                 'current_bid' => $bidAmount,
                 'bid_count' => $auction->bid_count + 1,
             ]);
+
+            // AUTO-BIDDING LOGIC
+            // Check if there's a previous bidder with a higher max_auto_bid
+            $previousHightestBid = AuctionBid::where('auction_id', $auction->id)
+                ->where('id', '!=', $bid->id)
+                ->where('status', 'valid') // Or 'outbid' if we want to reactivate
+                ->where('max_auto_bid', '>', $bidAmount)
+                ->orderBy('max_auto_bid', 'desc')
+                ->first();
+
+            if ($previousHightestBid) {
+                // Calculate next bid amount (Current + Increment)
+                $increment = $auction->bid_increment ?? 50; // Default increment
+                $nextBidAmount = $bidAmount + $increment;
+
+                // Ensure we don't exceed their max limit
+                if ($nextBidAmount <= $previousHightestBid->max_auto_bid) {
+                    // Place automatic counter-bid
+                    $autoBid = AuctionBid::create([
+                        'auction_id' => $auction->id,
+                        'user_id' => $previousHightestBid->user_id,
+                        'user_type' => $previousHightestBid->user_type,
+                        'bidder_name' => $previousHightestBid->bidder_name,
+                        'bidder_phone' => $previousHightestBid->bidder_phone, // Assuming we have access or can copy
+                        'amount' => $nextBidAmount,
+                        'max_auto_bid' => $previousHightestBid->max_auto_bid, // Carry over limit
+                        'bid_time' => now(),
+                        'wallet_hold_id' => $previousHightestBid->wallet_hold_id,
+                        'status' => 'valid',
+                        'is_auto_bid' => true,
+                    ]);
+
+                    // Mark user's bid as outbid
+                    $bid->markOutbid();
+                    event(new \App\Events\UserOutbid($bid, $auction, $nextBidAmount));
+
+                    // Update auction
+                    $auction->update([
+                        'current_bid' => $nextBidAmount,
+                        'bid_count' => $auction->bid_count + 1,
+                    ]);
+
+                    // Notify that auto-bid happened
+                    // event(new AuctionBidPlaced($auction->fresh(), $autoBid));
+
+                    // Set return to the auto-bid (so UI updates correctly showing user is outbid)
+                }
+            }
+
+            // ... (Rest of existing logic: Auto-extend, Broadcast) ...
 
             // Check if should auto-extend
             if ($auction->shouldAutoExtend()) {
@@ -269,6 +322,12 @@ class BidController extends Controller
 
             // Broadcast auction ended
             event(new \App\Events\AuctionEnded($auction));
+
+            // Update winner's registration
+            AuctionRegistration::where('auction_id', $auction->id)
+                ->where('user_id', $profile->id)
+                ->where('user_type', $userType)
+                ->update(['status' => 'winner']);
 
             // Release all other participants' deposits
             $this->releaseNonWinnerDeposits($auction, $profile->id, $userType);

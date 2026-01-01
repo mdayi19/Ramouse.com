@@ -133,13 +133,44 @@ export const cancelAuctionReminder = async (id: string) => {
     return response.data;
 };
 
-export const placeBid = async (id: string, amount: number) => {
-    const response = await api.post(`/auctions/${id}/bid`, { amount });
+export const placeBid = async (id: string, amount: number, max_auto_bid?: number) => {
+    const payload: any = { amount };
+    if (max_auto_bid) {
+        payload.max_auto_bid = max_auto_bid;
+    }
+    const response = await api.post(`/auctions/${id}/bid`, payload);
+    return response.data;
+};
+
+export const payAuction = async (id: string) => {
+    const response = await api.post(`/auctions/${id}/pay`);
     return response.data;
 };
 
 export const getMyAuctions = async (params?: { per_page?: number; page?: number }) => {
-    const response = await api.get('/my-auctions', { params });
+    const response = await api.get('/auctions/my-auctions', { params });
+    return response.data;
+};
+
+// ======== WATCHLIST ========
+
+export const getWatchlist = async () => {
+    const response = await api.get('/auctions/watchlist');
+    return response.data;
+};
+
+export const checkWatchlist = async (id: string) => {
+    const response = await api.get(`/auctions/watchlist/${id}/check`);
+    return response.data;
+};
+
+export const addToWatchlist = async (id: string) => {
+    const response = await api.post(`/auctions/watchlist/${id}`);
+    return response.data;
+};
+
+export const removeFromWatchlist = async (id: string) => {
+    const response = await api.delete(`/auctions/watchlist/${id}`);
     return response.data;
 };
 

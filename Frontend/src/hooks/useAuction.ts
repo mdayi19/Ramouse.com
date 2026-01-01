@@ -88,17 +88,23 @@ export const useLiveAuction = (auctionId: string | undefined) => {
     const { echo } = useRealtime();
 
     // Fetch auction data
+    const [bidsPage, setBidsPage] = useState(1);
+    const [bidsHasMore, setBidsHasMore] = useState(false);
+    const [loadingMoreBids, setLoadingMoreBids] = useState(false);
+
     // Fetch auction data
     const fetchAuction = useCallback(async (silent = false) => {
         if (!auctionId) return;
         try {
             if (!silent) setLoading(true);
-            const [auctionData, bidsData] = await Promise.all([
+            const [auctionData, bidsResponse] = await Promise.all([
                 auctionService.getPublicAuction(auctionId),
                 auctionService.getAuctionBids(auctionId, { per_page: 50 }),
             ]);
             setAuction(auctionData);
-            setBids(bidsData.data || []);
+            setBids(bidsResponse.data || []);
+            setBidsPage(bidsResponse.current_page || 1);
+            setBidsHasMore((bidsResponse.current_page || 1) < (bidsResponse.last_page || 1));
             setError(null);
         } catch (err: any) {
             setError(err.response?.data?.error || 'حدث خطأ أثناء تحميل المزاد');
@@ -107,11 +113,30 @@ export const useLiveAuction = (auctionId: string | undefined) => {
         }
     }, [auctionId]);
 
+    const loadMoreBids = useCallback(async () => {
+        if (!auctionId || loadingMoreBids || !bidsHasMore) return;
+
+        try {
+            setLoadingMoreBids(true);
+            const response = await auctionService.getAuctionBids(auctionId, {
+                page: bidsPage + 1,
+                per_page: 50
+            });
+
+            setBids(prev => [...prev, ...response.data]);
+            setBidsPage(response.current_page);
+            setBidsHasMore(response.current_page < response.last_page);
+        } catch (err) {
+            console.error('Failed to load more bids', err);
+        } finally {
+            setLoadingMoreBids(false);
+        }
+    }, [auctionId, bidsPage, bidsHasMore, loadingMoreBids]);
+
     useEffect(() => {
         fetchAuction();
     }, [fetchAuction]);
 
-    // Subscribe to real-time updates
     // Subscribe to real-time updates
     useEffect(() => {
         if (!auctionId || !auction?.is_live) return;
@@ -144,7 +169,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     status: event.auction.status,
                     extensions_used: event.auction.extensionsUsed,
                 } : null);
-                // Add bid to list with memory management
+                // Add bid to list
                 setBids(prev => {
                     const newBids = [{
                         id: event.bid.id,
@@ -158,8 +183,8 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                         is_auto_bid: event.bid.isAutoBid,
                         display_name: event.bid.bidderName,
                     } as AuctionBid, ...prev];
-                    // Limit to 100 bids to prevent memory leak
-                    return newBids.slice(0, 100);
+                    // Removed separate slice limit to allow full loaded history
+                    return newBids;
                 });
             })
             .listen('auction.extended', (event: AuctionExtendedEvent) => {
@@ -217,6 +242,10 @@ export const useLiveAuction = (auctionId: string | undefined) => {
         refresh: fetchAuction,
         updateLocalAuction,
         addLocalBid,
+        loadMoreBids,
+        bidsHasMore,
+        loadingMoreBids,
+        bidsPage
     };
 };
 
@@ -291,7 +320,7 @@ export const usePlaceBid = (auctionId: string | undefined) => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    const placeBid = useCallback(async (amount: number) => {
+    const placeBid = useCallback(async (amount: number, maxAutoBid?: number) => {
         if (!auctionId) return;
 
         try {
@@ -299,7 +328,7 @@ export const usePlaceBid = (auctionId: string | undefined) => {
             setError(null);
             setSuccess(false);
 
-            const response = await auctionService.placeBid(auctionId, amount);
+            const response = await auctionService.placeBid(auctionId, amount, maxAutoBid);
             setSuccess(true);
             return response.data; // Return data for immediate update
         } catch (err: any) {

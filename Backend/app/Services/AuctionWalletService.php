@@ -6,7 +6,7 @@ use App\Models\Auction;
 use App\Models\Customer;
 use App\Models\Technician;
 use App\Models\TowTruck;
-use App\Models\UserWalletTransaction;
+use App\Models\UserTransaction;
 use App\Models\UserWalletHold;
 use Illuminate\Support\Facades\DB;
 
@@ -37,7 +37,7 @@ class AuctionWalletService
             $winner->save();
 
             // 4. Create debit transaction
-            UserWalletTransaction::create([
+            UserTransaction::create([
                 'user_id' => $winner->id,
                 'user_type' => $auction->winner_type,
                 'type' => 'debit',
@@ -143,7 +143,7 @@ class AuctionWalletService
         $seller->wallet_balance += $amount;
         $seller->save();
 
-        UserWalletTransaction::create([
+        UserTransaction::create([
             'user_id' => $seller->id,
             'user_type' => $auction->car->seller_user_type,
             'type' => 'credit',
@@ -183,7 +183,7 @@ class AuctionWalletService
             $profile->save();
 
             // Create debit transaction
-            UserWalletTransaction::create([
+            UserTransaction::create([
                 'user_id' => $profile->id,
                 'user_type' => $registration->user_type,
                 'type' => 'debit',

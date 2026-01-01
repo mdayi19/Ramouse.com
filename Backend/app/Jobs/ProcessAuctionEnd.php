@@ -13,6 +13,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
+use App\Events\UserNotification;
 
 class ProcessAuctionEnd implements ShouldQueue
 {
@@ -73,6 +75,27 @@ class ProcessAuctionEnd implements ShouldQueue
                 // Update car status
                 $car->update(['status' => 'sold']);
 
+                // Update winner registration status
+                $auction->registrations()
+                    ->where('user_id', $winningBid->user_id)
+                    ->where('user_type', $winningBid->user_type)
+                    ->update(['status' => 'winner']);
+
+                // Notify winner
+                try {
+                    $notification = Notification::create([
+                        'user_id' => $winningBid->user_id,
+                        'title' => 'مبروك! فزت بالمزاد 🎉',
+                        'message' => 'لقد فزت بمزاد ' . $auction->title . ' بمبلغ ' . number_format((float) $winningBid->amount) . '. سيتم التواصل معك لإتمام عملية الدفع.',
+                        'type' => 'AUCTION_WON',
+                        'data' => json_encode(['auction_id' => $auction->id]),
+                        'read' => false,
+                    ]);
+                    event(new UserNotification($winningBid->user_id, $notification->toArray()));
+                } catch (\Exception $e) {
+                    Log::warning("Failed to notify winner {$winningBid->user_id}: " . $e->getMessage());
+                }
+
                 // Keep winner's deposit held
                 // Release all other deposits
                 $this->releaseNonWinnerDeposits($auction, $winningBid->user_id, $winningBid->user_type);
@@ -122,7 +145,7 @@ class ProcessAuctionEnd implements ShouldQueue
 
         foreach ($registrations as $registration) {
             try {
-                DB::transaction(function () use ($registration) {
+                DB::transaction(function () use ($registration, $auction) {
                     if ($registration->wallet_hold_id) {
                         $hold = UserWalletHold::find($registration->wallet_hold_id);
                         if ($hold && $hold->status === 'active') {
@@ -134,6 +157,21 @@ class ProcessAuctionEnd implements ShouldQueue
                         'status' => 'deposit_released',
                         'deposit_released_at' => now(),
                     ]);
+
+                    // Notify user
+                    try {
+                        $notification = Notification::create([
+                            'user_id' => $registration->user_id,
+                            'title' => 'تم استرداد مبلغ التأمين',
+                            'message' => 'انتهى المزاد ' . $auction->title . ' ولم تفز به. تم تحرير مبلغ التأمين.',
+                            'type' => 'INFO',
+                            'data' => json_encode(['auction_id' => $auction->id]),
+                            'read' => false,
+                        ]);
+                        event(new UserNotification($registration->user_id, $notification->toArray()));
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to notify user {$registration->user_id}: " . $e->getMessage());
+                    }
                 });
             } catch (\Exception $e) {
                 Log::warning("Failed to release deposit for registration {$registration->id}: " . $e->getMessage());
@@ -149,7 +187,7 @@ class ProcessAuctionEnd implements ShouldQueue
 
         foreach ($registrations as $registration) {
             try {
-                DB::transaction(function () use ($registration) {
+                DB::transaction(function () use ($registration, $auction) {
                     if ($registration->wallet_hold_id) {
                         $hold = UserWalletHold::find($registration->wallet_hold_id);
                         if ($hold && $hold->status === 'active') {
@@ -161,6 +199,21 @@ class ProcessAuctionEnd implements ShouldQueue
                         'status' => 'deposit_released',
                         'deposit_released_at' => now(),
                     ]);
+
+                    // Notify user
+                    try {
+                        $notification = Notification::create([
+                            'user_id' => $registration->user_id,
+                            'title' => 'تم استرداد مبلغ التأمين',
+                            'message' => 'انتهى المزاد ' . $auction->title . ' (لم يتم البيع). تم تحرير مبلغ التأمين.',
+                            'type' => 'INFO',
+                            'data' => json_encode(['auction_id' => $auction->id]),
+                            'read' => false,
+                        ]);
+                        event(new UserNotification($registration->user_id, $notification->toArray()));
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to notify user {$registration->user_id}: " . $e->getMessage());
+                    }
                 });
             } catch (\Exception $e) {
                 Log::warning("Failed to release deposit for registration {$registration->id}: " . $e->getMessage());

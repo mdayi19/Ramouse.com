@@ -17,6 +17,7 @@ import { StoreView } from './Store/StoreView';
 import { CustomerView } from './CustomerDashboardParts/types';
 import UserWalletView from './UserWalletView';
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
+import { UserAuctionsView } from './CustomerDashboardParts/UserAuctionsView';
 
 
 interface CustomerDashboardProps {
@@ -107,6 +108,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
         { id: 'orders', label: 'طلباتي', icon: 'ClipboardList', onClick: () => handleSidebarNavClick('orders'), isActive: activeView === 'orders' },
         { id: 'store', label: 'المتجر', icon: 'ShoppingBag', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },
         { id: 'wallet', label: 'المحفظة', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
+        { id: 'auctions', label: 'المزادات', icon: 'Gavel', onClick: () => handleSidebarNavClick('auctions'), isActive: activeView === 'auctions' },
         { id: 'garage', label: 'مرآبي', icon: 'Warehouse', onClick: () => handleSidebarNavClick('garage'), isActive: activeView === 'garage' },
         { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap', onClick: () => handleSidebarNavClick('flashProducts'), isActive: activeView === 'flashProducts' },
         { id: 'internationalLicense', label: 'الرخصة الدولية', icon: 'Globe', onClick: () => handleSidebarNavClick('internationalLicense'), isActive: activeView === 'internationalLicense' },
@@ -166,6 +168,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
                         } />
                         <Route path="flashProducts" element={customer ? <FlashProductsView customer={customer} showToast={props.showToast} addNotificationForUser={props.addNotificationForUser} settings={props.settings} /> : <SkeletonLoader />} />
                         <Route path="wallet" element={<UserWalletView settings={props.settings} onAddToast={props.showToast} userId={customer?.user_id} />} />
+                        <Route path="auctions" element={<UserAuctionsView userPhone={props.userPhone} showToast={props.showToast} />} />
                         <Route path="internationalLicense" element={<UserInternationalLicenseView showToast={props.showToast} />} />
                         <Route path="suggestions" element={<AISuggestionsWrapper />} />
                         <Route path="*" element={<Navigate to="" replace />} />

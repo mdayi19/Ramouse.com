@@ -952,7 +952,7 @@ export interface ApiResponse<T = any> {
 
 export type AuctionStatus = 'draft' | 'scheduled' | 'live' | 'extended' | 'ended' | 'completed' | 'cancelled';
 export type AuctionCarStatus = 'draft' | 'pending_approval' | 'approved' | 'in_auction' | 'sold' | 'unsold' | 'cancelled';
-export type AuctionPaymentStatus = 'pending' | 'awaiting_payment' | 'payment_received' | 'completed' | 'refunded';
+export type AuctionPaymentStatus = 'pending' | 'awaiting_payment' | 'payment_received' | 'completed' | 'refunded' | 'paid';
 
 export interface AuctionCarMedia {
   images: string[];

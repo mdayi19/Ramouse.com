@@ -429,6 +429,7 @@ Route::middleware(['auth:sanctum'])->prefix('auctions')->group(function () {
     Route::delete('/{id}/remind', [App\Http\Controllers\AuctionController::class, 'cancelReminder']);
     Route::post('/{id}/bid', [App\Http\Controllers\BidController::class, 'placeBid']);
     Route::post('/{id}/buy-now', [App\Http\Controllers\BidController::class, 'buyNow']);
+    Route::post('/{id}/pay', [App\Http\Controllers\AuctionController::class, 'pay']);
     Route::get('/my-auctions', [App\Http\Controllers\AuctionController::class, 'myAuctions']);
 
     // Watchlist routes

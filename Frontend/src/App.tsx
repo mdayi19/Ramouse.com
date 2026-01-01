@@ -413,7 +413,7 @@ function App() {
                     let soundFile = '/notification.wav'; // Default (Money sound for wins)
 
                     const type = notificationData.type;
-                    if (type === 'OFFER_ACCEPTED_PROVIDER_WIN' || type === 'FUNDS_DEPOSITED') {
+                    if (type === 'OFFER_ACCEPTED_PROVIDER_WIN' || type === 'FUNDS_DEPOSITED' || type === 'AUCTION_WON') {
                         soundFile = '/sound_money.wav';
                     } else if (type === 'NEW_ORDER_FOR_PROVIDER' || type === 'NEW_PROVIDER_REQUEST' || type === 'NEW_TECHNICIAN_REQUEST') {
                         soundFile = '/sound_new_order.wav';

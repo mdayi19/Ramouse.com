@@ -9,12 +9,21 @@ use App\Models\AuctionReminder;
 use App\Models\UserWalletHold;
 use App\Models\Notification;
 use App\Events\UserNotification;
+use App\Models\UserTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+use App\Services\AuctionWalletService;
+
 class AuctionController extends Controller
 {
+    protected $auctionWalletService;
+
+    public function __construct(AuctionWalletService $auctionWalletService)
+    {
+        $this->auctionWalletService = $auctionWalletService;
+    }
     /**
      * List auctions (public)
      */
@@ -308,6 +317,58 @@ class AuctionController extends Controller
             ->paginate(10);
 
         return response()->json($registrations);
+    }
+
+    /**
+     * Pay for won auction
+     */
+    public function pay(Request $request, $id)
+    {
+        $user = $request->user();
+        [$profile, $userType] = $this->getUserProfile($user);
+
+        if (!$profile) {
+            return response()->json(['error' => 'الحساب غير موجود'], 404);
+        }
+
+        $auction = Auction::with(['car', 'winner'])->findOrFail($id);
+
+        // Verify winner
+        if ($auction->winner_id != $profile->id || $auction->winner_type != $userType) {
+            return response()->json(['error' => 'لست الفائز في هذا المزاد'], 403);
+        }
+
+        // Verify payment status
+        if ($auction->payment_status === 'paid' || $auction->status === 'completed') {
+            return response()->json(['error' => 'تم الدفع مسبقاً'], 400);
+        }
+
+        try {
+            $this->auctionWalletService->chargeWinner($auction);
+
+            // Update Auction status
+            $auction->update([
+                'payment_status' => 'paid',
+                'status' => 'completed',
+            ]);
+
+            // Notify User
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'تم الدفع بنجاح',
+                'message' => 'تم استلام مبلغ المزاد ' . $auction->title . '. مبروك!',
+                'type' => 'INFO',
+                'data' => json_encode(['auction_id' => $auction->id]),
+                'read' => false,
+            ]);
+
+            return response()->json([
+                'message' => 'تم الدفع بنجاح',
+                'auction' => $auction->refresh(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     /**

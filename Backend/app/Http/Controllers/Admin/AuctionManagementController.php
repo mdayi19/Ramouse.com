@@ -295,6 +295,14 @@ class AuctionManagementController extends Controller
             'commission_fixed',
         ]);
 
+        // Explicitly parse dates to ensure correct format/timezone handling
+        if (isset($data['scheduled_start'])) {
+            $data['scheduled_start'] = \Carbon\Carbon::parse($data['scheduled_start']);
+        }
+        if (isset($data['scheduled_end'])) {
+            $data['scheduled_end'] = \Carbon\Carbon::parse($data['scheduled_end']);
+        }
+
         $data['status'] = $request->get('status', 'scheduled');
         $data['created_by'] = $request->user()->id;
 

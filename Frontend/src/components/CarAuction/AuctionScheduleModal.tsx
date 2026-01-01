@@ -78,7 +78,15 @@ const AuctionScheduleModal: React.FC<AuctionScheduleModalProps> = ({
         setLoading(true);
 
         try {
-            await auctionService.saveAuction(formData, initialData?.id);
+            // Ensure dates are sent as ISO strings with timezone info to preserve user's Damascus time intent
+            // The backend should parse this and store as UTC
+            const payload = {
+                ...formData,
+                scheduled_start: new Date(formData.scheduled_start).toISOString(),
+                scheduled_end: new Date(formData.scheduled_end).toISOString(),
+            };
+
+            await auctionService.saveAuction(payload, initialData?.id);
             showToast('تم حفظ جدول المزاد بنجاح', 'success');
             onSuccess();
             onClose();

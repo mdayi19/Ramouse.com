@@ -7,6 +7,9 @@ interface AuctionTimelineProps {
     auction: Auction;
     bids: AuctionBid[];
     className?: string;
+    onLoadMore?: () => void;
+    hasMore?: boolean;
+    loadingMore?: boolean;
 }
 
 type TimelineEvent = {
@@ -16,7 +19,14 @@ type TimelineEvent = {
     data?: any;
 };
 
-export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({ auction, bids, className = '' }) => {
+export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
+    auction,
+    bids,
+    className = '',
+    onLoadMore,
+    hasMore = false,
+    loadingMore = false
+}) => {
 
     // Merge and sort all events
     const events = useMemo(() => {
@@ -170,6 +180,25 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({ auction, bids,
                             </div>
                         </motion.div>
                     ))
+                )}
+
+
+                {/* Load More Button */}
+                {hasMore && (
+                    <div className="text-center pt-2 pb-4 relative z-10">
+                        <button
+                            onClick={onLoadMore}
+                            disabled={loadingMore}
+                            className="text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+                        >
+                            {loadingMore ? (
+                                <Icon name="Loader" className="w-3 h-3 animate-spin" />
+                            ) : (
+                                <Icon name="ChevronDown" className="w-3 h-3" />
+                            )}
+                            عرض المزيد من المزايدات
+                        </button>
+                    </div>
                 )}
             </div>
         </div>
