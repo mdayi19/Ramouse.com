@@ -1,0 +1,447 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Provider, Customer, Settings, Technician, Notification, NotificationType, TowTruck } from '../types';
+import Icon from './Icon';
+import { AuthService } from '../services/auth.service';
+import { reconnectEcho } from '../lib/echo';
+
+interface LoginScreenProps {
+  onLoginSuccess: (phone: string, rememberMe: boolean, provider?: Provider, technician?: Technician, towTruck?: TowTruck, isAdmin?: boolean) => void;
+  onClose: () => void;
+  onGoToTechnicianRegistration: () => void;
+  onGoToTowTruckRegistration: () => void;
+  settings: Settings;
+  sendMessage: (type: 'verification' | 'notification', to: string, message: string) => Promise<{ success: boolean; error?: string }>;
+  addNotificationForUser: (userPhone: string, notification: Omit<Notification, 'id' | 'timestamp' | 'read'>, type: NotificationType) => void;
+  showToast: (message: string, type: 'success' | 'error' | 'info') => void;
+  isClosing?: boolean;
+}
+
+type LoginMode = 'enterPhone' | 'verifyNewUser' | 'loginWithPassword' | 'forgotPasswordVerify' | 'resetPassword';
+
+const countryCodes = [
+  { code: '+963', name: 'Syria', placeholder: '912345678', length: 9 },
+  { code: '+966', name: 'SaudiArabia', placeholder: '520000001', length: 9 },
+  { code: '+961', name: 'Lebanon', placeholder: '3123456', length: 7 },
+  { code: '+962', name: 'Jordan', placeholder: '791234567', length: 9 },
+  { code: '+90', name: 'Turkey', placeholder: '5123456789', length: 10 },
+  { code: '+20', name: 'Egypt', placeholder: '1012345678', length: 10 },
+];
+
+// OTP Input Component
+interface OtpInputGroupProps {
+  otp: string[];
+  setOtp: (otp: string[]) => void;
+}
+
+const OtpInputGroup: React.FC<OtpInputGroupProps> = ({ otp, setOtp }) => {
+  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const val = e.target.value;
+    if (val && !/^\d+$/.test(val)) return;
+
+    const newOtp = [...otp];
+    if (val.length > 1) {
+      const chars = val.split('').slice(0, 6);
+      chars.forEach((c, i) => {
+        if (index + i < 6) newOtp[index + i] = c;
+      });
+      setOtp(newOtp);
+      const nextFocus = Math.min(index + chars.length, 5);
+      inputsRef.current[nextFocus]?.focus();
+      return;
+    }
+    newOtp[index] = val;
+    setOtp(newOtp);
+    if (val && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!paste) return;
+    const newOtp = [...otp];
+    paste.split('').forEach((char, i) => {
+      newOtp[i] = char;
+    });
+    setOtp(newOtp);
+    const nextFocus = Math.min(paste.length, 5);
+    inputsRef.current[nextFocus]?.focus();
+  };
+
+  return (
+    <div className="flex justify-center gap-2" dir="ltr">
+      {otp.map((digit, index) => (
+        <input
+          key={index}
+          ref={el => { inputsRef.current[index] = el; }}
+          type="tel"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={1}
+          className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-slate-700 transition"
+          value={digit}
+          onChange={e => handleChange(e, index)}
+          onKeyDown={e => handleKeyDown(e, index)}
+          onPaste={handlePaste}
+          onFocus={e => e.target.select()}
+        />
+      ))}
+    </div>
+  );
+};
+
+const LoginScreen: React.FC<LoginScreenProps> = ({
+  onLoginSuccess, onClose, onGoToTechnicianRegistration, onGoToTowTruckRegistration,
+  settings, showToast, isClosing
+}) => {
+  const [loginMode, setLoginMode] = useState<LoginMode>('enterPhone');
+
+  const [countryCode, setCountryCode] = useState('+963');
+  const [localPhone, setLocalPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [otp, setOtp] = useState(new Array(6).fill(''));
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  const fullPhoneNumber = useMemo(() => countryCode + localPhone, [countryCode, localPhone]);
+  const selectedCountry = useMemo(() => countryCodes.find(c => c.code === countryCode) || countryCodes[0], [countryCode]);
+
+  const inputStyles = "block w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm";
+
+  useEffect(() => {
+    const savedPhone = localStorage.getItem('savedUserPhone');
+    if (savedPhone) {
+      const foundCode = countryCodes.find(c => savedPhone.startsWith(c.code));
+      if (foundCode) {
+        setCountryCode(foundCode.code);
+        setLocalPhone(savedPhone.substring(foundCode.code.length));
+      } else {
+        setLocalPhone(savedPhone);
+      }
+      setRememberMe(true);
+    }
+  }, []);
+
+  const resetToPhoneInput = () => {
+    setLoginMode('enterPhone');
+    setPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setOtp(new Array(6).fill(''));
+    setError('');
+    setSuccessMessage('');
+    setIsNewUser(false);
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (localPhone.length !== selectedCountry.length) {
+      setError(`الرجاء إدخال رقم هاتف صحيح (${selectedCountry.length} أرقام).`);
+      return;
+    }
+    setError('');
+    setSuccessMessage('');
+    setLoading(true);
+    try {
+      const checkResult = await AuthService.checkPhone(fullPhoneNumber);
+
+      if (checkResult.exists) {
+        setLoginMode('loginWithPassword');
+        setIsNewUser(false);
+      } else {
+        await AuthService.sendOtp(fullPhoneNumber);
+        setSuccessMessage('تم إرسال رمز التحقق عبر واتساب. الرجاء التحقق من هاتفك.');
+        setIsNewUser(true);
+        setLoginMode('verifyNewUser');
+      }
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Phone check error:', err);
+      setError('حدث خطأ. يرجى المحاولة مرة أخرى.');
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
+    try {
+      const response = await AuthService.login(fullPhoneNumber, password);
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      localStorage.setItem('userType', response.role);
+      if (rememberMe) {
+        localStorage.setItem('savedUserPhone', fullPhoneNumber);
+      } else {
+        localStorage.removeItem('savedUserPhone');
+      }
+      // Reconnect Echo with new auth token
+      reconnectEcho();
+      setLoading(false);
+
+      if (response.role === 'provider') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, response.user as Provider);
+      } else if (response.role === 'technician') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, response.user as Technician);
+      } else if (response.role === 'tow_truck') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, response.user as TowTruck);
+      } else if (response.role === 'admin') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, undefined, true);
+      } else {
+        onLoginSuccess(fullPhoneNumber, rememberMe);
+      }
+      showToast('تم تسجيل الدخول بنجاح!', 'success');
+    } catch (err: any) {
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'كلمة المرور غير صحيحة أو الحساب غير موجود.';
+      setError(errorMessage);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await AuthService.sendOtp(fullPhoneNumber);
+      setSuccessMessage('تم إرسال رمز التحقق عبر واتساب. الرجاء التحقق من هاتفك.');
+      setLoginMode('forgotPasswordVerify');
+      setLoading(false);
+    } catch (err: any) {
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى.';
+      setError(errorMessage);
+    }
+  };
+
+  const handleForgotPasswordVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length !== 6) {
+      setError('الرجاء إدخال رمز التحقق المكون من 6 أرقام.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await AuthService.verifyOtp(fullPhoneNumber, code);
+      setSuccessMessage('تم التحقق بنجاح!');
+      setLoginMode('resetPassword');
+      setLoading(false);
+    } catch (err: any) {
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'رمز التحقق غير صحيح.';
+      setError(errorMessage);
+    }
+  };
+
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length !== 6) {
+      setError('الرجاء إدخال رمز التحقق المكون من 6 أرقام.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await AuthService.verifyOtp(fullPhoneNumber, code);
+      const response = await AuthService.registerCustomer({ phone: fullPhoneNumber, password: newPassword });
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      localStorage.setItem('userType', 'customer');
+      if (rememberMe) {
+        localStorage.setItem('savedUserPhone', fullPhoneNumber);
+      }
+      // Reconnect Echo with new auth token
+      reconnectEcho();
+      setLoading(false);
+      showToast('تم تسجيل حسابك بنجاح!', 'success');
+      onLoginSuccess(fullPhoneNumber, rememberMe);
+    } catch (err: any) {
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'فشل التسجيل. يرجى المحاولة مرة أخرى.';
+      setError(errorMessage);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setError('يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError('كلمات المرور غير متطابقة.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await AuthService.resetPassword(fullPhoneNumber, newPassword);
+      showToast('تم إعادة تعيين كلمة المرور بنجاح!', 'success');
+      const response = await AuthService.login(fullPhoneNumber, newPassword);
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      localStorage.setItem('userType', response.role);
+      if (rememberMe) {
+        localStorage.setItem('savedUserPhone', fullPhoneNumber);
+      }
+      // Reconnect Echo with new auth token
+      reconnectEcho();
+      setLoading(false);
+
+      if (response.role === 'provider') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, response.user as Provider);
+      } else if (response.role === 'technician') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, response.user as Technician);
+      } else if (response.role === 'tow_truck') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, response.user as TowTruck);
+      } else if (response.role === 'admin') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, undefined, true);
+      } else {
+        onLoginSuccess(fullPhoneNumber, rememberMe);
+      }
+    } catch (err: any) {
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'فشل تحديث كلمة المرور.';
+      setError(errorMessage);
+    }
+  };
+
+  const renderContent = () => {
+    switch (loginMode) {
+      case 'enterPhone':
+        return (
+          <form onSubmit={handlePhoneSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300">رقم الهاتف</label>
+              <div className="flex mt-1 group">
+                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="rounded-r-lg border-l-0 border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-sm focus:ring-primary focus:border-primary transition" dir="ltr">
+                  {countryCodes.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                </select>
+                <input type="tel" id="phone" value={localPhone} onChange={e => setLocalPhone(e.target.value.replace(/\D/g, ''))} className={`${inputStyles} rounded-l-lg rounded-r-none`} placeholder={selectedCountry.placeholder} required dir="ltr" />
+              </div>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-primary text-white font-bold py-2.5 px-4 rounded-lg hover:bg-primary-700 disabled:bg-slate-400 flex items-center justify-center gap-2 transition">
+              {loading && <Icon name="Loader" className="animate-spin w-5 h-5" />}
+              {loading ? 'جاري التحقق...' : 'متابعة'}
+            </button>
+            <div className="text-center text-sm flex flex-col items-center gap-2 pt-2">
+              <button type="button" onClick={onGoToTechnicianRegistration} className="font-medium text-primary hover:underline">هل أنت فني؟ سجل من هنا</button>
+              <button type="button" onClick={onGoToTowTruckRegistration} className="font-medium text-primary hover:underline">هل أنت سائق سطحة؟ سجل من هنا</button>
+            </div>
+          </form>
+        );
+      case 'loginWithPassword':
+        return (
+          <form onSubmit={handlePasswordLogin} className="space-y-4">
+            <p className="text-sm text-center text-slate-600 dark:text-slate-400">أهلاً بك! الرجاء إدخال كلمة المرور لرقم <span dir="ltr" className="font-semibold">{fullPhoneNumber}</span>.</p>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">كلمة المرور</label>
+              <input type="password" id="password" value={password} onChange={e => setPassword(e.target.value)} className={`${inputStyles} mt-1`} required dir="ltr" />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} className="rounded text-primary focus:ring-primary" /> تذكرني</label>
+              <button type="button" onClick={handleForgotPassword} className="font-medium text-primary hover:underline">نسيت كلمة المرور؟</button>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-primary text-white font-bold py-2.5 px-4 rounded-lg hover:bg-primary-700 disabled:bg-slate-400 flex items-center justify-center gap-2 transition">
+              {loading && <Icon name="Loader" className="animate-spin w-5 h-5" />}
+              {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
+            </button>
+            <button type="button" onClick={resetToPhoneInput} className="w-full text-sm text-center font-medium text-slate-500 hover:text-primary">تغيير الرقم</button>
+          </form>
+        );
+      case 'verifyNewUser':
+        return (
+          <form onSubmit={handleVerifyAndRegister} className="space-y-4">
+            {successMessage && (
+              <div className="text-center bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 mb-4">
+                <p className="text-green-700 dark:text-green-300 text-sm font-medium">✅ {successMessage}</p>
+              </div>
+            )}
+            <p className="text-sm text-center text-slate-600 dark:text-slate-400">الرجاء إدخال رمز التحقق المرسل إلى <span dir="ltr" className="font-semibold">{fullPhoneNumber}</span></p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 text-center">رمز التحقق (6 أرقام)</label>
+              <OtpInputGroup otp={otp} setOtp={setOtp} />
+            </div>
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300">كلمة مرور جديدة (6 أحرف على الأقل)</label>
+              <input type="password" id="newPassword" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={`${inputStyles} mt-1`} required dir="ltr" />
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-primary text-white font-bold py-2.5 px-4 rounded-lg hover:bg-primary-700 disabled:bg-slate-400 flex items-center justify-center gap-2 transition">
+              {loading && <Icon name="Loader" className="animate-spin w-5 h-5" />}
+              {loading ? 'جاري التسجيل...' : 'تسجيل وإنشاء حساب'}
+            </button>
+            <button type="button" onClick={resetToPhoneInput} className="w-full text-sm text-center font-medium text-slate-500 hover:text-primary">تغيير الرقم</button>
+          </form>
+        );
+      case 'forgotPasswordVerify':
+        return (
+          <form onSubmit={handleForgotPasswordVerify} className="space-y-4">
+            <p className="text-sm text-center text-slate-600 dark:text-slate-400">تم إرسال رمز التحقق عبر واتساب إلى <span dir="ltr" className="font-semibold">{fullPhoneNumber}</span></p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 text-center">رمز التحقق (6 أرقام)</label>
+              <OtpInputGroup otp={otp} setOtp={setOtp} />
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-primary text-white font-bold py-2.5 px-4 rounded-lg hover:bg-primary-700">تحقق</button>
+            <button type="button" onClick={resetToPhoneInput} className="w-full text-sm text-center font-medium text-slate-500 hover:text-primary">العودة</button>
+          </form>
+        );
+      case 'resetPassword':
+        return (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <p className="text-sm text-center text-slate-600 dark:text-slate-400">الرجاء إدخال كلمة المرور الجديدة.</p>
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium">كلمة المرور الجديدة (6 أحرف على الأقل)</label>
+              <input type="password" id="newPassword" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={`${inputStyles} mt-1`} required dir="ltr" />
+            </div>
+            <div>
+              <label htmlFor="confirmNewPassword" className="block text-sm font-medium">تأكيد كلمة المرور</label>
+              <input type="password" id="confirmNewPassword" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} className={`${inputStyles} mt-1`} required dir="ltr" />
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-primary text-white font-bold py-2.5 px-4 rounded-lg hover:bg-primary-700">إعادة تعيين كلمة المرور</button>
+            <button type="button" onClick={resetToPhoneInput} className="w-full text-sm text-center font-medium text-slate-500 hover:text-primary">العودة</button>
+          </form>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className={`w-full max-w-sm bg-white dark:bg-darkcard rounded-xl shadow-lg p-6 sm:p-8 relative ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`} onClick={e => e.stopPropagation()}>
+      <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 z-10 p-1 rounded-full transition-colors"><Icon name="X" className="w-5 h-5" /></button>
+      <div className="text-center mb-6">
+        <img src={settings.logoUrl} alt="Logo" className="h-12 mx-auto mb-3" />
+        <h2 className="text-2xl font-bold text-primary dark:text-primary-400">
+          {loginMode === 'verifyNewUser' ? 'تأكيد الحساب الجديد' : loginMode === 'resetPassword' ? 'إعادة تعيين كلمة المرور' : 'تسجيل الدخول'}
+        </h2>
+      </div>
+      {error && <p className="text-sm text-red-500 dark:text-red-400 text-center mb-4 bg-red-50 dark:bg-red-900/20 p-2 rounded-md">{error}</p>}
+      {renderContent()}
+    </div>
+  );
+};
+
+export default LoginScreen;

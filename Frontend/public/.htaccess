@@ -1,0 +1,124 @@
+# BEGIN cPanel-generated php ini directives, do not edit
+# Manual editing of this file may result in unexpected behavior.
+# To make changes to this file, use the cPanel MultiPHP INI Editor (Home >> Software >> MultiPHP INI Editor)
+# For more information, read our documentation (https://go.cpanel.net/EA4ModifyINI)
+<IfModule php8_module>
+   php_flag display_errors Off
+   php_value max_execution_time 30
+   php_value max_input_time 300
+   php_value max_input_vars 1000
+   php_value memory_limit 1024M
+   php_value post_max_size 128M
+   php_value session.gc_maxlifetime 1440
+   php_value session.save_path "/var/cpanel/php/sessions/ea-php81"
+   php_value upload_max_filesize 128M
+   php_flag zlib.output_compression Off
+</IfModule>
+<IfModule lsapi_module>
+   php_flag display_errors Off
+   php_value max_execution_time 30
+   php_value max_input_time 300
+   php_value max_input_vars 1000
+   php_value memory_limit 1024M
+   php_value post_max_size 128M
+   php_value session.gc_maxlifetime 1440
+   php_value session.save_path "/var/cpanel/php/sessions/ea-php81"
+   php_value upload_max_filesize 128M
+   php_flag zlib.output_compression Off
+</IfModule>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # ========================================
+    # 1. FORCE HTTPS
+    # ========================================
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # ========================================
+    # 2. REMOVE WWW (Canonical URL)
+    # ========================================
+    RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+    RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+    
+    # ========================================
+    # 3. API PROXY TO LARAVEL
+    # ========================================
+    # Route /api/* requests to Laravel backend
+    RewriteCond %{REQUEST_URI} ^/api
+    RewriteRule ^api/(.*)$ /ramouse_api/public/index.php [L,QSA]
+    
+    # ========================================
+    # 4. BROADCASTING PROXY
+    # ========================================
+    RewriteCond %{REQUEST_URI} ^/broadcasting
+    RewriteRule ^broadcasting/(.*)$ /ramouse_api/public/index.php [L,QSA]
+    
+    # ========================================
+    # 5. STORAGE FILES PROXY
+    # ========================================
+    RewriteCond %{REQUEST_URI} ^/storage
+    RewriteRule ^storage/(.*)$ /ramouse_api/public/storage/$1 [L]
+    
+    # ========================================
+    # 6. SPA FRONTEND ROUTING
+    # ========================================
+    # If file exists, serve it
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # If directory exists, serve it
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # Otherwise, route to index.html (React Router)
+    RewriteRule . /index.html [L]
+</IfModule>
+
+# ========================================
+# ADDITIONAL SECURITY HEADERS
+# ========================================
+<IfModule mod_headers.c>
+    # CORS Headers for API
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    
+    # Security Headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# ========================================
+# GZIP COMPRESSION
+# ========================================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/json
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE text/javascript text/xml application/xml
+</IfModule>
+
+# ========================================
+# CACHE CONTROL FOR STATIC ASSETS
+# ========================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    
+    # Fonts
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    
+    # CSS & JavaScript (Vite adds hash to filenames)
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    
+    # HTML (no cache for SPA routing)
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+# END cPanel-generated php ini directives, do not edit

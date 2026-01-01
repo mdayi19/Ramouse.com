@@ -1,0 +1,29 @@
+php artisan serve 
+php artisna reverb:start
+php artisan queue:work
+
+php artisan queue:work --queue=telegram
+php artisan queue:work --queue=telegram,default
+
+
+
+
+--------------
+npm run dev
+
+skeleton loading react
+
+8384231011:AAHwMGo47u8hLa-hFjV9kxeg8n36XVJdO-w
+
+-1003140324258
+
+----------------------
+--form 'appkey="5a3234b1-c074-4b4e-a646-087b110fedbb"' \
+--form 'authkey="DWaAxBH8Z0AJCdz5h4Vb87pkI6DxcMZ0RcU3htPtdgzfgEIJlu"' \
+
+--form 'appkey="f69e455b-2155-4b4b-981a-25af0e56df51"' \
+--form 'authkey="DWaAxBH8Z0AJCdz5h4Vb87pkI6DxcMZ0RcU3htPtdgzfgEIJlu"' \
+
+------------------
+elzeromedia@gmail.com
+Elzero@640680.

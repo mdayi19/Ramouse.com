@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" style="scroll-behavior: smooth;">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>راموسة لقطع غيار السيارات</title>
+
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com https://maps.googleapis.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' data: blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.google.com https://*.googleapis.com https://placehold.co https://ramouse.com http://ramouse.com http://localhost:8000 http://127.0.0.1:8000;
+    font-src 'self' data: https://fonts.gstatic.com;
+    connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.googleapis.com wss://* ws://* https://ramouse.com http://ramouse.com http://localhost:8000 http://127.0.0.1:8000;
+    frame-src 'self' https://www.google.com;
+    worker-src 'self' blob:;
+    object-src 'none';
+    base-uri 'self';
+  ">
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#0284c7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ramouse">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="icon" href="/pwa-192x192.png">
+  <link rel="shortcut icon" href="/pwa-192x192.png">
+
+  <meta name="description"
+    content="راموسة لقطع غيار السيارات: تطبيق ويب حديث ومتجاوب لطلب قطع غيار السيارات بسهولة في سوريا." />
+
+  <script>
+    (function () {
+      try {
+        const savedSettings = localStorage.getItem('app_settings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          if (settings.isDarkMode) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+      } catch (e) { }
+    })();
+  </script>
+
+  <script>
+    window.process = window.process || { env: { NODE_ENV: 'production' } };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L3D0EWMEQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-L3D0EWMEQ6');
+  </script>
+</head>
+
+<body class="bg-light dark:bg-darkbg text-slate-900 dark:text-slate-100 transition-colors duration-300">
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TCD2N436" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <div id="root"></div>
+  <script type="module" src="/src/index.tsx"></script>
+</body>
+
+</html>

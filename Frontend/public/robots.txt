@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /provider
+Disallow: /technician
+Disallow: /tow-truck-dashboard
+Disallow: /my-orders
+
+Sitemap: https://ramouse.com/sitemap.xml

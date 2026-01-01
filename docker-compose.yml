@@ -1,0 +1,245 @@
+services:
+  # Laravel Backend
+  app:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    image: ramouse-backend
+    container_name: ramouse-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - backend-storage:/var/www/storage/app/public
+    environment:
+      APP_NAME: ${APP_NAME:-Ramouse}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-https://ramouse.com}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-ramouse_db}
+      DB_USERNAME: ${DB_USERNAME:-ramouse_user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      BROADCAST_CONNECTION: reverb
+      CACHE_STORE: redis
+      FILESYSTEM_DISK: local
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: redis
+      SESSION_LIFETIME: 120
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+      REVERB_APP_ID: ${REVERB_APP_ID:-ramouse-app}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-ramouse-app-key}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-ramouse-app-secret}
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+    networks:
+      - ramouse-network
+    depends_on:
+      - db
+      - redis
+
+  # Scheduler (Cron)
+  scheduler:
+    image: ramouse-backend
+    container_name: ramouse-scheduler
+    restart: unless-stopped
+    command: "php artisan schedule:work"
+    working_dir: /var/www
+    volumes:
+      - backend-storage:/var/www/storage/app/public
+    environment:
+      APP_NAME: ${APP_NAME:-Ramouse}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_USERNAME: ${DB_USERNAME:-ramouse_user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_DATABASE: ${DB_DATABASE:-ramouse_db}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: database
+      REDIS_HOST: redis
+      BROADCAST_CONNECTION: reverb
+      REVERB_APP_ID: ${REVERB_APP_ID:-ramouse-app}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-ramouse-app-key}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-ramouse-app-secret}
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+    networks:
+      - ramouse-network
+    depends_on:
+      - app
+      - db
+      - redis
+
+  # Queue Worker
+  queue:
+    image: ramouse-backend
+    container_name: ramouse-queue
+    restart: unless-stopped
+    command: "php artisan queue:work --queue=default,telegram --tries=3 --timeout=90"
+    working_dir: /var/www
+    volumes:
+      - backend-storage:/var/www/storage/app/public
+    environment:
+      APP_NAME: ${APP_NAME:-Ramouse}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_USERNAME: ${DB_USERNAME:-ramouse_user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_DATABASE: ${DB_DATABASE:-ramouse_db}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: database
+      REDIS_HOST: redis
+      BROADCAST_CONNECTION: reverb
+      REVERB_APP_ID: ${REVERB_APP_ID:-ramouse-app}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-ramouse-app-key}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-ramouse-app-secret}
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+    networks:
+      - ramouse-network
+    depends_on:
+      - app
+      - db
+      - redis
+
+  # Laravel Reverb (WebSocket Server)
+  reverb:
+    image: ramouse-backend
+    container_name: ramouse-reverb
+    restart: unless-stopped
+    command: "php artisan reverb:start --host=0.0.0.0 --port=8080"
+    working_dir: /var/www
+    volumes:
+      - backend-storage:/var/www/storage/app/public
+    environment:
+      APP_NAME: ${APP_NAME:-Ramouse}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_USERNAME: ${DB_USERNAME:-ramouse_user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_DATABASE: ${DB_DATABASE:-ramouse_db}
+      CACHE_STORE: redis
+      REDIS_HOST: redis
+      REVERB_APP_ID: ${REVERB_APP_ID:-ramouse-app}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-ramouse-app-key}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-ramouse-app-secret}
+      REVERB_HOST: 0.0.0.0
+      REVERB_PORT: 8080
+      REVERB_SCHEME: https
+      REVERB_ALLOWED_ORIGINS: "*"
+    networks:
+      - ramouse-network
+    depends_on:
+      - app
+      - db
+      - redis
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:-ramouse-app-key}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:-ramouse.com}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
+        VITE_VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY}
+    image: ramouse-frontend
+    container_name: ramouse-frontend
+    restart: unless-stopped
+    networks:
+      - ramouse-network
+
+  # Nginx Gateway
+  nginx:
+    image: nginx:alpine
+    container_name: ramouse-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - backend-storage:/var/www/storage/app/public:ro
+    networks:
+      - ramouse-network
+    depends_on:
+      - app
+      - frontend
+      - reverb
+
+  # Certbot
+  certbot:
+    image: certbot/certbot
+    container_name: ramouse-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - ramouse-network
+
+  # Database
+  db:
+    image: mysql:8.0
+    container_name: ramouse-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-ramouse_db}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_USER: ${DB_USERNAME:-ramouse_user}
+    volumes:
+      - ramouse-db-data:/var/lib/mysql
+      - ./ramouse.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ramouse-network
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: ramouse-redis
+    restart: unless-stopped
+    networks:
+      - ramouse-network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ramouse-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_PASSWORD:-password}
+      PMA_ABSOLUTE_URI: https://ramouse.com/phpmyadmin/
+      UPLOAD_LIMIT: 100M
+    networks:
+      - ramouse-network
+    depends_on:
+      - db
+
+networks:
+  ramouse-network:
+    driver: bridge
+
+volumes:
+  ramouse-db-data:
+  backend-storage:

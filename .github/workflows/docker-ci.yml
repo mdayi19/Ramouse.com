@@ -1,0 +1,38 @@
+name: Docker Build CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Check Docker Layout
+        run: |
+          if [ ! -f docker-compose.yml ]; then
+            echo "docker-compose.yml not found!"
+            exit 1
+          fi
+          if [ ! -f Backend/Dockerfile ]; then
+            echo "Backend/Dockerfile not found!"
+            exit 1
+          fi
+          if [ ! -f Frontend/Dockerfile ]; then
+            echo "Frontend/Dockerfile not found!"
+            exit 1
+          fi
+
+      - name: Validate Docker Compose Config
+        run: docker compose config
+
+      - name: Build Docker Images
+        run: docker compose build

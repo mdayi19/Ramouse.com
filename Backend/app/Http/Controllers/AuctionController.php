@@ -1,0 +1,334 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Auction;
+use App\Models\AuctionCar;
+use App\Models\AuctionRegistration;
+use App\Models\AuctionReminder;
+use App\Models\UserWalletHold;
+use App\Models\Notification;
+use App\Events\UserNotification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class AuctionController extends Controller
+{
+    /**
+     * List auctions (public)
+     */
+    public function index(Request $request)
+    {
+        $query = Auction::with(['car'])
+            ->whereIn('status', ['scheduled', 'live', 'extended', 'ended']);
+
+        // Filter by status
+        if ($request->has('status')) {
+            $status = $request->status;
+            if ($status === 'upcoming') {
+                $query->where('status', 'scheduled')->where('scheduled_start', '>', now());
+            } elseif ($status === 'live') {
+                $query->whereIn('status', ['live', 'extended']);
+            } elseif ($status === 'ended') {
+                $query->whereIn('status', ['ended', 'completed']);
+            }
+        }
+
+        // Sort
+        $query->orderBy('scheduled_start', 'asc');
+
+        $auctions = $query->paginate($request->get('per_page', 12));
+
+        // If authenticated, add registration status
+        $user = $request->user();
+        if ($user) {
+            [$profile, $userType] = $this->getUserProfile($user);
+            if ($profile) {
+                $auctions->getCollection()->transform(function ($auction) use ($profile, $userType) {
+                    $auction->is_registered = $auction->isUserRegistered($profile->id, $userType);
+                    $auction->has_reminder = $auction->hasUserReminder($profile->id, $userType);
+                    return $auction;
+                });
+            }
+        }
+
+        return response()->json($auctions);
+    }
+
+    /**
+     * Get single auction details
+     */
+    public function show(Request $request, $id)
+    {
+        $auction = Auction::with([
+            'car',
+            'bids' => function ($q) {
+                $q->orderBy('bid_time', 'desc')->limit(20);
+            }
+        ])->findOrFail($id);
+
+        $data = $auction->toArray();
+        $data['participant_count'] = $auction->participant_count;
+        $data['time_remaining'] = $auction->time_remaining;
+        $data['minimum_bid'] = $auction->minimum_bid;
+
+        // If authenticated, add user-specific data
+        $user = $request->user();
+        if ($user) {
+            [$profile, $userType] = $this->getUserProfile($user);
+            if ($profile) {
+                $data['is_registered'] = $auction->isUserRegistered($profile->id, $userType);
+                $data['has_reminder'] = $auction->hasUserReminder($profile->id, $userType);
+                $data['can_bid'] = $auction->canBid($profile->id, $userType);
+
+                // Get user's highest bid
+                $userBid = $auction->bids()
+                    ->where('user_id', $profile->id)
+                    ->where('user_type', $userType)
+                    ->orderBy('amount', 'desc')
+                    ->first();
+                $data['my_highest_bid'] = $userBid ? (float) $userBid->amount : null;
+            }
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * Register for an auction (with deposit)
+     */
+    public function register(Request $request, $id)
+    {
+        $user = $request->user();
+        [$profile, $userType] = $this->getUserProfile($user);
+
+        if (!$profile) {
+            return response()->json(['error' => 'الحساب غير موجود'], 404);
+        }
+
+        // Providers cannot participate
+        if ($user->role === 'provider') {
+            return response()->json(['error' => 'مقدمي الخدمات لا يمكنهم المشاركة في المزادات'], 403);
+        }
+
+        $auction = Auction::with('car')->findOrFail($id);
+
+        // Check auction is available for registration
+        if (!in_array($auction->status, ['scheduled', 'live', 'extended'])) {
+            return response()->json(['error' => 'المزاد غير متاح للتسجيل'], 400);
+        }
+
+        // Check not already registered
+        if ($auction->isUserRegistered($profile->id, $userType)) {
+            return response()->json(['error' => 'أنت مسجل بالفعل في هذا المزاد'], 400);
+        }
+
+        // Prevent seller from registering in their own auction (future-proofing for user-submitted cars)
+        if (
+            $auction->car->seller_type === 'user' &&
+            $auction->car->seller_id === $profile->id &&
+            $auction->car->seller_user_type === $userType
+        ) {
+            return response()->json(['error' => 'لا يمكن للبائع المشاركة في مزاد سيارته'], 403);
+        }
+
+        $depositAmount = $auction->car->deposit_amount ?? 0;
+
+        // Check wallet balance if deposit required
+        if ($depositAmount > 0) {
+            $totalHolds = UserWalletHold::where('user_id', $user->id)
+                ->where('user_type', $userType)
+                ->validHolds()
+                ->sum('amount');
+
+            $availableBalance = $profile->wallet_balance - $totalHolds;
+
+            if ($availableBalance < $depositAmount) {
+                return response()->json([
+                    'error' => 'رصيد المحفظة غير كافي للتأمين',
+                    'required' => $depositAmount,
+                    'available' => $availableBalance,
+                ], 400);
+            }
+        }
+
+        DB::transaction(function () use ($auction, $profile, $userType, $user, $depositAmount, &$registration) {
+            $walletHoldId = null;
+
+            // Create wallet hold if deposit required
+            if ($depositAmount > 0) {
+                $walletHold = UserWalletHold::create([
+                    'user_id' => $user->id,
+                    'user_type' => $userType,
+                    'amount' => $depositAmount,
+                    'reason' => 'تأمين المزاد: ' . $auction->title,
+                    'reference_type' => 'auction',
+                    'reference_id' => $auction->id,
+                    'status' => 'active',
+                    'expires_at' => $auction->scheduled_end->addDays(3), // Hold until auction ends + payment period
+                ]);
+                $walletHoldId = $walletHold->id;
+            }
+
+            // Create registration
+            $registration = AuctionRegistration::create([
+                'auction_id' => $auction->id,
+                'user_id' => $profile->id,
+                'user_type' => $userType,
+                'user_name' => $profile->name,
+                'user_phone' => $user->phone,
+                'deposit_amount' => $depositAmount,
+                'wallet_hold_id' => $walletHoldId,
+                'status' => 'registered',
+                'registered_at' => now(),
+            ]);
+
+            // Create notification
+            $notification = Notification::create([
+                'user_id' => $user->id,
+                'title' => 'تم التسجيل في المزاد',
+                'message' => 'تم تسجيلك بنجاح في مزاد: ' . $auction->title,
+                'type' => 'AUCTION_REGISTRATION',
+                'data' => json_encode(['auction_id' => $auction->id]),
+                'read' => false,
+            ]);
+
+            event(new UserNotification($user->id, $notification->toArray()));
+        });
+
+        return response()->json([
+            'message' => 'تم التسجيل بنجاح',
+            'registration' => $registration,
+        ]);
+    }
+
+    /**
+     * Set reminder for auction
+     */
+    public function setReminder(Request $request, $id)
+    {
+        $request->validate([
+            'minutes_before' => 'sometimes|integer|in:15,30,60',
+            'channels' => 'sometimes|array',
+        ]);
+
+        $user = $request->user();
+        [$profile, $userType] = $this->getUserProfile($user);
+
+        if (!$profile) {
+            return response()->json(['error' => 'الحساب غير موجود'], 404);
+        }
+
+        $auction = Auction::findOrFail($id);
+
+        // Check auction is upcoming
+        if (!in_array($auction->status, ['scheduled'])) {
+            return response()->json(['error' => 'لا يمكن تعيين تذكير لهذا المزاد'], 400);
+        }
+
+        // Check not already has reminder
+        $existingReminder = AuctionReminder::where('auction_id', $auction->id)
+            ->where('user_id', $profile->id)
+            ->where('user_type', $userType)
+            ->first();
+
+        if ($existingReminder) {
+            // Update existing
+            $minutesBefore = $request->get('minutes_before', 30);
+            $existingReminder->update([
+                'remind_minutes_before' => $minutesBefore,
+                'remind_at' => AuctionReminder::calculateRemindAt($auction->scheduled_start, $minutesBefore),
+                'channels' => $request->get('channels', ['push']),
+            ]);
+
+            return response()->json([
+                'message' => 'تم تحديث التذكير',
+                'reminder' => $existingReminder,
+            ]);
+        }
+
+        // Create new reminder
+        $minutesBefore = $request->get('minutes_before', 30);
+        $reminder = AuctionReminder::create([
+            'auction_id' => $auction->id,
+            'user_id' => $profile->id,
+            'user_type' => $userType,
+            'remind_minutes_before' => $minutesBefore,
+            'remind_at' => AuctionReminder::calculateRemindAt($auction->scheduled_start, $minutesBefore),
+            'channels' => $request->get('channels', ['push']),
+        ]);
+
+        return response()->json([
+            'message' => 'تم تعيين التذكير',
+            'reminder' => $reminder,
+        ]);
+    }
+
+    /**
+     * Cancel reminder
+     */
+    public function cancelReminder(Request $request, $id)
+    {
+        $user = $request->user();
+        [$profile, $userType] = $this->getUserProfile($user);
+
+        if (!$profile) {
+            return response()->json(['error' => 'الحساب غير موجود'], 404);
+        }
+
+        $deleted = AuctionReminder::where('auction_id', $id)
+            ->where('user_id', $profile->id)
+            ->where('user_type', $userType)
+            ->delete();
+
+        if (!$deleted) {
+            return response()->json(['error' => 'لا يوجد تذكير لإلغائه'], 404);
+        }
+
+        return response()->json(['message' => 'تم إلغاء التذكير']);
+    }
+
+    /**
+     * Get user's registered auctions
+     */
+    public function myAuctions(Request $request)
+    {
+        $user = $request->user();
+        [$profile, $userType] = $this->getUserProfile($user);
+
+        if (!$profile) {
+            return response()->json(['error' => 'الحساب غير موجود'], 404);
+        }
+
+        $registrations = AuctionRegistration::with(['auction.car'])
+            ->where('user_id', $profile->id)
+            ->where('user_type', $userType)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return response()->json($registrations);
+    }
+
+    /**
+     * Get user profile and type (helper from WalletController pattern)
+     */
+    private function getUserProfile($user)
+    {
+        $profile = null;
+        $userType = null;
+
+        if ($user->customer) {
+            $profile = $user->customer;
+            $userType = 'customer';
+        } elseif ($user->technician) {
+            $profile = $user->technician;
+            $userType = 'technician';
+        } elseif ($user->towTruck) {
+            $profile = $user->towTruck;
+            $userType = 'tow_truck';
+        }
+
+        return [$profile, $userType];
+    }
+}

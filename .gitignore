@@ -1,0 +1,42 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.sql
+*.zip
+
+# Environment
+.env
+.env.backup
+.env.production
+.env.testing
+
+# VS Code
+.vscode/
+
+# Backend (Laravel)
+Backend/vendor/
+Backend/node_modules/
+Backend/public/hot
+Backend/public/storage
+Backend/storage/*.key
+Backend/storage/app/public/
+Backend/storage/framework/cache/data/
+Backend/storage/framework/sessions/
+Backend/storage/framework/testing/
+Backend/storage/framework/views/
+Backend/storage/logs/
+!Backend/storage/app/public/.gitignore
+!Backend/storage/framework/sessions/.gitignore
+!Backend/storage/framework/views/.gitignore
+!Backend/storage/logs/.gitignore
+Backend/.phpunit.result.cache
+
+# Frontend (React/Vite)
+Frontend/node_modules/
+Frontend/dist/
+Frontend/build/
+Frontend/.eslintcache
+
+# Docker
+docker-compose.override.yml

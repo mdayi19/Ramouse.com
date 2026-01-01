@@ -1,0 +1,403 @@
+import React, { useEffect, lazy, Suspense, useCallback } from 'react';
+import { useAppState } from './hooks/useAppState';
+import { TOTAL_STEPS } from './constants';
+// Removed lib/db import here as it's initialized in useAppState
+
+// Eager imports for critical path
+import Header from './components/Header';
+import Footer from './components/Footer';
+import WelcomeScreen from './components/WelcomeScreen';
+import ProgressBar from './components/ProgressBar';
+import Step1Category from './components/Step1Category';
+import Step2Brand from './components/Step2Brand';
+import Step3Model from './components/Step3Model';
+import Step4PartType from './components/Step4PartType';
+import Step5Details from './components/Step5Details';
+import Step6Review from './components/Step6Review';
+import Step7Success from './components/Step7Success';
+import ToastContainer from './components/Toast';
+import PublicMobileMenu from './components/PublicMobileMenu';
+import Icon from './components/Icon';
+import { Customer, Technician, TowTruck } from './types';
+
+// Lazy loads
+const LoginScreen = lazy(() => import('./components/LoginScreen'));
+const MyOrders = lazy(() => import('./components/MyOrders'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const ProviderDashboard = lazy(() => import('./components/ProviderDashboard'));
+const AnnouncementsScreen = lazy(() => import('./components/AnnouncementsScreen'));
+const CustomerDashboard = lazy(() => import('./components/CustomerDashboard'));
+const NotificationCenter = lazy(() => import('./components/NotificationCenter'));
+const TechnicianDashboard = lazy(() => import('./components/TechnicianDashboard'));
+const TechnicianProfile = lazy(() => import('./components/TechnicianProfile'));
+const TechnicianRegistration = lazy(() => import('./components/TechnicianRegistration'));
+const BlogScreen = lazy(() => import('./components/BlogScreen'));
+const BlogPostScreen = lazy(() => import('./components/BlogPostScreen'));
+const FaqScreen = lazy(() => import('./components/FaqScreen'));
+const PrivacyPolicyScreen = lazy(() => import('./components/PrivacyPolicyScreen'));
+const TermsOfUseScreen = lazy(() => import('./components/TermsOfUseScreen'));
+const ContactScreen = lazy(() => import('./components/ContactScreen'));
+const TowTruckProfile = lazy(() => import('./components/TowTruckProfile'));
+const TowTruckRegistration = lazy(() => import('./components/TowTruckRegistration'));
+const TowTruckDashboard = lazy(() => import('./components/TowTruckDashboard'));
+
+const TechnicianDirectory = lazy(() => import('./components/TechnicianDirectory').then(module => ({ default: module.TechnicianDirectory })));
+const TowTruckDirectory = lazy(() => import('./components/TowTruckDirectory').then(module => ({ default: module.TowTruckDirectory })));
+const StoreView = lazy(() => import('./components/CustomerDashboardParts/StoreView').then(module => ({ default: module.StoreView })));
+
+const PageLoader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[50vh] w-full text-primary animate-in fade-in duration-300">
+    <Icon name="Loader" className="w-10 h-10 animate-spin mb-4" />
+    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">جاري التحميل...</p>
+  </div>
+);
+
+function App() {
+  const {
+    isDarkMode, setIsDarkMode, currentStep, currentView, formData, orderNumber, isAuthenticated, isAdmin,
+    isProvider, isTechnician, isTowTruck, loggedInProvider, loggedInTechnician, loggedInTowTruck, userPhone,
+    showLogin, notifications, isSubmitting, settings, announcements, toastMessages, setToastMessages,
+    isLoading, navigationParams, setNavigationParams, isSidebarOpen, setIsSidebarOpen, isPublicMenuOpen, setIsPublicMenuOpen,
+    carCategories, setCarCategories, allBrands, setAllBrands, brandModels, setBrandModels, partTypes, setPartTypes,
+    allCustomers, setAllCustomers, allTechnicians, setAllTechnicians, allTowTrucks, setAllTowTrucks,
+    technicianSpecialties, setTechnicianSpecialties, storeCategories, updateStoreCategories,
+    selectedTechnician, selectedTowTruck, allOrders,
+    blogPosts, faqItems, selectedPost, unreadCount, showToast, userName, updateAllOrders, updateAllTechnicians,
+    updateAllTowTrucks, updateSettings, sendMessage, addNotificationForUser, handleLoginSuccess, handleLogout,
+    handleStartNewOrder, resetForm, updateFormData, nextStep, prevStep, goToStep, submitForm, handleNavigate,
+    publishAnnouncement, deleteAnnouncement, sendTelegramNotification, CACHE_VERSION, setShowLogin, setPostLoginAction
+  } = useAppState();
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const handleLoginClick = () => setShowLogin(true);
+  const handleCloseLogin = () => setShowLogin(false);
+
+  const markNotificationsAsRead = () => {
+    // Handled in backend or via API
+  };
+
+  const onClearAllNotifications = () => {
+    // Should call API
+    localStorage.removeItem(`notifications_${userPhone}`);
+    window.location.reload();
+  };
+
+  const onDeleteNotification = (id: string) => {
+    // Should call API
+  };
+
+  const onUpdateCustomer = async (customerId: string, updatedData: Partial<Customer>, newPassword?: string) => {
+    const currentCustomers = [...allCustomers];
+    const updatedCustomers = currentCustomers.map(c => c.id === customerId ? { ...c, ...updatedData } : c);
+    setAllCustomers(updatedCustomers);
+    // In real app, call AuthService.updateProfile
+  };
+
+  const onUpdateTechnician = async (technicianId: string, updatedData: Partial<Technician>, newPassword?: string) => {
+    const updated = allTechnicians.map(t => t.id === technicianId ? { ...t, ...updatedData } : t);
+    updateAllTechnicians(updated);
+  };
+
+  const onUpdateTowTruck = async (truckId: string, updatedData: Partial<TowTruck>, newPassword?: string) => {
+    const updated = allTowTrucks.map(t => t.id === truckId ? { ...t, ...updatedData } : t);
+    updateAllTowTrucks(updated);
+  };
+
+  const getDashboardAction = () => {
+    if (isAdmin) return () => handleNavigate('adminDashboard');
+    if (isProvider) return () => handleNavigate('providerDashboard');
+    if (isTechnician) return () => handleNavigate('technicianDashboard');
+    if (isTowTruck) return () => handleNavigate('towTruckDashboard');
+    return () => handleNavigate('customerDashboard');
+  };
+
+  const getLoggedInCustomer = () => {
+    if (isAuthenticated && !isAdmin && !isProvider && !isTechnician && !isTowTruck) {
+      return allCustomers.find(c => c.id === userPhone) || null;
+    }
+    return null;
+  }
+
+  const handleNavigationConsumed = useCallback(() => {
+    setNavigationParams(null);
+  }, [setNavigationParams]);
+
+  const stepNames = ['الفئة', 'الشركة', 'الموديل', 'نوع القطعة', 'التفاصيل', 'مراجعة', 'تم الطلب'];
+
+  const renderNewOrderForm = () => {
+    switch (currentStep) {
+      case 1: return <Step1Category updateFormData={updateFormData} nextStep={nextStep} carCategories={carCategories} />;
+      case 2: return <Step2Brand formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} carCategories={carCategories} allBrands={allBrands} />;
+      case 3: return <Step3Model formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} brandModels={brandModels} />;
+      case 4: return <Step4PartType formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} partTypes={partTypes} />;
+      case 5: return <Step5Details formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} settings={settings} />;
+        import React, { useEffect, lazy, Suspense, useCallback } from 'react';
+        import { useAppState } from './hooks/useAppState';
+        import { TOTAL_STEPS } from './constants';
+        // Removed lib/db import here as it's initialized in useAppState
+
+        // Eager imports for critical path
+        import Header from './components/Header';
+        import Footer from './components/Footer';
+        import WelcomeScreen from './components/WelcomeScreen';
+        import ProgressBar from './components/ProgressBar';
+        import Step1Category from './components/Step1Category';
+        import Step2Brand from './components/Step2Brand';
+        import Step3Model from './components/Step3Model';
+        import Step4PartType from './components/Step4PartType';
+        import Step5Details from './components/Step5Details';
+        import Step6Review from './components/Step6Review';
+        import Step7Success from './components/Step7Success';
+        import ToastContainer from './components/Toast';
+        import PublicMobileMenu from './components/PublicMobileMenu';
+        import Icon from './components/Icon';
+        import { Customer, Technician, TowTruck } from './types';
+
+        // Lazy loads
+        const LoginScreen = lazy(() => import('./components/LoginScreen'));
+        const MyOrders = lazy(() => import('./components/MyOrders'));
+        const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+        const ProviderDashboard = lazy(() => import('./components/ProviderDashboard'));
+        const AnnouncementsScreen = lazy(() => import('./components/AnnouncementsScreen'));
+        const CustomerDashboard = lazy(() => import('./components/CustomerDashboard'));
+        const NotificationCenter = lazy(() => import('./components/NotificationCenter'));
+        const TechnicianDashboard = lazy(() => import('./components/TechnicianDashboard'));
+        const TechnicianProfile = lazy(() => import('./components/TechnicianProfile'));
+        const TechnicianRegistration = lazy(() => import('./components/TechnicianRegistration'));
+        const BlogScreen = lazy(() => import('./components/BlogScreen'));
+        const BlogPostScreen = lazy(() => import('./components/BlogPostScreen'));
+        const FaqScreen = lazy(() => import('./components/FaqScreen'));
+        const PrivacyPolicyScreen = lazy(() => import('./components/PrivacyPolicyScreen'));
+        const TermsOfUseScreen = lazy(() => import('./components/TermsOfUseScreen'));
+        const ContactScreen = lazy(() => import('./components/ContactScreen'));
+        const TowTruckProfile = lazy(() => import('./components/TowTruckProfile'));
+        const TowTruckRegistration = lazy(() => import('./components/TowTruckRegistration'));
+        const TowTruckDashboard = lazy(() => import('./components/TowTruckDashboard'));
+
+        const TechnicianDirectory = lazy(() => import('./components/TechnicianDirectory').then(module => ({ default: module.TechnicianDirectory })));
+        const TowTruckDirectory = lazy(() => import('./components/TowTruckDirectory').then(module => ({ default: module.TowTruckDirectory })));
+        const StoreView = lazy(() => import('./components/CustomerDashboardParts/StoreView').then(module => ({ default: module.StoreView })));
+
+        const PageLoader = () => (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] w-full text-primary animate-in fade-in duration-300">
+            <Icon name="Loader" className="w-10 h-10 animate-spin mb-4" />
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">جاري التحميل...</p>
+          </div>
+        );
+
+        function App() {
+          const {
+            isDarkMode, setIsDarkMode, currentStep, currentView, formData, orderNumber, isAuthenticated, isAdmin,
+            isProvider, isTechnician, isTowTruck, loggedInProvider, loggedInTechnician, loggedInTowTruck, userPhone,
+            showLogin, notifications, isSubmitting, settings, announcements, toastMessages, setToastMessages,
+            isLoading, navigationParams, setNavigationParams, isSidebarOpen, setIsSidebarOpen, isPublicMenuOpen, setIsPublicMenuOpen,
+            carCategories, setCarCategories, allBrands, setAllBrands, brandModels, setBrandModels, partTypes, setPartTypes,
+            allCustomers, setAllCustomers, allTechnicians, setAllTechnicians, allTowTrucks, setAllTowTrucks,
+            technicianSpecialties, setTechnicianSpecialties, storeCategories, updateStoreCategories,
+            selectedTechnician, selectedTowTruck, allOrders,
+            blogPosts, faqItems, selectedPost, unreadCount, showToast, userName, updateAllOrders, updateAllTechnicians,
+            updateAllTowTrucks, updateSettings, sendMessage, addNotificationForUser, handleLoginSuccess, handleLogout,
+            handleStartNewOrder, resetForm, updateFormData, nextStep, prevStep, goToStep, submitForm, handleNavigate,
+            publishAnnouncement, deleteAnnouncement, sendTelegramNotification, CACHE_VERSION, setShowLogin, setPostLoginAction
+          } = useAppState();
+
+          useEffect(() => {
+            if (isDarkMode) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
+          }, [isDarkMode]);
+
+          const handleLoginClick = () => setShowLogin(true);
+          const handleCloseLogin = () => setShowLogin(false);
+
+          const markNotificationsAsRead = () => {
+            // Handled in backend or via API
+          };
+
+          const onClearAllNotifications = () => {
+            // Should call API
+            localStorage.removeItem(`notifications_${userPhone}`);
+            window.location.reload();
+          };
+
+          const onDeleteNotification = (id: string) => {
+            // Should call API
+          };
+
+          const onUpdateCustomer = async (customerId: string, updatedData: Partial<Customer>, newPassword?: string) => {
+            const currentCustomers = [...allCustomers];
+            const updatedCustomers = currentCustomers.map(c => c.id === customerId ? { ...c, ...updatedData } : c);
+            setAllCustomers(updatedCustomers);
+            // In real app, call AuthService.updateProfile
+          };
+
+          const onUpdateTechnician = async (technicianId: string, updatedData: Partial<Technician>, newPassword?: string) => {
+            const updated = allTechnicians.map(t => t.id === technicianId ? { ...t, ...updatedData } : t);
+            updateAllTechnicians(updated);
+          };
+
+          const onUpdateTowTruck = async (truckId: string, updatedData: Partial<TowTruck>, newPassword?: string) => {
+            const updated = allTowTrucks.map(t => t.id === truckId ? { ...t, ...updatedData } : t);
+            updateAllTowTrucks(updated);
+          };
+
+          const getDashboardAction = () => {
+            if (isAdmin) return () => handleNavigate('adminDashboard');
+            if (isProvider) return () => handleNavigate('providerDashboard');
+            if (isTechnician) return () => handleNavigate('technicianDashboard');
+            if (isTowTruck) return () => handleNavigate('towTruckDashboard');
+            return () => handleNavigate('customerDashboard');
+          };
+
+          const getLoggedInCustomer = () => {
+            if (isAuthenticated && !isAdmin && !isProvider && !isTechnician && !isTowTruck) {
+              return allCustomers.find(c => c.id === userPhone) || null;
+            }
+            return null;
+          }
+
+          const handleNavigationConsumed = useCallback(() => {
+            setNavigationParams(null);
+          }, [setNavigationParams]);
+
+          const stepNames = ['الفئة', 'الشركة', 'الموديل', 'نوع القطعة', 'التفاصيل', 'مراجعة', 'تم الطلب'];
+
+          const renderNewOrderForm = () => {
+            switch (currentStep) {
+              case 1: return <Step1Category updateFormData={updateFormData} nextStep={nextStep} carCategories={carCategories} />;
+              case 2: return <Step2Brand formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} carCategories={carCategories} allBrands={allBrands} />;
+              case 3: return <Step3Model formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} brandModels={brandModels} />;
+              case 4: return <Step4PartType formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} partTypes={partTypes} />;
+              case 5: return <Step5Details formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} settings={settings} />;
+              case 6: return <Step6Review formData={formData} prevStep={prevStep} submitForm={submitForm} goToStep={goToStep} isSubmitting={isSubmitting} />;
+              case 7: return <Step7Success resetForm={resetForm} orderNumber={orderNumber} />;
+              default: return <WelcomeScreen onStart={handleStartNewOrder} onViewOrders={() => handleNavigate(isAdmin ? 'adminDashboard' : isProvider ? 'providerDashboard' : 'customerDashboard')} onViewAnnouncements={() => handleNavigate('announcements')} isAuthenticated={isAuthenticated} onNavigate={handleNavigate} />;
+            }
+          };
+
+          const renderCurrentView = () => {
+            if (isLoading) return <PageLoader />;
+
+            switch (currentView) {
+              case 'welcome': return <WelcomeScreen onStart={handleStartNewOrder} onViewOrders={() => handleNavigate(isAdmin ? 'adminDashboard' : isProvider ? 'providerDashboard' : 'customerDashboard')} onViewAnnouncements={() => handleNavigate('announcements')} isAuthenticated={isAuthenticated} onNavigate={handleNavigate} />;
+              case 'newOrder': return renderNewOrderForm();
+              case 'myOrders': return <MyOrders allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} onUpdateCustomer={onUpdateCustomer} />;
+              case 'announcements': return <AnnouncementsScreen announcements={announcements} onBack={() => handleNavigate('welcome')} isAuthenticated={isAuthenticated} isProvider={isProvider} isTechnician={isTechnician} isTowTruck={isTowTruck} />;
+              case 'store': return <StoreView customer={getLoggedInCustomer()} provider={loggedInProvider} technician={loggedInTechnician} towTruck={loggedInTowTruck} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} onLoginRequest={() => { setPostLoginAction(() => () => { }); setShowLogin(true); }} storeCategories={storeCategories} />;
+              case 'adminDashboard': return <AdminDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} onBack={handleLogout} addNotificationForUser={addNotificationForUser} settings={settings} updateSettings={updateSettings} announcements={announcements} publishAnnouncement={publishAnnouncement} deleteAnnouncement={deleteAnnouncement} isLoading={isLoading} showToast={showToast} carCategories={carCategories} updateCarCategories={setCarCategories} allBrands={allBrands} updateAllBrands={setAllBrands} brandModels={brandModels} updateBrandModels={setBrandModels} partTypes={partTypes} updatePartTypes={setPartTypes} allTechnicians={allTechnicians} updateAllTechnicians={updateAllTechnicians} allTowTrucks={allTowTrucks} updateAllTowTrucks={updateAllTowTrucks} technicianSpecialties={technicianSpecialties} updateTechnicianSpecialties={setTechnicianSpecialties} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} sendTelegramNotification={sendTelegramNotification} cacheVersion={CACHE_VERSION} storeCategories={storeCategories} updateStoreCategories={updateStoreCategories} />;
+              case 'providerDashboard': return loggedInProvider ? <ProviderDashboard provider={loggedInProvider} allOrders={allOrders} updateAllOrders={updateAllOrders} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <div>خطأ: لا يوجد مزود مسجل.</div>;
+              case 'customerDashboard': return <CustomerDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} showToast={showToast} settings={settings} addNotificationForUser={addNotificationForUser} isLoading={isLoading} onStartNewOrder={handleStartNewOrder} onBack={() => handleNavigate('welcome')} onUpdateCustomer={onUpdateCustomer} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} allBrands={allBrands} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} />;
+              case 'notificationCenter': return <NotificationCenter notifications={notifications} onClearAll={onClearAllNotifications} onDelete={onDeleteNotification} onNavigate={handleNavigate} onBack={() => handleNavigate(isAdmin ? 'adminDashboard' : isProvider ? 'providerDashboard' : isTechnician ? 'technicianDashboard' : isTowTruck ? 'towTruckDashboard' : 'customerDashboard')} />;
+              case 'technicianDashboard': return loggedInTechnician ? <TechnicianDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} technician={loggedInTechnician} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTechnicianData={onUpdateTechnician} onStartNewOrder={handleStartNewOrder} userPhone={userPhone} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} technicianSpecialties={technicianSpecialties} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <div>خطأ.</div>;
+              case 'technicianDirectory': return <TechnicianDirectory allTechnicians={allTechnicians} onBack={() => handleNavigate('welcome')} onViewProfile={(technicianId) => handleNavigate('technicianProfile', { technicianId })} technicianSpecialties={technicianSpecialties} showToast={showToast} />;
+              case 'technicianProfile': return selectedTechnician ? <TechnicianProfile technician={selectedTechnician} onBack={() => handleNavigate('technicianDirectory')} technicianSpecialties={technicianSpecialties} userPhone={userPhone} isCustomer={!isAdmin && !isProvider && !isTechnician && !isTowTruck} allCustomers={allCustomers} updateAllTechnicians={updateAllTechnicians} showToast={showToast} isAuthenticated={isAuthenticated} onLoginClick={handleLoginClick} /> : <div>خطأ</div>;
+              case 'technicianRegistration': return <TechnicianRegistration allTechnicians={allTechnicians} onRegisterTechnician={(tech) => updateAllTechnicians([...allTechnicians, tech])} onBack={() => handleNavigate('welcome')} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} technicianSpecialties={technicianSpecialties} />;
+              case 'towTruckDirectory': return <TowTruckDirectory allTowTrucks={allTowTrucks} onBack={() => handleNavigate('welcome')} onViewProfile={(towTruckId) => handleNavigate('towTruckProfile', { towTruckId })} showToast={showToast} />;
+              case 'towTruckProfile': return selectedTowTruck ? <TowTruckProfile towTruck={selectedTowTruck} onBack={() => handleNavigate('towTruckDirectory')} userPhone={userPhone} isCustomer={!isAdmin && !isProvider && !isTechnician && !isTowTruck} allCustomers={allCustomers} updateAllTowTrucks={updateAllTowTrucks} showToast={showToast} isAuthenticated={isAuthenticated} onLoginClick={handleLoginClick} /> : <div>خطأ</div>;
+              case 'towTruckRegistration': return <TowTruckRegistration allTowTrucks={allTowTrucks} onRegister={(truck) => updateAllTowTrucks([...allTowTrucks, truck])} onBack={() => handleNavigate('welcome')} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} />;
+              case 'towTruckDashboard': return loggedInTowTruck ? <TowTruckDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} towTruck={loggedInTowTruck} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTowTruckData={onUpdateTowTruck} settings={settings} onStartNewOrder={handleStartNewOrder} addNotificationForUser={addNotificationForUser} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <div>خطأ</div>;
+              case 'blog': return <BlogScreen onReadMore={(slug) => handleNavigate('blogPost', { slug })} onBack={() => handleNavigate('welcome')} />;
+              case 'blogPost': return selectedPost ? <BlogPostScreen post={selectedPost} onBack={() => handleNavigate('blog')} /> : <div>خطأ.</div>;
+              case 'faq': return <FaqScreen onBack={() => handleNavigate('welcome')} />;
+              case 'privacyPolicy': return <PrivacyPolicyScreen onBack={() => handleNavigate('welcome')} />;
+              case 'termsOfUse': return <TermsOfUseScreen onBack={() => handleNavigate('welcome')} />;
+              case 'contact': return <ContactScreen onBack={() => handleNavigate('welcome')} settings={settings} showToast={showToast} />;
+              default: return <div>Loading...</div>;
+            }
+          };
+
+          const showBottomNav = ['customerDashboard', 'providerDashboard', 'technicianDashboard', 'towTruckDashboard', 'notificationCenter'].includes(currentView);
+          const isPublicView = ['welcome', 'store', 'technicianDirectory', 'technicianProfile', 'technicianRegistration', 'blog', 'blogPost', 'faq', 'privacyPolicy', 'termsOfUse', 'contact', 'towTruckDirectory', 'towTruckProfile', 'towTruckRegistration'].includes(currentView);
+          const isDashboardView = ['adminDashboard', 'providerDashboard', 'customerDashboard', 'technicianDashboard', 'towTruckDashboard'].includes(currentView);
+
+          return (
+            <div className={`min-h-screen flex flex-col font-sans bg-sky-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 ${isDarkMode ? 'dark' : ''}`}>
+              <Header
+                isDarkMode={isDarkMode}
+                setIsDarkMode={setIsDarkMode}
+                isAuthenticated={isAuthenticated}
+                isAdmin={isAdmin}
+                isProvider={isProvider}
+                isTechnician={isTechnician}
+                isTowTruck={isTowTruck}
+                onLogout={handleLogout}
+                userPhone={userPhone}
+                userName={userName}
+                onGoToOrders={() => handleNavigate('customerDashboard')}
+                onGoToAdmin={() => handleNavigate('adminDashboard')}
+                onGoToProvider={() => handleNavigate('providerDashboard')}
+                onGoToTechnician={() => handleNavigate('technicianDashboard')}
+                onGoToTowTruck={() => handleNavigate('towTruckDashboard')}
+                onGoToAnnouncements={() => handleNavigate('announcements')}
+                onGoToNotifications={() => handleNavigate('notificationCenter')}
+                onLoginClick={handleLoginClick}
+                notifications={notifications}
+                unreadCount={unreadCount}
+                markNotificationsAsRead={markNotificationsAsRead}
+                settings={settings}
+                onStartNewOrder={handleStartNewOrder}
+                onClearAllNotifications={onClearAllNotifications}
+                onDeleteNotification={onDeleteNotification}
+                onNavigate={handleNavigate}
+                showMobileMenuButton={isPublicView || (isAuthenticated && isDashboardView)}
+                onMobileMenuClick={() => {
+                  if (isDashboardView && isAuthenticated) setIsSidebarOpen(true);
+                  else setIsPublicMenuOpen(true);
+                }}
+              />
+
+              <main className="flex-grow w-full px-4 sm:px-6 py-8 flex flex-col pb-28 md:pb-8">
+                {currentView === 'newOrder' && currentStep > 0 && currentStep <= TOTAL_STEPS && (
+                  <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} stepNames={stepNames} goToStep={goToStep} />
+                )}
+                <Suspense fallback={<PageLoader />}>
+                  {renderCurrentView()}
+                </Suspense>
+              </main>
+
+              <Footer settings={settings} onNavigate={(view) => handleNavigate(view as any)} className={showBottomNav ? 'hidden md:block' : ''} />
+
+              {isPublicMenuOpen && (
+                <PublicMobileMenu
+                  isOpen={isPublicMenuOpen}
+                  onClose={() => setIsPublicMenuOpen(false)}
+                  onNavigate={(view, params) => { handleNavigate(view, params); setIsPublicMenuOpen(false); }}
+                  onLoginClick={() => { handleLoginClick(); setIsPublicMenuOpen(false); }}
+                  isAuthenticated={isAuthenticated}
+                  onGoToDashboard={() => { getDashboardAction()(); setIsPublicMenuOpen(false); }}
+                  onLogout={() => { handleLogout(); setIsPublicMenuOpen(false); }}
+                />
+              )}
+
+              <Suspense fallback={null}>
+                {showLogin && (
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70]" onClick={handleCloseLogin}>
+                    <LoginScreen
+                      onLoginSuccess={handleLoginSuccess}
+                      onClose={handleCloseLogin}
+                      settings={settings}
+                      sendMessage={sendMessage}
+                      addNotificationForUser={addNotificationForUser}
+                      showToast={showToast}
+                      onGoToTechnicianRegistration={() => { handleNavigate('technicianRegistration'); handleCloseLogin(); }}
+                      onGoToTowTruckRegistration={() => { handleNavigate('towTruckRegistration'); handleCloseLogin(); }}
+                    />
+                  </div>
+                )}
+              </Suspense>
+
+              <ToastContainer messages={toastMessages} setMessages={setToastMessages} />
+            </div>
+          );
+        }
+
+        export default App;
