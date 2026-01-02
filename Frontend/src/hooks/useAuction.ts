@@ -169,8 +169,22 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     status: event.auction.status,
                     extensions_used: event.auction.extensionsUsed,
                 } : null);
-                // Add bid to list
+                // Add bid to list with duplicate detection
                 setBids(prev => {
+                    // Check if bid already exists by ID or by amount+bidderName (for optimistic updates)
+                    const isDuplicate = prev.some(b =>
+                        b.id === event.bid.id ||
+                        (b.amount === event.bid.amount && b.bidder_name === event.bid.bidderName)
+                    );
+                    if (isDuplicate) {
+                        // Update existing optimistic bid with server ID
+                        return prev.map(b =>
+                            (b.amount === event.bid.amount && b.bidder_name === event.bid.bidderName && !b.id)
+                                ? { ...b, id: event.bid.id }
+                                : b
+                        );
+                    }
+
                     const newBids = [{
                         id: event.bid.id,
                         auction_id: auctionId,
@@ -183,7 +197,6 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                         is_auto_bid: event.bid.isAutoBid,
                         display_name: event.bid.bidderName,
                     } as AuctionBid, ...prev];
-                    // Removed separate slice limit to allow full loaded history
                     return newBids;
                 });
             })
@@ -230,7 +243,15 @@ export const useLiveAuction = (auctionId: string | undefined) => {
     }, []);
 
     const addLocalBid = useCallback((bid: AuctionBid) => {
-        setBids(prev => [bid, ...prev]);
+        setBids(prev => {
+            // Check for duplicates by ID or by amount+bidderName
+            const isDuplicate = prev.some(b =>
+                b.id === bid.id ||
+                (b.amount === bid.amount && b.bidder_name === bid.bidder_name)
+            );
+            if (isDuplicate) return prev;
+            return [bid, ...prev];
+        });
     }, []);
 
     return {
