@@ -34,38 +34,33 @@ export const useAuctionUpdates = (
                         time_remaining: event.auction.timeRemaining,
                     });
                 })
-            onUpdateRef.current(id, {
-                current_bid: event.auction.currentBid,
-                bid_count: event.auction.bidCount,
-                minimum_bid: event.auction.minimumBid,
-                time_remaining: event.auction.timeRemaining,
-            });
-        })
-            .listen('auction.started', (event: any) => {
-                onUpdateRef.current(id, {
-                    status: 'live',
-                    actual_start: event.auction.actualStart,
-                    is_live: true,
+                .listen('auction.started', (event: any) => {
+                    console.log(`🔴 Auction ${id} started:`, event);
+                    onUpdateRef.current(id, {
+                        status: 'live',
+                        actual_start: event.auction.actualStart,
+                        is_live: true,
+                    });
+                })
+                .listen('auction.ended', (event: any) => {
+                    console.log(`🏁 Auction ${id} ended:`, event);
+                    onUpdateRef.current(id, {
+                        status: 'ended',
+                        has_ended: true,
+                        is_live: false,
+                        winner_name: event.auction.winnerName,
+                        final_price: event.auction.finalPrice,
+                    });
                 });
-            })
-            .listen('auction.ended', (event: any) => {
-                onUpdateRef.current(id, {
-                    status: 'ended',
-                    has_ended: true,
-                    is_live: false,
-                    winner_name: event.auction.winnerName,
-                    final_price: event.auction.finalPrice,
-                });
-            });
-    });
-
-    return () => {
-        // console.log(`🚪 Unsubscribing from auction updates`);
-        auctionIds.forEach(id => {
-            echo.leave(`auction-updates.${id}`);
         });
-    };
-}, [JSON.stringify(auctionIds), echo]);
+
+        return () => {
+            // console.log(`🚪 Unsubscribing from auction updates`);
+            auctionIds.forEach(id => {
+                echo.leave(`auction-updates.${id}`);
+            });
+        };
+    }, [JSON.stringify(auctionIds), echo]);
 };
 
 /**
