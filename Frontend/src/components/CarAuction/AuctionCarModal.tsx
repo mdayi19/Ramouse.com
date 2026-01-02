@@ -1,60 +1,21 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../Modal';
 import { AuctionCar } from '../../types';
 import * as auctionService from '../../services/auction.service';
 import {
-    Loader2, X, Upload, Image, Video, Car, Settings,
-    DollarSign, Check, ChevronRight, ChevronLeft, MapPin
+    Loader2, Image, Car, Settings,
+    DollarSign, Check, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
+// New sub-components
+import { AuctionFormBasic } from './AuctionFormBasic';
+import { AuctionFormSpecs } from './AuctionFormSpecs';
+import { AuctionFormMedia } from './AuctionFormMedia';
+import { AuctionFormPricing } from './AuctionFormPricing';
+
 type FormStep = 'basic' | 'specs' | 'media' | 'pricing';
-
-const BODY_TYPES = [
-    { id: 'sedan', label: 'سيدان' },
-    { id: 'suv', label: 'دفع رباعي' },
-    { id: 'hatchback', label: 'هاتشباك' },
-    { id: 'coupe', label: 'كوبيه' },
-    { id: 'convertible', label: 'مكشوفة' },
-    { id: 'pickup', label: 'بيك أب' },
-    { id: 'van', label: 'فان' },
-    { id: 'wagon', label: 'ستيشن' },
-];
-
-const TRANSMISSIONS = [
-    { id: 'automatic', label: 'أوتوماتيك' },
-    { id: 'manual', label: 'يدوي' },
-    { id: 'cvt', label: 'CVT' },
-];
-
-const FUEL_TYPES = [
-    { id: 'petrol', label: 'بنزين' },
-    { id: 'diesel', label: 'ديزل' },
-    { id: 'hybrid', label: 'هايبرد' },
-    { id: 'electric', label: 'كهربائي' },
-    { id: 'lpg', label: 'غاز' },
-];
-
-const COLORS = [
-    { id: 'white', label: 'أبيض', hex: '#FFFFFF' },
-    { id: 'black', label: 'أسود', hex: '#1a1a1a' },
-    { id: 'silver', label: 'فضي', hex: '#C0C0C0' },
-    { id: 'gray', label: 'رمادي', hex: '#808080' },
-    { id: 'red', label: 'أحمر', hex: '#DC2626' },
-    { id: 'blue', label: 'أزرق', hex: '#2563EB' },
-    { id: 'green', label: 'أخضر', hex: '#16A34A' },
-    { id: 'brown', label: 'بني', hex: '#92400E' },
-    { id: 'beige', label: 'بيج', hex: '#D4A574' },
-    { id: 'gold', label: 'ذهبي', hex: '#D4AF37' },
-];
-
-const FEATURES = [
-    'كاميرا خلفية', 'نظام ملاحة', 'فتحة سقف', 'مقاعد جلد',
-    'تحكم مناخي', 'بلوتوث', 'مثبت سرعة', 'حساسات ركن',
-    'شاشة لمس', 'نظام صوتي متطور', 'مقاعد مُدفأة', 'ريموت ستارت'
-];
 
 interface AuctionCarModalProps {
     isOpen: boolean;
@@ -156,6 +117,10 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
         }
     }, [initialData, isOpen]);
 
+    const updateFormData = (newData: any) => {
+        setFormData(newData);
+    };
+
     const handleSubmit = async () => {
         if (!formData.title || !formData.brand || !formData.model || !formData.year) {
             showToast('يرجى تعبئة المعلومات الأساسية للسيارة', 'error');
@@ -192,9 +157,6 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                 showToast('تم إرسال سيارتك للمراجعة بنجاح', 'success');
             } else {
                 const savedCarResponse = await auctionService.saveAuctionCar(carData, initialData?.id);
-
-                // Log response for debugging
-
 
                 // Robust ID extraction
                 carId = initialData?.id ||
@@ -404,495 +366,42 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                         className="h-full"
                     >
                         {currentStep === 'basic' && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">عنوان الإعلان</label>
-                                        <input
-                                            type="text"
-                                            value={formData.title}
-                                            onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all font-medium"
-                                            placeholder="مثال: مرسيدس S-Class 2023 فل كامل"
-                                            autoFocus
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الماركة</label>
-                                        <input
-                                            type="text"
-                                            value={formData.brand}
-                                            onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
-                                            placeholder="Mercedes"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الموديل</label>
-                                        <input
-                                            type="text"
-                                            value={formData.model}
-                                            onChange={e => setFormData({ ...formData, model: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
-                                            placeholder="S500"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">سنة الصنع</label>
-                                        <input
-                                            type="number"
-                                            value={formData.year}
-                                            onChange={e => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">رقم الهيكل (VIN)</label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={formData.vin}
-                                                onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all uppercase font-mono tracking-widest"
-                                                placeholder="WDB..."
-                                            />
-                                            {formData.vin.length === 17 && (
-                                                <Check className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500" size={18} />
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">الحالة</label>
-                                        <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
-                                            {(['new', 'used'] as const).map(condition => (
-                                                <button
-                                                    key={condition}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, condition })}
-                                                    className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${formData.condition === condition
-                                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm'
-                                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                                                        }`}
-                                                >
-                                                    {condition === 'new' ? '✨ جديدة' : '🔄 مستعملة'}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الوصف</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                            rows={4}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all resize-none"
-                                            placeholder="اكتب أبرز مواصفات وعيوب السيارة..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            <AuctionFormBasic
+                                formData={formData}
+                                updateFormData={updateFormData}
+                            />
                         )}
 
                         {currentStep === 'specs' && (
-                            <div className="space-y-8">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">نوع الهيكل</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {BODY_TYPES.map(type => (
-                                            <button
-                                                key={type.id}
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, body_type: type.id })}
-                                                className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${formData.body_type === type.id
-                                                    ? 'bg-blue-50 border-blue-200 text-blue-700 ring-2 ring-blue-500/20'
-                                                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-slate-600'
-                                                    }`}
-                                            >
-                                                {type.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الممشى (كم)</label>
-                                        <input
-                                            type="number"
-                                            value={formData.mileage}
-                                            onChange={e => setFormData({ ...formData, mileage: parseInt(e.target.value) })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الموقع</label>
-                                        <div className="relative">
-                                            <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                            <input
-                                                type="text"
-                                                value={formData.location}
-                                                onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
-                                                placeholder="المدينة، المنطقة"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">ناقل الحركة</label>
-                                        <div className="flex rounded-xl bg-gray-50 dark:bg-slate-800 p-1">
-                                            {TRANSMISSIONS.map(t => (
-                                                <button
-                                                    key={t.id}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, transmission: t.id })}
-                                                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${formData.transmission === t.id
-                                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm'
-                                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                                                        }`}
-                                                >
-                                                    {t.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">الوقود</label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {FUEL_TYPES.map(f => (
-                                                <button
-                                                    key={f.id}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, fuel_type: f.id })}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${formData.fuel_type === f.id
-                                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                                        : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300'
-                                                        }`}
-                                                >
-                                                    {f.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">اللون الخارجي</label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {COLORS.map(c => (
-                                                <button
-                                                    key={c.id}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, exterior_color: c.id })}
-                                                    className={`w-8 h-8 rounded-full border transition-transform hover:scale-110 ${formData.exterior_color === c.id
-                                                        ? 'ring-2 ring-blue-500 ring-offset-2'
-                                                        : 'border-gray-200'
-                                                        }`}
-                                                    style={{ backgroundColor: c.hex }}
-                                                    title={c.label}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">اللون الداخلي</label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {COLORS.slice(0, 6).map(c => (
-                                                <button
-                                                    key={c.id}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, interior_color: c.id })}
-                                                    className={`w-8 h-8 rounded-full border transition-transform hover:scale-110 ${formData.interior_color === c.id
-                                                        ? 'ring-2 ring-blue-500 ring-offset-2'
-                                                        : 'border-gray-200'
-                                                        }`}
-                                                    style={{ backgroundColor: c.hex }}
-                                                    title={c.label}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">المميزات الإضافية</label>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        {FEATURES.map(feature => (
-                                            <button
-                                                key={feature}
-                                                type="button"
-                                                onClick={() => toggleFeature(feature)}
-                                                className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 justify-center border ${formData.features.includes(feature)
-                                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-100 dark:border-slate-700 hover:border-gray-200'
-                                                    }`}
-                                            >
-                                                {formData.features.includes(feature) && <Check size={14} className="text-green-600" />}
-                                                {feature}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                            <AuctionFormSpecs
+                                formData={formData}
+                                updateFormData={updateFormData}
+                                toggleFeature={toggleFeature}
+                            />
                         )}
 
                         {currentStep === 'media' && (
-                            <div className="space-y-6">
-                                <div
-                                    className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer group ${isDragging
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-gray-200 dark:border-slate-700 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-slate-800'
-                                        }`}
-                                    onDragOver={handleDragOver}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={handleDrop}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        multiple
-                                        accept="image/png, image/jpeg, image/jpg"
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                    />
-                                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        {uploadingImages ? (
-                                            <Loader2 className="animate-spin text-blue-600" size={28} />
-                                        ) : (
-                                            <Upload className="text-blue-600" size={28} />
-                                        )}
-                                    </div>
-                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                                        {isDragging ? 'أفلت الصور هنا' : 'اضغط للرفع أو اسحب الصور'}
-                                    </h4>
-                                    <p className="text-sm text-gray-500">
-                                        الحد الأقصى 20 ميجابايت • JPG, PNG
-                                        {mode === 'user' && <span className="text-red-500 mr-1 block mt-1 font-medium">* مطلوب 3 صور على الأقل</span>}
-                                    </p>
-                                </div>
-
-                                {formData.media.images.length > 0 && (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-in fade-in duration-500">
-                                        {formData.media.images.map((url, idx) => (
-                                            <div key={idx} className="relative group aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
-                                                <img
-                                                    src={url}
-                                                    alt={`Car ${idx}`}
-                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                                                />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
-                                                        className="p-2 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg"
-                                                    >
-                                                        <X size={16} />
-                                                    </button>
-                                                </div>
-                                                {idx === 0 && (
-                                                    <div className="absolute top-2 right-2 px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-md shadow-sm">
-                                                        الرئيسية
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">رابط فيديو يوتيوب (اختياري)</label>
-                                    <div className="relative">
-                                        <Video className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                        <input
-                                            type="url"
-                                            value={formData.media.videos?.[0] || ''}
-                                            onChange={e => setFormData({
-                                                ...formData,
-                                                media: { ...formData.media, videos: e.target.value ? [e.target.value] : [] }
-                                            })}
-                                            className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-red-500 focus:ring-4 focus:ring-red-50/50 dark:focus:ring-red-900/20 transition-all font-mono text-sm"
-                                            placeholder="https://youtu.be/..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            <AuctionFormMedia
+                                formData={formData}
+                                updateFormData={updateFormData}
+                                handleRemoveImage={handleRemoveImage}
+                                fileInputRef={fileInputRef}
+                                handleImageChange={handleImageChange}
+                                handleDragOver={handleDragOver}
+                                handleDragLeave={handleDragLeave}
+                                handleDrop={handleDrop}
+                                isDragging={isDragging}
+                                uploadingImages={uploadingImages}
+                                mode={mode}
+                            />
                         )}
 
                         {currentStep === 'pricing' && (
-                            <div className="space-y-6">
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-6 border border-blue-100 dark:border-white/5">
-                                    <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-6 flex items-center gap-2 text-lg">
-                                        <DollarSign className="w-6 h-6" />
-                                        تــفــاصــيــل الــمــزاد
-                                    </h3>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">سعر البداية (Starting Bid) *</label>
-                                            <div className="relative">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                                <input
-                                                    type="number"
-                                                    value={formData.starting_price}
-                                                    onChange={e => setFormData({ ...formData, starting_price: parseFloat(e.target.value) })}
-                                                    className="w-full pl-8 pr-4 py-4 text-xl font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all"
-                                                    placeholder="0"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">مقدار الزيادة (Bid Increment) *</label>
-                                            <div className="relative">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                                <input
-                                                    type="number"
-                                                    value={formData.bid_increment}
-                                                    onChange={e => setFormData({ ...formData, bid_increment: parseFloat(e.target.value) || 100 })}
-                                                    className="w-full pl-8 pr-4 py-4 text-xl font-bold text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all"
-                                                    placeholder="100"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الحد الأدنى للبيع (Reserve)</label>
-                                            <div className="relative">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                                <input
-                                                    type="number"
-                                                    value={formData.reserve_price || ''}
-                                                    onChange={e => setFormData({ ...formData, reserve_price: parseFloat(e.target.value) || 0 })}
-                                                    className="w-full pl-8 pr-4 py-3 text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all"
-                                                    placeholder="اختياري"
-                                                />
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-1.5">لن تباع السيارة بأقل من هذا السعر</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">سعر الشراء الفوري (Buy Now)</label>
-                                            <div className="relative">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                                <input
-                                                    type="number"
-                                                    value={formData.buy_now_price || ''}
-                                                    onChange={e => setFormData({ ...formData, buy_now_price: parseFloat(e.target.value) || 0 })}
-                                                    className="w-full pl-8 pr-4 py-3 text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 focus:border-green-500 focus:ring-4 focus:ring-green-50 dark:focus:ring-green-900/30 transition-all"
-                                                    placeholder="اختياري"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">التأمين المطلوب للمشاركة</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                            <input
-                                                type="number"
-                                                value={formData.deposit_amount}
-                                                onChange={e => setFormData({ ...formData, deposit_amount: parseFloat(e.target.value) })}
-                                                className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-50 transition-all"
-                                                placeholder="500"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {mode === 'admin' && (
-                                    <div className="mt-8 pt-6 border-t border-gray-200">
-                                        <div className="flex items-center justify-between mb-6">
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${formData.schedule_auction ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                                                    <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.schedule_auction ? 'translate-x-0' : '-translate-x-6'}`} />
-                                                </div>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.schedule_auction}
-                                                    onChange={e => setFormData({ ...formData, schedule_auction: e.target.checked })}
-                                                    className="hidden"
-                                                />
-                                                <span className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">جدولة المزاد الآن؟</span>
-                                            </label>
-                                        </div>
-
-                                        <AnimatePresence>
-                                            {formData.schedule_auction && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200 space-y-5 mt-4">
-                                                        {/* Start Immediately Checkbox */}
-                                                        <label className="flex items-center gap-2 cursor-pointer w-fit">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={formData.start_immediately}
-                                                                onChange={(e) => {
-                                                                    const isImmediate = e.target.checked;
-                                                                    const now = new Date();
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        start_immediately: isImmediate,
-                                                                        scheduled_start: isImmediate ? format(now, "yyyy-MM-dd'T'HH:mm") : formData.scheduled_start
-                                                                    });
-                                                                }}
-                                                                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                                                            />
-                                                            <span className="text-sm font-bold text-gray-700">بدء المزاد فوراً</span>
-                                                        </label>
-
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                                            <div>
-                                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">
-                                                                    يبدأ في <span className="text-gray-400 font-normal">(بتوقيت دمشق)</span>
-                                                                </label>
-                                                                <input
-                                                                    type="datetime-local"
-                                                                    value={formData.scheduled_start}
-                                                                    onChange={e => setFormData({ ...formData, scheduled_start: e.target.value })}
-                                                                    disabled={formData.start_immediately}
-                                                                    className={`w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 text-sm dir-ltr ${formData.start_immediately ? 'bg-gray-100 text-gray-400' : ''}`}
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">
-                                                                    ينتهي في <span className="text-gray-400 font-normal">(بتوقيت دمشق)</span>
-                                                                </label>
-                                                                <input
-                                                                    type="datetime-local"
-                                                                    value={formData.scheduled_end}
-                                                                    onChange={e => setFormData({ ...formData, scheduled_end: e.target.value })}
-                                                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 text-sm dir-ltr"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                )}
-                            </div>
+                            <AuctionFormPricing
+                                formData={formData}
+                                updateFormData={updateFormData}
+                                mode={mode}
+                            />
                         )}
                     </motion.div>
                 </AnimatePresence>
