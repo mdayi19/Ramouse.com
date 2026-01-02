@@ -53,10 +53,19 @@ class WalletController extends Controller
         }
 
         // Calculate available balance (total - holds)
-        $totalHolds = UserWalletHold::where('user_id', $user->id)
+        // FIXED: Use $profile->id, not $user->id - holds are stored with profile ID
+        $totalHolds = UserWalletHold::where('user_id', $profile->id)
             ->where('user_type', $userType)
             ->validHolds()
             ->sum('amount');
+
+        \Log::info("WALLET BALANCE API", [
+            'user_id' => $user->id,
+            'profile_id' => $profile->id,
+            'user_type' => $userType,
+            'balance' => $profile->wallet_balance,
+            'total_holds' => $totalHolds,
+        ]);
 
         return response()->json([
             'balance' => (float) $profile->wallet_balance,
