@@ -247,6 +247,7 @@ export const useWalletUpdates = (
                     'WITHDRAWAL_PROCESSED_REJECTED',
                     'FUNDS_DEPOSITED',
                     'WITHDRAWAL_REQUEST_CONFIRMATION',
+                    'DEPOSIT_REQUEST_CONFIRMATION',
                     'AUCTION_REGISTRATION' // Added this to trigger update on registration
                 ];
 

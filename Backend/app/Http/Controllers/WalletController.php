@@ -199,6 +199,27 @@ class WalletController extends Controller
             \Log::warning('Failed to send admin notification: ' . $e->getMessage());
         }
 
+        // Notify user
+        try {
+            $notification = Notification::create([
+                'user_id' => $user->id,
+                'title' => 'طلب إيداع جديد',
+                'message' => 'تم تقديم طلب إيداع بمبلغ ' . number_format($request->amount, 2) . '$ وهو قيد المراجعة',
+                'type' => 'DEPOSIT_REQUEST_CONFIRMATION',
+                'read' => false,
+            ]);
+
+            event(new UserNotification($user->id, [
+                'id' => $notification->id,
+                'title' => $notification->title,
+                'message' => $notification->message,
+                'type' => $notification->type,
+                'timestamp' => $notification->created_at->toIso8601String(),
+            ]));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send user notification: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'تم تقديم طلب الإيداع بنجاح',
             'deposit' => $deposit,
