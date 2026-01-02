@@ -58,6 +58,8 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
         loading,
         error,
         participants,
+        announcement,
+        clearAnnouncement,
         refresh,
         updateLocalAuction,
         addLocalBid,
@@ -410,6 +412,33 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                 position="top-right"
                 compact={false}
             />
+
+            {/* Auctioneer Announcement Overlay */}
+            <AnimatePresence>
+                {announcement && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -50, scale: 0.9 }}
+                        className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md w-full px-4"
+                    >
+                        <div className={`
+                            rounded-2xl p-4 shadow-2xl backdrop-blur-xl border text-center
+                            ${announcement.type === 'going_once' ? 'bg-yellow-500/90 border-yellow-400 text-white' : ''}
+                            ${announcement.type === 'going_twice' ? 'bg-orange-500/90 border-orange-400 text-white' : ''}
+                            ${announcement.type === 'sold' ? 'bg-green-500/90 border-green-400 text-white' : ''}
+                            ${announcement.type === 'warning' ? 'bg-red-500/90 border-red-400 text-white' : ''}
+                            ${announcement.type === 'info' ? 'bg-blue-500/90 border-blue-400 text-white' : ''}
+                        `}
+                        >
+                            <div className="flex items-center justify-center gap-3">
+                                <Icon name="Megaphone" className="w-6 h-6" />
+                                <p className="font-bold text-lg">{announcement.message}</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Top Bar */}
             <div className={`bg-slate-900/80 backdrop-blur-xl border-b border-white/10 sticky z-50 ${connectionStatus !== 'connected' ? 'top-14' : 'top-0'}`}>

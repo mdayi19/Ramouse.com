@@ -85,6 +85,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [participants, setParticipants] = useState<any[]>([]);
+    const [announcement, setAnnouncement] = useState<{ message: string; type: string } | null>(null);
     const { echo } = useRealtime();
 
     // Fetch auction data
@@ -230,6 +231,31 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     has_ended: true,
                     is_live: false,
                 } : null);
+            })
+            .listen('auction.paused', (event: any) => {
+                console.log('⏸️ Auction Paused:', event);
+                setAuction(prev => prev ? {
+                    ...prev,
+                    status: 'paused',
+                } : null);
+            })
+            .listen('auction.resumed', (event: any) => {
+                console.log('▶️ Auction Resumed:', event);
+                setAuction(prev => prev ? {
+                    ...prev,
+                    status: 'live',
+                    scheduled_end: event.auction.scheduledEnd,
+                    time_remaining: event.auction.timeRemaining,
+                } : null);
+            })
+            .listen('auctioneer.announcement', (event: any) => {
+                console.log('📢 Auctioneer Announcement:', event);
+                setAnnouncement({
+                    message: event.message,
+                    type: event.type,
+                });
+                // Auto-clear after 5 seconds
+                setTimeout(() => setAnnouncement(null), 5000);
             });
 
         return () => {
@@ -260,6 +286,8 @@ export const useLiveAuction = (auctionId: string | undefined) => {
         loading,
         error,
         participants,
+        announcement,
+        clearAnnouncement: () => setAnnouncement(null),
         refresh: fetchAuction,
         updateLocalAuction,
         addLocalBid,

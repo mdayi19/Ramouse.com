@@ -139,6 +139,15 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
         }
     };
 
+    const handleAnnounceAuction = async (id: string, message: string, type: string) => {
+        try {
+            await auctionService.announceAuction(id, message, type as any);
+            showToast('تم إرسال الإعلان', 'success');
+        } catch (err: any) {
+            showToast(err.response?.data?.error || 'فشل إرسال الإعلان', 'error');
+        }
+    };
+
     const handleApproveCar = async (id: string) => {
         try {
             await auctionService.approveAuctionCar(id);
@@ -304,6 +313,7 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
                                 onDelete={handleDeleteAuction}
                                 onPause={handlePauseAuction}
                                 onResume={handleResumeAuction}
+                                onAnnounce={handleAnnounceAuction}
                             />
                         )}
                     </motion.div>

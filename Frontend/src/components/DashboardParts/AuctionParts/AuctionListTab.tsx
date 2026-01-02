@@ -308,6 +308,18 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
                                         ) : (auction.status === 'live' || auction.status === 'extended') ? (
                                             <>
                                                 <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        const msg = prompt('رسالة الإعلان:');
+                                                        if (msg) onAnnounce?.(auction.id, msg, 'info');
+                                                    }}
+                                                    className="w-11 h-11 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl"
+                                                    title="إعلان"
+                                                >
+                                                    <Icon name="Megaphone" className="w-5 h-5" />
+                                                </Button>
+                                                <Button
                                                     variant="warning"
                                                     onClick={() => onPause?.(auction.id)}
                                                     className="flex-1 font-bold"
