@@ -148,6 +148,28 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
         }
     };
 
+    const handleExtendAuction = async (id: string, minutes: number) => {
+        try {
+            await auctionService.extendAuction(id, minutes);
+            showToast(`تم تمديد المزاد ${minutes} دقيقة`, 'success');
+            fetchAuctions();
+        } catch (err: any) {
+            showToast(err.response?.data?.error || 'فشل تمديد المزاد', 'error');
+        }
+    };
+
+    const handleCancelAuction = async (id: string, reason: string) => {
+        if (!confirm('هل أنت متأكد من إلغاء هذا المزاد؟')) return;
+        try {
+            await auctionService.cancelAuction(id, reason);
+            showToast('تم إلغاء المزاد', 'success');
+            fetchAuctions();
+            fetchStats();
+        } catch (err: any) {
+            showToast(err.response?.data?.error || 'فشل إلغاء المزاد', 'error');
+        }
+    };
+
     const handleApproveCar = async (id: string) => {
         try {
             await auctionService.approveAuctionCar(id);
@@ -314,6 +336,8 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
                                 onPause={handlePauseAuction}
                                 onResume={handleResumeAuction}
                                 onAnnounce={handleAnnounceAuction}
+                                onExtend={handleExtendAuction}
+                                onCancel={handleCancelAuction}
                             />
                         )}
                     </motion.div>

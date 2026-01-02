@@ -18,6 +18,8 @@ interface AuctionListTabProps {
     onPause?: (id: string) => void;
     onResume?: (id: string) => void;
     onAnnounce?: (id: string, message: string, type: string) => void;
+    onExtend?: (id: string, minutes: number) => void;
+    onCancel?: (id: string, reason: string) => void;
 }
 
 type StatusConfig = {
@@ -70,6 +72,8 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
     onPause,
     onResume,
     onAnnounce,
+    onExtend,
+    onCancel,
 }) => {
     const [displayAuctions, setDisplayAuctions] = useState<Auction[]>(initialAuctions);
 
@@ -318,6 +322,30 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
                                                     title="إعلان"
                                                 >
                                                     <Icon name="Megaphone" className="w-5 h-5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        const mins = prompt('عدد الدقائق للتمديد:', '5');
+                                                        if (mins) onExtend?.(auction.id, parseInt(mins));
+                                                    }}
+                                                    className="w-11 h-11 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl"
+                                                    title="تمديد"
+                                                >
+                                                    <Icon name="Clock" className="w-5 h-5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        const reason = prompt('سبب الإلغاء:');
+                                                        if (reason) onCancel?.(auction.id, reason);
+                                                    }}
+                                                    className="w-11 h-11 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
+                                                    title="إلغاء"
+                                                >
+                                                    <Icon name="XCircle" className="w-5 h-5" />
                                                 </Button>
                                                 <Button
                                                     variant="warning"
