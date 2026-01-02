@@ -163,10 +163,22 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
     };
 
     // Countdown
-    const targetIsLive = auction?.is_live;
+    const targetIsLive = auction?.is_live || auction?.status === 'live' || auction?.status === 'extended';
+
+    // Use scheduled_end for live auctions (actual_end is only set when auction ends)
     const targetTime = targetIsLive
-        ? (auction?.actual_end || auction?.scheduled_end)
+        ? auction?.scheduled_end
         : auction?.scheduled_start;
+
+    // Debug countdown
+    console.log('⏱️ Countdown Debug:', {
+        status: auction?.status,
+        is_live: auction?.is_live,
+        scheduled_end: auction?.scheduled_end,
+        actual_end: auction?.actual_end,
+        time_remaining_backend: auction?.time_remaining,
+        targetTime,
+    });
 
     const { formatted, timeRemaining, isExpired } = useAuctionCountdown(targetTime);
 
