@@ -292,14 +292,28 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
                                     {/* Actions */}
                                     <div className="flex items-center gap-2">
                                         {auction.status === 'scheduled' ? (
-                                            <Button
-                                                variant="success"
-                                                onClick={() => onStart(auction.id)}
-                                                className="flex-1 font-bold shadow-lg shadow-green-500/10 hover:shadow-green-500/20"
-                                            >
-                                                <Icon name="Play" className="w-4 h-4 ml-1.5 fill-current" />
-                                                بدء المزاد
-                                            </Button>
+                                            <>
+                                                <Button
+                                                    variant="success"
+                                                    onClick={() => onStart(auction.id)}
+                                                    className="flex-1 font-bold shadow-lg shadow-green-500/10 hover:shadow-green-500/20"
+                                                >
+                                                    <Icon name="Play" className="w-4 h-4 ml-1.5 fill-current" />
+                                                    بدء المزاد
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        const reason = prompt('سبب الإلغاء:');
+                                                        if (reason) onCancel?.(auction.id, reason);
+                                                    }}
+                                                    className="w-11 h-11 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
+                                                    title="إلغاء"
+                                                >
+                                                    <Icon name="XCircle" className="w-5 h-5" />
+                                                </Button>
+                                            </>
                                         ) : auction.status === 'paused' ? (
                                             <Button
                                                 variant="success"
