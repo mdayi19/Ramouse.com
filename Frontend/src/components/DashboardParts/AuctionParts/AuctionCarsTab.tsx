@@ -58,6 +58,7 @@ export const AuctionCarsTab: React.FC<AuctionCarsTabProps> = ({
     onDelete,
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
     const filteredCars = searchQuery
         ? cars.filter(car =>
@@ -95,6 +96,22 @@ export const AuctionCarsTab: React.FC<AuctionCarsTabProps> = ({
                     />
                 </div>
                 <div className="flex gap-3">
+                    {/* View Toggle */}
+                    <div className="hidden md:flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-2.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <Icon name="List" className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`p-2.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <Icon name="LayoutGrid" className="w-5 h-5" />
+                        </button>
+                    </div>
+
                     <select
                         value={carFilter}
                         onChange={e => onFilterChange(e.target.value)}
@@ -145,229 +162,55 @@ export const AuctionCarsTab: React.FC<AuctionCarsTabProps> = ({
                     </div>
                 ) : (
                     <>
-                        {/* Mobile Grid View */}
+                        {/* Mobile Grid View (Always Visible on Mobile) */}
                         <motion.div
                             variants={container}
                             initial="hidden"
                             animate="show"
-                            className="grid grid-cols-1 gap-4 md:hidden p-4 md:p-0"
+                            className={`grid grid-cols-1 gap-4 p-4 md:hidden`}
                         >
                             <AnimatePresence>
                                 {filteredCars.map(car => (
-                                    <motion.div
-                                        key={car.id}
-                                        variants={item}
-                                        layout
-                                        className="bg-white dark:bg-darkcard rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800"
-                                    >
-                                        <div className="flex gap-4 mb-4">
-                                            <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-gray-100">
-                                                <img
-                                                    src={car.media?.images?.[0] || '/placeholder-car.jpg'}
-                                                    alt=""
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-start mb-2 gap-2">
-                                                    <h3 className="font-bold text-gray-900 dark:text-white truncate text-base">
-                                                        {car.brand} {car.model}
-                                                    </h3>
-                                                    <div className="shrink-0 scale-90 origin-top-left">
-                                                        {getCarStatusBadge(car.status)}
-                                                    </div>
-                                                </div>
-                                                <p className="text-sm text-gray-500 mb-2 truncate">{car.title}</p>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg text-gray-600 dark:text-gray-300">
-                                                        {car.year}
-                                                    </span>
-                                                    <span className="text-base font-black text-blue-600 dark:text-blue-400">
-                                                        ${car.starting_price?.toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-2 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                onClick={() => onEdit(car)}
-                                                className="flex-1"
-                                            >
-                                                <Icon name="Pencil" className="w-3.5 h-3.5 ml-1.5" />
-                                                تعديل
-                                            </Button>
-
-                                            {car.status === 'approved' && (
-                                                <Button
-                                                    variant="success"
-                                                    size="sm"
-                                                    onClick={() => onSchedule(car)}
-                                                    className="flex-1"
-                                                >
-                                                    <Icon name="Hammer" className="w-3.5 h-3.5 ml-1.5" />
-                                                    جدولة
-                                                </Button>
-                                            )}
-
-                                            {car.status === 'pending_approval' && (
-                                                <>
-                                                    <Button
-                                                        variant="success"
-                                                        size="sm"
-                                                        onClick={() => onApprove(car.id)}
-                                                        className="flex-1"
-                                                    >
-                                                        <Icon name="Check" className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="danger"
-                                                        size="sm"
-                                                        onClick={() => onReject(car.id)}
-                                                        className="flex-1"
-                                                    >
-                                                        <Icon name="X" className="w-4 h-4" />
-                                                    </Button>
-                                                </>
-                                            )}
-
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => onDelete(car.id)}
-                                                className="w-9 px-0 text-red-500 hover:bg-red-50"
-                                            >
-                                                <Icon name="Trash2" className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </motion.div>
+                                    <CarGridItem key={car.id} car={car} onEdit={onEdit} onSchedule={onSchedule} onApprove={onApprove} onReject={onReject} onDelete={onDelete} />
                                 ))}
                             </AnimatePresence>
                         </motion.div>
 
-                        {/* Desktop Table View */}
-                        <div className="hidden md:block overflow-x-auto bg-white dark:bg-darkcard rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                            <table className="w-full">
-                                <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
-                                    <tr>
-                                        <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">تفاصيل السيارة</th>
-                                        <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">السعر المبدئي</th>
-                                        <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الحالة</th>
-                                        <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المالك</th>
-                                        <th className="px-6 py-5 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                    {filteredCars.map(car => (
-                                        <tr key={car.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm group-hover:scale-105 transition-transform">
-                                                        <img
-                                                            src={car.media?.images?.[0] || '/placeholder-car.jpg'}
-                                                            alt=""
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <p className="font-bold text-gray-900 dark:text-white text-lg">{car.brand} {car.model}</p>
-                                                            <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{car.year}</span>
-                                                        </div>
-                                                        <p className="text-sm text-gray-500 line-clamp-1 max-w-[200px]">{car.title}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="font-black text-blue-600 dark:text-blue-400 text-lg tracking-tight">
-                                                    ${car.starting_price?.toLocaleString()}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex">{getCarStatusBadge(car.status)}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ${car.seller_type === 'admin'
-                                                            ? 'bg-blue-50 border-blue-200 text-blue-600'
-                                                            : 'bg-gray-50 border-gray-200 text-gray-500'
-                                                        }`}>
-                                                        <Icon name={car.seller_type === 'admin' ? 'Shield' : 'User'} className="w-4 h-4" />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900 dark:text-gray-200">
-                                                            {car.seller_type === 'admin' ? 'System Admin' : car.seller_name || 'User'}
-                                                        </span>
-                                                        <span className="text-xs text-gray-400">
-                                                            {car.seller_type === 'admin' ? 'Malik' : 'Seller'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-center gap-2 opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => onEdit(car)}
-                                                        className="w-10 h-10 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-900/20 dark:hover:bg-blue-900/40"
-                                                        title="تعديل البيانات"
-                                                    >
-                                                        <Icon name="Pencil" className="w-4 h-4" />
-                                                    </Button>
-
-                                                    {car.status === 'approved' && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => onSchedule(car)}
-                                                            className="w-10 h-10 rounded-xl text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/20"
-                                                            title="جدولة مزاد لهذه السيارة"
-                                                        >
-                                                            <Icon name="Hammer" className="w-4 h-4" />
-                                                        </Button>
-                                                    )}
-
-                                                    {car.status === 'pending_approval' && (
-                                                        <>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => onApprove(car.id)}
-                                                                className="w-10 h-10 rounded-xl text-green-600 bg-green-50 hover:bg-green-100"
-                                                                title="قبول"
-                                                            >
-                                                                <Icon name="Check" className="w-5 h-5 stroke-[3px]" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => onReject(car.id)}
-                                                                className="w-10 h-10 rounded-xl text-orange-600 bg-orange-50 hover:bg-orange-100"
-                                                                title="رفض"
-                                                            >
-                                                                <Icon name="X" className="w-5 h-5 stroke-[3px]" />
-                                                            </Button>
-                                                        </>
-                                                    )}
-
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => onDelete(car.id)}
-                                                        className="w-10 h-10 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50"
-                                                        title="حذف نهائي"
-                                                    >
-                                                        <Icon name="Trash2" className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        {/* Desktop View (Toggleable) */}
+                        <div className="hidden md:block">
+                            {viewMode === 'list' ? (
+                                <div className="overflow-x-auto bg-white dark:bg-darkcard rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
+                                            <tr>
+                                                <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">تفاصيل السيارة</th>
+                                                <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">السعر المبدئي</th>
+                                                <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الحالة</th>
+                                                <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المالك</th>
+                                                <th className="px-6 py-5 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجراءات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                            {filteredCars.map(car => (
+                                                <CarListItem key={car.id} car={car} onEdit={onEdit} onSchedule={onSchedule} onApprove={onApprove} onReject={onReject} onDelete={onDelete} />
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={container}
+                                    initial="hidden"
+                                    animate="show"
+                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                                >
+                                    <AnimatePresence>
+                                        {filteredCars.map(car => (
+                                            <CarGridItem key={car.id} car={car} onEdit={onEdit} onSchedule={onSchedule} onApprove={onApprove} onReject={onReject} onDelete={onDelete} />
+                                        ))}
+                                    </AnimatePresence>
+                                </motion.div>
+                            )}
                         </div>
                     </>
                 )}
@@ -375,5 +218,213 @@ export const AuctionCarsTab: React.FC<AuctionCarsTabProps> = ({
         </div>
     );
 };
+
+// Subcomponents
+
+const CarListItem: React.FC<{
+    car: AuctionCar,
+    onEdit: any, onSchedule: any, onApprove: any, onReject: any, onDelete: any
+}> = ({ car, onEdit, onSchedule, onApprove, onReject, onDelete }) => (
+    <tr className="hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-colors group">
+        <td className="px-6 py-4">
+            <div className="flex items-center gap-4">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm group-hover:scale-105 transition-transform">
+                    <img
+                        src={car.media?.images?.[0] || '/placeholder-car.jpg'}
+                        alt=""
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-900 dark:text-white text-lg">{car.brand} {car.model}</p>
+                        <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{car.year}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 line-clamp-1 max-w-[200px]">{car.title}</p>
+                </div>
+            </div>
+        </td>
+        <td className="px-6 py-4">
+            <span className="font-black text-blue-600 dark:text-blue-400 text-lg tracking-tight">
+                ${car.starting_price?.toLocaleString()}
+            </span>
+        </td>
+        <td className="px-6 py-4">
+            <div className="flex">{getCarStatusBadge(car.status)}</div>
+        </td>
+        <td className="px-6 py-4">
+            <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ${car.seller_type === 'admin'
+                    ? 'bg-blue-50 border-blue-200 text-blue-600'
+                    : 'bg-gray-50 border-gray-200 text-gray-500'
+                    }`}>
+                    <Icon name={car.seller_type === 'admin' ? 'Shield' : 'User'} className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900 dark:text-gray-200">
+                        {car.seller_type === 'admin' ? 'System Admin' : car.seller_name || 'User'}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                        {car.seller_type === 'admin' ? 'Malik' : 'Seller'}
+                    </span>
+                </div>
+            </div>
+        </td>
+        <td className="px-6 py-4">
+            <div className="flex items-center justify-center gap-2 opacity-100 transition-opacity">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(car)}
+                    className="w-10 h-10 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-900/20 dark:hover:bg-blue-900/40"
+                    title="تعديل البيانات"
+                >
+                    <Icon name="Pencil" className="w-4 h-4" />
+                </Button>
+
+                {car.status === 'approved' && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onSchedule(car)}
+                        className="w-10 h-10 rounded-xl text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/20"
+                        title="جدولة مزاد لهذه السيارة"
+                    >
+                        <Icon name="Hammer" className="w-4 h-4" />
+                    </Button>
+                )}
+
+                {car.status === 'pending_approval' && (
+                    <>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onApprove(car.id)}
+                            className="w-10 h-10 rounded-xl text-green-600 bg-green-50 hover:bg-green-100"
+                            title="قبول"
+                        >
+                            <Icon name="Check" className="w-5 h-5 stroke-[3px]" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onReject(car.id)}
+                            className="w-10 h-10 rounded-xl text-orange-600 bg-orange-50 hover:bg-orange-100"
+                            title="رفض"
+                        >
+                            <Icon name="X" className="w-5 h-5 stroke-[3px]" />
+                        </Button>
+                    </>
+                )}
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(car.id)}
+                    className="w-10 h-10 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50"
+                    title="حذف نهائي"
+                >
+                    <Icon name="Trash2" className="w-4 h-4" />
+                </Button>
+            </div>
+        </td>
+    </tr>
+);
+
+const CarGridItem: React.FC<{
+    car: AuctionCar,
+    onEdit: any, onSchedule: any, onApprove: any, onReject: any, onDelete: any
+}> = ({ car, onEdit, onSchedule, onApprove, onReject, onDelete }) => (
+    <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white dark:bg-darkcard rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full"
+    >
+        <div className="flex gap-4 mb-4">
+            <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-gray-100">
+                <img
+                    src={car.media?.images?.[0] || '/placeholder-car.jpg'}
+                    alt=""
+                    className="w-full h-full object-cover"
+                />
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-2 gap-2">
+                    <h3 className="font-bold text-gray-900 dark:text-white truncate text-base">
+                        {car.brand} {car.model}
+                    </h3>
+                    <div className="shrink-0 scale-90 origin-top-left">
+                        {getCarStatusBadge(car.status)}
+                    </div>
+                </div>
+                <p className="text-sm text-gray-500 mb-2 truncate">{car.title}</p>
+                <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg text-gray-600 dark:text-gray-300">
+                        {car.year}
+                    </span>
+                    <span className="text-base font-black text-blue-600 dark:text-blue-400">
+                        ${car.starting_price?.toLocaleString()}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div className="flex gap-2 pt-4 border-t border-gray-100 dark:border-gray-800 mt-auto">
+            <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onEdit(car)}
+                className="flex-1"
+            >
+                <Icon name="Pencil" className="w-3.5 h-3.5 ml-1.5" />
+                تعديل
+            </Button>
+
+            {car.status === 'approved' && (
+                <Button
+                    variant="success"
+                    size="sm"
+                    onClick={() => onSchedule(car)}
+                    className="flex-1"
+                >
+                    <Icon name="Hammer" className="w-3.5 h-3.5 ml-1.5" />
+                    جدولة
+                </Button>
+            )}
+
+            {car.status === 'pending_approval' && (
+                <>
+                    <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => onApprove(car.id)}
+                        className="flex-1"
+                    >
+                        <Icon name="Check" className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onReject(car.id)}
+                        className="flex-1"
+                    >
+                        <Icon name="X" className="w-4 h-4" />
+                    </Button>
+                </>
+            )}
+
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(car.id)}
+                className="w-9 px-0 text-red-500 hover:bg-red-50"
+            >
+                <Icon name="Trash2" className="w-4 h-4" />
+            </Button>
+        </div>
+    </motion.div>
+);
 
 export default AuctionCarsTab;

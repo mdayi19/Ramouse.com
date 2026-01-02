@@ -5,6 +5,7 @@ import AuctionCarModal from '../CarAuction/AuctionCarModal';
 import AuctionScheduleModal from '../CarAuction/AuctionScheduleModal';
 import { ViewHeader } from './Shared';
 import { AuctionOverviewTab, AuctionCarsTab, AuctionListTab } from './AuctionParts';
+import AuctionCommandPalette from './AuctionParts/AuctionCommandPalette';
 import { useAdminDashboardUpdates } from '../../hooks/useAuctionUpdates';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -237,19 +238,32 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
 
     return (
         <div className="p-6 space-y-8 max-w-[1600px] mx-auto">
+            {/* Command Palette */}
+            <AuctionCommandPalette />
+
             {/* Header */}
             <ViewHeader
                 title="إدارة المزادات"
                 subtitle="لوحة التحكم الخاصة بإدارة السيارات والمزادات المباشرة"
                 actions={
-                    <Button
-                        variant="primary"
-                        onClick={() => { setSelectedCar(null); setShowCarModal(true); }}
-                        className="shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5"
-                    >
-                        <Icon name="Plus" className="w-5 h-5 ml-2" />
-                        <span className="font-bold">إضافة سيارة</span>
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="secondary"
+                            onClick={() => alert("Generating Report... (Stub)")}
+                            className="hidden md:flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            <Icon name="Download" className="w-5 h-5 ml-2" />
+                            تصدير تقرير
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => { setSelectedCar(null); setShowCarModal(true); }}
+                            className="shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5"
+                        >
+                            <Icon name="Plus" className="w-5 h-5 ml-2" />
+                            <span className="font-bold">إضافة سيارة</span>
+                        </Button>
+                    </div>
                 }
             />
 
