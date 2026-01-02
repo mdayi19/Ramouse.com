@@ -167,6 +167,8 @@ export const useAdminDashboardUpdates = (
         onStatsUpdate?: (stats: AuctionStats) => void;
         onCarUpdate?: () => void;
         onAuctionCreated?: (auction: any) => void;
+        onAuctionUpdate?: (auction: any) => void;
+        onBidPlaced?: (bid: any, auction: any) => void;
     }
 ) => {
     const { echo } = useRealtime();
@@ -178,34 +180,70 @@ export const useAdminDashboardUpdates = (
 
     useEffect(() => {
         console.log('🛡️ Listening to Admin Dashboard updates...');
-        const channel = echo.private('admin.dashboard');
 
-        channel.listen('admin.auction.stats_updated', (event: any) => {
+        // Private admin channel
+        const adminChannel = echo.private('admin.dashboard');
+
+        adminChannel.listen('admin.auction.stats_updated', (event: any) => {
             console.log('📊 Stats Updated:', event.data);
             if (callbacksRef.current.onStatsUpdate) {
                 callbacksRef.current.onStatsUpdate(event.data);
             }
         });
 
-        channel.listen('admin.car.updated', (event: any) => {
+        adminChannel.listen('admin.car.updated', (event: any) => {
             console.log('🚗 Car Updated:', event);
             if (callbacksRef.current.onCarUpdate) {
                 callbacksRef.current.onCarUpdate();
             }
         });
 
-        channel.listen('admin.auction.created', (event: any) => {
+        adminChannel.listen('admin.auction.created', (event: any) => {
             console.log('🔨 Auction Created (Admin):', event);
             if (callbacksRef.current.onAuctionCreated) {
                 callbacksRef.current.onAuctionCreated(event.data);
             }
         });
 
+        // Public auctions channel for real-time updates
+        const publicChannel = echo.channel('auctions');
+
+        publicChannel.listen('auction.started', (event: any) => {
+            console.log('🔴 [Admin] Auction Started:', event.auction);
+            if (callbacksRef.current.onAuctionUpdate) {
+                callbacksRef.current.onAuctionUpdate({ ...event.auction, status: 'live', is_live: true });
+            }
+        });
+
+        publicChannel.listen('auction.ended', (event: any) => {
+            console.log('🏁 [Admin] Auction Ended:', event.auction);
+            if (callbacksRef.current.onAuctionUpdate) {
+                callbacksRef.current.onAuctionUpdate({ ...event.auction, status: 'ended', is_live: false });
+            }
+        });
+
+        publicChannel.listen('bid.placed', (event: any) => {
+            console.log('💰 [Admin] Bid Placed:', event);
+            if (callbacksRef.current.onBidPlaced) {
+                callbacksRef.current.onBidPlaced(event.bid, event.auction);
+            }
+            // Also trigger auction update for bid count/current bid
+            if (callbacksRef.current.onAuctionUpdate && event.auction) {
+                callbacksRef.current.onAuctionUpdate({
+                    id: event.auction.id,
+                    current_bid: event.auction.currentBid,
+                    bid_count: event.auction.bidCount,
+                });
+            }
+        });
+
         return () => {
-            channel.stopListening('admin.auction.stats_updated');
-            channel.stopListening('admin.car.updated');
-            channel.stopListening('admin.auction.created');
-            // echo.leave('admin.dashboard');
+            adminChannel.stopListening('admin.auction.stats_updated');
+            adminChannel.stopListening('admin.car.updated');
+            adminChannel.stopListening('admin.auction.created');
+            publicChannel.stopListening('auction.started');
+            publicChannel.stopListening('auction.ended');
+            publicChannel.stopListening('bid.placed');
         };
     }, [echo]);
 };
