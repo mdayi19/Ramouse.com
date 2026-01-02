@@ -13,9 +13,9 @@ return new class extends Migration {
         Schema::create('auction_watchlist', function (Blueprint $table) {
             $table->id();
 
-            // Use unsignedBigInteger to match the auctions table 'id' column type
+            // Use unsignedBigInteger for user_id, uuid for auction_id (matches auctions table)
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('auction_id');
+            $table->uuid('auction_id');
 
             $table->timestamps();
 
