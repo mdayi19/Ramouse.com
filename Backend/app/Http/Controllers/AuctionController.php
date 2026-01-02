@@ -323,7 +323,8 @@ class AuctionController extends Controller
     }
 
     /**
-     * Pay for won auction
+     * Pay for won auction - Informs winner about offline payment process
+     * Payment happens at company, not from wallet
      */
     public function pay(Request $request, $id)
     {
@@ -346,32 +347,17 @@ class AuctionController extends Controller
             return response()->json(['error' => 'تم الدفع مسبقاً'], 400);
         }
 
-        try {
-            $this->auctionWalletService->chargeWinner($auction);
-
-            // Update auction status and winner name
-            $auction->update([
-                'payment_status' => 'paid',
-                'status' => 'completed',
-                'winner_name' => $profile->name,
-            ]);
-
-            // Notify user
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'تم الدفع بنجاح',
-                'message' => 'تم استلام مبلغ المزاد ' . $auction->title . '. مبروك!',
-                'type' => 'INFO',
-                'data' => json_encode(['auction_id' => $auction->id]),
-                'read' => false,
-            ]);
-
-            return response()->json([
-                'message' => 'تم الدفع بنجاح',
-                'auction' => $auction->refresh(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+        // Return payment instructions (offline payment at company)
+        return response()->json([
+            'message' => 'سيتم التواصل معك من قبل الإدارة لإتمام عملية الشراء في الشركة',
+            'instructions' => [
+                'step1' => 'انتظر اتصال الإدارة',
+                'step2' => 'توجه للشركة لإتمام الدفع',
+                'step3' => 'إحضار هويتك ومبلغ الشراء',
+            ],
+            'final_price' => $auction->final_price,
+            'payment_deadline' => $auction->payment_deadline,
+            'auction' => $auction,
+        ]);
     }
 }

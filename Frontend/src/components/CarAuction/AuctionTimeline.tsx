@@ -131,7 +131,7 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
                                 `}>
                                     {event.type === 'bid' && (
                                         <span className="text-xs font-bold">
-                                            {event.data.display_name ? event.data.display_name.charAt(0) : 'U'}
+                                            {event.data.bidder_phone ? event.data.bidder_phone.slice(-2) : '**'}
                                         </span>
                                     )}
                                     {event.type === 'start' && <Icon name="Play" className="w-4 h-4" />}
@@ -146,8 +146,11 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
                                     <div className={`rounded-xl p-3 border ${index === 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500/30' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/5'}`}>
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <p className="text-slate-900 dark:text-white text-sm font-bold truncate">
-                                                    {event.data.display_name || event.data.anonymized_name}
+                                                <p className="text-slate-900 dark:text-white text-sm font-bold truncate font-mono" dir="ltr">
+                                                    {event.data.bidder_phone ?
+                                                        `${event.data.bidder_phone.slice(0, 4)}****${event.data.bidder_phone.slice(-3)}` :
+                                                        (event.data.display_name || event.data.anonymized_name)
+                                                    }
                                                 </p>
                                                 <p className="text-slate-500 text-[10px]">
                                                     {event.date.toLocaleTimeString('ar-SA')}

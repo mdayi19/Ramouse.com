@@ -444,6 +444,7 @@ class AuctionManagementController extends Controller
 
     /**
      * Get auction details with all registrations and bids
+     * Shows full participant details for admin including phone numbers
      */
     public function getAuctionDetails($id)
     {
@@ -459,11 +460,32 @@ class AuctionManagementController extends Controller
         $auction->participant_count = $auction->registrations()->where('status', 'registered')->count();
         $auction->reminder_count = $auction->reminders()->count();
 
+        // Add winner details if auction has ended
+        if ($auction->winner_id) {
+            $winnerReg = $auction->registrations()
+                ->where('user_id', $auction->winner_id)
+                ->where('user_type', $auction->winner_type)
+                ->first();
+
+            $auction->winner_details = [
+                'id' => $auction->winner_id,
+                'name' => $auction->winner_name,
+                'phone' => $winnerReg?->user_phone ?? $auction->winner_phone,
+                'type' => $auction->winner_type,
+                'final_price' => $auction->final_price,
+                'commission_amount' => $auction->commission_amount,
+                'deposit_amount' => $winnerReg?->deposit_amount,
+                'deposit_status' => $winnerReg?->status,
+                'registered_at' => $winnerReg?->registered_at,
+            ];
+        }
+
         return response()->json($auction);
     }
 
     /**
      * Update payment status for winner
+     * Payment happens OFFLINE at company - no wallet deduction
      */
     public function updatePaymentStatus(Request $request, $id)
     {
@@ -474,35 +496,39 @@ class AuctionManagementController extends Controller
 
         $auction = Auction::findOrFail($id);
 
-        // If marking as completed, actually charge the winner
+        // If marking as completed, update status and release deposit
         if ($request->payment_status === 'completed') {
-            try {
-                $walletService = new \App\Services\AuctionWalletService();
-                $walletService->chargeWinner($auction);
+            $auction->update([
+                'status' => 'completed',
+                'payment_status' => 'completed',
+                'payment_notes' => $request->payment_notes,
+            ]);
 
-                $auction->update([
-                    'status' => 'completed',
-                    'payment_status' => 'completed',
-                    'payment_notes' => $request->payment_notes,
-                ]);
+            // Release winner's deposit (payment received offline at company)
+            $winnerReg = $auction->registrations()
+                ->where('status', 'winner')
+                ->first();
 
-                // Notify all registered users
-                $this->notifyRegisteredUsers(
-                    $auction,
-                    'تم إتمام المزاد',
-                    'تم إتمام الدفع لمزاد: ' . $auction->title
-                );
-
-                return response()->json([
-                    'message' => 'تم الدفع وإتمام المزاد بنجاح',
-                    'auction' => $auction,
-                ]);
-
-            } catch (\Exception $e) {
-                return response()->json([
-                    'error' => 'فشل الدفع: ' . $e->getMessage(),
-                ], 400);
+            if ($winnerReg) {
+                $winnerReg->releaseDeposit();
             }
+
+            // Notify winner
+            if ($auction->winner_id) {
+                $notification = Notification::create([
+                    'user_id' => $auction->winner_id,
+                    'title' => 'تم إتمام المزاد ✓',
+                    'message' => 'تم استلام الدفع لمزاد: ' . $auction->title . '. شكراً لك!',
+                    'type' => 'AUCTION_COMPLETED',
+                    'read' => false,
+                ]);
+                event(new UserNotification($auction->winner_id, $notification->toArray()));
+            }
+
+            return response()->json([
+                'message' => 'تم إتمام المزاد بنجاح - تم تحرير التأمين',
+                'auction' => $auction,
+            ]);
         }
 
         // Handle refund
@@ -516,7 +542,7 @@ class AuctionManagementController extends Controller
             }
         }
 
-        // Update status without charging
+        // Update status
         $auction->update([
             'payment_status' => $request->payment_status,
             'payment_notes' => $request->payment_notes,

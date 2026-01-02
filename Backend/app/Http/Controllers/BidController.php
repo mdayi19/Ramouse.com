@@ -219,16 +219,17 @@ class BidController extends Controller
         [$profile, $userType] = $this->getUserProfile($user);
 
         $bids->getCollection()->transform(function ($bid) use ($profile, $userType) {
-            // Show full name only if it's the user's own bid
+            // Show full details only if it's the user's own bid
             if ($profile && $bid->user_id == $profile->id && $bid->user_type === $userType) {
                 $bid->display_name = $bid->bidder_name . ' (أنت)';
                 $bid->is_mine = true;
+                // Keep full phone for own bids
             } else {
                 $bid->display_name = $bid->anonymized_name;
                 $bid->is_mine = false;
             }
-            // Remove sensitive data
-            unset($bid->bidder_phone);
+            // Keep bidder_phone for display (frontend masks it)
+            // Remove truly sensitive data only
             unset($bid->ip_address);
             unset($bid->user_agent);
             return $bid;
