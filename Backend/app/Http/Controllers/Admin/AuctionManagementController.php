@@ -602,4 +602,90 @@ class AuctionManagementController extends Controller
             }
         }
     }
+
+    /**
+     * Cancel an auction (including live auctions) - Full admin control
+     */
+    public function cancelAuction(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $auction = Auction::with('car')->findOrFail($id);
+
+        if (in_array($auction->status, ['cancelled', 'completed'])) {
+            return response()->json(['error' => 'لا يمكن إلغاء هذا المزاد'], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($auction, $request) {
+                // Release all deposits
+                $this->releaseAllDeposits($auction);
+
+                // Update auction status
+                $auction->update([
+                    'status' => 'cancelled',
+                    'actual_end' => now(),
+                    'cancellation_reason' => $request->reason,
+                ]);
+
+                // Reset car status
+                AuctionCar::where('id', $auction->auction_car_id)->update(['status' => 'approved']);
+
+                // Notify all registered users
+                $this->notifyRegisteredUsers(
+                    $auction,
+                    'تم إلغاء المزاد ⚠️',
+                    'تم إلغاء المزاد: ' . $auction->title . '. السبب: ' . $request->reason
+                );
+
+                // Broadcast cancellation
+                event(new AuctionEnded($auction));
+            });
+
+            event(new AdminDashboardEvent('auction.stats_updated', $this->getStatsData()));
+
+            return response()->json([
+                'message' => 'تم إلغاء المزاد بنجاح وتم إخطار المشاركين',
+                'auction' => $auction->fresh(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to cancel auction: ' . $e->getMessage());
+            return response()->json(['error' => 'حدث خطأ أثناء إلغاء المزاد'], 500);
+        }
+    }
+
+    /**
+     * Extend an ongoing auction manually
+     */
+    public function extendAuction(Request $request, $id)
+    {
+        $request->validate([
+            'minutes' => 'required|integer|min:1|max:1440',
+        ]);
+
+        $auction = Auction::findOrFail($id);
+
+        if (!in_array($auction->status, ['live', 'extended'])) {
+            return response()->json(['error' => 'المزاد ليس نشطاً'], 400);
+        }
+
+        $auction->update([
+            'scheduled_end' => $auction->scheduled_end->addMinutes($request->minutes),
+            'status' => 'extended',
+        ]);
+
+        // Notify registered users
+        $this->notifyRegisteredUsers(
+            $auction,
+            'تم تمديد المزاد ⏰',
+            'تم تمديد مزاد ' . $auction->title . ' لمدة ' . $request->minutes . ' دقيقة إضافية.'
+        );
+
+        return response()->json([
+            'message' => 'تم تمديد المزاد بنجاح',
+            'auction' => $auction->fresh(),
+        ]);
+    }
 }
