@@ -147,6 +147,15 @@ class AuctionController extends Controller
 
         $depositAmount = $auction->car->deposit_amount ?? 0;
 
+        // DEBUG: Log deposit info
+        \Log::info("AUCTION REGISTRATION DEBUG", [
+            'auction_id' => $auction->id,
+            'user_id' => $profile->id,
+            'user_type' => $userType,
+            'deposit_amount' => $depositAmount,
+            'wallet_balance' => $profile->wallet_balance,
+        ]);
+
         // Check wallet balance if deposit required
         if ($depositAmount > 0) {
             $totalHolds = UserWalletHold::where('user_id', $profile->id)
@@ -155,6 +164,12 @@ class AuctionController extends Controller
                 ->sum('amount');
 
             $availableBalance = $profile->wallet_balance - $totalHolds;
+
+            \Log::info("DEPOSIT CHECK", [
+                'total_holds' => $totalHolds,
+                'available_balance' => $availableBalance,
+                'required' => $depositAmount,
+            ]);
 
             if ($availableBalance < $depositAmount) {
                 return response()->json([
@@ -181,6 +196,11 @@ class AuctionController extends Controller
                     'expires_at' => $auction->scheduled_end->addDays(3),
                 ]);
                 $walletHoldId = $walletHold->id;
+
+                \Log::info("WALLET HOLD CREATED", [
+                    'hold_id' => $walletHoldId,
+                    'amount' => $depositAmount,
+                ]);
             }
 
             // Create registration
@@ -194,6 +214,11 @@ class AuctionController extends Controller
                 'wallet_hold_id' => $walletHoldId,
                 'status' => 'registered',
                 'registered_at' => now(),
+            ]);
+
+            \Log::info("REGISTRATION CREATED", [
+                'registration_id' => $registration->id,
+                'wallet_hold_id' => $walletHoldId,
             ]);
 
             // Create notification
