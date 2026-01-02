@@ -114,6 +114,22 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                         </Badge>
                     )}
 
+                    {/* Hot Badge */}
+                    {auction.bid_count > 5 && (
+                        <Badge variant="destructive" className="bg-orange-600 text-white border-0 shadow-lg font-bold text-[10px] w-fit flex items-center gap-1">
+                            <Icon name="Flame" className="w-3 h-3" />
+                            ساخن
+                        </Badge>
+                    )}
+
+                    {/* Simulated Viewers (Stable based on ID/Bids) */}
+                    {auction.is_live && !compact && (
+                        <div className="bg-black/40 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 w-fit shadow-lg border border-white/10">
+                            <Icon name="Eye" className="w-3 h-3 opacity-70" />
+                            {10 + (auction.bid_count * 3)} مشاهد
+                        </div>
+                    )}
+
                     {auction.car?.reserve_price && auction.car.reserve_price > 0 && (
                         (auction.current_bid || 0) >= auction.car.reserve_price ? (
                             <Badge variant="success" className="bg-emerald-600 text-white border-0 shadow-lg font-bold text-[10px] w-fit">
@@ -130,7 +146,24 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                 {/* Timer Overlay */}
                 {(auction.is_live || auction.status === 'scheduled') && !isExpired && (
                     <div className="absolute bottom-4 left-4 right-4 z-20">
-                        <div className={`flex items-center justify-between backdrop-blur-md border rounded-xl p-2.5 shadow-lg transition-all duration-300 ${timeRemaining < 300 // < 5 minutes
+                        {/* Quick Bid Button (Hover) */}
+                        {auction.is_live && !compact && (
+                            <motion.button
+                                initial={{ opacity: 0, y: 10 }}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="absolute bottom-0 left-0 right-0 hidden group-hover:flex items-center justify-center bg-red-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-600/30 z-30 mb-full"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onView(auction);
+                                }}
+                            >
+                                <Icon name="Hammer" className="w-5 h-5 ml-2" />
+                                زايد سريعاً
+                            </motion.button>
+                        )}
+
+                        <div className={`flex items-center justify-between backdrop-blur-md border rounded-xl p-2.5 shadow-lg transition-all duration-300 group-hover:translate-y-12 group-hover:opacity-0 ${timeRemaining < 300 // < 5 minutes
                             ? 'bg-red-500/20 border-red-500/30 animate-countdown-critical'
                             : timeRemaining < 3600 // < 1 hour
                                 ? 'bg-amber-500/20 border-amber-500/30 animate-countdown-urgent'
@@ -164,13 +197,13 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
             </div>
 
             {/* Content Section */}
-            <div className="p-5 flex-1 flex flex-col">
+            <div className={`${compact ? 'p-3' : 'p-5'} flex-1 flex flex-col`}>
                 <div className="mb-4">
-                    <h3 className="font-black text-slate-900 dark:text-white text-lg line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors leading-snug">
+                    <h3 className={`font-black text-slate-900 dark:text-white ${compact ? 'text-sm mb-1 line-clamp-1' : 'text-lg mb-2 line-clamp-2'} group-hover:text-blue-600 transition-colors leading-snug`}>
                         {auction.title}
                     </h3>
 
-                    {auction.car && (
+                    {auction.car && !compact && (
                         <div className="flex flex-wrap items-center gap-1.5 text-xs">
                             <span className="px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium border border-slate-100">
                                 {auction.car.brand}
@@ -196,7 +229,7 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                         </div>
                     )}
                     {/* Pricing Card */}
-                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50 group-hover:border-blue-100 group-hover:bg-blue-50/30 transition-all">
+                    <div className={`bg-slate-50 dark:bg-slate-800/50 rounded-2xl ${compact ? 'p-2.5' : 'p-4'} border border-slate-100 dark:border-slate-700/50 group-hover:border-blue-100 group-hover:bg-blue-50/30 transition-all`}>
                         <div className="flex justify-between items-end">
                             <div className="space-y-1">
                                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
@@ -205,17 +238,17 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                                 <div className="flex items-baseline gap-1">
                                     <motion.span
                                         key={currentPrice}
-                                        initial={{ scale: 1.2 }}
+                                        initial={!compact ? { scale: 1.2 } : undefined}
                                         animate={{ scale: 1 }}
                                         transition={{ duration: 0.3 }}
-                                        className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-blue-700 transition-colors"
+                                        className={`${compact ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white group-hover:text-blue-700 transition-colors`}
                                     >
                                         ${currentPrice?.toLocaleString()}
                                     </motion.span>
                                 </div>
                             </div>
 
-                            {auction.bid_count > 0 && (
+                            {auction.bid_count > 0 && !compact && (
                                 <div className="text-center px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                                     <p className="text-[10px] text-slate-400 font-bold mb-0.5">مزايدات</p>
                                     <div className="flex items-center gap-1 text-blue-600 font-bold">
@@ -228,36 +261,38 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                            variant={auction.is_live ? 'danger' : 'outline'}
-                            onClick={() => onView(auction)}
-                            className={`flex-1 rounded-xl py-5 text-sm font-bold shadow-sm transition-all
+                    {!compact && (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                variant={auction.is_live ? 'danger' : 'outline'}
+                                onClick={() => onView(auction)}
+                                className={`flex-1 rounded-xl py-5 text-sm font-bold shadow-sm transition-all
                                 ${auction.is_live
-                                    ? 'bg-red-600 hover:bg-red-700 text-white border-0 shadow-red-200'
-                                    : 'border-2 hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-200 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200'}`}
-                            leftIcon={<Icon name={auction.is_live ? 'Flame' : 'Eye'} className="w-4 h-4" />}
-                        >
-                            {auction.is_live ? 'زايد الآن' : 'التفاصيل'}
-                        </Button>
-
-                        {showReminder && auction.status === 'scheduled' && !auction.has_reminder && onRemind && (
-                            <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => onRemind(auction)}
-                                className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 border border-slate-100 dark:border-slate-700 transition-all"
-                                title="ذكرني"
+                                        ? 'bg-red-600 hover:bg-red-700 text-white border-0 shadow-red-200'
+                                        : 'border-2 hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-200 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200'}`}
+                                leftIcon={<Icon name={auction.is_live ? 'Flame' : 'Eye'} className="w-4 h-4" />}
                             >
-                                <Icon name="Bell" className="w-5 h-5" />
-                            </motion.button>
-                        )}
+                                {auction.is_live ? 'زايد الآن' : 'التفاصيل'}
+                            </Button>
 
-                        {auction.has_reminder && (
-                            <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800" title="تم تعيين تذكير">
-                                <Icon name="CheckCircle" className="w-5 h-5" />
-                            </div>
-                        )}
-                    </div>
+                            {showReminder && auction.status === 'scheduled' && !auction.has_reminder && onRemind && (
+                                <motion.button
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => onRemind(auction)}
+                                    className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 border border-slate-100 dark:border-slate-700 transition-all"
+                                    title="ذكرني"
+                                >
+                                    <Icon name="Bell" className="w-5 h-5" />
+                                </motion.button>
+                            )}
+
+                            {auction.has_reminder && (
+                                <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800" title="تم تعيين تذكير">
+                                    <Icon name="CheckCircle" className="w-5 h-5" />
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </motion.div>

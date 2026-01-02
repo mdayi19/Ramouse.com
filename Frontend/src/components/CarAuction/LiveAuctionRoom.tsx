@@ -10,6 +10,8 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import Icon from '../Icon';
 import { AuctionStatusBadge } from './AuctionStatusBadge';
+import { useAIAuctioneer } from '../../hooks/useAIAuctioneer';
+import { AuctionReactions } from './AuctionReactions';
 import { AuctionTimeline } from './AuctionTimeline';
 import { LiveAuctionRoomSkeleton } from './AuctionSkeleton';
 import { AuctionPolicyModal } from './AuctionPolicyModal';
@@ -22,6 +24,8 @@ import { BidHistoryCard } from './BidHistoryCard';
 import { QuickBidButton } from './QuickBidButton';
 import { MobileBidSheet } from './MobileBidSheet';
 import { ParticipantsList } from './ParticipantsList';
+import { SimilarAuctionsCarousel } from './SimilarAuctionsCarousel';
+import { BidderFeed } from './BidderFeed';
 
 // Debounce utility
 const debounce = <T extends (...args: any[]) => any>(
@@ -131,6 +135,8 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [showCarDetails, setShowCarDetails] = useState(false);
     const [showParticipantsList, setShowParticipantsList] = useState(false);
+    const [isImmersive, setIsImmersive] = useState(false);
+    const { speak, announceBid, announceTimer, announceSold, isSpeaking } = useAIAuctioneer(true); // Default true, can add toggle
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected');
     const [retryCount, setRetryCount] = useState(0);
     const [isRetrying, setIsRetrying] = useState(false);
@@ -191,12 +197,24 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                 .then(() => {
                     refresh(true);
                     showToast?.('انتهى المزاد', 'info');
+                    // AI Announcement for sold is handled in status effect, or trigger here if we know winner
+                    // announceSold(auction.current_bid, auction.winner_name || 'أحد المزايدين'); 
                 })
                 .catch(err => console.error('Failed to check status on timer end', err));
         }
-    }, [auctionId, auction, refresh, showToast]);
+    }, [auctionId, auction, refresh, showToast, announceSold]);
 
     const { formatted, timeRemaining, isExpired } = useAuctionCountdown(targetTime, handleTimerEnd);
+
+    // Announce Timer (10s countdown)
+    useEffect(() => {
+        if (timeRemaining <= 10 && timeRemaining > 0 && (auction?.status === 'live' || auction?.status === 'extended')) {
+            // Only announce integer seconds
+            if (Math.floor(timeRemaining) === timeRemaining || Math.abs(timeRemaining - Math.round(timeRemaining)) < 0.1) {
+                announceTimer(Math.round(timeRemaining));
+            }
+        }
+    }, [timeRemaining, auction?.status, announceTimer]);
 
     // Sync registration state
     useEffect(() => {
@@ -209,6 +227,11 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
     useEffect(() => {
         if (bids.length > lastBidCountRef.current) {
             // New bid arrived
+            const latestBid = bids[0];
+            if (latestBid) {
+                announceBid(latestBid.amount, latestBid.display_name || 'مزايد');
+            }
+
             if (soundEnabled) {
                 try {
                     new Audio('/bid_sound.mp3').play().catch(() => { });
@@ -217,7 +240,7 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
 
             lastBidCountRef.current = bids.length;
         }
-    }, [bids.length, soundEnabled]);
+    }, [bids.length, soundEnabled, announceBid, bids]);
 
     // Scroll to top on new bid
     useEffect(() => {
@@ -431,7 +454,22 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
     const isUrgent = timeRemaining < 30 && !hasEnded;
 
     return (
-        <div className={`min-h-screen bg-slate-900 transition-colors duration-1000 ${isUrgent ? 'bg-red-950/30' : ''}`}>
+        <div className={`min-h-screen transition-colors duration-1000 ${isUrgent ? 'bg-red-950/30' : 'bg-slate-900'} ${isImmersive ? 'overflow-hidden' : ''}`}>
+            {/* Immersive Background */}
+            <div className={`absolute inset-0 transition-all duration-1000 ${isImmersive ? 'z-[60] bg-black/95' : '-z-10'}`}>
+                {isImmersive && (
+                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5"></div>
+                )}
+            </div>
+
+            {/* Reactions Overlay */}
+            <AuctionReactions />
+
+            {/* Bidder Feed Overlay */}
+            <div className="hidden lg:block">
+                <BidderFeed bids={bids} />
+            </div>
+
             <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none"></div>
 
             {/* Connection Status Indicator  - New Component */}
@@ -481,6 +519,16 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                     </Button>
 
                     <div className="flex items-center gap-2 md:gap-3">
+                        {/* Immersive Toggle */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsImmersive(!isImmersive)}
+                            className={`!w-8 !h-8 md:!w-10 md:!h-10 rounded-xl transition-all ${isImmersive ? '!bg-white !text-black shadow-white/20' : '!bg-white/10 !text-white/50'}`}
+                            title="وضع التركيز"
+                        >
+                            <Icon name={isImmersive ? "Minimize2" : "Maximize2"} className="w-4 h-4 md:w-5 md:h-5" />
+                        </Button>
                         {/* Watchlist Toggle */}
                         {isAuthenticated && (
                             <Button
@@ -526,7 +574,7 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+            <div className={`max-w-7xl mx-auto px-4 py-4 md:py-6 transition-all duration-500 ${isImmersive ? 'relative z-[70] scale-105 mt-10' : ''}`}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
 
                     {/* 1. Image Gallery - Order 1 */}
@@ -633,7 +681,42 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                                 <p className={`text-4xl md:text-6xl font-mono font-black tracking-widest relative z-10 ${isUrgent ? 'text-red-400' : timeRemaining < 3600 ? 'text-amber-400' : 'text-white'}`}>
                                     {hasEnded ? '00:00:00' : formatted}
                                 </p>
+                                {isSpeaking && (
+                                    <div className="absolute top-2 right-2 flex gap-1 items-center">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                                        <Icon name="Mic" className="w-4 h-4 text-green-400" />
+                                    </div>
+                                )}
                             </motion.div>
+
+                            {/* King of the Hill - Highest Bidder */}
+                            {bids[0] && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    key={bids[0].id}
+                                    className="mb-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 rounded-2xl p-3 flex items-center justify-between relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-yellow-500/5 animate-pulse"></div>
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/50 shadow-lg shadow-yellow-500/20">
+                                            <motion.div
+                                                animate={{ rotate: [0, -10, 10, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                                            >
+                                                <Icon name="Crown" className="w-6 h-6 text-yellow-400" />
+                                            </motion.div>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-yellow-200 font-bold uppercase tracking-wider">ملك المزاد حالياً</p>
+                                            <p className="text-white font-bold">{bids[0].display_name}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-yellow-400 font-black text-lg relative z-10">
+                                        ${bids[0].amount.toLocaleString()}
+                                    </div>
+                                </motion.div>
+                            )}
 
                             {/* Current Bid */}
                             <motion.div
@@ -674,281 +757,287 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Actions */}
+                            {/* Win Probability Gauge (Visual only for now) */}
                             {isLive && !hasEnded && (
-                                <div className="relative z-10">
-                                    {!isRegistered ? (
-                                        <div className="bg-slate-800/50 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-sm border border-white/10 shadow-lg">
-                                            <div className="text-center mb-4 md:mb-6">
-                                                <div className="inline-flex p-3 md:p-4 rounded-full bg-primary/10 mb-3 md:mb-4 ring-1 ring-primary/30">
-                                                    <Icon name="UserPlus" className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-                                                </div>
-                                                <p className="text-white font-bold text-base md:text-lg mb-1">سجّل للمشاركة</p>
-                                                {car && car.deposit_amount > 0 && (
-                                                    <Badge variant="warning" className="mt-2 text-xs">
-                                                        تأمين: ${car.deposit_amount.toLocaleString()}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <Button
-                                                variant="primary"
-                                                size="lg"
-                                                onClick={handleRegisterClick}
-                                                isLoading={registerLoading}
-                                                className="w-full font-bold shadow-lg shadow-primary/25 !text-sm md:!text-base"
-                                            >
-                                                سجّل الآن في المزاد
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <div className="bg-slate-800/50 rounded-2xl md:rounded-3xl p-4 backdrop-blur-sm border border-white/10 space-y-3">
-                                            {/* Buy Now Button */}
-                                            {auction?.car?.buy_now_price && (
-                                                <div className="mb-3 md:mb-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl md:rounded-2xl p-3 md:p-4 border border-purple-500/20">
-                                                    <div className="flex justify-between items-center mb-2 md:mb-3">
-                                                        <span className="text-purple-300 font-bold text-xs md:text-sm">شراء فوري</span>
-                                                        <span className="text-white font-black text-lg md:text-xl">${auction.car.buy_now_price.toLocaleString()}</span>
-                                                    </div>
-                                                    <Button
-                                                        variant="primary"
-                                                        className="w-full !bg-gradient-to-r !from-purple-600 !to-pink-600 hover:!from-purple-500 hover:!to-pink-500 shadow-lg shadow-purple-500/20 border-0 !text-sm"
-                                                        onClick={() => setShowBuyNowConfirm(true)}
-                                                        disabled={bidLoading}
-                                                    >
-                                                        شراء الآن
-                                                    </Button>
-                                                </div>
-                                            )}
+                                <div className="w-full h-1.5 bg-slate-700/50 rounded-full mt-4 overflow-hidden relative group">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 w-full opacity-30"
+                                    />
+                                    <motion.div
+                                        initial={{ x: '-100%' }}
+                                        animate={{ x: `${Math.min((bids.length * 5), 100) - 100}%` }}
+                                        className="absolute inset-0 bg-white/50 w-full"
+                                    />
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-4 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-white bg-black px-2 rounded">
+                                        حماسة المزاد
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
-                                            {/* Mobile Quick Bid - Shows only on Mobile */}
-                                            <div className="lg:hidden">
+                        {/* Actions */}
+                        {isLive && !hasEnded && (
+                            <div className="relative z-10">
+                                {!isRegistered ? (
+                                    <div className="bg-slate-800/50 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-sm border border-white/10 shadow-lg">
+                                        <div className="text-center mb-4 md:mb-6">
+                                            <div className="inline-flex p-3 md:p-4 rounded-full bg-primary/10 mb-3 md:mb-4 ring-1 ring-primary/30">
+                                                <Icon name="UserPlus" className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                                            </div>
+                                            <p className="text-white font-bold text-base md:text-lg mb-1">سجّل للمشاركة</p>
+                                            {car && car.deposit_amount > 0 && (
+                                                <Badge variant="warning" className="mt-2 text-xs">
+                                                    تأمين: ${car.deposit_amount.toLocaleString()}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            onClick={handleRegisterClick}
+                                            isLoading={registerLoading}
+                                            className="w-full font-bold shadow-lg shadow-primary/25 !text-sm md:!text-base"
+                                        >
+                                            سجّل الآن في المزاد
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-800/50 rounded-2xl md:rounded-3xl p-4 backdrop-blur-sm border border-white/10 space-y-3">
+                                        {/* Buy Now Button */}
+                                        {auction?.car?.buy_now_price && (
+                                            <div className="mb-3 md:mb-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl md:rounded-2xl p-3 md:p-4 border border-purple-500/20">
+                                                <div className="flex justify-between items-center mb-2 md:mb-3">
+                                                    <span className="text-purple-300 font-bold text-xs md:text-sm">شراء فوري</span>
+                                                    <span className="text-white font-black text-lg md:text-xl">${auction.car.buy_now_price.toLocaleString()}</span>
+                                                </div>
                                                 <Button
-                                                    variant="success"
-                                                    size="lg"
-                                                    onClick={() => setShowMobileBidSheet(true)}
-                                                    className="w-full !text-lg !py-6 font-black shadow-lg shadow-emerald-500/20 touch-target"
-                                                    leftIcon={<Icon name="Hammer" className="w-6 h-6" />}
+                                                    variant="primary"
+                                                    className="w-full !bg-gradient-to-r !from-purple-600 !to-pink-600 hover:!from-purple-500 hover:!to-pink-500 shadow-lg shadow-purple-500/20 border-0 !text-sm"
+                                                    onClick={() => setShowBuyNowConfirm(true)}
+                                                    disabled={bidLoading}
                                                 >
-                                                    زايد الآن
+                                                    شراء الآن
                                                 </Button>
                                             </div>
+                                        )}
 
-                                            {/* Quick Bid Button */}
-                                            <Button
-                                                variant="success"
-                                                size="lg"
-                                                onClick={handleQuickBid}
-                                                isLoading={bidLoading}
-                                                className="w-full !text-base md:!text-lg !py-4 md:!py-6 font-black shadow-lg shadow-emerald-500/20 group relative overflow-hidden"
-                                                leftIcon={<Icon name="Hammer" className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-12 transition-transform" />}
-                                            >
-                                                <span className="relative z-10">زايد ${auction.minimum_bid?.toLocaleString()}</span>
-                                            </Button>
 
-                                            {/* Quick Increments */}
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {[100, 500, 1000].map(increment => (
-                                                    <Button
-                                                        key={increment}
-                                                        variant="ghost"
-                                                        onClick={() => handlePlaceBid((auction.minimum_bid || 0) + increment)}
-                                                        disabled={bidLoading}
-                                                        className="!bg-slate-700/50 !text-white hover:!bg-slate-600 font-bold border border-white/5 !text-xs md:!text-sm"
-                                                    >
-                                                        +${increment}
-                                                    </Button>
-                                                ))}
+
+                                        {/* Quick Bid Button */}
+                                        <Button
+                                            variant="success"
+                                            size="lg"
+                                            onClick={handleQuickBid}
+                                            isLoading={bidLoading}
+                                            className="w-full !text-base md:!text-lg !py-4 md:!py-6 font-black shadow-lg shadow-emerald-500/20 group relative overflow-hidden"
+                                            leftIcon={<Icon name="Hammer" className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-12 transition-transform" />}
+                                        >
+                                            <span className="relative z-10">زايد ${auction.minimum_bid?.toLocaleString()}</span>
+                                        </Button>
+
+                                        {/* Quick Increments */}
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[100, 500, 1000].map(increment => (
+                                                <Button
+                                                    key={increment}
+                                                    variant="ghost"
+                                                    onClick={() => handlePlaceBid((auction.minimum_bid || 0) + increment)}
+                                                    disabled={bidLoading}
+                                                    className="!bg-slate-700/50 !text-white hover:!bg-slate-600 font-bold border border-white/5 !text-xs md:!text-sm"
+                                                >
+                                                    +${increment}
+                                                </Button>
+                                            ))}
+                                        </div>
+
+                                        {/* Custom Bid Input & Auto Bid */}
+                                        <div className="space-y-3">
+                                            <div className="flex gap-2">
+                                                <div className="flex-1 relative">
+                                                    <input
+                                                        ref={bidInputRef}
+                                                        type="number"
+                                                        value={customBid}
+                                                        onChange={(e) => setCustomBid(e.target.value)}
+                                                        placeholder="مبلغ المزايدة.."
+                                                        className="w-full bg-slate-700/50 text-white py-2 md:py-3.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-bold border border-white/5 transition-all focus:bg-slate-700 text-sm md:text-base text-center"
+                                                    />
+                                                </div>
                                             </div>
 
-                                            {/* Custom Bid Input & Auto Bid */}
-                                            <div className="space-y-3">
+                                            {/* Auto Bid Input */}
+                                            <div className="relative">
+                                                <label className="text-xs text-slate-400 mb-1 block">مزايدة تلقائية (اختياري)</label>
                                                 <div className="flex gap-2">
-                                                    <div className="flex-1 relative">
-                                                        <input
-                                                            ref={bidInputRef}
-                                                            type="number"
-                                                            value={customBid}
-                                                            onChange={(e) => setCustomBid(e.target.value)}
-                                                            placeholder="مبلغ المزايدة.."
-                                                            className="w-full bg-slate-700/50 text-white py-2 md:py-3.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-bold border border-white/5 transition-all focus:bg-slate-700 text-sm md:text-base text-center"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="أقصى حد للمزايدة..."
+                                                        className="flex-1 bg-slate-700/30 text-white py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 border border-white/5 text-sm"
+                                                        onChange={(e) => {
+                                                            // Store in a ref or state if needed, simpler to just use ref for now or adding state
+                                                            // For simplicity, let's treat customBid as the direct bid, and this as max
+                                                            // I'll add a state for autoBid
+                                                        }}
+                                                        id="auto-bid-input"
+                                                    />
+                                                    <Button
+                                                        variant="primary"
+                                                        onClick={() => {
+                                                            // Get values
+                                                            const amount = parseFloat(customBid);
+                                                            const maxAuto = parseFloat((document.getElementById('auto-bid-input') as HTMLInputElement).value) || undefined;
 
-                                                {/* Auto Bid Input */}
-                                                <div className="relative">
-                                                    <label className="text-xs text-slate-400 mb-1 block">مزايدة تلقائية (اختياري)</label>
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="number"
-                                                            placeholder="أقصى حد للمزايدة..."
-                                                            className="flex-1 bg-slate-700/30 text-white py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 border border-white/5 text-sm"
-                                                            onChange={(e) => {
-                                                                // Store in a ref or state if needed, simpler to just use ref for now or adding state
-                                                                // For simplicity, let's treat customBid as the direct bid, and this as max
-                                                                // I'll add a state for autoBid
-                                                            }}
-                                                            id="auto-bid-input"
-                                                        />
-                                                        <Button
-                                                            variant="primary"
-                                                            onClick={() => {
-                                                                // Get values
-                                                                const amount = parseFloat(customBid);
-                                                                const maxAuto = parseFloat((document.getElementById('auto-bid-input') as HTMLInputElement).value) || undefined;
+                                                            if (isNaN(amount) || amount < (auction?.minimum_bid || 0)) {
+                                                                showToast?.(`الحد الأدنى للمزايدة هو ${auction?.minimum_bid?.toLocaleString()}$`, 'error');
+                                                                return;
+                                                            }
+                                                            if (maxAuto && maxAuto <= amount) {
+                                                                showToast?.('يجب أن يكون الحد الأقصى أكبر من مبلغ المزايدة', 'error');
+                                                                return;
+                                                            }
 
-                                                                if (isNaN(amount) || amount < (auction?.minimum_bid || 0)) {
-                                                                    showToast?.(`الحد الأدنى للمزايدة هو ${auction?.minimum_bid?.toLocaleString()}$`, 'error');
-                                                                    return;
-                                                                }
-                                                                if (maxAuto && maxAuto <= amount) {
-                                                                    showToast?.('يجب أن يكون الحد الأقصى أكبر من مبلغ المزايدة', 'error');
-                                                                    return;
-                                                                }
-
-                                                                handlePlaceBid(amount, false, maxAuto);
-                                                            }}
-                                                            disabled={bidLoading || !customBid}
-                                                            className="!px-4 md:!px-6 shadow-lg shadow-primary/20"
-                                                        >
-                                                            <Icon name="Send" className="w-4 h-4 md:w-5 md:h-5 ml-2" />
-                                                            زايد
-                                                        </Button>
-                                                    </div>
+                                                            handlePlaceBid(amount, false, maxAuto);
+                                                        }}
+                                                        disabled={bidLoading || !customBid}
+                                                        className="!px-4 md:!px-6 shadow-lg shadow-primary/20"
+                                                    >
+                                                        <Icon name="Send" className="w-4 h-4 md:w-5 md:h-5 ml-2" />
+                                                        زايد
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Winner Action - Pay Now */}
-                            {hasEnded && auction.winner_id === userId && auction.payment_status !== 'paid' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-center text-white shadow-xl mt-4 relative z-20"
-                                >
-                                    <div className="mb-4">
-                                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
-                                            <Icon name="Award" className="w-8 h-8 text-white" />
-                                        </div>
-                                        <h3 className="text-xl font-bold mb-1">مبروك! لقد ربحت المزاد 🎉</h3>
-                                        <p className="text-emerald-100 text-sm">يرجى إتمام عملية الدفع لاستلام السيارة</p>
                                     </div>
-                                    <Button
-                                        variant="secondary"
-                                        size="lg"
-                                        className="w-full font-bold bg-white text-emerald-700 hover:bg-emerald-50"
-                                        onClick={handlePayAuction}
-                                        isLoading={isPaying}
-                                    >
-                                        إتمام الدفع (${auction.current_bid?.toLocaleString()})
-                                    </Button>
-                                </motion.div>
-                            )}
+                                )}
+                            </div>
+                        )}
 
-                            {/* Paid Status */}
-                            {hasEnded && auction.winner_id === userId && auction.payment_status === 'paid' && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 text-center mt-4"
-                                >
-                                    <Icon name="CheckCircle" className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
-                                    <h3 className="text-xl font-bold text-white mb-1">تم الدفع بنجاح</h3>
-                                    <p className="text-slate-400">سيتم التواصل معك لتسليم السيارة</p>
-                                </motion.div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* 3. Car Details - Order 3 Mobile / Left Column Desktop */}
-                    <div className="lg:col-span-2 order-3">
-                        <div className="bg-slate-800/50 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-sm border border-white/10">
-                            <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                                <div>
-                                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                                        <AuctionStatusBadge status={auction.status} isLive={isLive} />
-                                        <h1 className="text-xl md:text-3xl font-black text-white">{auction.title}</h1>
+                        {/* Winner Action - Pay Now */}
+                        {hasEnded && auction.winner_id === userId && auction.payment_status !== 'paid' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-center text-white shadow-xl mt-4 relative z-20"
+                            >
+                                <div className="mb-4">
+                                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+                                        <Icon name="Award" className="w-8 h-8 text-white" />
                                     </div>
-                                    {car && (
-                                        <p className="text-slate-400 font-medium text-sm md:text-base">{car.brand} {car.model} • {car.year}</p>
-                                    )}
+                                    <h3 className="text-xl font-bold mb-1">مبروك! لقد ربحت المزاد 🎉</h3>
+                                    <p className="text-emerald-100 text-sm">يرجى إتمام عملية الدفع لاستلام السيارة</p>
                                 </div>
                                 <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowCarDetails(!showCarDetails)}
-                                    className="!text-primary hover:!bg-primary/10"
+                                    variant="secondary"
+                                    size="lg"
+                                    className="w-full font-bold bg-white text-emerald-700 hover:bg-emerald-50"
+                                    onClick={handlePayAuction}
+                                    isLoading={isPaying}
                                 >
-                                    {showCarDetails ? 'إخفاء' : 'عرض الكل'}
-                                    <Icon name={showCarDetails ? 'ChevronUp' : 'ChevronDown'} className="w-4 h-4 mr-1" />
+                                    إتمام الدفع (${auction.current_bid?.toLocaleString()})
                                 </Button>
-                            </div>
+                            </motion.div>
+                        )}
 
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
-                                {car?.mileage && (
-                                    <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
-                                        <Icon name="Gauge" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
-                                        <p className="text-slate-400 text-[10px] md:text-xs font-medium">الممشى</p>
-                                        <p className="text-white font-bold text-sm md:text-base">{car.mileage.toLocaleString()}</p>
-                                    </div>
-                                )}
-                                {car?.transmission && (
-                                    <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
-                                        <Icon name="Settings" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
-                                        <p className="text-slate-400 text-[10px] md:text-xs font-medium">القير</p>
-                                        <p className="text-white font-bold text-sm md:text-base">{car.transmission === 'automatic' ? 'أوتوماتيك' : 'يدوي'}</p>
-                                    </div>
-                                )}
-                                {car?.fuel_type && (
-                                    <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
-                                        <Icon name="Fuel" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
-                                        <p className="text-slate-400 text-[10px] md:text-xs font-medium">الوقود</p>
-                                        <p className="text-white font-bold text-sm md:text-base">{car.fuel_type === 'petrol' ? 'بنزين' : 'ديزل'}</p>
-                                    </div>
-                                )}
-                                {car?.exterior_color && (
-                                    <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
-                                        <Icon name="Palette" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
-                                        <p className="text-slate-400 text-[10px] md:text-xs font-medium">اللون</p>
-                                        <p className="text-white font-bold text-sm md:text-base capitalize">{car.exterior_color}</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <AnimatePresence>
-                                {showCarDetails && car?.description && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className="pt-4 mt-4 border-t border-white/10">
-                                            <h3 className="text-white font-bold mb-2">الوصف</h3>
-                                            <p className="text-slate-300 leading-relaxed text-sm md:text-base">{car.description}</p>
-                                            {car.features && car.features.length > 0 && (
-                                                <div className="mt-4">
-                                                    <h3 className="text-white font-bold mb-2">المميزات</h3>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {car.features.map((feature, i) => (
-                                                            <Badge key={i} variant="secondary" className="!bg-slate-700 !text-white border border-white/10">
-                                                                <Icon name="Check" className="w-3 h-3 mr-1 text-emerald-400" />
-                                                                {feature}
-                                                            </Badge>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                        {/* Paid Status */}
+                        {hasEnded && auction.winner_id === userId && auction.payment_status === 'paid' && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 text-center mt-4"
+                            >
+                                <Icon name="CheckCircle" className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
+                                <h3 className="text-xl font-bold text-white mb-1">تم الدفع بنجاح</h3>
+                                <p className="text-slate-400">سيتم التواصل معك لتسليم السيارة</p>
+                            </motion.div>
+                        )}
                     </div>
+                </div>
+
+                {/* 3. Car Details - Order 3 Mobile / Left Column Desktop */}
+                <div className="lg:col-span-2 order-3">
+                    <div className="bg-slate-800/50 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-sm border border-white/10">
+                        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                            <div>
+                                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                                    <AuctionStatusBadge status={auction.status} isLive={isLive} />
+                                    <h1 className="text-xl md:text-3xl font-black text-white">{auction.title}</h1>
+                                </div>
+                                {car && (
+                                    <p className="text-slate-400 font-medium text-sm md:text-base">{car.brand} {car.model} • {car.year}</p>
+                                )}
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowCarDetails(!showCarDetails)}
+                                className="!text-primary hover:!bg-primary/10"
+                            >
+                                {showCarDetails ? 'إخفاء' : 'عرض الكل'}
+                                <Icon name={showCarDetails ? 'ChevronUp' : 'ChevronDown'} className="w-4 h-4 mr-1" />
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
+                            {car?.mileage && (
+                                <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
+                                    <Icon name="Gauge" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
+                                    <p className="text-slate-400 text-[10px] md:text-xs font-medium">الممشى</p>
+                                    <p className="text-white font-bold text-sm md:text-base">{car.mileage.toLocaleString()}</p>
+                                </div>
+                            )}
+                            {car?.transmission && (
+                                <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
+                                    <Icon name="Settings" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
+                                    <p className="text-slate-400 text-[10px] md:text-xs font-medium">القير</p>
+                                    <p className="text-white font-bold text-sm md:text-base">{car.transmission === 'automatic' ? 'أوتوماتيك' : 'يدوي'}</p>
+                                </div>
+                            )}
+                            {car?.fuel_type && (
+                                <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
+                                    <Icon name="Fuel" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
+                                    <p className="text-slate-400 text-[10px] md:text-xs font-medium">الوقود</p>
+                                    <p className="text-white font-bold text-sm md:text-base">{car.fuel_type === 'petrol' ? 'بنزين' : 'ديزل'}</p>
+                                </div>
+                            )}
+                            {car?.exterior_color && (
+                                <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
+                                    <Icon name="Palette" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
+                                    <p className="text-slate-400 text-[10px] md:text-xs font-medium">اللون</p>
+                                    <p className="text-white font-bold text-sm md:text-base capitalize">{car.exterior_color}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <AnimatePresence>
+                            {showCarDetails && car?.description && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="pt-4 mt-4 border-t border-white/10">
+                                        <h3 className="text-white font-bold mb-2">الوصف</h3>
+                                        <p className="text-slate-300 leading-relaxed text-sm md:text-base">{car.description}</p>
+                                        {car.features && car.features.length > 0 && (
+                                            <div className="mt-4">
+                                                <h3 className="text-white font-bold mb-2">المميزات</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {car.features.map((feature, i) => (
+                                                        <Badge key={i} variant="secondary" className="!bg-slate-700 !text-white border border-white/10">
+                                                            <Icon name="Check" className="w-3 h-3 mr-1 text-emerald-400" />
+                                                            {feature}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
 
                     {/* 4. Timeline/History - Order 4 */}
                     <div className="lg:col-span-1 order-4">
@@ -971,13 +1060,34 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                 </div>
             </div>
 
+            {/* Similar Auctions */}
+            <div className={`max-w-7xl mx-auto px-4 ${isImmersive ? 'relative z-[70] scale-105' : ''}`}>
+                <SimilarAuctionsCarousel currentAuctionId={auctionId} />
+            </div>
+
+
             {/* Policy Modal */}
-            <AuctionPolicyModal
+            < AuctionPolicyModal
                 isOpen={showPolicyModal}
                 onClose={() => setShowPolicyModal(false)}
                 onAccept={handleAcceptPolicy}
                 depositAmount={auction?.car?.deposit_amount || 0}
             />
+
+            {/* Mobile Sticky Action Bar */}
+            {isLive && !hasEnded && isRegistered && (
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 z-[60] lg:hidden pb-safe">
+                    <Button
+                        variant="success"
+                        size="lg"
+                        onClick={() => setShowMobileBidSheet(true)}
+                        className="w-full !text-lg !py-4 font-black shadow-lg shadow-emerald-500/20 touch-target"
+                        leftIcon={<Icon name="Hammer" className="w-6 h-6" />}
+                    >
+                        زايد الآن
+                    </Button>
+                </div>
+            )}
 
             {/* Mobile Bid Sheet */}
             <MobileBidSheet
