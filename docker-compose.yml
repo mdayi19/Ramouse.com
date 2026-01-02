@@ -138,7 +138,7 @@ services:
       REVERB_APP_SECRET: ${REVERB_APP_SECRET:-ramouse-app-secret}
       REVERB_HOST: 0.0.0.0
       REVERB_PORT: 8080
-      REVERB_SCHEME: https
+      REVERB_SCHEME: http
       REVERB_ALLOWED_ORIGINS: "*"
     networks:
       - ramouse-network
