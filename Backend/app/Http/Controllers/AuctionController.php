@@ -385,4 +385,33 @@ class AuctionController extends Controller
             'auction' => $auction,
         ]);
     }
+
+    /**
+     * Check and update auction status (manually triggered when timer ends)
+     */
+    public function checkStatus($id)
+    {
+        $auction = Auction::findOrFail($id);
+
+        // If auction is live/extended and passed end time, end it immediately
+        if (in_array($auction->status, ['live', 'extended']) && $auction->scheduled_end <= now()) {
+            try {
+                // Use the service to end it properly
+                $auctionService = app(\App\Services\AuctionService::class);
+                $auctionService->endAuction($auction);
+
+                // Refresh to get updated data
+                $auction->refresh();
+            } catch (\Exception $e) {
+                \Log::error("Failed to force end auction {$id}: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'status' => $auction->status,
+            'is_live' => $auction->is_live,
+            'has_ended' => $auction->has_ended,
+            'auction' => $auction
+        ]);
+    }
 }

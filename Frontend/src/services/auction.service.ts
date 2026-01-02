@@ -172,6 +172,11 @@ export const payAuction = async (id: string) => {
     return response.data;
 };
 
+export const checkAuctionStatus = async (id: string) => {
+    const response = await api.post(`/auctions/${id}/check-status`);
+    return response.data;
+};
+
 export const getMyAuctions = async (params?: { per_page?: number; page?: number }) => {
     const response = await api.get('/auctions/my-auctions', { params });
     return response.data;

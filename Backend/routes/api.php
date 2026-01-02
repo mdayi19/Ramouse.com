@@ -425,6 +425,7 @@ Route::prefix('auctions')->group(function () {
     Route::get('/', [App\Http\Controllers\AuctionController::class, 'index']);
     Route::get('/{id}', [App\Http\Controllers\AuctionController::class, 'show']);
     Route::get('/{id}/bids', [App\Http\Controllers\BidController::class, 'getBids']);
+    Route::post('/{id}/check-status', [App\Http\Controllers\AuctionController::class, 'checkStatus']);
 });
 
 // ======== AUTHENTICATED AUCTION ROUTES ========

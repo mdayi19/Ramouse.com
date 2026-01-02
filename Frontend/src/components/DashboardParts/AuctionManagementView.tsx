@@ -90,19 +90,7 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
                 fetchAuctions(true);
             }
             fetchStats();
-        },
-        onAuctionUpdate: (auctionUpdate) => {
-            // Update existing auction in the list
-            setAuctions(prev => prev.map(auction =>
-                auction.id === auctionUpdate.id
-                    ? { ...auction, ...auctionUpdate }
-                    : auction
-            ));
-            // Refresh stats on status changes
-            if (auctionUpdate.status) {
-                fetchStats();
-            }
-        },
+        }
     });
 
     // Actions

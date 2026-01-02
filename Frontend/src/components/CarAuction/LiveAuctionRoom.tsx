@@ -180,7 +180,23 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
         targetTime,
     });
 
-    const { formatted, timeRemaining, isExpired } = useAuctionCountdown(targetTime);
+    // Callback for timer end
+    const handleTimerEnd = useCallback(() => {
+        const isAuctionLive = auction?.is_live || auction?.status === 'live' || auction?.status === 'extended';
+        const auctionHasEnded = auction?.has_ended || auction?.status === 'ended';
+
+        if (auctionId && !auctionHasEnded && isAuctionLive) {
+            console.log('🏁 Timer reached zero, forcing status check...');
+            auctionService.checkAuctionStatus(auctionId)
+                .then(() => {
+                    refresh(true);
+                    showToast?.('انتهى المزاد', 'info');
+                })
+                .catch(err => console.error('Failed to check status on timer end', err));
+        }
+    }, [auctionId, auction, refresh, showToast]);
+
+    const { formatted, timeRemaining, isExpired } = useAuctionCountdown(targetTime, handleTimerEnd);
 
     // Sync registration state
     useEffect(() => {
