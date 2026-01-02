@@ -10,8 +10,8 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import Icon from '../Icon';
 import { AuctionStatusBadge } from './AuctionStatusBadge';
-import { useAIAuctioneer } from '../../hooks/useAIAuctioneer';
-import { AuctionReactions } from './AuctionReactions';
+// AuctionReactions removed
+// useAIAuctioneer removed
 import { AuctionTimeline } from './AuctionTimeline';
 import { LiveAuctionRoomSkeleton } from './AuctionSkeleton';
 import { AuctionPolicyModal } from './AuctionPolicyModal';
@@ -132,11 +132,9 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
 
     const [customBid, setCustomBid] = useState('');
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [soundEnabled, setSoundEnabled] = useState(true);
     const [showCarDetails, setShowCarDetails] = useState(false);
     const [showParticipantsList, setShowParticipantsList] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
-    const { speak, announceBid, announceTimer, announceSold, isSpeaking } = useAIAuctioneer(true); // Default true, can add toggle
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected');
     const [retryCount, setRetryCount] = useState(0);
     const [isRetrying, setIsRetrying] = useState(false);
@@ -462,9 +460,6 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                 )}
             </div>
 
-            {/* Reactions Overlay */}
-            <AuctionReactions />
-
             {/* Bidder Feed Overlay */}
             <div className="hidden lg:block">
                 <BidderFeed bids={bids} />
@@ -479,32 +474,7 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                 compact={false}
             />
 
-            {/* Auctioneer Announcement Overlay */}
-            <AnimatePresence>
-                {announcement && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -50, scale: 0.9 }}
-                        className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md w-full px-4"
-                    >
-                        <div className={`
-                            rounded-2xl p-4 shadow-2xl backdrop-blur-xl border text-center
-                            ${announcement.type === 'going_once' ? 'bg-yellow-500/90 border-yellow-400 text-white' : ''}
-                            ${announcement.type === 'going_twice' ? 'bg-orange-500/90 border-orange-400 text-white' : ''}
-                            ${announcement.type === 'sold' ? 'bg-green-500/90 border-green-400 text-white' : ''}
-                            ${announcement.type === 'warning' ? 'bg-red-500/90 border-red-400 text-white' : ''}
-                            ${announcement.type === 'info' ? 'bg-blue-500/90 border-blue-400 text-white' : ''}
-                        `}
-                        >
-                            <div className="flex items-center justify-center gap-3">
-                                <Icon name="Megaphone" className="w-6 h-6" />
-                                <p className="font-bold text-lg">{announcement.message}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Connection Status Indicator  - New Component */}
 
             {/* Top Bar */}
             <div className={`bg-slate-900/80 backdrop-blur-xl border-b border-white/10 sticky z-50 ${connectionStatus !== 'connected' ? 'top-14' : 'top-0'}`}>
@@ -561,15 +531,6 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                             <span className="font-semibold">{participants.length}</span>
                         </button>
 
-                        {/* Sound Toggle */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setSoundEnabled(!soundEnabled)}
-                            className={`!w-8 !h-8 md:!w-10 md:!h-10 rounded-xl transition-all ${soundEnabled ? '!bg-primary !text-white shadow-lg shadow-primary/20' : '!bg-white/10 !text-white/50'}`}
-                        >
-                            <Icon name={soundEnabled ? 'Volume2' : 'VolumeX'} className="w-4 h-4 md:w-5 md:h-5" />
-                        </Button>
                     </div>
                 </div>
             </div>
@@ -681,12 +642,6 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                                 <p className={`text-4xl md:text-6xl font-mono font-black tracking-widest relative z-10 ${isUrgent ? 'text-red-400' : timeRemaining < 3600 ? 'text-amber-400' : 'text-white'}`}>
                                     {hasEnded ? '00:00:00' : formatted}
                                 </p>
-                                {isSpeaking && (
-                                    <div className="absolute top-2 right-2 flex gap-1 items-center">
-                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-                                        <Icon name="Mic" className="w-4 h-4 text-green-400" />
-                                    </div>
-                                )}
                             </motion.div>
 
                             {/* King of the Hill - Highest Bidder */}
@@ -1075,19 +1030,21 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
             />
 
             {/* Mobile Sticky Action Bar */}
-            {isLive && !hasEnded && isRegistered && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 z-[60] lg:hidden pb-safe">
-                    <Button
-                        variant="success"
-                        size="lg"
-                        onClick={() => setShowMobileBidSheet(true)}
-                        className="w-full !text-lg !py-4 font-black shadow-lg shadow-emerald-500/20 touch-target"
-                        leftIcon={<Icon name="Hammer" className="w-6 h-6" />}
-                    >
-                        زايد الآن
-                    </Button>
-                </div>
-            )}
+            {
+                isLive && !hasEnded && isRegistered && (
+                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 z-[60] lg:hidden pb-safe">
+                        <Button
+                            variant="success"
+                            size="lg"
+                            onClick={() => setShowMobileBidSheet(true)}
+                            className="w-full !text-lg !py-4 font-black shadow-lg shadow-emerald-500/20 touch-target"
+                            leftIcon={<Icon name="Hammer" className="w-6 h-6" />}
+                        >
+                            زايد الآن
+                        </Button>
+                    </div>
+                )
+            }
 
             {/* Mobile Bid Sheet */}
             <MobileBidSheet
