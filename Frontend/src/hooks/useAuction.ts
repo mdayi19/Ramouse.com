@@ -158,7 +158,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
         // 2. Public Updates Channel (for Bids and Status - Reliable)
         console.log(`📡 Listening to public auction updates: auction-updates.${auctionId}`);
         const publicChannel = echo.channel(`auction-updates.${auctionId}`)
-            .listen('bid.placed', (event: AuctionBidPlacedEvent) => {
+            .listen('.bid.placed', (event: AuctionBidPlacedEvent) => {
                 console.log('⚡ Bid Placed Event Received:', event);
                 // Update auction state
                 setAuction(prev => prev ? {
@@ -201,7 +201,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     return newBids;
                 });
             })
-            .listen('auction.extended', (event: AuctionExtendedEvent) => {
+            .listen('.auction.extended', (event: AuctionExtendedEvent) => {
                 console.log('⏰ Auction Extended:', event);
                 setAuction(prev => prev ? {
                     ...prev,
@@ -211,7 +211,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     extensions_used: event.auction.extensionsUsed,
                 } : null);
             })
-            .listen('auction.started', (event: AuctionStartedEvent) => {
+            .listen('.auction.started', (event: AuctionStartedEvent) => {
                 console.log('🚀 Auction Started:', event);
                 setAuction(prev => prev ? {
                     ...prev,
@@ -221,7 +221,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     is_live: true,
                 } : null);
             })
-            .listen('auction.ended', (event: AuctionEndedEvent) => {
+            .listen('.auction.ended', (event: AuctionEndedEvent) => {
                 console.log('🏁 Auction Ended:', event);
                 setAuction(prev => prev ? {
                     ...prev,
@@ -232,14 +232,14 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     is_live: false,
                 } : null);
             })
-            .listen('auction.paused', (event: any) => {
+            .listen('.auction.paused', (event: any) => {
                 console.log('⏸️ Auction Paused:', event);
                 setAuction(prev => prev ? {
                     ...prev,
                     status: 'paused',
                 } : null);
             })
-            .listen('auction.resumed', (event: any) => {
+            .listen('.auction.resumed', (event: any) => {
                 console.log('▶️ Auction Resumed:', event);
                 setAuction(prev => prev ? {
                     ...prev,
@@ -248,7 +248,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
                     time_remaining: event.auction.timeRemaining,
                 } : null);
             })
-            .listen('auctioneer.announcement', (event: any) => {
+            .listen('.auctioneer.announcement', (event: any) => {
                 console.log('📢 Auctioneer Announcement:', event);
                 setAnnouncement({
                     message: event.message,

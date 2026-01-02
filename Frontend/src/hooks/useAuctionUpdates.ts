@@ -25,7 +25,7 @@ export const useAuctionUpdates = (
 
         const channels = auctionIds.map(id => {
             return echo.channel(`auction-updates.${id}`)
-                .listen('bid.placed', (event: any) => {
+                .listen('.bid.placed', (event: any) => {
                     console.log(`💰 Bid placed on ${id}:`, event);
                     onUpdateRef.current(id, {
                         current_bid: event.auction.currentBid,
@@ -34,7 +34,7 @@ export const useAuctionUpdates = (
                         time_remaining: event.auction.timeRemaining,
                     });
                 })
-                .listen('auction.started', (event: any) => {
+                .listen('.auction.started', (event: any) => {
                     console.log(`🔴 Auction ${id} started:`, event);
                     onUpdateRef.current(id, {
                         status: 'live',
@@ -42,7 +42,7 @@ export const useAuctionUpdates = (
                         is_live: true,
                     });
                 })
-                .listen('auction.ended', (event: any) => {
+                .listen('.auction.ended', (event: any) => {
                     console.log(`🏁 Auction ${id} ended:`, event);
                     onUpdateRef.current(id, {
                         status: 'ended',
@@ -84,7 +84,7 @@ export const useOutbidNotification = (
         // console.log(`🔔 Listening for outbid notifications for user ${userId}`);
 
         const channel = echo.private(`user.${userId}`)
-            .listen('outbid', (event: any) => {
+            .listen('.outbid', (event: any) => {
                 console.log('❌ You were outbid:', event);
 
                 if (onOutbid) {
@@ -93,7 +93,7 @@ export const useOutbidNotification = (
             });
 
         return () => {
-            channel.stopListening('outbid');
+            channel.stopListening('.outbid');
             // echo.leave(`user.${userId}`); // Don't leave private channel as it might be used by other hooks
         };
     }, [userId, echo, onOutbid]);
@@ -115,13 +115,13 @@ export const useAuctionListUpdates = (
     useEffect(() => {
         console.log('📡 Listening for auction list updates on public channel...');
         const channel = echo.channel('auctions')
-            .listen('auction.created', (event: any) => {
+            .listen('.auction.created', (event: any) => {
                 console.log('🆕 New Auction Created:', event.auction);
                 if (onUpdateRef.current && event.auction) {
                     onUpdateRef.current(event.auction);
                 }
             })
-            .listen('auction.started', (event: any) => {
+            .listen('.auction.started', (event: any) => {
                 console.log('🔴 Auction Started (Live):', event.auction);
                 if (onUpdateRef.current && event.auction) {
                     // Transform backend data to frontend Auction format
@@ -137,7 +137,7 @@ export const useAuctionListUpdates = (
                     onUpdateRef.current(auctionUpdate as Auction);
                 }
             })
-            .listen('auction.ended', (event: any) => {
+            .listen('.auction.ended', (event: any) => {
                 console.log('🏁 Auction Ended:', event.auction);
                 if (onUpdateRef.current && event.auction) {
                     const auctionUpdate = {
@@ -151,9 +151,9 @@ export const useAuctionListUpdates = (
             });
 
         return () => {
-            channel.stopListening('auction.created');
-            channel.stopListening('auction.started');
-            channel.stopListening('auction.ended');
+            channel.stopListening('.auction.created');
+            channel.stopListening('.auction.started');
+            channel.stopListening('.auction.ended');
             // echo.leave('auctions');
         };
     }, [echo]);
@@ -180,21 +180,21 @@ export const useAdminDashboardUpdates = (
         console.log('🛡️ Listening to Admin Dashboard updates...');
         const channel = echo.private('admin.dashboard');
 
-        channel.listen('admin.auction.stats_updated', (event: any) => {
+        channel.listen('.admin.auction.stats_updated', (event: any) => {
             console.log('📊 Stats Updated:', event.data);
             if (callbacksRef.current.onStatsUpdate) {
                 callbacksRef.current.onStatsUpdate(event.data);
             }
         });
 
-        channel.listen('admin.car.updated', (event: any) => {
+        channel.listen('.admin.car.updated', (event: any) => {
             console.log('🚗 Car Updated:', event);
             if (callbacksRef.current.onCarUpdate) {
                 callbacksRef.current.onCarUpdate();
             }
         });
 
-        channel.listen('admin.auction.created', (event: any) => {
+        channel.listen('.admin.auction.created', (event: any) => {
             console.log('🔨 Auction Created (Admin):', event);
             if (callbacksRef.current.onAuctionCreated) {
                 callbacksRef.current.onAuctionCreated(event.data);
@@ -202,9 +202,9 @@ export const useAdminDashboardUpdates = (
         });
 
         return () => {
-            channel.stopListening('admin.auction.stats_updated');
-            channel.stopListening('admin.car.updated');
-            channel.stopListening('admin.auction.created');
+            channel.stopListening('.admin.auction.stats_updated');
+            channel.stopListening('.admin.car.updated');
+            channel.stopListening('.admin.auction.created');
             // echo.leave('admin.dashboard');
         };
     }, [echo]);
