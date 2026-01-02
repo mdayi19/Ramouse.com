@@ -46,6 +46,9 @@ class Auction extends Model
         'payment_notes',
         'payment_deadline',
         'created_by',
+        'cancellation_reason',
+        'pause_reason',
+        'paused_at',
     ];
 
     protected $casts = [

@@ -714,4 +714,112 @@ class AuctionManagementController extends Controller
             'auction' => $auction->fresh(),
         ]);
     }
+
+    /**
+     * Pause an ongoing auction
+     */
+    public function pauseAuction(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $auction = Auction::findOrFail($id);
+
+        if (!in_array($auction->status, ['live', 'extended'])) {
+            return response()->json(['error' => 'المزاد ليس نشطاً'], 400);
+        }
+
+        $auction->update([
+            'status' => 'paused',
+            'pause_reason' => $request->reason,
+            'paused_at' => now(),
+        ]);
+
+        // Broadcast pause event
+        event(new \App\Events\AuctionPaused($auction, $request->reason ?? ''));
+
+        // Notify users
+        $this->notifyRegisteredUsers(
+            $auction,
+            'تم إيقاف المزاد مؤقتاً ⏸️',
+            'تم إيقاف المزاد: ' . $auction->title . ' مؤقتاً.' . ($request->reason ? ' السبب: ' . $request->reason : '')
+        );
+
+        return response()->json([
+            'message' => 'تم إيقاف المزاد مؤقتاً',
+            'auction' => $auction->fresh(),
+        ]);
+    }
+
+    /**
+     * Resume a paused auction
+     */
+    public function resumeAuction(Request $request, $id)
+    {
+        $request->validate([
+            'additional_minutes' => 'nullable|integer|min:0|max:1440',
+        ]);
+
+        $auction = Auction::findOrFail($id);
+
+        if ($auction->status !== 'paused') {
+            return response()->json(['error' => 'المزاد ليس متوقفاً'], 400);
+        }
+
+        $newEnd = $auction->scheduled_end;
+        if ($request->additional_minutes) {
+            $newEnd = $newEnd->addMinutes($request->additional_minutes);
+        }
+
+        $auction->update([
+            'status' => 'live',
+            'scheduled_end' => $newEnd,
+            'pause_reason' => null,
+            'paused_at' => null,
+        ]);
+
+        // Broadcast resume event
+        event(new \App\Events\AuctionResumed($auction));
+
+        $this->notifyRegisteredUsers(
+            $auction,
+            'استأنف المزاد ▶️',
+            'استأنف المزاد: ' . $auction->title
+        );
+
+        return response()->json([
+            'message' => 'تم استئناف المزاد',
+            'auction' => $auction->fresh(),
+        ]);
+    }
+
+    /**
+     * Broadcast an auctioneer announcement
+     */
+    public function announceAuction(Request $request, $id)
+    {
+        $request->validate([
+            'message' => 'required|string|max:500',
+            'type' => 'nullable|in:info,warning,going_once,going_twice,sold',
+        ]);
+
+        $auction = Auction::findOrFail($id);
+
+        if (!in_array($auction->status, ['live', 'extended', 'paused'])) {
+            return response()->json(['error' => 'المزاد ليس نشطاً'], 400);
+        }
+
+        // Broadcast announcement
+        event(new \App\Events\AuctionAnnouncement(
+            $auction,
+            $request->message,
+            $request->type ?? 'info'
+        ));
+
+        return response()->json([
+            'message' => 'تم إرسال الإعلان بنجاح',
+        ]);
+    }
 }
+

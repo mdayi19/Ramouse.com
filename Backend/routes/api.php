@@ -403,6 +403,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{id}/end', [App\Http\Controllers\Admin\AuctionManagementController::class, 'endAuction']);
             Route::post('/{id}/cancel', [App\Http\Controllers\Admin\AuctionManagementController::class, 'cancelAuction']);
             Route::post('/{id}/extend', [App\Http\Controllers\Admin\AuctionManagementController::class, 'extendAuction']);
+            Route::post('/{id}/pause', [App\Http\Controllers\Admin\AuctionManagementController::class, 'pauseAuction']);
+            Route::post('/{id}/resume', [App\Http\Controllers\Admin\AuctionManagementController::class, 'resumeAuction']);
+            Route::post('/{id}/announce', [App\Http\Controllers\Admin\AuctionManagementController::class, 'announceAuction']);
             Route::patch('/{id}/payment', [App\Http\Controllers\Admin\AuctionManagementController::class, 'updatePaymentStatus']);
         });
 
