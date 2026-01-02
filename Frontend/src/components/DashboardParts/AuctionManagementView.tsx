@@ -117,6 +117,28 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
         }
     };
 
+    const handlePauseAuction = async (id: string) => {
+        const reason = prompt('سبب الإيقاف (اختياري):');
+        try {
+            await auctionService.pauseAuction(id, reason || undefined);
+            showToast('تم إيقاف المزاد مؤقتاً', 'success');
+            fetchAuctions();
+        } catch (err: any) {
+            showToast(err.response?.data?.error || 'فشل إيقاف المزاد', 'error');
+        }
+    };
+
+    const handleResumeAuction = async (id: string) => {
+        const additionalMinutes = prompt('دقائق إضافية (اختياري):');
+        try {
+            await auctionService.resumeAuction(id, additionalMinutes ? parseInt(additionalMinutes) : undefined);
+            showToast('تم استئناف المزاد', 'success');
+            fetchAuctions();
+        } catch (err: any) {
+            showToast(err.response?.data?.error || 'فشل استئناف المزاد', 'error');
+        }
+    };
+
     const handleApproveCar = async (id: string) => {
         try {
             await auctionService.approveAuctionCar(id);
@@ -280,6 +302,8 @@ export const AuctionManagementView: React.FC<AuctionManagementViewProps> = ({ sh
                                 onStart={handleStartAuction}
                                 onEnd={handleEndAuction}
                                 onDelete={handleDeleteAuction}
+                                onPause={handlePauseAuction}
+                                onResume={handleResumeAuction}
                             />
                         )}
                     </motion.div>

@@ -15,6 +15,9 @@ interface AuctionListTabProps {
     onStart: (id: string) => void;
     onEnd: (id: string) => void;
     onDelete: (id: string) => void;
+    onPause?: (id: string) => void;
+    onResume?: (id: string) => void;
+    onAnnounce?: (id: string, message: string, type: string) => void;
 }
 
 type StatusConfig = {
@@ -28,6 +31,7 @@ const auctionStatusMap: Record<string, StatusConfig> = {
     'scheduled': { variant: 'info', label: 'مجدول', icon: 'Calendar' },
     'live': { variant: 'destructive', label: 'مباشر', icon: 'Radio', className: 'animate-pulse' },
     'extended': { variant: 'warning', label: 'ممدد', icon: 'Clock' },
+    'paused': { variant: 'secondary', label: 'متوقف', icon: 'Pause', className: 'bg-yellow-500 text-white' },
     'ended': { variant: 'secondary', label: 'انتهى', icon: 'Square' },
     'completed': { variant: 'success', label: 'مكتمل', icon: 'CheckCircle' },
     'cancelled': { variant: 'outline', label: 'ملغي', icon: 'XCircle' },
@@ -63,6 +67,9 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
     onStart,
     onEnd,
     onDelete,
+    onPause,
+    onResume,
+    onAnnounce,
 }) => {
     const [displayAuctions, setDisplayAuctions] = useState<Auction[]>(initialAuctions);
 
@@ -242,12 +249,12 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
                                     {/* Stats Grid */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className={`rounded-2xl p-3 text-center transition-colors ${(auction.status === 'completed' || auction.status === 'ended') && auction.winner_name
-                                                ? 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-2 border-emerald-300 dark:border-emerald-700'
-                                                : 'bg-blue-50 dark:bg-blue-900/10 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/20'
+                                            ? 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-2 border-emerald-300 dark:border-emerald-700'
+                                            : 'bg-blue-50 dark:bg-blue-900/10 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/20'
                                             }`}>
                                             <p className={`text-[10px] font-bold uppercase mb-1 ${(auction.status === 'completed' || auction.status === 'ended') && auction.winner_name
-                                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                                    : 'text-blue-600 dark:text-blue-400'
+                                                ? 'text-emerald-700 dark:text-emerald-400'
+                                                : 'text-blue-600 dark:text-blue-400'
                                                 }`}>
                                                 {(auction.status === 'completed' || auction.status === 'ended') && auction.winner_name
                                                     ? '💰 سعر البيع النهائي'
@@ -259,8 +266,8 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
                                                 initial={{ scale: 1.1 }}
                                                 animate={{ scale: 1 }}
                                                 className={`font-black text-xl font-mono tracking-tight ${(auction.status === 'completed' || auction.status === 'ended') && auction.winner_name
-                                                        ? 'text-emerald-700 dark:text-emerald-300'
-                                                        : 'text-blue-800 dark:text-blue-300'
+                                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                                    : 'text-blue-800 dark:text-blue-300'
                                                     }`}
                                             >
                                                 ${(auction.current_bid || auction.starting_bid || 0).toLocaleString()}
@@ -289,15 +296,35 @@ export const AuctionListTab: React.FC<AuctionListTabProps> = ({
                                                 <Icon name="Play" className="w-4 h-4 ml-1.5 fill-current" />
                                                 بدء المزاد
                                             </Button>
-                                        ) : (auction.status === 'live' || auction.status === 'extended') ? (
+                                        ) : auction.status === 'paused' ? (
                                             <Button
-                                                variant="danger"
-                                                onClick={() => onEnd(auction.id)}
-                                                className="flex-1 font-bold shadow-lg shadow-red-500/10 hover:shadow-red-500/20"
+                                                variant="success"
+                                                onClick={() => onResume?.(auction.id)}
+                                                className="flex-1 font-bold shadow-lg shadow-green-500/10 hover:shadow-green-500/20"
                                             >
-                                                <Icon name="Square" className="w-4 h-4 ml-1.5 fill-current" />
-                                                إنهاء
+                                                <Icon name="Play" className="w-4 h-4 ml-1.5" />
+                                                استئناف
                                             </Button>
+                                        ) : (auction.status === 'live' || auction.status === 'extended') ? (
+                                            <>
+                                                <Button
+                                                    variant="warning"
+                                                    onClick={() => onPause?.(auction.id)}
+                                                    className="flex-1 font-bold"
+                                                    title="إيقاف مؤقت"
+                                                >
+                                                    <Icon name="Pause" className="w-4 h-4 ml-1.5" />
+                                                    إيقاف
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    onClick={() => onEnd(auction.id)}
+                                                    className="flex-1 font-bold shadow-lg shadow-red-500/10 hover:shadow-red-500/20"
+                                                >
+                                                    <Icon name="Square" className="w-4 h-4 ml-1.5 fill-current" />
+                                                    إنهاء
+                                                </Button>
+                                            </>
                                         ) : (
                                             <div className="flex-1 py-2.5 text-center text-sm font-bold text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 cursor-not-allowed">
                                                 {auction.status === 'completed' ? 'تم البيع' : 'المزاد مغلق'}

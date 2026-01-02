@@ -87,6 +87,31 @@ export const updateAuctionPayment = async (id: string, data: { payment_status: s
     return response.data;
 };
 
+export const cancelAuction = async (id: string, reason: string) => {
+    const response = await api.post(`/admin/auctions/${id}/cancel`, { reason });
+    return response.data;
+};
+
+export const extendAuction = async (id: string, minutes: number) => {
+    const response = await api.post(`/admin/auctions/${id}/extend`, { minutes });
+    return response.data;
+};
+
+export const pauseAuction = async (id: string, reason?: string) => {
+    const response = await api.post(`/admin/auctions/${id}/pause`, { reason });
+    return response.data;
+};
+
+export const resumeAuction = async (id: string, additionalMinutes?: number) => {
+    const response = await api.post(`/admin/auctions/${id}/resume`, { additional_minutes: additionalMinutes });
+    return response.data;
+};
+
+export const announceAuction = async (id: string, message: string, type: 'info' | 'warning' | 'going_once' | 'going_twice' | 'sold' = 'info') => {
+    const response = await api.post(`/admin/auctions/${id}/announce`, { message, type });
+    return response.data;
+};
+
 export const getAuctionStats = async () => {
     const response = await api.get('/admin/auctions/stats');
     return response.data;

@@ -950,7 +950,7 @@ export interface ApiResponse<T = any> {
 
 // ======== AUCTION TYPES ========
 
-export type AuctionStatus = 'draft' | 'scheduled' | 'live' | 'extended' | 'ended' | 'completed' | 'cancelled';
+export type AuctionStatus = 'draft' | 'scheduled' | 'live' | 'extended' | 'paused' | 'ended' | 'completed' | 'cancelled';
 export type AuctionCarStatus = 'draft' | 'pending_approval' | 'approved' | 'in_auction' | 'sold' | 'unsold' | 'cancelled';
 export type AuctionPaymentStatus = 'pending' | 'awaiting_payment' | 'payment_received' | 'completed' | 'refunded' | 'paid';
 
