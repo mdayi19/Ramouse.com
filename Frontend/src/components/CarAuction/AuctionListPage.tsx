@@ -54,24 +54,42 @@ export const AuctionListPage: React.FC<AuctionListPageProps> = ({
         ));
     });
 
-    // Listen for new auctions
-    useAuctionListUpdates((newAuction: Auction) => {
+    // Listen for new auctions and status updates (live/ended) on public channel
+    useAuctionListUpdates((auctionUpdate: Auction) => {
         setAuctions(prev => {
-            // Prevent duplicates
-            if (prev.find(a => a.id === newAuction.id)) return prev;
+            // Check if this is an update to an existing auction
+            const existingIndex = prev.findIndex(a => a.id === auctionUpdate.id);
 
-            // Filter based on active tab
-            if (activeTab === 'live' && !['live', 'extended'].includes(newAuction.status)) return prev;
-            if (activeTab === 'upcoming' && newAuction.status !== 'scheduled') return prev;
-            if (activeTab === 'ended' && !['ended', 'completed'].includes(newAuction.status)) return prev;
+            if (existingIndex !== -1) {
+                // Update existing auction
+                const updated = [...prev];
+                updated[existingIndex] = { ...updated[existingIndex], ...auctionUpdate };
+
+                // Notify user when auction goes live
+                if (auctionUpdate.is_live && !prev[existingIndex].is_live) {
+                    showToast?.(`🔴 مزاد مباشر الآن: ${updated[existingIndex].title}`, 'info');
+                    confetti({
+                        particleCount: 50,
+                        spread: 60,
+                        origin: { y: 0.6 },
+                        colors: ['#EF4444', '#F97316', '#FBBF24']
+                    });
+                }
+
+                return updated;
+            }
+
+            // This is a new auction - only add if it passes tab filter
+            if (activeTab === 'live' && !['live', 'extended'].includes(auctionUpdate.status)) return prev;
+            if (activeTab === 'upcoming' && auctionUpdate.status !== 'scheduled') return prev;
+            if (activeTab === 'ended' && !['ended', 'completed'].includes(auctionUpdate.status)) return prev;
 
             // Notify user about new live auctions
-            if (newAuction.is_live) {
-                showToast?.(`🔴 مزاد جديد مباشر: ${newAuction.title}`, 'info');
+            if (auctionUpdate.is_live) {
+                showToast?.(`🔴 مزاد جديد مباشر: ${auctionUpdate.title}`, 'info');
                 setShowNewAuctionBadge(true);
                 setTimeout(() => setShowNewAuctionBadge(false), 5000);
 
-                // Confetti for new live auction
                 confetti({
                     particleCount: 50,
                     spread: 60,
@@ -80,7 +98,7 @@ export const AuctionListPage: React.FC<AuctionListPageProps> = ({
                 });
             }
 
-            return [newAuction, ...prev];
+            return [auctionUpdate, ...prev];
         });
     });
 

@@ -25,17 +25,8 @@ export const useAuctionUpdates = (
 
         const channels = auctionIds.map(id => {
             return echo.channel(`auction-updates.${id}`)
-                .listen('status.changed', (event: any) => {
-                    console.log(`🔄 Status changed for ${id}:`, event);
-                    onUpdateRef.current(id, {
-                        status: event.status,
-                        actual_start: event.actual_start,
-                        actual_end: event.actual_end,
-                        is_live: event.is_live,
-                        has_ended: event.has_ended,
-                    });
-                })
                 .listen('bid.placed', (event: any) => {
+                    console.log(`💰 Bid placed on ${id}:`, event);
                     onUpdateRef.current(id, {
                         current_bid: event.auction.currentBid,
                         bid_count: event.auction.bidCount,
@@ -43,31 +34,38 @@ export const useAuctionUpdates = (
                         time_remaining: event.auction.timeRemaining,
                     });
                 })
-                .listen('auction.started', (event: any) => {
-                    onUpdateRef.current(id, {
-                        status: 'live',
-                        actual_start: event.auction.actualStart,
-                        is_live: true,
-                    });
-                })
-                .listen('auction.ended', (event: any) => {
-                    onUpdateRef.current(id, {
-                        status: 'ended',
-                        has_ended: true,
-                        is_live: false,
-                        winner_name: event.auction.winnerName,
-                        final_price: event.auction.finalPrice,
-                    });
-                });
-        });
-
-        return () => {
-            // console.log(`🚪 Unsubscribing from auction updates`);
-            auctionIds.forEach(id => {
-                echo.leave(`auction-updates.${id}`);
+            onUpdateRef.current(id, {
+                current_bid: event.auction.currentBid,
+                bid_count: event.auction.bidCount,
+                minimum_bid: event.auction.minimumBid,
+                time_remaining: event.auction.timeRemaining,
             });
-        };
-    }, [JSON.stringify(auctionIds), echo]);
+        })
+            .listen('auction.started', (event: any) => {
+                onUpdateRef.current(id, {
+                    status: 'live',
+                    actual_start: event.auction.actualStart,
+                    is_live: true,
+                });
+            })
+            .listen('auction.ended', (event: any) => {
+                onUpdateRef.current(id, {
+                    status: 'ended',
+                    has_ended: true,
+                    is_live: false,
+                    winner_name: event.auction.winnerName,
+                    final_price: event.auction.finalPrice,
+                });
+            });
+    });
+
+    return () => {
+        // console.log(`🚪 Unsubscribing from auction updates`);
+        auctionIds.forEach(id => {
+            echo.leave(`auction-updates.${id}`);
+        });
+    };
+}, [JSON.stringify(auctionIds), echo]);
 };
 
 /**
@@ -107,30 +105,60 @@ export const useOutbidNotification = (
 };
 
 /**
- * Hook to listen for new auctions being created (Public)
+ * Hook to listen for new auctions being created/started (Public)
  */
 export const useAuctionListUpdates = (
-    onAuctionCreated: (auction: Auction) => void
+    onAuctionUpdate: (auction: Auction) => void
 ) => {
     const { echo } = useRealtime();
-    const onCreatedRef = useRef(onAuctionCreated);
+    const onUpdateRef = useRef(onAuctionUpdate);
 
     useEffect(() => {
-        onCreatedRef.current = onAuctionCreated;
-    }, [onAuctionCreated]);
+        onUpdateRef.current = onAuctionUpdate;
+    }, [onAuctionUpdate]);
 
     useEffect(() => {
-        console.log('📡 Listening for new auctions...');
+        console.log('📡 Listening for auction list updates on public channel...');
         const channel = echo.channel('auctions')
             .listen('auction.created', (event: any) => {
                 console.log('🆕 New Auction Created:', event.auction);
-                if (onCreatedRef.current) {
-                    onCreatedRef.current(event.auction);
+                if (onUpdateRef.current && event.auction) {
+                    onUpdateRef.current(event.auction);
+                }
+            })
+            .listen('auction.started', (event: any) => {
+                console.log('🔴 Auction Started (Live):', event.auction);
+                if (onUpdateRef.current && event.auction) {
+                    // Transform backend data to frontend Auction format
+                    const auctionUpdate = {
+                        id: event.auction.id,
+                        title: event.auction.title,
+                        status: 'live',
+                        is_live: true,
+                        current_bid: event.auction.currentBid,
+                        minimum_bid: event.auction.minimumBid,
+                        starting_bid: event.auction.startingBid,
+                    };
+                    onUpdateRef.current(auctionUpdate as Auction);
+                }
+            })
+            .listen('auction.ended', (event: any) => {
+                console.log('🏁 Auction Ended:', event.auction);
+                if (onUpdateRef.current && event.auction) {
+                    const auctionUpdate = {
+                        id: event.auction.id,
+                        status: 'ended',
+                        is_live: false,
+                        has_ended: true,
+                    };
+                    onUpdateRef.current(auctionUpdate as Auction);
                 }
             });
 
         return () => {
             channel.stopListening('auction.created');
+            channel.stopListening('auction.started');
+            channel.stopListening('auction.ended');
             // echo.leave('auctions');
         };
     }, [echo]);
