@@ -11,9 +11,12 @@ use App\Events\AuctionExtended;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Controllers\Traits\GetUserProfileTrait;
 
 class BidController extends Controller
 {
+    use GetUserProfileTrait;
+
     /**
      * Place a bid on an auction
      */
@@ -61,7 +64,7 @@ class BidController extends Controller
                 throw new \Exception('يجب التسجيل أولاً للمشاركة في المزاد');
             }
 
-            // Prevent seller from bidding on their own car (future-proofing for user-submitted cars)
+            // Prevent seller from bidding on their own car
             if (
                 $auction->car->seller_type === 'user' &&
                 $auction->car->seller_id === $profile->id &&
@@ -101,6 +104,14 @@ class BidController extends Controller
                 ]));
             }
 
+            // FIXED: Get auto-bid candidate BEFORE creating new bid and marking others as outbid
+            $autoBidCandidate = AuctionBid::where('auction_id', $auction->id)
+                ->where('user_id', '!=', $profile->id)
+                ->whereNotNull('max_auto_bid')
+                ->where('max_auto_bid', '>', $bidAmount)
+                ->orderBy('max_auto_bid', 'desc')
+                ->first();
+
             // Mark previous highest bid as outbid
             $previousBid = AuctionBid::where('auction_id', $auction->id)
                 ->where('status', 'valid')
@@ -113,8 +124,6 @@ class BidController extends Controller
                 event(new \App\Events\UserOutbid($previousBid, $auction, $bidAmount));
             }
 
-            // ... (Existing validation code) ...
-
             // Create the new bid
             $bid = AuctionBid::create([
                 'auction_id' => $auction->id,
@@ -123,7 +132,7 @@ class BidController extends Controller
                 'bidder_name' => $profile->name,
                 'bidder_phone' => $user->phone,
                 'amount' => $bidAmount,
-                'max_auto_bid' => $request->input('max_auto_bid'), // Store max auto bid limit
+                'max_auto_bid' => $request->input('max_auto_bid'),
                 'bid_time' => now(),
                 'wallet_hold_id' => $registration->wallet_hold_id,
                 'status' => 'valid',
@@ -137,33 +146,23 @@ class BidController extends Controller
                 'bid_count' => $auction->bid_count + 1,
             ]);
 
-            // AUTO-BIDDING LOGIC
-            // Check if there's a previous bidder with a higher max_auto_bid
-            $previousHightestBid = AuctionBid::where('auction_id', $auction->id)
-                ->where('id', '!=', $bid->id)
-                ->where('status', 'valid') // Or 'outbid' if we want to reactivate
-                ->where('max_auto_bid', '>', $bidAmount)
-                ->orderBy('max_auto_bid', 'desc')
-                ->first();
-
-            if ($previousHightestBid) {
-                // Calculate next bid amount (Current + Increment)
-                $increment = $auction->bid_increment ?? 50; // Default increment
+            // AUTO-BIDDING LOGIC (FIXED - using pre-fetched candidate)
+            if ($autoBidCandidate) {
+                $increment = $auction->bid_increment ?? 50;
                 $nextBidAmount = $bidAmount + $increment;
 
-                // Ensure we don't exceed their max limit
-                if ($nextBidAmount <= $previousHightestBid->max_auto_bid) {
+                if ($nextBidAmount <= $autoBidCandidate->max_auto_bid) {
                     // Place automatic counter-bid
                     $autoBid = AuctionBid::create([
                         'auction_id' => $auction->id,
-                        'user_id' => $previousHightestBid->user_id,
-                        'user_type' => $previousHightestBid->user_type,
-                        'bidder_name' => $previousHightestBid->bidder_name,
-                        'bidder_phone' => $previousHightestBid->bidder_phone, // Assuming we have access or can copy
+                        'user_id' => $autoBidCandidate->user_id,
+                        'user_type' => $autoBidCandidate->user_type,
+                        'bidder_name' => $autoBidCandidate->bidder_name,
+                        'bidder_phone' => $autoBidCandidate->bidder_phone,
                         'amount' => $nextBidAmount,
-                        'max_auto_bid' => $previousHightestBid->max_auto_bid, // Carry over limit
+                        'max_auto_bid' => $autoBidCandidate->max_auto_bid,
                         'bid_time' => now(),
-                        'wallet_hold_id' => $previousHightestBid->wallet_hold_id,
+                        'wallet_hold_id' => $autoBidCandidate->wallet_hold_id,
                         'status' => 'valid',
                         'is_auto_bid' => true,
                     ]);
@@ -178,14 +177,10 @@ class BidController extends Controller
                         'bid_count' => $auction->bid_count + 1,
                     ]);
 
-                    // Notify that auto-bid happened
-                    // event(new AuctionBidPlaced($auction->fresh(), $autoBid));
-
-                    // Set return to the auto-bid (so UI updates correctly showing user is outbid)
+                    // Broadcast the auto-bid
+                    event(new AuctionBidPlaced($auction->fresh(), $autoBid));
                 }
             }
-
-            // ... (Rest of existing logic: Auto-extend, Broadcast) ...
 
             // Check if should auto-extend
             if ($auction->shouldAutoExtend()) {
@@ -243,28 +238,6 @@ class BidController extends Controller
     }
 
     /**
-     * Get user profile and type
-     */
-    private function getUserProfile($user)
-    {
-        $profile = null;
-        $userType = null;
-
-        if ($user && $user->customer) {
-            $profile = $user->customer;
-            $userType = 'customer';
-        } elseif ($user && $user->technician) {
-            $profile = $user->technician;
-            $userType = 'technician';
-        } elseif ($user && $user->towTruck) {
-            $profile = $user->towTruck;
-            $userType = 'tow_truck';
-        }
-
-        return [$profile, $userType];
-    }
-
-    /**
      * Instant Buy Now purchase
      */
     public function buyNow(Request $request, $auctionId)
@@ -280,7 +253,7 @@ class BidController extends Controller
         $auction = Auction::lockForUpdate()->findOrFail($auctionId);
         $car = $auction->car;
 
-        // Prevent seller from buying their own car (future-proofing for user-submitted cars)
+        // Prevent seller from buying their own car
         if (
             $car->seller_type === 'user' &&
             $car->seller_id === $profile->id &&
@@ -338,11 +311,6 @@ class BidController extends Controller
 
     /**
      * Release deposits for non-winning users
-     * 
-     * @param Auction $auction
-     * @param string $winnerId
-     * @param string $winnerType
-     * @return void
      */
     private function releaseNonWinnerDeposits(Auction $auction, string $winnerId, string $winnerType): void
     {

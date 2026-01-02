@@ -366,7 +366,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
         >
             <div className="mb-8">
                 <div className="flex items-center justify-between relative">
-                    <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-gray-100 -z-10" />
+                    <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-gray-100 dark:bg-slate-800 -z-10" />
                     {steps.map((step, index) => {
                         const isActive = index === currentStepIndex;
                         const isCompleted = index < currentStepIndex;
@@ -374,12 +374,12 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                             <button
                                 key={step.id}
                                 type="button"
-                                className="flex flex-col items-center gap-2 bg-white px-2 cursor-pointer focus:outline-none"
+                                className="flex flex-col items-center gap-2 bg-white dark:bg-slate-900 px-2 cursor-pointer focus:outline-none"
                                 onClick={() => index < currentStepIndex && setCurrentStep(step.id)}
                             >
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${isActive ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200 scale-110' :
                                     isCompleted ? 'bg-green-500 border-green-500 text-white' :
-                                        'bg-white border-gray-200 text-gray-400'
+                                        'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400'
                                     }`}>
                                     {isCompleted ? <Check size={18} strokeWidth={3} /> : step.icon}
                                 </div>
@@ -407,57 +407,57 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">عنوان الإعلان</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">عنوان الإعلان</label>
                                         <input
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all font-medium"
                                             placeholder="مثال: مرسيدس S-Class 2023 فل كامل"
                                             autoFocus
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">الماركة</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الماركة</label>
                                         <input
                                             type="text"
                                             value={formData.brand}
                                             onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
                                             placeholder="Mercedes"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">الموديل</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الموديل</label>
                                         <input
                                             type="text"
                                             value={formData.model}
                                             onChange={e => setFormData({ ...formData, model: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
                                             placeholder="S500"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">سنة الصنع</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">سنة الصنع</label>
                                         <input
                                             type="number"
                                             value={formData.year}
                                             onChange={e => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">رقم الهيكل (VIN)</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">رقم الهيكل (VIN)</label>
                                         <div className="relative">
                                             <input
                                                 type="text"
                                                 value={formData.vin}
                                                 onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all uppercase font-mono tracking-widest"
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all uppercase font-mono tracking-widest"
                                                 placeholder="WDB..."
                                             />
                                             {formData.vin.length === 17 && (
@@ -467,16 +467,16 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                     </div>
 
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-bold text-gray-700 mb-3">الحالة</label>
-                                        <div className="flex p-1 bg-gray-100 rounded-xl">
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">الحالة</label>
+                                        <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
                                             {(['new', 'used'] as const).map(condition => (
                                                 <button
                                                     key={condition}
                                                     type="button"
                                                     onClick={() => setFormData({ ...formData, condition })}
                                                     className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${formData.condition === condition
-                                                        ? 'bg-white text-blue-600 shadow-sm'
-                                                        : 'text-gray-500 hover:text-gray-700'
+                                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                                         }`}
                                                 >
                                                     {condition === 'new' ? '✨ جديدة' : '🔄 مستعملة'}
@@ -486,12 +486,12 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                     </div>
 
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">الوصف</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الوصف</label>
                                         <textarea
                                             value={formData.description}
                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                                             rows={4}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all resize-none"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all resize-none"
                                             placeholder="اكتب أبرز مواصفات وعيوب السيارة..."
                                         />
                                     </div>
@@ -502,7 +502,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                         {currentStep === 'specs' && (
                             <div className="space-y-8">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-3">نوع الهيكل</label>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">نوع الهيكل</label>
                                     <div className="flex flex-wrap gap-2">
                                         {BODY_TYPES.map(type => (
                                             <button
@@ -511,7 +511,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                                 onClick={() => setFormData({ ...formData, body_type: type.id })}
                                                 className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${formData.body_type === type.id
                                                     ? 'bg-blue-50 border-blue-200 text-blue-700 ring-2 ring-blue-500/20'
-                                                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                                                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-slate-600'
                                                     }`}
                                             >
                                                 {type.label}
@@ -522,24 +522,24 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">الممشى (كم)</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الممشى (كم)</label>
                                         <input
                                             type="number"
                                             value={formData.mileage}
                                             onChange={e => setFormData({ ...formData, mileage: parseInt(e.target.value) })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">الموقع</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الموقع</label>
                                         <div className="relative">
                                             <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                             <input
                                                 type="text"
                                                 value={formData.location}
                                                 onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                                                className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-900/50 transition-all"
                                                 placeholder="المدينة، المنطقة"
                                             />
                                         </div>
@@ -548,16 +548,16 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-3">ناقل الحركة</label>
-                                        <div className="flex rounded-xl bg-gray-50 p-1">
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">ناقل الحركة</label>
+                                        <div className="flex rounded-xl bg-gray-50 dark:bg-slate-800 p-1">
                                             {TRANSMISSIONS.map(t => (
                                                 <button
                                                     key={t.id}
                                                     type="button"
                                                     onClick={() => setFormData({ ...formData, transmission: t.id })}
                                                     className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${formData.transmission === t.id
-                                                        ? 'bg-white text-blue-600 shadow-sm'
-                                                        : 'text-gray-500 hover:text-gray-700'
+                                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                                         }`}
                                                 >
                                                     {t.label}
@@ -567,7 +567,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-3">الوقود</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">الوقود</label>
                                         <div className="flex flex-wrap gap-2">
                                             {FUEL_TYPES.map(f => (
                                                 <button
@@ -576,7 +576,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                                     onClick={() => setFormData({ ...formData, fuel_type: f.id })}
                                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${formData.fuel_type === f.id
                                                         ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                                        : 'bg-white border-gray-200 text-gray-600'
+                                                        : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300'
                                                         }`}
                                                 >
                                                     {f.label}
@@ -588,7 +588,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-3">اللون الخارجي</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">اللون الخارجي</label>
                                         <div className="flex flex-wrap gap-2">
                                             {COLORS.map(c => (
                                                 <button
@@ -606,7 +606,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-3">اللون الداخلي</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">اللون الداخلي</label>
                                         <div className="flex flex-wrap gap-2">
                                             {COLORS.slice(0, 6).map(c => (
                                                 <button
@@ -626,7 +626,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-3">المميزات الإضافية</label>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">المميزات الإضافية</label>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {FEATURES.map(feature => (
                                             <button
@@ -635,7 +635,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                                 onClick={() => toggleFeature(feature)}
                                                 className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 justify-center border ${formData.features.includes(feature)
                                                     ? 'bg-green-50 text-green-700 border-green-200'
-                                                    : 'bg-white text-gray-600 border-gray-100 hover:border-gray-200'
+                                                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-100 dark:border-slate-700 hover:border-gray-200'
                                                     }`}
                                             >
                                                 {formData.features.includes(feature) && <Check size={14} className="text-green-600" />}
@@ -651,8 +651,8 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                             <div className="space-y-6">
                                 <div
                                     className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer group ${isDragging
-                                        ? 'border-blue-500 bg-blue-50'
-                                        : 'border-gray-200 hover:border-blue-400 hover:bg-gray-50'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                        : 'border-gray-200 dark:border-slate-700 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-slate-800'
                                         }`}
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
@@ -667,14 +667,14 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                         onChange={handleImageChange}
                                         className="hidden"
                                     />
-                                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                                         {uploadingImages ? (
                                             <Loader2 className="animate-spin text-blue-600" size={28} />
                                         ) : (
                                             <Upload className="text-blue-600" size={28} />
                                         )}
                                     </div>
-                                    <h4 className="text-lg font-bold text-gray-900 mb-1">
+                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                                         {isDragging ? 'أفلت الصور هنا' : 'اضغط للرفع أو اسحب الصور'}
                                     </h4>
                                     <p className="text-sm text-gray-500">
@@ -686,7 +686,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                 {formData.media.images.length > 0 && (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-in fade-in duration-500">
                                         {formData.media.images.map((url, idx) => (
-                                            <div key={idx} className="relative group aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                                            <div key={idx} className="relative group aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
                                                 <img
                                                     src={url}
                                                     alt={`Car ${idx}`}
@@ -712,7 +712,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                 )}
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1.5">رابط فيديو يوتيوب (اختياري)</label>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">رابط فيديو يوتيوب (اختياري)</label>
                                     <div className="relative">
                                         <Video className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
@@ -722,7 +722,7 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
                                                 ...formData,
                                                 media: { ...formData.media, videos: e.target.value ? [e.target.value] : [] }
                                             })}
-                                            className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-50/50 transition-all font-mono text-sm"
+                                            className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-red-500 focus:ring-4 focus:ring-red-50/50 dark:focus:ring-red-900/20 transition-all font-mono text-sm"
                                             placeholder="https://youtu.be/..."
                                         />
                                     </div>
@@ -732,36 +732,36 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
 
                         {currentStep === 'pricing' && (
                             <div className="space-y-6">
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                                    <h3 className="font-bold text-blue-900 mb-6 flex items-center gap-2 text-lg">
+                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-6 border border-blue-100 dark:border-white/5">
+                                    <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-6 flex items-center gap-2 text-lg">
                                         <DollarSign className="w-6 h-6" />
                                         تــفــاصــيــل الــمــزاد
                                     </h3>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1.5">سعر البداية (Starting Bid) *</label>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">سعر البداية (Starting Bid) *</label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
                                                 <input
                                                     type="number"
                                                     value={formData.starting_price}
                                                     onChange={e => setFormData({ ...formData, starting_price: parseFloat(e.target.value) })}
-                                                    className="w-full pl-8 pr-4 py-4 text-xl font-bold text-blue-700 bg-white rounded-xl border border-blue-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                                                    className="w-full pl-8 pr-4 py-4 text-xl font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all"
                                                     placeholder="0"
                                                 />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1.5">مقدار الزيادة (Bid Increment) *</label>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">مقدار الزيادة (Bid Increment) *</label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
                                                 <input
                                                     type="number"
                                                     value={formData.bid_increment}
                                                     onChange={e => setFormData({ ...formData, bid_increment: parseFloat(e.target.value) || 100 })}
-                                                    className="w-full pl-8 pr-4 py-4 text-xl font-bold text-indigo-700 bg-white rounded-xl border border-blue-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all"
+                                                    className="w-full pl-8 pr-4 py-4 text-xl font-bold text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all"
                                                     placeholder="100"
                                                 />
                                             </div>
@@ -770,28 +770,28 @@ const AuctionCarModal: React.FC<AuctionCarModalProps> = ({
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1.5">الحد الأدنى للبيع (Reserve)</label>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">الحد الأدنى للبيع (Reserve)</label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
                                                 <input
                                                     type="number"
                                                     value={formData.reserve_price || ''}
                                                     onChange={e => setFormData({ ...formData, reserve_price: parseFloat(e.target.value) || 0 })}
-                                                    className="w-full pl-8 pr-4 py-3 text-lg font-bold text-gray-700 bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                                                    className="w-full pl-8 pr-4 py-3 text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all"
                                                     placeholder="اختياري"
                                                 />
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1.5">لن تباع السيارة بأقل من هذا السعر</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1.5">سعر الشراء الفوري (Buy Now)</label>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1.5">سعر الشراء الفوري (Buy Now)</label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
                                                 <input
                                                     type="number"
                                                     value={formData.buy_now_price || ''}
                                                     onChange={e => setFormData({ ...formData, buy_now_price: parseFloat(e.target.value) || 0 })}
-                                                    className="w-full pl-8 pr-4 py-3 text-lg font-bold text-gray-700 bg-white rounded-xl border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-50 transition-all"
+                                                    className="w-full pl-8 pr-4 py-3 text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 focus:border-green-500 focus:ring-4 focus:ring-green-50 dark:focus:ring-green-900/30 transition-all"
                                                     placeholder="اختياري"
                                                 />
                                             </div>

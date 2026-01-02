@@ -62,14 +62,16 @@ class ProcessAuctionEnd implements ShouldQueue
             $reserveMet = !$car->reserve_price || $winningBid->amount >= $car->reserve_price;
 
             if ($reserveMet) {
-                // Update auction with winner
+                // FIXED: Update auction with winner, winner_name, payment_deadline, and correct payment_status
                 $auction->update([
                     'status' => 'ended',
                     'actual_end' => now(),
                     'winner_id' => $winningBid->user_id,
                     'winner_type' => $winningBid->user_type,
+                    'winner_name' => $winningBid->bidder_name,
                     'final_price' => $winningBid->amount,
-                    'payment_status' => 'pending',
+                    'payment_status' => 'awaiting_payment',
+                    'payment_deadline' => now()->addDays(3),
                 ]);
 
                 // Update car status

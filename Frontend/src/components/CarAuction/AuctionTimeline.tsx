@@ -84,13 +84,13 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
 
     return (
         <div className={`flex flex-col h-full ${className}`}>
-            <div className="p-4 border-b border-white/5 bg-white/5 backdrop-blur-md sticky top-0 z-10">
-                <h3 className="text-white font-bold flex items-center justify-between text-sm">
+            <div className="p-4 border-b border-slate-200 dark:border-white/5 bg-slate-50/80 dark:bg-white/5 backdrop-blur-md sticky top-0 z-10">
+                <h3 className="text-slate-900 dark:text-white font-bold flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                         نشاط المزاد
                     </div>
-                    <span className="text-xs text-slate-400 font-normal">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">
                         {events.length} حدث
                     </span>
                 </h3>
@@ -98,10 +98,10 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 relative">
                 {/* Vertical Line */}
-                <div className="absolute top-4 bottom-4 right-[27px] w-0.5 bg-white/5"></div>
+                <div className="absolute top-4 bottom-4 right-[27px] w-0.5 bg-slate-200 dark:bg-white/5"></div>
 
                 {events.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-500 min-h-[200px]">
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 min-h-[200px]">
                         <Icon name="Activity" className="w-10 h-10 mb-3 opacity-20" />
                         <p>لا توجد مزايدات حتى الآن</p>
                         <p className="text-xs opacity-60 mt-1">كن أول من يزايد!</p>
@@ -123,8 +123,8 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
                         >
                             {/* Icon Node */}
                             <div className="relative z-10 flex-shrink-0">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-slate-900 
-                                    ${event.type === 'bid' ? (index === 0 ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-300') : ''}
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-slate-50 dark:ring-slate-900 
+                                    ${event.type === 'bid' ? (index === 0 ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300') : ''}
                                     ${event.type === 'start' ? 'bg-blue-500 text-white' : ''}
                                     ${event.type === 'end' ? 'bg-red-500 text-white' : ''}
                                     ${event.type === 'reserve_met' ? 'bg-yellow-500 text-white' : ''}
@@ -143,17 +143,17 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
                             {/* Content */}
                             <div className="flex-1 min-w-0 pt-1">
                                 {event.type === 'bid' && (
-                                    <div className={`rounded-xl p-3 border ${index === 0 ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-white/5 border-white/5'}`}>
+                                    <div className={`rounded-xl p-3 border ${index === 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500/30' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/5'}`}>
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <p className="text-white text-sm font-bold truncate">
+                                                <p className="text-slate-900 dark:text-white text-sm font-bold truncate">
                                                     {event.data.display_name || event.data.anonymized_name}
                                                 </p>
                                                 <p className="text-slate-500 text-[10px]">
                                                     {event.date.toLocaleTimeString('ar-SA')}
                                                 </p>
                                             </div>
-                                            <p className={`font-mono font-bold ${index === 0 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                                            <p className={`font-mono font-bold ${index === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
                                                 ${event.data.amount.toLocaleString()}
                                             </p>
                                         </div>
@@ -189,7 +189,7 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
                         <button
                             onClick={onLoadMore}
                             disabled={loadingMore}
-                            className="text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+                            className="text-xs text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 px-4 py-2 rounded-full transition-all flex items-center gap-2 mx-auto disabled:opacity-50 border border-slate-200 dark:border-transparent"
                         >
                             {loadingMore ? (
                                 <Icon name="Loader" className="w-3 h-3 animate-spin" />

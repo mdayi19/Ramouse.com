@@ -13,17 +13,20 @@ use App\Models\UserTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-
 use App\Services\AuctionWalletService;
+use App\Http\Controllers\Traits\GetUserProfileTrait;
 
 class AuctionController extends Controller
 {
+    use GetUserProfileTrait;
+
     protected $auctionWalletService;
 
     public function __construct(AuctionWalletService $auctionWalletService)
     {
         $this->auctionWalletService = $auctionWalletService;
     }
+
     /**
      * List auctions (public)
      */
@@ -133,7 +136,7 @@ class AuctionController extends Controller
             return response()->json(['error' => 'أنت مسجل بالفعل في هذا المزاد'], 400);
         }
 
-        // Prevent seller from registering in their own auction (future-proofing for user-submitted cars)
+        // Prevent seller from registering in their own auction
         if (
             $auction->car->seller_type === 'user' &&
             $auction->car->seller_id === $profile->id &&
@@ -146,7 +149,7 @@ class AuctionController extends Controller
 
         // Check wallet balance if deposit required
         if ($depositAmount > 0) {
-            $totalHolds = UserWalletHold::where('user_id', $user->id)
+            $totalHolds = UserWalletHold::where('user_id', $profile->id)
                 ->where('user_type', $userType)
                 ->validHolds()
                 ->sum('amount');
@@ -165,17 +168,17 @@ class AuctionController extends Controller
         DB::transaction(function () use ($auction, $profile, $userType, $user, $depositAmount, &$registration) {
             $walletHoldId = null;
 
-            // Create wallet hold if deposit required
+            // FIXED: Create wallet hold using $profile->id, not $user->id
             if ($depositAmount > 0) {
                 $walletHold = UserWalletHold::create([
-                    'user_id' => $user->id,
+                    'user_id' => $profile->id,
                     'user_type' => $userType,
                     'amount' => $depositAmount,
                     'reason' => 'تأمين المزاد: ' . $auction->title,
                     'reference_type' => 'auction',
                     'reference_id' => $auction->id,
                     'status' => 'active',
-                    'expires_at' => $auction->scheduled_end->addDays(3), // Hold until auction ends + payment period
+                    'expires_at' => $auction->scheduled_end->addDays(3),
                 ]);
                 $walletHoldId = $walletHold->id;
             }
@@ -346,13 +349,14 @@ class AuctionController extends Controller
         try {
             $this->auctionWalletService->chargeWinner($auction);
 
-            // Update Auction status
+            // Update auction status and winner name
             $auction->update([
                 'payment_status' => 'paid',
                 'status' => 'completed',
+                'winner_name' => $profile->name,
             ]);
 
-            // Notify User
+            // Notify user
             Notification::create([
                 'user_id' => $user->id,
                 'title' => 'تم الدفع بنجاح',
@@ -369,27 +373,5 @@ class AuctionController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
-    }
-
-    /**
-     * Get user profile and type (helper from WalletController pattern)
-     */
-    private function getUserProfile($user)
-    {
-        $profile = null;
-        $userType = null;
-
-        if ($user->customer) {
-            $profile = $user->customer;
-            $userType = 'customer';
-        } elseif ($user->technician) {
-            $profile = $user->technician;
-            $userType = 'technician';
-        } elseif ($user->towTruck) {
-            $profile = $user->towTruck;
-            $userType = 'tow_truck';
-        }
-
-        return [$profile, $userType];
     }
 }

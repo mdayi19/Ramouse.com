@@ -216,7 +216,7 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                             </div>
 
                             {auction.bid_count > 0 && (
-                                <div className="text-center px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100">
+                                <div className="text-center px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                                     <p className="text-[10px] text-slate-400 font-bold mb-0.5">مزايدات</p>
                                     <div className="flex items-center gap-1 text-blue-600 font-bold">
                                         <Icon name="Hammer" className="w-3 h-3" />
@@ -235,7 +235,7 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                             className={`flex-1 rounded-xl py-5 text-sm font-bold shadow-sm transition-all
                                 ${auction.is_live
                                     ? 'bg-red-600 hover:bg-red-700 text-white border-0 shadow-red-200'
-                                    : 'border-2 hover:bg-blue-50 hover:border-blue-200 text-slate-700'}`}
+                                    : 'border-2 hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-200 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200'}`}
                             leftIcon={<Icon name={auction.is_live ? 'Flame' : 'Eye'} className="w-4 h-4" />}
                         >
                             {auction.is_live ? 'زايد الآن' : 'التفاصيل'}
@@ -245,7 +245,7 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => onRemind(auction)}
-                                className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-amber-50 hover:text-amber-600 border border-slate-100 transition-all"
+                                className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 border border-slate-100 dark:border-slate-700 transition-all"
                                 title="ذكرني"
                             >
                                 <Icon name="Bell" className="w-5 h-5" />
@@ -253,7 +253,7 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                         )}
 
                         {auction.has_reminder && (
-                            <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100" title="تم تعيين تذكير">
+                            <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800" title="تم تعيين تذكير">
                                 <Icon name="CheckCircle" className="w-5 h-5" />
                             </div>
                         )}
