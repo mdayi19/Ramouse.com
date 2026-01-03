@@ -216,6 +216,8 @@ export const useOnlineUsers = (
     }, []);
 };
 
+import { invalidateCache } from '../lib/apiCache';
+
 /**
  * Hook for user wallet real-time updates
  */
@@ -230,6 +232,19 @@ export const useWalletUpdates = (
         if (!userId) return;
 
         console.log(`💰 useWalletUpdates: Subscribing to user.${userId} for wallet updates`);
+
+        // Helper to invalidate cache and trigger update
+        const handleUpdate = (e: any, source: string) => {
+            console.log(`💰 Wallet update via ${source}! Invalidating cache...`, e);
+            // Invalidate all wallet-related endpoints
+            invalidateCache([
+                '/wallet/balance',
+                '/wallet/transactions',
+                '/wallet/deposits',
+                '/wallet/withdrawals'
+            ]);
+            onWalletUpdate(e);
+        };
 
         // Listen for Notifications (Standard)
         const notificationChannel = echo.private(`user.${userId}`);
@@ -253,8 +268,7 @@ export const useWalletUpdates = (
                 ];
 
                 if (walletTypes.includes(type)) {
-                    console.log('💰 Wallet update via notification! Triggering refresh...');
-                    onWalletUpdate(e);
+                    handleUpdate(e, 'notification');
                     if (showToast) {
                         const toastType = type.includes('REJECTED') ? 'error' :
                             type.includes('APPROVED') ? 'success' : 'info';
@@ -268,8 +282,7 @@ export const useWalletUpdates = (
         // Listen for Balance Updates (Dedicated Channel)
         const walletChannel = echo.private(`user.${userId}.wallet`);
         const handleBalanceUpdate = (e: any) => {
-            console.log('💰 Balance updated via event:', e);
-            onWalletUpdate(e);
+            handleUpdate(e, 'balance_event');
         };
         walletChannel.listen('.balance.updated', handleBalanceUpdate);
 
@@ -297,8 +310,20 @@ export const useAdminWalletUpdates = (
 
         const channel = echo.private('admin.dashboard');
 
+        // Helper to invalidate admin cache
+        const invalidateAdminCache = () => {
+            invalidateCache([
+                '/admin/user-deposits',
+                '/admin/user-withdrawals',
+                '/admin/user-transactions',
+                '/admin/withdrawals',
+                '/admin/transactions'
+            ]);
+        };
+
         channel.listen('.admin.USER_DEPOSIT_REQUEST', (e: any) => {
             console.log('💰 New Deposit Request:', e);
+            invalidateAdminCache();
             onDepositRequest(e);
             if (showToast) {
                 showToast(`طلب إيداع جديد من ${e.data?.userName || 'مستخدم'}`, 'info');
@@ -308,6 +333,7 @@ export const useAdminWalletUpdates = (
 
         channel.listen('.admin.USER_WITHDRAWAL_REQUEST', (e: any) => {
             console.log('💸 New Withdrawal Request:', e);
+            invalidateAdminCache();
             onWithdrawalRequest(e);
             if (showToast) {
                 showToast(`طلب سحب جديد من ${e.data?.userName || 'مستخدم'}`, 'info');
@@ -317,16 +343,19 @@ export const useAdminWalletUpdates = (
 
         channel.listen('.admin.user_deposit.processed', (e: any) => {
             console.log('💰 Deposit Processed:', e);
+            invalidateAdminCache();
             onProcessed(e);
         });
 
         channel.listen('.admin.user_withdrawal.processed', (e: any) => {
             console.log('💸 Withdrawal Processed:', e);
+            invalidateAdminCache();
             onProcessed(e);
         });
 
         channel.listen('.admin.user.balance_changed', (e: any) => {
             console.log('💰 User Balance Changed:', e);
+            invalidateAdminCache();
             onProcessed(e);
         });
 
