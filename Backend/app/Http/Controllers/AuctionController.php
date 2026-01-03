@@ -196,6 +196,18 @@ class AuctionController extends Controller
                 ]);
                 $walletHoldId = $walletHold->id;
 
+                // Add to wallet history (transaction record for hold)
+                UserTransaction::create([
+                    'user_id' => $profile->id,
+                    'user_type' => $userType,
+                    'type' => 'hold',
+                    'amount' => $depositAmount,
+                    'description' => 'تجميد تأمين المزاد: ' . $auction->title,
+                    'reference_type' => 'wallet_hold',
+                    'reference_id' => $walletHold->id,
+                    'balance_after' => $profile->wallet_balance, // Balance unchanged, just held
+                ]);
+
                 \Log::debug("Wallet hold created", ['hold_id' => $walletHoldId, 'amount' => $depositAmount]);
             }
 

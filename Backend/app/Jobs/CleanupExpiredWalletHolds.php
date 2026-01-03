@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\UserWalletHold;
+use App\Models\UserTransaction;
 use App\Models\Notification;
 use App\Events\UserNotification;
 use Illuminate\Bus\Queueable;
@@ -46,6 +47,18 @@ class CleanupExpiredWalletHolds implements ShouldQueue
                 DB::transaction(function () use ($hold) {
                     // Release the hold
                     $hold->update(['status' => 'released']);
+
+                    // Add to wallet history (transaction record for release)
+                    UserTransaction::create([
+                        'user_id' => $hold->user_id,
+                        'user_type' => $hold->user_type,
+                        'type' => 'release',
+                        'amount' => $hold->amount,
+                        'description' => 'تحرير تأمين منتهي الصلاحية: ' . $hold->reason,
+                        'reference_type' => 'wallet_hold',
+                        'reference_id' => $hold->id,
+                        'balance_after' => null,
+                    ]);
 
                     // Update the related auction registration if exists
                     $registration = \App\Models\AuctionRegistration::where('wallet_hold_id', $hold->id)->first();

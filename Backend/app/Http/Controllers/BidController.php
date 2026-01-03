@@ -6,6 +6,7 @@ use App\Models\Auction;
 use App\Models\AuctionBid;
 use App\Models\AuctionRegistration;
 use App\Models\UserWalletHold;
+use App\Models\UserTransaction;
 use App\Events\AuctionBidPlaced;
 use App\Events\AuctionExtended;
 use Illuminate\Http\Request;
@@ -330,6 +331,18 @@ class BidController extends Controller
                         $hold = UserWalletHold::find($registration->wallet_hold_id);
                         if ($hold && $hold->status === 'active') {
                             $hold->release();
+
+                            // Add to wallet history (transaction record for release)
+                            UserTransaction::create([
+                                'user_id' => $registration->user_id,
+                                'user_type' => $registration->user_type,
+                                'type' => 'release',
+                                'amount' => $hold->amount,
+                                'description' => 'تحرير تأمين المزاد (شراء فوري)',
+                                'reference_type' => 'wallet_hold',
+                                'reference_id' => $hold->id,
+                                'balance_after' => null,
+                            ]);
                         }
                     }
 

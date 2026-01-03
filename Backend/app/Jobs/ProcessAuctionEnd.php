@@ -6,6 +6,7 @@ use App\Events\AuctionEnded;
 use App\Models\Auction;
 use App\Models\AuctionBid;
 use App\Models\UserWalletHold;
+use App\Models\UserTransaction;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -152,6 +153,18 @@ class ProcessAuctionEnd implements ShouldQueue
                         $hold = UserWalletHold::find($registration->wallet_hold_id);
                         if ($hold && $hold->status === 'active') {
                             $hold->release();
+
+                            // Add to wallet history (transaction record for release)
+                            UserTransaction::create([
+                                'user_id' => $registration->user_id,
+                                'user_type' => $registration->user_type,
+                                'type' => 'release',
+                                'amount' => $hold->amount,
+                                'description' => 'تحرير تأمين المزاد: ' . $auction->title,
+                                'reference_type' => 'wallet_hold',
+                                'reference_id' => $hold->id,
+                                'balance_after' => null, // Balance unchanged
+                            ]);
                         }
                     }
 
@@ -194,6 +207,18 @@ class ProcessAuctionEnd implements ShouldQueue
                         $hold = UserWalletHold::find($registration->wallet_hold_id);
                         if ($hold && $hold->status === 'active') {
                             $hold->release();
+
+                            // Add to wallet history (transaction record for release)
+                            UserTransaction::create([
+                                'user_id' => $registration->user_id,
+                                'user_type' => $registration->user_type,
+                                'type' => 'release',
+                                'amount' => $hold->amount,
+                                'description' => 'تحرير تأمين المزاد: ' . $auction->title,
+                                'reference_type' => 'wallet_hold',
+                                'reference_id' => $hold->id,
+                                'balance_after' => null, // Balance unchanged
+                            ]);
                         }
                     }
 
