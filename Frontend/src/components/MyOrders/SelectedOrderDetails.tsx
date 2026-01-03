@@ -31,8 +31,8 @@ const SelectedOrderDetails: React.FC<{
             if (formData.video) {
                 result.video = getStorageUrl(formData.video);
             }
-            if (formData.voiceNote) {
-                result.voiceNote = getStorageUrl(formData.voiceNote);
+            if (formData.voiceNote || formData.voice_note) {
+                result.voiceNote = getStorageUrl(formData.voiceNote || formData.voice_note || '');
             }
         }
 

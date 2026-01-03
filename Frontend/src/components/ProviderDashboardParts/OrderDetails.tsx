@@ -75,7 +75,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, isExpanded }) => {
     const { formData } = order;
 
     // This is the source of truth for whether media exists, based on persistent data.
-    const hasMedia = (formData.images && formData.images.length > 0) || !!formData.video || !!formData.voiceNote;
+    const hasMedia = (formData.images && formData.images.length > 0) || !!formData.video || !!formData.voiceNote || !!formData.voice_note;
 
     useEffect(() => {
         let active = true;
@@ -98,8 +98,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, isExpanded }) => {
                 if (url) newUrls.video = url;
             }
 
-            if (formData.voiceNote && typeof formData.voiceNote === 'string') {
-                const url = getStorageUrl(formData.voiceNote);
+            if ((formData.voiceNote && typeof formData.voiceNote === 'string') || (formData.voice_note && typeof formData.voice_note === 'string')) {
+                const url = getStorageUrl(formData.voiceNote || formData.voice_note || '');
                 if (url) newUrls.voiceNote = url;
             }
 
