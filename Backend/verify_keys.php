@@ -7,6 +7,22 @@ use Minishlink\WebPush\Vapid;
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
+echo "🔍 Autoloading Debug:\n";
+$loader = require __DIR__ . '/vendor/autoload.php';
+$prefixes = $loader->getPrefixesPsr4();
+if (isset($prefixes['Minishlink\\WebPush\\'])) {
+    echo "✅ Namespace 'Minishlink\\WebPush\\' is registered to: " . implode(', ', $prefixes['Minishlink\\WebPush\\']) . "\n";
+} else {
+    echo "❌ Namespace 'Minishlink\\WebPush\\' IS NOT REGISTERED.\n";
+}
+
+if (class_exists('Minishlink\WebPush\Vapid')) {
+    echo "✅ Class 'Minishlink\WebPush\Vapid' exists.\n";
+} else {
+    echo "❌ Class 'Minishlink\WebPush\Vapid' DOES NOT EXIST.\n";
+}
+echo "--------------------------------------------------\n";
+
 $publicKey = env('VAPID_PUBLIC_KEY');
 $privateKey = env('VAPID_PRIVATE_KEY');
 
