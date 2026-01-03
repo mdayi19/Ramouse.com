@@ -1,6 +1,17 @@
 // Custom Service Worker for Web Push
 // Features: Action Buttons, Sound, Grouping (via tag), Deep Links
 
+// 1. Force Immediate Activation
+self.addEventListener('install', (event) => {
+    console.log('SW: Installing & Skipping Waiting...');
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    console.log('SW: Activating & Claiming Clients...');
+    event.waitUntil(clients.claim());
+});
+
 self.addEventListener('push', function (event) {
     if (!(self.Notification && self.Notification.permission === 'granted')) {
         return;
