@@ -147,14 +147,15 @@ class AuctionController extends Controller
 
         $depositAmount = $auction->car->deposit_amount ?? 0;
 
-        // DEBUG: Log deposit info
-        \Log::info("AUCTION REGISTRATION DEBUG", [
-            'auction_id' => $auction->id,
-            'user_id' => $profile->id,
-            'user_type' => $userType,
-            'deposit_amount' => $depositAmount,
-            'wallet_balance' => $profile->wallet_balance,
-        ]);
+        // Log deposit info for debugging (only in non-production)
+        if (config('app.debug')) {
+            \Log::debug("Auction registration attempt", [
+                'auction_id' => $auction->id,
+                'user_id' => $profile->id,
+                'user_type' => $userType,
+                'deposit_amount' => $depositAmount,
+            ]);
+        }
 
         // Check wallet balance if deposit required
         if ($depositAmount > 0) {
@@ -165,11 +166,9 @@ class AuctionController extends Controller
 
             $availableBalance = $profile->wallet_balance - $totalHolds;
 
-            \Log::info("DEPOSIT CHECK", [
-                'total_holds' => $totalHolds,
-                'available_balance' => $availableBalance,
-                'required' => $depositAmount,
-            ]);
+            if (config('app.debug')) {
+                \Log::debug("Deposit check", compact('totalHolds', 'availableBalance', 'depositAmount'));
+            }
 
             if ($availableBalance < $depositAmount) {
                 return response()->json([
@@ -197,10 +196,7 @@ class AuctionController extends Controller
                 ]);
                 $walletHoldId = $walletHold->id;
 
-                \Log::info("WALLET HOLD CREATED", [
-                    'hold_id' => $walletHoldId,
-                    'amount' => $depositAmount,
-                ]);
+                \Log::debug("Wallet hold created", ['hold_id' => $walletHoldId, 'amount' => $depositAmount]);
             }
 
             // Create registration
@@ -216,10 +212,7 @@ class AuctionController extends Controller
                 'registered_at' => now(),
             ]);
 
-            \Log::info("REGISTRATION CREATED", [
-                'registration_id' => $registration->id,
-                'wallet_hold_id' => $walletHoldId,
-            ]);
+            \Log::debug("Registration created", ['id' => $registration->id, 'hold_id' => $walletHoldId]);
 
             // Create notification
             $notification = Notification::create([
