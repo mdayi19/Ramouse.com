@@ -18,6 +18,7 @@ skeleton loading react
 -1003140324258
 
 ----------------------
+https://whatsoio.com/api/create-message
 --form 'appkey="5a3234b1-c074-4b4e-a646-087b110fedbb"' \
 --form 'authkey="DWaAxBH8Z0AJCdz5h4Vb87pkI6DxcMZ0RcU3htPtdgzfgEIJlu"' \
 

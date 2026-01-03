@@ -230,10 +230,13 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
                                 <div className="flex items-baseline gap-1">
                                     <motion.span
                                         key={currentPrice}
-                                        initial={!compact ? { scale: 1.2 } : undefined}
-                                        animate={{ scale: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                        className={`${compact ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white group-hover:text-blue-700 transition-colors`}
+                                        initial={!compact ? { scale: 1.2, color: '#10b981' } : undefined}
+                                        animate={{ scale: 1, color: '#0f172a' }}
+                                        transition={{
+                                            scale: { type: "spring", stiffness: 300, damping: 20 },
+                                            color: { duration: 0.8 }
+                                        }}
+                                        className={`${compact ? 'text-lg' : 'text-2xl'} font-black dark:!text-white group-hover:!text-blue-700 transition-colors`}
                                     >
                                         ${currentPrice?.toLocaleString()}
                                     </motion.span>

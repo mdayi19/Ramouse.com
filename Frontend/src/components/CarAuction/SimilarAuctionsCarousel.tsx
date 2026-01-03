@@ -1,10 +1,12 @@
-import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuctions } from '../../hooks/useAuction';
+import { useAuctionUpdates } from '../../hooks/useAuctionUpdates';
 import { AuctionCard } from './AuctionCard';
 import { Button } from '../ui/Button';
 import Icon from '../Icon';
 import { useNavigate } from 'react-router-dom';
+import { Auction } from '../../types';
 
 interface SimilarAuctionsCarouselProps {
     currentAuctionId?: string;
@@ -37,14 +39,41 @@ const AuctionCardSkeleton: React.FC = () => (
 );
 
 export const SimilarAuctionsCarousel: React.FC<SimilarAuctionsCarouselProps> = ({ currentAuctionId }) => {
-    const { auctions, loading } = useAuctions('live'); // Fetch live auctions first
+    const { auctions: initialAuctions, loading } = useAuctions('live');
+    const [auctions, setAuctions] = useState<Auction[]>([]);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
+    // Initialize local state from fetched data
+    useEffect(() => {
+        if (initialAuctions.length > 0) {
+            setAuctions(initialAuctions);
+        }
+    }, [initialAuctions]);
+
     // Filter out current auction and limit to 10
-    const similarAuctions = auctions
-        .filter(a => a.id !== currentAuctionId)
-        .slice(0, 10);
+    const similarAuctions = useMemo(() =>
+        auctions.filter(a => a.id !== currentAuctionId).slice(0, 10),
+        [auctions, currentAuctionId]
+    );
+
+    // Get auction IDs for real-time subscription
+    const auctionIds = useMemo(() =>
+        similarAuctions.map(a => a.id),
+        [similarAuctions]
+    );
+
+    // Handle real-time updates with smooth state updates
+    const handleAuctionUpdate = useCallback((auctionId: string, updates: Partial<Auction>) => {
+        setAuctions(prev => prev.map(auction =>
+            auction.id === auctionId
+                ? { ...auction, ...updates }
+                : auction
+        ));
+    }, []);
+
+    // Subscribe to real-time updates for all displayed auctions
+    useAuctionUpdates(auctionIds, handleAuctionUpdate);
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollContainerRef.current) {
@@ -114,23 +143,29 @@ export const SimilarAuctionsCarousel: React.FC<SimilarAuctionsCarouselProps> = (
                 className="flex gap-4 overflow-x-auto pb-8 px-4 snap-x snap-mandatory scrollbar-hide"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-                {similarAuctions.map(auction => (
-                    <motion.div
-                        key={auction.id}
-                        className="min-w-[280px] md:min-w-[320px] snap-center"
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <div className="h-full cursor-pointer" onClick={() => navigate(`/auctions/${auction.id}`)}>
-                            <AuctionCard
-                                auction={auction}
-                                onView={() => navigate(`/auctions/${auction.id}`)}
-                                compact={true}
-                                showReminder={false}
-                            />
-                        </div>
-                    </motion.div>
-                ))}
+                <AnimatePresence mode="popLayout">
+                    {similarAuctions.map(auction => (
+                        <motion.div
+                            key={auction.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="min-w-[280px] md:min-w-[320px] snap-center"
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <div className="h-full cursor-pointer" onClick={() => navigate(`/auctions/${auction.id}`)}>
+                                <AuctionCard
+                                    auction={auction}
+                                    onView={() => navigate(`/auctions/${auction.id}`)}
+                                    compact={true}
+                                    showReminder={false}
+                                />
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
         </div>
     );
