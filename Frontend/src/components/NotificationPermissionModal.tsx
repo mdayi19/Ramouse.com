@@ -15,22 +15,37 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
     onPermissionGranted
 }) => {
     const [isLoading, setIsLoading] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
 
     const handleEnable = async () => {
         setIsLoading(true);
+        setError(null);
+
         try {
+            console.log('🔵 [Modal] User clicked enable notifications');
             const success = await NotificationService.subscribeToPush();
+
             if (success) {
+                console.log('✅ [Modal] Subscription successful');
                 onPermissionGranted();
                 onClose();
             } else {
-                // Permission denied or other error
-                alert('فشل تفعيل الإشعارات. يرجى التأكد من سماح المتصفح بها.');
-                onClose(); // Close anyway to not block user
+                console.warn('⚠️ [Modal] Subscription failed (returned false)');
+                setError('فشل تفعيل الإشعارات. يرجى التأكد من سماح المتصفح بها.');
             }
-        } catch (error) {
-            console.error('Failed to enable notifications:', error);
-            onClose();
+        } catch (error: any) {
+            console.error('❌ [Modal] Subscription error:', error);
+
+            // Show user-friendly error messages
+            if (error.name === 'NotAllowedError') {
+                setError('تم رفض الإذن. يرجى السماح بالإشعارات من إعدادات المتصفح.');
+            } else if (error.message?.includes('Service worker')) {
+                setError('خطأ في تحميل الخدمة. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.');
+            } else if (error.message?.includes('VAPID')) {
+                setError('خطأ في الإعدادات. يرجى الاتصال بالدعم الفني.');
+            } else {
+                setError('حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -59,11 +74,17 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
                         قم بتفعيل الإشعارات لتصلك تحديثات طلبك، والعروض الخاصة، ورسائل المتجر مباشرة حتى واأنت خارج التطبيق.
                     </p>
 
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                        </div>
+                    )}
+
                     <div className="flex flex-col gap-3">
                         <button
                             onClick={handleEnable}
                             disabled={isLoading}
-                            className="w-full bg-primary hover:bg-primary-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+                            className="w-full bg-primary hover:bg-primary-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? (
                                 <>
@@ -77,7 +98,8 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
 
                         <button
                             onClick={onClose}
-                            className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium py-3 rounded-xl transition-colors"
+                            disabled={isLoading}
+                            className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             ليس الآن
                         </button>

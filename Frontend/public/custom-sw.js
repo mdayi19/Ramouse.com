@@ -1,24 +1,31 @@
 // Custom Service Worker for Web Push
 // Features: Action Buttons, Sound, Grouping (via tag), Deep Links
 
+console.log('🔵 [SW] Custom service worker script loaded');
+
 // 1. Force Immediate Activation
 self.addEventListener('install', (event) => {
-    console.log('SW: Installing & Skipping Waiting...');
+    console.log('✅ [SW] Installing & Skipping Waiting...');
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('SW: Activating & Claiming Clients...');
+    console.log('✅ [SW] Activating & Claiming Clients...');
     event.waitUntil(clients.claim());
 });
 
 self.addEventListener('push', function (event) {
+    console.log('🔔 [SW] Push event received:', event);
+
     if (!(self.Notification && self.Notification.permission === 'granted')) {
+        console.warn('⚠️ [SW] Notification permission not granted');
         return;
     }
 
     if (event.data) {
+        console.log('🔵 [SW] Push data:', event.data.text());
         const data = event.data.json();
+        console.log('🔵 [SW] Parsed push data:', data);
 
         // Build notification options
         const options = {

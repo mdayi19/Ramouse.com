@@ -1,5 +1,6 @@
 import { api } from '../lib/api';
-import { Notification, NotificationType } from '../types';
+import type { Notification } from '../types';
+import { NotificationType } from '../types';
 
 export interface NotificationResponse {
     notifications: Notification[];
@@ -44,49 +45,85 @@ export const NotificationService = {
      */
     async subscribeToPush(): Promise<boolean> {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.warn('Push messaging is not supported');
+            console.warn('❌ Push messaging is not supported in this browser');
             return false;
         }
 
         try {
-            console.log('🔵 subscribing...');
+            console.log('🔵 [Push] Starting subscription process...');
 
-            // Wait for SW ready with Timeout (5s) to prevent hanging
-            const registration = (await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT: SW not ready (Check Console)')), 5000))
-            ])) as ServiceWorkerRegistration;
+            // Step 1: Request notification permission first
+            console.log('🔵 [Push] Requesting notification permission...');
+            const permission = await Notification.requestPermission();
+            console.log('🔵 [Push] Permission result:', permission);
 
-            console.log('✅ SW ready');
-
-            const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-
-            if (!vapidKey) {
-                console.error('VITE_VAPID_PUBLIC_KEY not found');
-                alert('Error: VAPID Key Missing');
+            if (permission !== 'granted') {
+                console.warn('⚠️ [Push] Notification permission denied by user');
                 return false;
             }
 
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidKey)
-            });
+            // Step 2: Wait for SW ready with Timeout (10s)
+            console.log('🔵 [Push] Waiting for service worker to be ready...');
+            const registration = (await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Service worker not ready after 10s')), 10000))
+            ])) as ServiceWorkerRegistration;
 
-            console.log('✅ Subscribed:', subscription);
+            console.log('✅ [Push] Service worker ready:', registration.scope);
 
-            // Send to backend
-            // usage of toJSON() ensures we get the keys
-            await api.post('/notifications/subscribe', subscription.toJSON());
+            // Step 3: Check VAPID key
+            const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            console.log('🔵 [Push] VAPID key present:', !!vapidKey);
 
+            if (!vapidKey) {
+                console.error('❌ [Push] VITE_VAPID_PUBLIC_KEY not found in environment');
+                throw new Error('VAPID key is missing. Please check your .env file.');
+            }
+
+            // Step 4: Check for existing subscription
+            console.log('🔵 [Push] Checking for existing subscription...');
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+                console.log('✅ [Push] Found existing subscription, updating backend...');
+            } else {
+                // Step 5: Create new subscription
+                console.log('🔵 [Push] Creating new push subscription...');
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidKey)
+                });
+                console.log('✅ [Push] New subscription created');
+            }
+
+            console.log('🔵 [Push] Subscription endpoint:', subscription.endpoint);
+
+            // Step 6: Send to backend
+            console.log('🔵 [Push] Sending subscription to backend...');
+            const response = await api.post('/notifications/subscribe', subscription.toJSON());
+            console.log('✅ [Push] Backend response:', response.data);
+
+            console.log('✅ [Push] Subscription complete!');
             return true;
         } catch (error: any) {
-            console.error('❌ Failed to subscribe to push:', error);
+            console.error('❌ [Push] Subscription failed:', error);
+
+            // Detailed error logging
             if (error.name === 'NotAllowedError') {
-                console.warn('User denied notifications.');
+                console.warn('⚠️ [Push] User denied notification permission');
+                return false;
+            } else if (error.name === 'AbortError') {
+                console.error('❌ [Push] Subscription was aborted');
+            } else if (error.name === 'NotSupportedError') {
+                console.error('❌ [Push] Push notifications not supported');
+            } else if (error.message?.includes('Service worker')) {
+                console.error('❌ [Push] Service worker issue:', error.message);
+            } else if (error.response) {
+                console.error('❌ [Push] Backend error:', error.response.data);
             } else {
-                // TEMP DEBUG: Alert for other errors
-                alert(`Push Subscription Error: ${error.message}`);
+                console.error('❌ [Push] Unknown error:', error.message);
             }
+
             throw error;
         }
     },

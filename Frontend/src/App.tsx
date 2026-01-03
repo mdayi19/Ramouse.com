@@ -218,15 +218,37 @@ const App: React.FC = () => {
                 })
                 .catch(err => console.error('Failed to fetch notifications:', err));
 
-            // Handle Notification Logic
-            if ('Notification' in window) {
+            // Handle Notification Logic with improved flow
+            if ('Notification' in window && 'serviceWorker' in navigator) {
+                console.log('🔵 [App] Checking notification permission:', Notification.permission);
+
                 if (Notification.permission === 'default') {
-                    // Ask efficiently using our custom modal
-                    setShowNotificationModal(true);
+                    // Wait a bit for user to settle in before showing modal
+                    setTimeout(() => {
+                        console.log('🔵 [App] Showing notification permission modal');
+                        setShowNotificationModal(true);
+                    }, 2000);
                 } else if (Notification.permission === 'granted') {
-                    // Already granted, ensure key is up to date (Silent)
-                    NotificationService.subscribeToPush().catch(err => console.warn('Silent push sync failed:', err));
+                    // Already granted, ensure subscription is up to date (Silent)
+                    console.log('🔵 [App] Permission already granted, syncing subscription...');
+
+                    // Wait for service worker to be ready first
+                    navigator.serviceWorker.ready
+                        .then(() => {
+                            console.log('🔵 [App] Service worker ready, attempting silent subscription sync');
+                            return NotificationService.subscribeToPush();
+                        })
+                        .then(() => {
+                            console.log('✅ [App] Silent subscription sync successful');
+                        })
+                        .catch(err => {
+                            console.warn('⚠️ [App] Silent push sync failed:', err);
+                        });
+                } else {
+                    console.log('⚠️ [App] Notification permission denied');
                 }
+            } else {
+                console.warn('⚠️ [App] Notifications or Service Workers not supported');
             }
         }
 
