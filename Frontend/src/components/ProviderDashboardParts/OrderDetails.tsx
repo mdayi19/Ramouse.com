@@ -74,8 +74,38 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, isExpanded }) => {
     const [lightboxStartIndex, setLightboxStartIndex] = useState(0);
     const { formData } = order;
 
-    // This is the source of truth for whether media exists, based on persistent data.
-    const hasMedia = (formData.images && formData.images.length > 0) || !!formData.video || !!formData.voiceNote || !!formData.voice_note;
+    // Helper to safely parse images if they come as a JSON string
+    const parseImages = (imgs: any): string[] => {
+        if (Array.isArray(imgs)) return imgs;
+        if (typeof imgs === 'string') {
+            try {
+                const parsed = JSON.parse(imgs);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (e) {
+                // If not JSON, maybe comma separated? or just a single image string?
+                // For now assuming JSON or Array.
+                console.error("Failed to parse images string:", e);
+            }
+        }
+        return [];
+    };
+
+    // Helper to find checking multiple keys
+    const findValue = (obj: any, keys: string[]) => {
+        for (const key of keys) {
+            if (obj && obj[key]) return obj[key];
+        }
+        return null;
+    };
+
+    const imagesRaw = findValue(formData, ['images', 'photos', 'attachments']) || [];
+    const videoRaw = findValue(formData, ['video', 'video_path', 'video_url']);
+    const voiceNoteRaw = findValue(formData, ['voiceNote', 'voice_note', 'voice_note_url', 'voice_path']);
+
+    const parsedImages = parseImages(imagesRaw);
+
+    // This is the source of truth for whether media exists
+    const hasMedia = (parsedImages && parsedImages.length > 0) || !!videoRaw || !!voiceNoteRaw;
 
     useEffect(() => {
         let active = true;
@@ -86,20 +116,24 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, isExpanded }) => {
             let loadedFromDb = false;
 
             // 1. Try to load from Server URLs (formData)
-            if (formData.images && Array.isArray(formData.images) && formData.images.length > 0) {
-                // Check if the first item is a string (URL) - simplistic check but effective for mixed types
-                if (typeof formData.images[0] === 'string') {
-                    newUrls.images = (formData.images as any[]).map(getStorageUrl).filter((url): url is string => !!url);
+            if (parsedImages.length > 0) {
+                // Clean and process images
+                const validImages = parsedImages
+                    .map((img: any) => typeof img === 'string' ? getStorageUrl(img) : null)
+                    .filter((url): url is string => !!url);
+
+                if (validImages.length > 0) {
+                    newUrls.images = validImages;
                 }
             }
 
-            if (formData.video && typeof formData.video === 'string') {
-                const url = getStorageUrl(formData.video);
+            if (videoRaw && typeof videoRaw === 'string') {
+                const url = getStorageUrl(videoRaw);
                 if (url) newUrls.video = url;
             }
 
-            if ((formData.voiceNote && typeof formData.voiceNote === 'string') || (formData.voice_note && typeof formData.voice_note === 'string')) {
-                const url = getStorageUrl(formData.voiceNote || formData.voice_note || '');
+            if (voiceNoteRaw && typeof voiceNoteRaw === 'string') {
+                const url = getStorageUrl(voiceNoteRaw);
                 if (url) newUrls.voiceNote = url;
             }
 
@@ -141,7 +175,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, isExpanded }) => {
             if (mediaUrls.video) URL.revokeObjectURL(mediaUrls.video);
             if (mediaUrls.voiceNote) URL.revokeObjectURL(mediaUrls.voiceNote);
         };
-    }, [isExpanded, order.orderNumber, hasMedia]);
+    }, [isExpanded, order.orderNumber, hasMedia, formData]);
 
     const openLightbox = (index: number) => {
         setLightboxStartIndex(index);

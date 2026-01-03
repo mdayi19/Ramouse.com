@@ -25,14 +25,46 @@ const SelectedOrderDetails: React.FC<{
         const result: { video?: string; voiceNote?: string; images: string[] } = { images: [] };
 
         if (formData) {
-            if (formData.images && Array.isArray(formData.images)) {
-                result.images = formData.images.map((path: string) => getStorageUrl(path)).filter(url => !!url);
+            // Helper to parse images
+            const parseImages = (imgs: any): string[] => {
+                if (Array.isArray(imgs)) return imgs;
+                if (typeof imgs === 'string') {
+                    try {
+                        const parsed = JSON.parse(imgs);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (e) {
+                        console.error("Failed to parse images string:", e);
+                    }
+                }
+                return [];
+            };
+
+            // Helper to find value
+            const findValue = (obj: any, keys: string[]) => {
+                for (const key of keys) {
+                    if (obj && obj[key]) return obj[key];
+                }
+                return null;
+            };
+
+            const imagesRaw = findValue(formData, ['images', 'photos', 'attachments']) || [];
+            const videoRaw = findValue(formData, ['video', 'video_path', 'video_url']);
+            const voiceNoteRaw = findValue(formData, ['voiceNote', 'voice_note', 'voice_note_url', 'voice_path']);
+
+            const parsedImages = parseImages(imagesRaw);
+
+            if (parsedImages.length > 0) {
+                result.images = parsedImages
+                    .map((path: any) => typeof path === 'string' ? getStorageUrl(path) : null)
+                    .filter((url): url is string => !!url);
             }
-            if (formData.video) {
-                result.video = getStorageUrl(formData.video);
+
+            if (videoRaw && typeof videoRaw === 'string') {
+                result.video = getStorageUrl(videoRaw);
             }
-            if (formData.voiceNote || formData.voice_note) {
-                result.voiceNote = getStorageUrl(formData.voiceNote || formData.voice_note || '');
+
+            if (voiceNoteRaw && typeof voiceNoteRaw === 'string') {
+                result.voiceNote = getStorageUrl(voiceNoteRaw);
             }
         }
 

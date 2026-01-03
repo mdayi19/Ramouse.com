@@ -21,6 +21,12 @@ export const getStorageUrl = (path: string): string => {
         return path;
     }
 
+    // Fix for Mixed Content: If on HTTPS but API is localhost (default), use relative path
+    // This assumes Nginx is configured to serve /storage locally
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && API_BASE_URL.includes('localhost')) {
+        return `/storage/${path}`;
+    }
+
     // Construct full URL with API base
     return `${API_BASE_URL}/storage/${path}`;
 };
