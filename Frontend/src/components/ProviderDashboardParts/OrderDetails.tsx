@@ -161,21 +161,21 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, isExpanded }) => {
                                 <DetailItem label="الموديل" value={formData.model} />
                                 <DetailItem label="سنة الصنع" value={formData.year} />
                                 <DetailItem label="رقم الهيكل (VIN)" value={formData.vin} />
-                                <DetailItem label="نوع المحرك" value={formData.engineType} />
+                                <DetailItem label="نوع المحرك" value={formData.engineType || formData.engine_type} />
                                 <DetailItem label="ناقل الحركة" value={formData.transmission} />
                             </dl>
                         </div>
                         <div>
                             <h5 className="font-bold text-primary dark:text-primary-400 mb-3 border-b-2 border-primary/20 pb-1 flex items-center gap-2"><Icon name="Cog" className="w-5 h-5" />تفاصيل القطعة المطلوبة</h5>
                             <dl className="space-y-2">
-                                <DetailItem label="أنواع القطع" value={formData.partTypes.join(', ')} />
-                                <DetailItem label="رقم القطعة" value={formData.partNumber} />
+                                <DetailItem label="أنواع القطع" value={(formData.partTypes || formData.part_types || []).join(', ')} />
+                                <DetailItem label="رقم القطعة" value={formData.partNumber || formData.part_number} />
                             </dl>
                         </div>
                         {formData.additionalDetails && (
                             <div>
                                 <h5 className="font-bold text-primary dark:text-primary-400 mb-2 flex items-center gap-2"><Icon name="MessageSquare" className="w-5 h-5" />ملاحظات العميل</h5>
-                                <p className="text-sm bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border-l-4 border-yellow-400 dark:border-yellow-500">{formData.additionalDetails}</p>
+                                <p className="text-sm bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border-l-4 border-yellow-400 dark:border-yellow-500">{formData.additionalDetails || formData.additional_details}</p>
                             </div>
                         )}
                     </div>

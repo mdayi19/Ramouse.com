@@ -130,6 +130,13 @@ export interface StoredFormData extends Omit<OrderFormData, 'images' | 'video' |
   video?: string;
   voiceNote?: string;
   voice_note?: string; // Support for snake_case backend response
+  brand_manual?: string;
+  engine_type?: string;
+  part_types?: string[];
+  part_description?: string;
+  part_number?: string;
+  additional_details?: string;
+  contact_method?: string;
 }
 
 export interface PartType {

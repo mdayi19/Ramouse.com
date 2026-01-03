@@ -212,7 +212,7 @@ const SelectedOrderDetails: React.FC<{
                                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
                                     <dl className="space-y-0">
                                         {renderDetail('فئة السيارة', formData.category)}
-                                        {renderDetail('الشركة', formData.brandManual || formData.brand)}
+                                        {renderDetail('الشركة', formData.brandManual || formData.brand_manual || formData.brand)}
                                         {renderDetail('الموديل', formData.model)}
                                         {renderDetail('سنة الصنع', formData.year)}
                                         {renderDetail('رقم الهيكل (VIN)', formData.vin)}
@@ -228,8 +228,8 @@ const SelectedOrderDetails: React.FC<{
                                 </h5>
                                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm mb-4">
                                     <dl className="space-y-0">
-                                        {renderDetail('أنواع القطع', formData.partTypes)}
-                                        {renderDetail('وصف القطعة', formData.partDescription)}
+                                        {renderDetail('أنواع القطع', formData.partTypes || formData.part_types)}
+                                        {renderDetail('وصف القطعة', formData.partDescription || formData.part_description)}
                                     </dl>
                                 </div>
 
