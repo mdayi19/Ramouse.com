@@ -41,14 +41,6 @@ const AuctionCardComponent: React.FC<AuctionCardProps> = ({
     const primaryImage = auction.car?.media?.images?.[0] || '/placeholder-car.jpg';
     const currentPrice = auction.current_bid || auction.starting_bid;
 
-    // Extract additional car details
-    const carDetails = {
-        mileage: auction.car?.mileage,
-        transmission: auction.car?.transmission,
-        fuelType: auction.car?.fuel_type,
-        bodyType: auction.car?.body_type,
-    };
-
     return (
         <motion.div
             layout

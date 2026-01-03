@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuctionConnection, ConnectionStatus, ConnectionQuality } from '../../hooks/useAuctionConnection';
 import Icon from '../Icon';
@@ -10,21 +10,76 @@ interface AuctionConnectionStatusProps {
     position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'inline';
     /** Compact mode for mobile */
     compact?: boolean;
+    /** Auto-dismiss after success (ms). Set to 0 to disable */
+    autoDismissDelay?: number;
 }
 
 export const AuctionConnectionStatus: React.FC<AuctionConnectionStatusProps> = ({
     showDetails = false,
     position = 'top-right',
     compact = false,
+    autoDismissDelay = 3000,
 }) => {
     const { status, quality, isOnline, metrics, retryConnection } = useAuctionConnection();
+    const [showRestored, setShowRestored] = useState(false);
+    const [dismissed, setDismissed] = useState(false);
+    const prevStatusRef = useRef<ConnectionStatus>(status);
 
-    // Don't show anything if connected and quality is good
-    if (status === 'connected' && quality === 'excellent' && !showDetails) {
+    // Track status changes to show "restored" message
+    useEffect(() => {
+        const wasDisconnected = prevStatusRef.current === 'disconnected' ||
+            prevStatusRef.current === 'error' ||
+            prevStatusRef.current === 'reconnecting';
+        const isNowConnected = status === 'connected' && quality === 'excellent';
+
+        if (wasDisconnected && isNowConnected) {
+            // Show "restored" briefly
+            setShowRestored(true);
+            setDismissed(false);
+
+            const timer = setTimeout(() => {
+                setShowRestored(false);
+                if (autoDismissDelay > 0) {
+                    setDismissed(true);
+                }
+            }, autoDismissDelay);
+
+            return () => clearTimeout(timer);
+        }
+
+        // Reset dismissed state when connection is lost
+        if (!isNowConnected) {
+            setDismissed(false);
+            setShowRestored(false);
+        }
+
+        prevStatusRef.current = status;
+    }, [status, quality, autoDismissDelay]);
+
+    // Don't show anything if connected and quality is good (and dismissed or never had issues)
+    const isFullyConnected = status === 'connected' && quality === 'excellent';
+    if (isFullyConnected && !showDetails && !showRestored && dismissed) {
+        return null;
+    }
+    if (isFullyConnected && !showDetails && !showRestored && !dismissed) {
+        // First load, never had issues - don't show
         return null;
     }
 
-    const getStatusConfig = (status: ConnectionStatus, quality: ConnectionQuality) => {
+    const getStatusConfig = (status: ConnectionStatus, quality: ConnectionQuality, isRestored: boolean) => {
+        // Show restored message first if just reconnected
+        if (isRestored) {
+            return {
+                icon: 'CheckCircle',
+                label: 'تم استعادة الاتصال',
+                color: 'bg-emerald-500',
+                textColor: 'text-emerald-800 dark:text-emerald-200',
+                bgColor: 'bg-emerald-50 dark:bg-emerald-900/30',
+                borderColor: 'border-emerald-200 dark:border-emerald-800',
+                pulse: false,
+            };
+        }
+
         if (!isOnline || status === 'disconnected') {
             return {
                 icon: 'WifiOff',
@@ -91,7 +146,7 @@ export const AuctionConnectionStatus: React.FC<AuctionConnectionStatusProps> = (
         };
     };
 
-    const config = getStatusConfig(status, quality);
+    const config = getStatusConfig(status, quality, showRestored);
 
     const positionClasses = {
         'top-right': 'fixed top-4 right-4 z-50',

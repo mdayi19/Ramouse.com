@@ -11,7 +11,6 @@ interface Reaction {
 
 export const AuctionReactions: React.FC = () => {
     const [reactions, setReactions] = useState<Reaction[]>([]);
-    const [socketSim, setSocketSim] = useState<any>(null);
 
     // Add a reaction locally and broadcast (simulated)
     const addReaction = useCallback((emoji: string) => {

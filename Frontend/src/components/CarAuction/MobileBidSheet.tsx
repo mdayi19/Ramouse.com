@@ -20,6 +20,35 @@ interface MobileBidSheetProps {
     isLoading?: boolean;
 }
 
+/**
+ * Trigger haptic feedback on supported devices
+ * Uses the Vibration API for mobile devices
+ */
+const triggerHapticFeedback = (type: 'light' | 'medium' | 'success' | 'error' = 'medium') => {
+    if (!('vibrate' in navigator)) return;
+
+    try {
+        switch (type) {
+            case 'light':
+                navigator.vibrate(10);
+                break;
+            case 'medium':
+                navigator.vibrate(25);
+                break;
+            case 'success':
+                // Double pulse for success
+                navigator.vibrate([15, 50, 15]);
+                break;
+            case 'error':
+                // Single longer pulse for error
+                navigator.vibrate(100);
+                break;
+        }
+    } catch (e) {
+        // Silently fail if vibration not supported
+    }
+};
+
 export const MobileBidSheet: React.FC<MobileBidSheetProps> = ({
     isOpen,
     onClose,
@@ -33,6 +62,7 @@ export const MobileBidSheet: React.FC<MobileBidSheetProps> = ({
     const [selectedQuickBid, setSelectedQuickBid] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     // Generate quick bid options
     const quickBidOptions = [
@@ -52,6 +82,7 @@ export const MobileBidSheet: React.FC<MobileBidSheetProps> = ({
     const handlePlaceBid = async (amount: number) => {
         if (amount < minimumBid) {
             setError(`الحد الأدنى للمزايدة هو $${minimumBid.toLocaleString()}`);
+            triggerHapticFeedback('error');
             return;
         }
 
@@ -60,12 +91,23 @@ export const MobileBidSheet: React.FC<MobileBidSheetProps> = ({
 
         try {
             await onPlaceBid(amount);
-            onClose();
-            // Reset form
-            setCustomBid('');
-            setSelectedQuickBid(null);
+
+            // Haptic success feedback
+            triggerHapticFeedback('success');
+
+            // Show success animation briefly
+            setShowSuccess(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+                onClose();
+                // Reset form
+                setCustomBid('');
+                setSelectedQuickBid(null);
+            }, 800);
+
         } catch (err: any) {
             setError(err.message || 'فشلت المزايدة');
+            triggerHapticFeedback('error');
         } finally {
             setIsProcessing(false);
         }
@@ -75,6 +117,8 @@ export const MobileBidSheet: React.FC<MobileBidSheetProps> = ({
         setSelectedQuickBid(amount);
         setCustomBid('');
         setError(null);
+        // Light haptic on selection
+        triggerHapticFeedback('light');
     };
 
     const handleCustomBidChange = (value: string) => {

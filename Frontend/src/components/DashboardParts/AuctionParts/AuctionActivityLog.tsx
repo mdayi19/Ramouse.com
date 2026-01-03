@@ -13,15 +13,35 @@ interface ActivityItem {
     details?: any;
 }
 
+/**
+ * Format timestamp as relative time in Arabic
+ */
+const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+
+    if (diffSecs < 5) return 'الآن';
+    if (diffSecs < 60) return `منذ ${diffSecs} ثانية`;
+
+    const diffMins = Math.floor(diffSecs / 60);
+    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+
+    return `منذ ${Math.floor(diffHours / 24)} يوم`;
+};
+
 const AuctionActivityLog: React.FC = () => {
     const [activities, setActivities] = useState<ActivityItem[]>([]);
     const { echo } = useRealtime();
     const listRef = useRef<HTMLDivElement>(null);
 
-    // Mock initial data
+    // Initialize with system check message
     useEffect(() => {
         setActivities([
-            { id: '1', type: 'status_change', message: 'System initiated daily check', timestamp: new Date(Date.now() - 1000 * 60 * 5) }
+            { id: '1', type: 'status_change', message: 'تم تنشيط نظام المراقبة', timestamp: new Date(Date.now() - 1000 * 60 * 5) }
         ]);
     }, []);
 
@@ -35,13 +55,12 @@ const AuctionActivityLog: React.FC = () => {
     };
 
     useEffect(() => {
-        // console.log('🛡️ Listening to Activity Log updates...');
         const channel = echo.private('admin.dashboard');
 
         channel.listen('.bid.placed', (e: any) => {
             addActivity({
                 type: 'bid',
-                message: `New bid of $${e.auction?.currentBid} on auction #${e.auction?.id}`,
+                message: `مزايدة جديدة بقيمة $${e.auction?.currentBid?.toLocaleString()} على المزاد #${e.auction?.id}`,
                 auctionId: e.auction?.id,
                 amount: e.auction?.currentBid,
                 details: e
@@ -51,7 +70,7 @@ const AuctionActivityLog: React.FC = () => {
         channel.listen('.auction.started', (e: any) => {
             addActivity({
                 type: 'auction_start',
-                message: `Auction "${e.auction?.title}" is now LIVE 🔴`,
+                message: `المزاد "${e.auction?.title}" أصبح مباشر الآن 🔴`,
                 auctionId: e.auction?.id,
                 details: e
             });
@@ -60,8 +79,16 @@ const AuctionActivityLog: React.FC = () => {
         channel.listen('.auction.ended', (e: any) => {
             addActivity({
                 type: 'auction_end',
-                message: `Auction "${e.auction?.title}" ended. Winner: ${e.auction?.winnerName || 'None'}`,
+                message: `انتهى المزاد "${e.auction?.title}". الفائز: ${e.auction?.winnerName || 'لا يوجد'}`,
                 auctionId: e.auction?.id,
+                details: e
+            });
+        });
+
+        channel.listen('.car.approved', (e: any) => {
+            addActivity({
+                type: 'car_approved',
+                message: `تمت الموافقة على السيارة "${e.car?.title}"`,
                 details: e
             });
         });
@@ -70,6 +97,7 @@ const AuctionActivityLog: React.FC = () => {
             channel.stopListening('.bid.placed');
             channel.stopListening('.auction.started');
             channel.stopListening('.auction.ended');
+            channel.stopListening('.car.approved');
         };
     }, [echo]);
 
@@ -91,11 +119,11 @@ const AuctionActivityLog: React.FC = () => {
                         <Icon name="Activity" className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                        <h3 className="font-bold text-gray-900 dark:text-white">Live Activity</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Real-time system events</p>
+                        <h3 className="font-bold text-gray-900 dark:text-white">النشاط المباشر</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">أحداث النظام في الوقت الفعلي</p>
                     </div>
                 </div>
-                <div className="flex gap-1" title="Live Connection">
+                <div className="flex gap-1" title="متصل مباشرة">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 </div>
             </div>
@@ -124,7 +152,7 @@ const AuctionActivityLog: React.FC = () => {
                                     </p>
                                     <div className="flex items-center gap-2 mt-1.5">
                                         <span className="text-[10px] font-medium text-gray-400 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                                            {item.timestamp.toLocaleTimeString()}
+                                            {formatTimeAgo(item.timestamp)}
                                         </span>
                                         {item.auctionId && (
                                             <span className="text-[10px] font-bold text-blue-500 hover:underline cursor-pointer">
@@ -141,7 +169,7 @@ const AuctionActivityLog: React.FC = () => {
                 {activities.length === 0 && (
                     <div className="text-center py-10 text-gray-400">
                         <Icon name="Inbox" className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm opacity-70">No recent activity</p>
+                        <p className="text-sm opacity-70">لا يوجد نشاط حديث</p>
                     </div>
                 )}
             </div>
@@ -150,3 +178,4 @@ const AuctionActivityLog: React.FC = () => {
 };
 
 export default AuctionActivityLog;
+

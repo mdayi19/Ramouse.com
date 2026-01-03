@@ -64,7 +64,22 @@ export const AuctionCarDetails: React.FC<AuctionCarDetailsProps> = ({
                         <div className="bg-slate-700/30 rounded-xl md:rounded-2xl p-3 md:p-4 text-center border border-white/5">
                             <Icon name="Fuel" className="w-5 h-5 md:w-6 md:h-6 text-primary mx-auto mb-1.5" />
                             <p className="text-slate-400 text-[10px] md:text-xs font-medium">الوقود</p>
-                            <p className="text-white font-bold text-sm md:text-base">{car.fuel_type === 'petrol' ? 'بنزين' : 'ديزل'}</p>
+                            <p className="text-white font-bold text-sm md:text-base">
+                                {(() => {
+                                    const fuelMap: Record<string, string> = {
+                                        'petrol': 'بنزين',
+                                        'gasoline': 'بنزين',
+                                        'diesel': 'ديزل',
+                                        'electric': 'كهربائي',
+                                        'hybrid': 'هايبرد',
+                                        'plug_in_hybrid': 'هايبرد قابل للشحن',
+                                        'hydrogen': 'هيدروجين',
+                                        'natural_gas': 'غاز طبيعي',
+                                        'lpg': 'غاز مسال',
+                                    };
+                                    return fuelMap[car.fuel_type.toLowerCase()] || car.fuel_type;
+                                })()}
+                            </p>
                         </div>
                     )}
                     {car?.exterior_color && (

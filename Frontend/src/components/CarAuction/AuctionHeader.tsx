@@ -37,6 +37,7 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
                     variant="ghost"
                     onClick={onBack}
                     className="!text-white/70 hover:!text-white hover:!bg-white/10"
+                    aria-label="العودة للخلف"
                 >
                     <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
                     العودة
@@ -49,7 +50,9 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
                         size="icon"
                         onClick={() => setIsImmersive(!isImmersive)}
                         className={`!w-8 !h-8 md:!w-10 md:!h-10 rounded-xl transition-all ${isImmersive ? '!bg-white !text-black shadow-white/20' : '!bg-white/10 !text-white/50'}`}
-                        title="وضع التركيز"
+                        title={isImmersive ? "إلغاء وضع التركيز" : "تفعيل وضع التركيز"}
+                        aria-label={isImmersive ? "إلغاء وضع التركيز" : "تفعيل وضع التركيز"}
+                        aria-pressed={isImmersive}
                     >
                         <Icon name={isImmersive ? "Minimize2" : "Maximize2"} className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>
@@ -61,13 +64,20 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
                             onClick={handleToggleWatchlist}
                             disabled={watchlistLoading}
                             className={`!w-8 !h-8 md:!w-10 md:!h-10 rounded-xl transition-all ${isInWatchlist ? '!bg-red-500 !text-white shadow-lg shadow-red-500/20' : '!bg-white/10 !text-white/50 hover:!text-red-400'}`}
+                            title={isInWatchlist ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+                            aria-label={isInWatchlist ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+                            aria-pressed={isInWatchlist}
                         >
                             <Icon name="Heart" className={`w-4 h-4 md:w-5 md:h-5 ${isInWatchlist ? 'fill-current' : ''}`} />
                         </Button>
                     )}
                     {/* Live Badge */}
                     {isLive && (
-                        <Badge variant="destructive" className="animate-pulse flex items-center gap-1.5 px-2 md:px-3 py-1 md:py-1.5 shadow-lg shadow-red-500/20">
+                        <Badge
+                            variant="destructive"
+                            className="animate-pulse flex items-center gap-1.5 px-2 md:px-3 py-1 md:py-1.5 shadow-lg shadow-red-500/20"
+                            aria-label="المزاد مباشر الآن"
+                        >
                             <span className="relative flex h-2 w-2 md:h-2.5 md:w-2.5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 md:h-2.5 w-2 md:w-2.5 bg-white"></span>
@@ -80,6 +90,8 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
                     <button
                         onClick={() => setShowParticipantsList(true)}
                         className="flex items-center gap-1.5 md:gap-2 text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2 md:px-3 py-1 md:py-1.5 rounded-xl backdrop-blur-sm text-xs md:text-sm transition-all"
+                        title={`${participantsCount} مشارك متصل الآن`}
+                        aria-label={`عرض قائمة المشاركين - ${participantsCount} متصل`}
                     >
                         <Icon name="Users" className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         <span className="font-semibold">{participantsCount}</span>
@@ -90,3 +102,4 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
         </div>
     );
 };
+

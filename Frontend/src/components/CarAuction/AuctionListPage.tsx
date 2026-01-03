@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuctions } from '../../hooks/useAuction';
 import { useWatchlist } from '../../hooks/useWatchlist';
 import { useAuctionUpdates, useAuctionListUpdates } from '../../hooks/useAuctionUpdates';
@@ -24,6 +24,20 @@ interface AuctionListPageProps {
 type FilterTab = 'all' | 'upcoming' | 'live' | 'ended' | 'watchlist';
 type ViewMode = 'grid' | 'list';
 
+/**
+ * Custom hook for debounced search value
+ */
+const useDebouncedValue = <T,>(value: T, delay: number): T => {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    return debouncedValue;
+};
+
 export const AuctionListPage: React.FC<AuctionListPageProps> = ({
     onSelectAuction,
     showToast,
@@ -32,6 +46,9 @@ export const AuctionListPage: React.FC<AuctionListPageProps> = ({
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [searchQuery, setSearchQuery] = useState('');
     const [showNewAuctionBadge, setShowNewAuctionBadge] = useState(false);
+
+    // Debounce search query for performance (300ms delay)
+    const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
 
     // Advanced Filters State (Placeholder for now)
     const [showFilters, setShowFilters] = useState(false);
@@ -145,13 +162,17 @@ export const AuctionListPage: React.FC<AuctionListPageProps> = ({
         ? safeAuctions.filter(a => isInWatchlist(a.id))
         : safeAuctions;
 
-    const filteredAuctions = searchQuery
-        ? watchlistFiltered.filter(a =>
-            a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            a.car?.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            a.car?.model?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : watchlistFiltered;
+    // Use debounced search query for filtering (better performance)
+    const filteredAuctions = useMemo(() => {
+        if (!debouncedSearchQuery) return watchlistFiltered;
+
+        const query = debouncedSearchQuery.toLowerCase();
+        return watchlistFiltered.filter(a =>
+            a.title.toLowerCase().includes(query) ||
+            a.car?.brand?.toLowerCase().includes(query) ||
+            a.car?.model?.toLowerCase().includes(query)
+        );
+    }, [watchlistFiltered, debouncedSearchQuery]);
 
     const tabs = [
         { id: 'all' as FilterTab, label: 'الكل', icon: 'Grid' },

@@ -27,6 +27,8 @@ interface AuctionBiddingPanelProps {
     userId?: string | number;
     hasEnded: boolean;
     isLive: boolean;
+    /** Toast notification function */
+    showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
 }
 
 export const AuctionBiddingPanel: React.FC<AuctionBiddingPanelProps> = ({
@@ -51,6 +53,7 @@ export const AuctionBiddingPanel: React.FC<AuctionBiddingPanelProps> = ({
     userId,
     hasEnded,
     isLive,
+    showToast,
 }) => {
     const bidInputRef = useRef<HTMLInputElement>(null);
 
@@ -273,17 +276,10 @@ export const AuctionBiddingPanel: React.FC<AuctionBiddingPanelProps> = ({
                                                 const maxAuto = parseFloat((document.getElementById('auto-bid-input') as HTMLInputElement).value) || undefined;
 
                                                 if (isNaN(amount) || amount < (auction?.minimum_bid || 0)) {
-                                                    // handled by parent toast usually, but logic here needs to be solid or passed down
-                                                    // For now assume parent handles toast if we throw or return false
-                                                    // But wait, toast is not passed here. 
-                                                    // Let's call handlePlaceBid and let parent validation run or do simple validation here
-                                                    // It seems better to pass the validation responsibility or a toast function
-                                                    // But for 'split', we'll rely on handlePlaceBid to handle it if it does
-                                                    // Actually handlePlaceBid in parent does checks? No it creates the promise
-                                                    // We'll duplicate validation or assume handlePlaceBid does it.
-                                                    // Let's pass the toast capability or do basic check
-                                                    alert(`الحد الأدنى للمزايدة هو ${auction?.minimum_bid?.toLocaleString()}$`);
-                                                    // We should pass showToast prop ideally, but let's stick to extraction
+                                                    const minBidMessage = `الحد الأدنى للمزايدة هو $${auction?.minimum_bid?.toLocaleString()}`;
+                                                    if (showToast) {
+                                                        showToast(minBidMessage, 'error');
+                                                    }
                                                     return;
                                                 }
                                                 // Actually let's assume valid and pass to parent handler

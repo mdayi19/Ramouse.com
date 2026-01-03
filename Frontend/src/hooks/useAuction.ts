@@ -379,6 +379,10 @@ export const usePlaceBid = (auctionId: string | undefined) => {
 
             const response = await auctionService.placeBid(auctionId, amount, maxAutoBid);
             setSuccess(true);
+
+            // Auto-reset success after 3 seconds to allow new bids
+            setTimeout(() => setSuccess(false), 3000);
+
             return response.data; // Return data for immediate update
         } catch (err: any) {
             setError(err.response?.data?.error || 'حدث خطأ أثناء تقديم المزايدة');

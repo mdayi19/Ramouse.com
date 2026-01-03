@@ -11,16 +11,44 @@ interface LiveAuction {
     bidders: number;
 }
 
-const LiveAuctionControl: React.FC = () => {
-    // Mock Live Auctions - In real integration, filter 'live' auctions from main context
-    const [liveAuctions] = useState<LiveAuction[]>([
-        { id: '1', title: '2023 Tesla Model S Plaid', currentBid: 85000, timeRemaining: '04:12', bidders: 12 },
-        { id: '2', title: '2022 Porsche 911 GT3', currentBid: 215000, timeRemaining: '00:45', bidders: 28 },
-    ]);
+interface LiveAuctionControlProps {
+    /** Callback when emergency stop is triggered */
+    onEmergencyStop?: () => Promise<void>;
+    /** Callback when view auction is clicked */
+    onViewAuction?: (auctionId: string) => void;
+    /** Callback when extend auction is clicked */
+    onExtendAuction?: (auctionId: string) => void;
+    /** Toast notification function */
+    showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+    /** Optional external live auctions data */
+    liveAuctions?: LiveAuction[];
+}
 
-    const handleEmergencyPause = () => {
-        if (confirm("🚨 EMERGENCY: Are you sure you want to PAUSE ALL live auctions?")) {
-            alert("Stopping all auctions...");
+const LiveAuctionControl: React.FC<LiveAuctionControlProps> = ({
+    onEmergencyStop,
+    onViewAuction,
+    onExtendAuction,
+    showToast,
+    liveAuctions: externalAuctions,
+}) => {
+    // Use external data if provided, otherwise use internal state
+    const [internalAuctions] = useState<LiveAuction[]>([]);
+    const liveAuctions = externalAuctions ?? internalAuctions;
+    const [isStoppingAll, setIsStoppingAll] = useState(false);
+
+    const handleEmergencyPause = async () => {
+        if (onEmergencyStop) {
+            setIsStoppingAll(true);
+            try {
+                await onEmergencyStop();
+                showToast?.('تم إيقاف جميع المزادات بنجاح', 'success');
+            } catch (error) {
+                showToast?.('فشل في إيقاف المزادات', 'error');
+            } finally {
+                setIsStoppingAll(false);
+            }
+        } else {
+            showToast?.('وظيفة الإيقاف غير متاحة', 'info');
         }
     };
 
@@ -36,18 +64,20 @@ const LiveAuctionControl: React.FC = () => {
                             <Icon name="Radio" className="w-5 h-5 text-red-500" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg">Live Control Room</h3>
-                            <p className="text-xs text-gray-400 font-medium">{liveAuctions.length} Active Auctions</p>
+                            <h3 className="font-bold text-lg">غرفة التحكم المباشرة</h3>
+                            <p className="text-xs text-gray-400 font-medium">{liveAuctions.length} مزاد نشط</p>
                         </div>
                     </div>
                     <Button
                         variant="danger"
                         size="sm"
                         onClick={handleEmergencyPause}
+                        disabled={isStoppingAll || liveAuctions.length === 0}
+                        isLoading={isStoppingAll}
                         className="bg-red-500/10 hover:bg-red-500 border border-red-500/50 text-red-200 hover:text-white"
                     >
                         <Icon name="PauseCircle" className="w-4 h-4 ml-2" />
-                        Emergency Stop all
+                        إيقاف طوارئ
                     </Button>
                 </div>
 
@@ -63,13 +93,21 @@ const LiveAuctionControl: React.FC = () => {
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <span className="text-gray-400 text-xs font-mono">{auction.bidders} bidders</span>
+                                <span className="text-gray-400 text-xs font-mono">{auction.bidders} مزايد</span>
                                 <span className="font-mono font-bold text-green-400">${auction.currentBid.toLocaleString()}</span>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="p-1.5 hover:bg-white/10 rounded-lg" title="View">
+                                    <button
+                                        className="p-1.5 hover:bg-white/10 rounded-lg"
+                                        title="عرض"
+                                        onClick={() => onViewAuction?.(auction.id)}
+                                    >
                                         <Icon name="Eye" className="w-4 h-4" />
                                     </button>
-                                    <button className="p-1.5 hover:bg-white/10 rounded-lg text-yellow-400" title="Extend">
+                                    <button
+                                        className="p-1.5 hover:bg-white/10 rounded-lg text-yellow-400"
+                                        title="تمديد الوقت"
+                                        onClick={() => onExtendAuction?.(auction.id)}
+                                    >
                                         <Icon name="Clock" className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -79,7 +117,7 @@ const LiveAuctionControl: React.FC = () => {
 
                     {liveAuctions.length === 0 && (
                         <div className="text-center py-8 text-gray-500 border border-dashed border-white/10 rounded-xl">
-                            No auctions are currently live
+                            لا توجد مزادات مباشرة حالياً
                         </div>
                     )}
                 </div>
@@ -89,3 +127,4 @@ const LiveAuctionControl: React.FC = () => {
 };
 
 export default LiveAuctionControl;
+

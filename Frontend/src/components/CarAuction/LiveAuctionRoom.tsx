@@ -458,6 +458,7 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
                         userId={userId}
                         hasEnded={hasEnded}
                         isLive={isLive}
+                        showToast={showToast}
                     />
                 </div>
 
