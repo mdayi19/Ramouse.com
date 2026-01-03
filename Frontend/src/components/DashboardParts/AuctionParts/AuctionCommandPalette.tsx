@@ -41,10 +41,10 @@ const AuctionCommandPalette: React.FC = () => {
                     className="relative w-full max-w-2xl bg-white dark:bg-darkcard rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col max-h-[60vh]"
                 >
                     <div className="flex items-center px-4 py-4 border-b border-gray-100 dark:border-gray-800">
-                        <Icon name="Search" className="w-5 h-5 text-gray-400 mr-2" />
+                        <Icon name="Search" className="w-5 h-5 text-gray-400 ml-2" />
                         <input
                             autoFocus
-                            placeholder="Type a command or search..."
+                            placeholder="اكتب أمراً أو ابحث..."
                             className="flex-1 bg-transparent outline-none text-lg text-gray-900 dark:text-white placeholder-gray-400"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -53,14 +53,14 @@ const AuctionCommandPalette: React.FC = () => {
                     </div>
 
                     <div className="overflow-y-auto p-2">
-                        <div className="text-xs font-bold text-gray-400 uppercase px-3 py-2">Quick Actions</div>
-                        <CommandItem icon="Plus" label="Create New Auction" shortcut="N" />
-                        <CommandItem icon="CheckCircle" label="Approve Pending Cars" />
-                        <CommandItem icon="Download" label="Export Weekly Report" />
+                        <div className="text-xs font-bold text-gray-400 uppercase px-3 py-2">إجراءات سريعة</div>
+                        <CommandItem icon="Plus" label="إنشاء مزاد جديد" shortcut="N" />
+                        <CommandItem icon="CheckCircle" label="الموافقة على السيارات المعلقة" />
+                        <CommandItem icon="Download" label="تصدير التقرير الأسبوعي" />
 
-                        <div className="text-xs font-bold text-gray-400 uppercase px-3 py-2 mt-2">Navigation</div>
-                        <CommandItem icon="LayoutGrid" label="Go to Dashboard" />
-                        <CommandItem icon="Users" label="Manage Users" />
+                        <div className="text-xs font-bold text-gray-400 uppercase px-3 py-2 mt-2">التنقل</div>
+                        <CommandItem icon="LayoutGrid" label="الانتقال للوحة التحكم" />
+                        <CommandItem icon="Users" label="إدارة المستخدمين" />
                     </div>
                 </motion.div>
             </div>
@@ -83,3 +83,4 @@ const CommandItem: React.FC<{ icon: string, label: string, shortcut?: string }> 
 );
 
 export default AuctionCommandPalette;
+

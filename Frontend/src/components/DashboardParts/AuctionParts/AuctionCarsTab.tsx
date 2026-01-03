@@ -262,10 +262,10 @@ const CarListItem: React.FC<{
                 </div>
                 <div className="flex flex-col">
                     <span className="text-sm font-bold text-gray-900 dark:text-gray-200">
-                        {car.seller_type === 'admin' ? 'System Admin' : car.seller_name || 'User'}
+                        {car.seller_type === 'admin' ? 'المسؤول' : car.seller_name || 'مستخدم'}
                     </span>
                     <span className="text-xs text-gray-400">
-                        {car.seller_type === 'admin' ? 'Malik' : 'Seller'}
+                        {car.seller_type === 'admin' ? 'مالك' : 'بائع'}
                     </span>
                 </div>
             </div>
