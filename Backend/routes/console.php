@@ -70,8 +70,20 @@ Schedule::command('auction:check-payment-deadlines')
         Log::error('[Scheduler] CRITICAL: Failed to check payment deadlines');
     });
 
+// NEW: Cleanup expired wallet holds
+Schedule::command('wallet:cleanup-expired-holds')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('[Scheduler] Expired wallet holds cleanup completed');
+    })
+    ->onFailure(function () {
+        Log::warning('[Scheduler] Failed to cleanup expired wallet holds');
+    });
+
 // Scheduler heartbeat - confirms scheduler is running
 Schedule::call(function () {
     \Illuminate\Support\Facades\Cache::put('scheduler:last_run', now(), now()->addHour());
     \Illuminate\Support\Facades\Log::debug('[Scheduler] Heartbeat');
 })->everyFiveMinutes();
+
