@@ -39,6 +39,10 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
             // Show user-friendly error messages
             if (error.name === 'NotAllowedError') {
                 setError('تم رفض الإذن. يرجى السماح بالإشعارات من إعدادات المتصفح.');
+            } else if (error.message?.includes('not registered')) {
+                setError('خدمة الإشعارات غير مفعلة. يرجى إعادة تحميل الصفحة.');
+            } else if (error.message?.includes('not ready')) {
+                setError('خدمة الإشعارات لم تكتمل. يرجى الانتظار قليلاً وإعادة المحاولة.');
             } else if (error.message?.includes('Service worker')) {
                 setError('خطأ في تحميل الخدمة. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.');
             } else if (error.message?.includes('VAPID')) {
@@ -76,7 +80,15 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
 
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                            <p className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</p>
+                            {(error.includes('إعادة تحميل') || error.includes('reload')) && (
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="text-xs bg-red-100 dark:bg-red-800 hover:bg-red-200 dark:hover:bg-red-700 text-red-700 dark:text-red-200 px-3 py-1 rounded transition-colors"
+                                >
+                                    إعادة تحميل الصفحة
+                                </button>
+                            )}
                         </div>
                     )}
 

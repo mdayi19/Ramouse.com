@@ -62,11 +62,23 @@ export const NotificationService = {
                 return false;
             }
 
-            // Step 2: Wait for SW ready with Timeout (10s)
+            // Step 2: Ensure service worker is registered first
+            console.log('🔵 [Push] Checking service worker registration...');
+
+            // Check if service worker is even registered
+            const swRegistration = await navigator.serviceWorker.getRegistration();
+            if (!swRegistration) {
+                console.error('❌ [Push] No service worker registered');
+                throw new Error('Service worker not registered. Please reload the page.');
+            }
+
+            console.log('✅ [Push] Service worker is registered');
+
+            // Step 3: Wait for SW to be ready with increased timeout (15s)
             console.log('🔵 [Push] Waiting for service worker to be ready...');
             const registration = (await Promise.race([
                 navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Service worker not ready after 10s')), 10000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Service worker not ready after 15s. Please reload the page.')), 15000))
             ])) as ServiceWorkerRegistration;
 
             console.log('✅ [Push] Service worker ready:', registration.scope);
