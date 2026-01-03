@@ -49,13 +49,16 @@ export const NotificationService = {
         }
 
         try {
+            console.log('🔵 subscribing...');
             // Wait for SW ready
             const registration = await navigator.serviceWorker.ready;
+            console.log('✅ SW ready');
 
             const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
             if (!vapidKey) {
                 console.error('VITE_VAPID_PUBLIC_KEY not found');
+                alert('Error: VAPID Key Missing');
                 return false;
             }
 
@@ -64,7 +67,7 @@ export const NotificationService = {
                 applicationServerKey: urlBase64ToUint8Array(vapidKey)
             });
 
-            console.log('✅ Push Subscription successful:', subscription);
+            console.log('✅ Subscribed:', subscription);
 
             // Send to backend
             // usage of toJSON() ensures we get the keys
