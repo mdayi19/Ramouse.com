@@ -231,6 +231,7 @@ const OrderCard: React.FC<{ order: Order; onQuote: () => void; isQuoted: boolean
                             <DetailItem label="المحرك" value={formData.engineType} />
                             <DetailItem label="القير" value={formData.transmission} />
                             <DetailItem label="رقم الهيكل" value={formData.vin} />
+                            <DetailItem label="المدينة" value={formData.city} />
                         </div>
                     </div>
 
@@ -245,6 +246,7 @@ const OrderCard: React.FC<{ order: Order; onQuote: () => void; isQuoted: boolean
                                     <span key={idx} className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-md">{type}</span>
                                 ))}
                             </div>
+                            <DetailItem label="وصف القطعة" value={formData.partDescription} />
                             <DetailItem label="رقم القطعة" value={formData.partNumber} />
                             {formData.additionalDetails && (
                                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
