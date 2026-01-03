@@ -158,13 +158,45 @@ export const cancelAuctionReminder = async (id: string) => {
     return response.data;
 };
 
-export const placeBid = async (id: string, amount: number, max_auto_bid?: number) => {
-    const payload: any = { amount };
-    if (max_auto_bid) {
-        payload.max_auto_bid = max_auto_bid;
+/**
+ * Place a bid on an auction with retry logic for network failures
+ * Critical operation that deserves resilience
+ */
+export const placeBid = async (
+    id: string,
+    amount: number,
+    max_auto_bid?: number,
+    options?: { maxRetries?: number }
+) => {
+    const maxRetries = options?.maxRetries ?? 2;
+    let lastError: any;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            const payload: any = { amount };
+            if (max_auto_bid) {
+                payload.max_auto_bid = max_auto_bid;
+            }
+            const response = await api.post(`/auctions/${id}/bid`, payload);
+            return response.data;
+        } catch (error: any) {
+            lastError = error;
+
+            // Don't retry on client errors (4xx) - these are intentional rejections
+            if (error.response?.status >= 400 && error.response?.status < 500) {
+                throw error;
+            }
+
+            // Retry on network errors or server errors (5xx)
+            if (attempt < maxRetries) {
+                const delay = Math.pow(2, attempt) * 500; // 500ms, 1s, 2s...
+                await new Promise(resolve => setTimeout(resolve, delay));
+                console.log(`🔄 Retrying bid (attempt ${attempt + 2}/${maxRetries + 1})...`);
+            }
+        }
     }
-    const response = await api.post(`/auctions/${id}/bid`, payload);
-    return response.data;
+
+    throw lastError;
 };
 
 export const payAuction = async (id: string) => {
