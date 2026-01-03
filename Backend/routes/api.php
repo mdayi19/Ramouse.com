@@ -24,6 +24,11 @@ use App\Http\Controllers\TechnicianController;
 |
 */
 
+// Health check endpoint for connection monitoring
+Route::match(['get', 'head'], '/ping', function () {
+    return response()->json(['pong' => true, 'time' => now()->timestamp]);
+});
+
 // Auth with rate limiting
 Route::prefix('auth')->group(function () {
     Route::post('/check-phone', [AuthController::class, 'checkPhone']);
