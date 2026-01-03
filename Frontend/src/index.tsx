@@ -22,6 +22,26 @@ const updateSW = registerSW({
   }
 });
 
+// DEBUG: Check SW State on Load
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then(() => {
+    console.log('SW Ready Logic confirmed');
+  }).catch(e => console.error('SW Ready Error', e));
+
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (!reg) {
+      console.warn('DEBUG: No Service Worker found registered!');
+      // Try explicit fallback?
+    } else {
+      console.log('DEBUG: SW Found.', {
+        active: !!reg.active,
+        waiting: !!reg.waiting,
+        installing: !!reg.installing
+      });
+    }
+  });
+}
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");
