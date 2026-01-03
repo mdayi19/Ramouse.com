@@ -66,10 +66,17 @@ export const NotificationService = {
             console.log('🔵 [Push] Checking service worker registration...');
 
             // Check if service worker is even registered
-            const swRegistration = await navigator.serviceWorker.getRegistration();
+            let swRegistration = await navigator.serviceWorker.getRegistration();
+
             if (!swRegistration) {
-                console.error('❌ [Push] No service worker registered');
-                throw new Error('Service worker not registered. Please reload the page.');
+                console.warn('⚠️ [Push] No service worker registered. Attempting lazy registration...');
+                try {
+                    swRegistration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('✅ [Push] Lazy registration successful:', swRegistration.scope);
+                } catch (regError) {
+                    console.error('❌ [Push] Lazy registration failed:', regError);
+                    throw new Error('Service worker registration failed. Please reload.');
+                }
             }
 
             console.log('✅ [Push] Service worker is registered');
