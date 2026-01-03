@@ -37,6 +37,9 @@ services:
       REVERB_HOST: reverb
       REVERB_PORT: 8080
       REVERB_SCHEME: http
+      VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@ramouse.com}
     networks:
       - ramouse-network
     depends_on:
