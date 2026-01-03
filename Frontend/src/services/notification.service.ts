@@ -43,6 +43,7 @@ export const NotificationService = {
      * Subscribe to Web Push Notifications
      */
     async subscribeToPush(): Promise<boolean> {
+        console.log('🔵 Starting push subscription...');
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             console.warn('Push messaging is not supported');
             return false;
@@ -50,10 +51,15 @@ export const NotificationService = {
 
         try {
             const registration = await navigator.serviceWorker.ready;
+            console.log('✅ Service Worker ready');
+
             const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            // console.log('🔑 Key:', vapidKey); // Don't log full key in prod usually, but for debug:
 
             if (!vapidKey) {
                 console.error('VITE_VAPID_PUBLIC_KEY not found');
+                // TEMP DEBUG: Alert user
+                alert('SYSTEM ERROR: VAPID Key is missing! The frontend needs to be rebuilt.');
                 return false;
             }
 
@@ -62,15 +68,21 @@ export const NotificationService = {
                 applicationServerKey: urlBase64ToUint8Array(vapidKey)
             });
 
-            console.log('Push Subscription:', subscription);
+            console.log('✅ Push Subscription successful:', subscription);
 
             // Send to backend
             // usage of toJSON() ensures we get the keys
             await api.post('/notifications/subscribe', subscription.toJSON());
 
             return true;
-        } catch (error) {
-            console.error('Failed to subscribe to push:', error);
+        } catch (error: any) {
+            console.error('❌ Failed to subscribe to push:', error);
+            if (error.name === 'NotAllowedError') {
+                console.warn('User denied notifications.');
+            } else {
+                // TEMP DEBUG: Alert for other errors
+                alert(`Push Subscription Error: ${error.message}`);
+            }
             throw error;
         }
     },
