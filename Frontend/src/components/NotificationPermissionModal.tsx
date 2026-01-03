@@ -94,6 +94,13 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
                                     إعادة تحميل الصفحة
                                 </button>
                             )}
+                            {error.includes('VAPID') && (
+                                <div className="mt-2 text-xs text-red-600 dark:text-red-400 text-left bg-white/50 dark:bg-black/20 p-2 rounded">
+                                    <p className="font-bold">Debugging Info:</p>
+                                    <p>Code: E-VAPID-MISSING</p>
+                                    <p>Please check if VITE_VAPID_PUBLIC_KEY is set in your build environment.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 

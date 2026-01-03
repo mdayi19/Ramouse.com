@@ -36,6 +36,16 @@ try {
         echo "Configured Public Key:         " . $publicKey . "\n";
     }
 
+    echo "\n🔍 Checking PHP Extensions for Web Push:\n";
+    $extensions = ['gmp', 'bcmath', 'curl', 'openssl', 'mbstring'];
+    foreach ($extensions as $ext) {
+        if (extension_loaded($ext)) {
+            echo "✅ Extension '$ext' is loaded.\n";
+        } else {
+            echo "⚠️ [WARNING] Extension '$ext' is MISSING. (WebPush may fallback or fail)\n";
+        }
+    }
+
 } catch (\Exception $e) {
     echo "❌ ERROR: " . $e->getMessage() . "\n";
 }

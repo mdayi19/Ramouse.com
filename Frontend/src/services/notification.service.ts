@@ -89,7 +89,7 @@ export const NotificationService = {
 
             if (!vapidKey) {
                 console.error('❌ [Push] VITE_VAPID_PUBLIC_KEY not found in environment');
-                throw new Error('VAPID key is missing. Please check your .env file.');
+                throw new Error('VAPID key is missing. Environmental variable not found.');
             }
 
             // Step 4: Check for existing subscription

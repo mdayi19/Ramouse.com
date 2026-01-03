@@ -6,6 +6,7 @@ interface ImportMetaEnv {
     readonly VITE_REVERB_HOST: string
     readonly VITE_REVERB_PORT: string
     readonly VITE_REVERB_SCHEME: string
+    readonly VITE_VAPID_PUBLIC_KEY: string
 }
 
 interface ImportMeta {
