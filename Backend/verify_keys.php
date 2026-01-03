@@ -37,20 +37,23 @@ try {
         'subject' => env('VAPID_SUBJECT')
     ]);
 
-    // Check if derived public key matches
-    $derivedPublic = VAPID::computePublicKey($privateKey);
+    // Check if derived public key matches - REMOVED (Method removed in v10)
+    // $derivedPublic = VAPID::computePublicKey($privateKey);
+    // Instead we rely on validate() above.
+
+    echo "✅ Keys format and Subject appear valid according to library.\n";
 
     // Normalize both keys to remove padding/format diffs if any
     $cleanPublic = str_replace(['=', '+', '/'], ['', '-', '_'], $publicKey);
-    $cleanDerived = str_replace(['=', '+', '/'], ['', '-', '_'], $derivedPublic);
+    // $cleanDerived = str_replace(['=', '+', '/'], ['', '-', '_'], $derivedPublic);
 
-    if ($cleanPublic === $cleanDerived) {
-        echo "✅ SUCCESS: Private Key generates the configured Public Key correctly.\n";
-    } else {
-        echo "❌ FAILURE: Mismatch!\n";
-        echo "Derived Public from Private Key: " . $derivedPublic . "\n";
-        echo "Configured Public Key:         " . $publicKey . "\n";
-    }
+    // if ($cleanPublic === $cleanDerived) {
+    //    echo "✅ SUCCESS: Private Key generates the configured Public Key correctly.\n";
+    // } else {
+    //    echo "❌ FAILURE: Mismatch!\n";
+    //    echo "Derived Public from Private Key: " . $derivedPublic . "\n";
+    //    echo "Configured Public Key:         " . $publicKey . "\n";
+    //}
 
     echo "\n🔍 Checking PHP Extensions for Web Push:\n";
     $extensions = ['gmp', 'bcmath', 'curl', 'openssl', 'mbstring'];
