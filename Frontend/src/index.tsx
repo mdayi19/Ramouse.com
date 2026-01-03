@@ -6,39 +6,21 @@ import { HelmetProvider } from 'react-helmet-async';
 
 import './index.css';
 
-import { registerSW } from 'virtual:pwa-register';
-
-// Register Service Worker manually to ensure it loads
-const updateSW = registerSW({
-  onNeedRefresh() {
-    console.log('Update available, reloading...');
-  },
-  onOfflineReady() {
-    console.log('App is ready for offline usage');
-  },
-  onRegisterError(error) {
-    console.error('SW Registration Failed:', error);
-    alert('System Error: Service Worker failed to register. ' + error);
-  }
-});
-
-// DEBUG: Check SW State on Load
+// Native Service Worker Registration (Bypassing Vite Plugin Magic)
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.ready.then(() => {
-    console.log('SW Ready Logic confirmed');
-  }).catch(e => console.error('SW Ready Error', e));
-
-  navigator.serviceWorker.getRegistration().then(reg => {
-    if (!reg) {
-      console.warn('DEBUG: No Service Worker found registered!');
-      // Try explicit fallback?
-    } else {
-      console.log('DEBUG: SW Found.', {
-        active: !!reg.active,
-        waiting: !!reg.waiting,
-        installing: !!reg.installing
+  window.addEventListener('load', () => {
+    // Explicitly register sw.js to ensure it loads
+    // We use '/custom-sw.js' if that is what VitePWA generates, or 'sw.js'. 
+    // Default is usually 'sw.js' which imports 'custom-sw.js' if configured so. 
+    // We will try 'sw.js' first.
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('✅ Native SW Registered Scope:', registration.scope);
+      })
+      .catch(error => {
+        console.error('❌ Native SW Registration Failed:', error);
+        alert(`Example Error: SW Registration Failed. ${error.message}`);
       });
-    }
   });
 }
 
