@@ -11,94 +11,119 @@ import SEO from './SEO';
 // Glassmorphism, bold gradients, vibrant energy, micro-interactions
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// --- Animated Background ---
+// --- Animated Background (Mobile-Optimized) ---
 const AnimatedBackground: React.FC = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
+    // Check for mobile/touch device
+    const checkMobile = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { passive: true });
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    // Only track mouse on desktop for performance
+    if (!isMobile) {
+      const handleMouseMove = (e: MouseEvent) => {
+        requestAnimationFrame(() => setMousePos({ x: e.clientX, y: e.clientY }));
+      };
+      window.addEventListener('mousemove', handleMouseMove, { passive: true });
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('resize', checkMobile);
+      };
+    }
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isMobile]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10" aria-hidden="true">
       {/* Base background */}
       <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900" />
 
-      {/* Primary orb */}
+      {/* Primary orb - smaller on mobile */}
       <div
-        className="absolute w-[800px] h-[800px] rounded-full opacity-20 dark:opacity-30 blur-[120px]"
+        className="absolute rounded-full opacity-20 dark:opacity-30 will-change-transform
+          w-[300px] h-[300px] blur-[60px] md:w-[800px] md:h-[800px] md:blur-[120px]"
         style={{
           background: 'radial-gradient(circle, #1c2e5b 0%, transparent 70%)',
-          top: '-20%',
-          right: '-10%',
-          animation: 'float 20s ease-in-out infinite'
+          top: '-10%',
+          right: '-5%',
+          animation: isMobile ? 'none' : 'float 20s ease-in-out infinite',
+          transform: 'translateZ(0)'
         }}
       />
 
-      {/* Secondary orb */}
+      {/* Secondary orb - hidden on mobile for performance */}
       <div
-        className="absolute w-[600px] h-[600px] rounded-full opacity-15 dark:opacity-25 blur-[100px]"
+        className="hidden md:block absolute w-[600px] h-[600px] rounded-full opacity-15 dark:opacity-25 blur-[100px] will-change-transform"
         style={{
           background: 'radial-gradient(circle, #f0b71a 0%, transparent 70%)',
           bottom: '-10%',
           left: '-5%',
-          animation: 'float 25s ease-in-out infinite reverse'
+          animation: 'float 25s ease-in-out infinite reverse',
+          transform: 'translateZ(0)'
         }}
       />
 
-      {/* Accent orb */}
+      {/* Accent orb - hidden on mobile */}
       <div
-        className="absolute w-[400px] h-[400px] rounded-full opacity-10 dark:opacity-20 blur-[80px]"
+        className="hidden lg:block absolute w-[400px] h-[400px] rounded-full opacity-10 dark:opacity-20 blur-[80px] will-change-transform"
         style={{
           background: 'radial-gradient(circle, #f3efe4 0%, transparent 70%)',
           top: '40%',
           left: '30%',
-          animation: 'float 15s ease-in-out infinite'
+          animation: 'float 15s ease-in-out infinite',
+          transform: 'translateZ(0)'
         }}
       />
 
-      {/* Mouse follower glow */}
-      <div
-        className="absolute w-64 h-64 rounded-full opacity-5 dark:opacity-10 blur-[60px] transition-all duration-1000 ease-out"
-        style={{
-          background: 'radial-gradient(circle, #f0b71a 0%, transparent 70%)',
-          left: mousePos.x - 128,
-          top: mousePos.y - 128,
-        }}
-      />
+      {/* Mouse follower glow - desktop only */}
+      {!isMobile && (
+        <div
+          className="absolute w-64 h-64 rounded-full opacity-5 dark:opacity-10 blur-[60px] transition-all duration-1000 ease-out will-change-transform"
+          style={{
+            background: 'radial-gradient(circle, #f0b71a 0%, transparent 70%)',
+            left: mousePos.x - 128,
+            top: mousePos.y - 128,
+            transform: 'translateZ(0)'
+          }}
+        />
+      )}
 
-      {/* Grid pattern overlay */}
+      {/* Grid pattern - lighter on mobile */}
       <div
-        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+        className="absolute inset-0 opacity-[0.02] md:opacity-[0.03] dark:opacity-[0.03] dark:md:opacity-[0.05]"
         style={{
           backgroundImage: `
             linear-gradient(rgba(28, 46, 91, 0.3) 1px, transparent 1px),
             linear-gradient(90deg, rgba(28, 46, 91, 0.3) 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px'
+          backgroundSize: '40px 40px'
         }}
       />
     </div>
   );
 };
 
-// --- Section wrapper ---
+
+// --- Section wrapper (Mobile-First) ---
 const Section: React.FC<{
   children: React.ReactNode;
   className?: string;
   id?: string;
-}> = ({ children, className = '', id }) => (
-  <section id={id} className={`py-20 md:py-28 px-5 sm:px-8 ${className}`}>
+  ariaLabel?: string;
+}> = ({ children, className = '', id, ariaLabel }) => (
+  <section
+    id={id}
+    className={`py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 ${className}`}
+    aria-label={ariaLabel}
+  >
     <div className="max-w-7xl mx-auto">{children}</div>
   </section>
 );
 
-// --- Section Header ---
+// --- Section Header (Mobile-First + SEO) ---
 const SectionHeader: React.FC<{
   badge?: string;
   badgeColor?: string;
@@ -106,22 +131,24 @@ const SectionHeader: React.FC<{
   highlightedWord?: string;
   highlightGradient?: string;
   description?: string;
+  as?: 'h2' | 'h3';
 }> = ({
   badge,
   badgeColor = 'bg-primary/10 text-primary',
   title,
   highlightedWord,
   highlightGradient = 'from-primary to-primary-600',
-  description
+  description,
+  as: HeadingTag = 'h2'
 }) => (
-    <div className="text-center mb-20 animate-fade-in-up">
+    <header className="text-center mb-10 sm:mb-14 md:mb-16">
       {badge && (
         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold mb-6 border border-current opacity-90 ${badgeColor}`}>
           <span className="w-2 h-2 rounded-full bg-current animate-pulse mr-2"></span>
           {badge}
         </span>
       )}
-      <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tighter">
+      <HeadingTag className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-4 sm:mb-6 tracking-tight leading-tight">
         {highlightedWord ? (
           <>
             {title.split(highlightedWord)[0]}
@@ -134,14 +161,14 @@ const SectionHeader: React.FC<{
             {title.split(highlightedWord)[1]}
           </>
         ) : title}
-      </h2>
+      </HeadingTag>
       {description && (
-        <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed">{description}</p>
+        <p className="text-base sm:text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed px-2">{description}</p>
       )}
-    </div>
+    </header>
   );
 
-// --- Service Card with glow effect ---
+// --- Service Card (Mobile-First + Performance) ---
 const ServiceCard: React.FC<{
   icon: string;
   gradientFrom: string;
@@ -151,42 +178,42 @@ const ServiceCard: React.FC<{
   primaryAction: { label: string; onClick: () => void; loading?: boolean };
   secondaryAction: { label: string; onClick: () => void };
 }> = ({ icon, gradientFrom, gradientTo, title, description, primaryAction, secondaryAction }) => (
-  <div className="group relative p-10 rounded-[2.5rem] bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/30 hover:border-primary/20 transition-all duration-700 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-slate-900/50 hover:-translate-y-2 hover:shadow-primary/10">
-    {/* Animated background gradient orbs */}
-    <div className={`absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700`} />
-    <div className={`absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-br ${gradientTo} ${gradientFrom} rounded-full blur-[80px] opacity-5 group-hover:opacity-15 transition-opacity duration-700`} />
+  <article className="group relative p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md md:backdrop-blur-xl border border-white/20 dark:border-slate-700/30 hover:border-primary/20 transition-all duration-500 overflow-hidden shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl active:scale-[0.99]">
+    {/* Gradient orbs - hidden on mobile for performance */}
+    <div className={`hidden md:block absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-500 will-change-opacity`} aria-hidden="true" />
+    <div className={`hidden md:block absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-br ${gradientTo} ${gradientFrom} rounded-full blur-[80px] opacity-5 group-hover:opacity-15 transition-opacity duration-500 will-change-opacity`} aria-hidden="true" />
 
     <div className="relative z-10">
-      <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center mb-8 shadow-xl shadow-primary/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-        <Icon name={icon as any} className="w-10 h-10 text-white" />
+      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center mb-4 sm:mb-6 md:mb-8 shadow-lg shadow-primary/10 transition-transform duration-300 group-hover:scale-105`}>
+        <Icon name={icon as any} className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
       </div>
 
-      <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">{title}</h3>
-      <p className="text-lg text-slate-500 dark:text-slate-400 mb-10 leading-relaxed font-medium">{description}</p>
+      <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-2 sm:mb-3 md:mb-4 tracking-tight">{title}</h3>
+      <p className="text-sm sm:text-base md:text-lg text-slate-500 dark:text-slate-400 mb-6 sm:mb-8 md:mb-10 leading-relaxed font-medium">{description}</p>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <Button
           onClick={primaryAction.onClick}
           isLoading={primaryAction.loading}
           icon={!primaryAction.loading ? "MapPin" : undefined}
-          className={`h-auto py-4 rounded-2xl bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white font-bold text-lg hover:shadow-2xl hover:shadow-primary/20 transition-all active:scale-[0.98] border-0`}
+          className={`h-auto py-3 sm:py-3.5 md:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white font-bold text-base sm:text-lg hover:shadow-xl transition-all active:scale-[0.98] border-0 min-h-[44px]`}
         >
           {primaryAction.label}
         </Button>
         <Button
           onClick={secondaryAction.onClick}
           variant="outline"
-          className="h-auto py-4 rounded-2xl bg-white/50 dark:bg-slate-700/50 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold hover:bg-white dark:hover:bg-slate-700 transition-all hover:border-primary/30"
+          className="h-auto py-3 sm:py-3.5 md:py-4 rounded-xl sm:rounded-2xl bg-white/50 dark:bg-slate-700/50 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold hover:bg-white dark:hover:bg-slate-700 transition-all min-h-[44px]"
         >
           <span>{secondaryAction.label}</span>
-          <Icon name="ArrowLeft" className="w-4 h-4 mr-2" />
+          <Icon name="ArrowLeft" className="w-4 h-4 mr-2 rtl:rotate-180" />
         </Button>
       </div>
     </div>
-  </div>
+  </article>
 );
 
-// --- Feature Card with hover animation ---
+// --- Feature Card (Mobile-First) ---
 const FeatureCard: React.FC<{
   icon: string;
   gradientFrom: string;
@@ -197,48 +224,47 @@ const FeatureCard: React.FC<{
   onHover: () => void;
   onLeave: () => void;
 }> = ({ icon, gradientFrom, gradientTo, title, description, isHovered, onHover, onLeave }) => (
-  <div
-    className={`group relative p-8 rounded-3xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/20 dark:border-slate-700/30 transition-all duration-500 cursor-pointer shadow-xl hover:shadow-2xl hover:-translate-y-2 ${isHovered ? 'ring-2 ring-secondary/50' : ''}`}
+  <article
+    className={`group relative p-5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md md:backdrop-blur-xl border border-white/20 dark:border-slate-700/30 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl active:scale-[0.98] ${isHovered ? 'ring-2 ring-secondary/50' : ''}`}
     onMouseEnter={onHover}
     onMouseLeave={onLeave}
   >
-    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center mb-6 shadow-xl shadow-primary/10 transition-all duration-500 ${isHovered ? 'scale-125 rotate-6' : ''}`}>
-      <Icon name={icon as any} className="w-8 h-8 text-white" />
+    <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center mb-4 sm:mb-5 md:mb-6 shadow-lg shadow-primary/10 transition-transform duration-300 ${isHovered ? 'scale-110' : ''}`}>
+      <Icon name={icon as any} className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
     </div>
-    <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">{title}</h3>
-    <p className="text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{description}</p>
+    <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-2 sm:mb-3 tracking-tight">{title}</h3>
+    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{description}</p>
 
     {/* Bottom gradient line */}
-    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${gradientFrom} ${gradientTo} transform origin-left transition-transform duration-500 ${isHovered ? 'scale-x-100' : 'scale-x-0'}`} />
-  </div>
+    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${gradientFrom} ${gradientTo} transform origin-left transition-transform duration-300 ${isHovered ? 'scale-x-100' : 'scale-x-0'}`} aria-hidden="true" />
+  </article>
 );
 
-// --- Floating Elements for Hero ---
+// --- Floating Elements for Hero (Desktop Only for Performance) ---
 const FloatingElements: React.FC = () => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-    {/* Floating car emojis */}
-    {['🚗', '🚙', '🏎️', '🔧', '⚡', '🛞'].map((emoji, i) => (
+  <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    {/* Floating car emojis - only show on larger screens */}
+    {['🚗', '🚙', '🏎️', '🔧'].map((emoji, i) => (
       <div
         key={i}
-        className="absolute text-4xl opacity-20 dark:opacity-10"
+        className="absolute text-3xl lg:text-4xl opacity-15 dark:opacity-10 will-change-transform"
         style={{
-          left: `${10 + i * 15}%`,
-          top: `${20 + (i % 3) * 25}%`,
-          animation: `float ${8 + i * 2}s ease-in-out infinite`,
-          animationDelay: `${i * 0.5}s`,
+          left: `${15 + i * 20}%`,
+          top: `${25 + (i % 2) * 30}%`,
+          animation: `float ${10 + i * 3}s ease-in-out infinite`,
+          animationDelay: `${i * 0.8}s`,
         }}
       >
         {emoji}
       </div>
     ))}
 
-    {/* Animated circles */}
-    <div className="absolute top-10 right-10 w-20 h-20 border-4 border-primary/10 rounded-full animate-spin-slow" />
-    <div className="absolute bottom-20 left-10 w-32 h-32 border-2 border-secondary/10 rounded-full animate-ping-slow" />
+    {/* Animated circles - simplified */}
+    <div className="absolute top-10 right-10 w-16 lg:w-20 h-16 lg:h-20 border-2 border-primary/10 rounded-full animate-spin-slow" />
   </div>
 );
 
-// --- Process Step ---
+// --- Process Step (Mobile-First) ---
 const ProcessStep: React.FC<{
   number: string;
   icon: string;
@@ -246,20 +272,20 @@ const ProcessStep: React.FC<{
   description: string;
 }> = ({ number, icon, title, description }) => (
   <div className="text-center relative group">
-    <div className="relative inline-block mb-6">
-      <div className="w-24 h-24 rounded-full bg-white dark:bg-slate-800 border-4 border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:border-secondary/30 transition-all duration-500">
-        <Icon name={icon as any} className="w-10 h-10 text-primary dark:text-secondary" />
+    <div className="relative inline-block mb-4 sm:mb-6">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-white dark:bg-slate-800 border-2 sm:border-4 border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-lg sm:shadow-xl transition-transform duration-300 group-hover:scale-105">
+        <Icon name={icon as any} className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-primary dark:text-secondary" />
       </div>
-      <span className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-orange-400 flex items-center justify-center text-sm font-black text-primary-900 shadow-lg border-2 border-white dark:border-slate-900">
+      <span className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-secondary to-orange-400 flex items-center justify-center text-xs sm:text-sm font-black text-primary-900 shadow-lg border-2 border-white dark:border-slate-900">
         {number}
       </span>
     </div>
-    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 group-hover:text-primary dark:group-hover:text-secondary transition-colors">{title}</h3>
-    <p className="text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p>
+    <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-800 dark:text-white mb-1 sm:mb-2">{title}</h3>
+    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p>
   </div>
 );
 
-// --- Quick Link Button ---
+// --- Quick Link Button (Touch-Friendly) ---
 const QuickLink: React.FC<{
   icon: string;
   label: string;
@@ -267,16 +293,17 @@ const QuickLink: React.FC<{
 }> = ({ icon, label, onClick }) => (
   <button
     onClick={onClick}
-    className="group flex flex-col items-center justify-center p-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-2xl hover:border-secondary dark:hover:border-secondary hover:shadow-lg hover:shadow-secondary/10 dark:hover:shadow-secondary/20 hover:-translate-y-1 transition-all duration-300"
+    className="group flex flex-col items-center justify-center p-4 sm:p-5 md:p-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-xl sm:rounded-2xl hover:border-secondary dark:hover:border-secondary hover:shadow-lg transition-all duration-200 active:scale-95 min-h-[100px] sm:min-h-[120px]"
+    aria-label={label}
   >
-    <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-3 transition-all ${icon === 'towtruck' ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-slate-50 dark:bg-slate-700 group-hover:bg-secondary/10'}`}>
-      <Icon name={icon as any} className={icon === 'towtruck' ? "w-10 h-10 text-white" : "w-7 h-7 text-primary dark:text-white group-hover:text-secondary"} />
+    <div className={`w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 transition-all ${icon === 'towtruck' ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-slate-50 dark:bg-slate-700 group-hover:bg-secondary/10'}`}>
+      <Icon name={icon as any} className={icon === 'towtruck' ? "w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" : "w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary dark:text-white group-hover:text-secondary"} />
     </div>
-    <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary dark:group-hover:text-white text-center leading-tight">{label}</span>
+    <span className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary dark:group-hover:text-white text-center leading-tight">{label}</span>
   </button>
 );
 
-// --- Category Chip ---
+// --- Category Chip (Touch-Friendly) ---
 const CategoryChip: React.FC<{
   flag: string;
   name: string;
@@ -284,10 +311,11 @@ const CategoryChip: React.FC<{
 }> = ({ flag, name, onClick }) => (
   <button
     onClick={onClick}
-    className="group flex items-center gap-2 px-5 py-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all active:scale-95"
+    className="group flex items-center gap-2 px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/50 transition-all duration-200 active:scale-95 min-h-[44px]"
+    aria-label={`اختر ${name}`}
   >
-    <span className="text-xl group-hover:scale-125 transition-transform">{flag}</span>
-    <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-primary dark:group-hover:text-white">{name}</span>
+    <span className="text-lg sm:text-xl transition-transform group-hover:scale-110">{flag}</span>
+    <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-primary dark:group-hover:text-white">{name}</span>
   </button>
 );
 

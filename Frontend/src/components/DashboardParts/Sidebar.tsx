@@ -50,32 +50,31 @@ const Sidebar: React.FC<SidebarProps> = ({
         setOpenSubmenus(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
+    // Simplified variants for better mobile performance
     const sidebarVariants = {
         closed: {
             x: '100%',
             opacity: 0,
             transition: {
-                type: 'spring' as const,
-                stiffness: 400,
-                damping: 40
+                type: 'tween' as const,
+                duration: 0.25,
+                ease: 'easeOut' as const
             }
         },
         open: {
             x: 0,
             opacity: 1,
             transition: {
-                type: 'spring' as const,
-                stiffness: 400,
-                damping: 40,
-                staggerChildren: 0.05,
-                delayChildren: 0.1
+                type: 'tween' as const,
+                duration: 0.2,
+                ease: 'easeOut' as const
             }
         }
     };
 
     const itemVariants = {
-        closed: { x: 20, opacity: 0 },
-        open: { x: 0, opacity: 1 }
+        closed: { x: 10, opacity: 0 },
+        open: { x: 0, opacity: 1, transition: { duration: 0.15 } }
     };
 
     const overlayVariants = {
@@ -157,11 +156,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <Button
                     onClick={item.onClick}
                     variant="ghost"
-                    className={`w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium transition-all duration-300 rounded-xl mb-1 relative overflow-hidden group
+                    className={`w-full justify-start gap-3 px-3 py-3 h-auto text-sm font-medium transition-colors duration-200 rounded-xl mb-1 relative overflow-hidden group min-h-[44px]
                         ${isSelected
-                            ? 'text-primary dark:text-primary-400 shadow-[0_2px_12px_-4px_rgba(var(--primary-rgb),0.2)] bg-gradient-to-r from-primary/10 to-transparent dark:from-primary-500/20'
+                            ? 'text-primary dark:text-primary-400 bg-primary/5 dark:bg-primary-500/10'
                             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                         }`}
+                    aria-current={isSelected ? 'page' : undefined}
                 >
                     {isSelected && (
                         <motion.div
@@ -204,13 +204,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     return (
         <>
-            {/* Mobile Overlay */}
+            {/* Mobile Overlay - reduced blur for performance */}
             <motion.div
                 initial="closed"
                 animate={isOpen ? "open" : "closed"}
                 variants={overlayVariants}
                 onClick={() => setIsOpen(false)}
-                className="md:hidden fixed inset-0 bg-slate-900/60 z-40 backdrop-blur-sm"
+                className="md:hidden fixed inset-0 bg-slate-900/60 z-40"
+                aria-hidden="true"
             />
 
             {/* Sidebar Container */}
@@ -225,8 +226,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 // However, for cleaner code, we can force reset scale/x on desktop via className '!translate-x-0' if needed, but motion inline styles have high specificity.
                 // Let's rely on standard mobile-first logic: Drawer on mobile, Static on desktop.
                 className={`fixed inset-y-0 right-0 z-50 w-[280px] h-full flex flex-col
-                    bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-l border-white/20 dark:border-slate-800/50 shadow-2xl 
-                    md:shadow-none md:relative md:!translate-x-0 md:bg-transparent dark:md:bg-transparent md:backdrop-filter-none md:border-none md:!opacity-100`}
+                    bg-white/95 dark:bg-slate-900/95 backdrop-blur-md md:backdrop-blur-none border-l border-slate-200/50 dark:border-slate-800/50 shadow-xl 
+                    md:shadow-none md:relative md:!translate-x-0 md:bg-transparent dark:md:bg-transparent md:border-none md:!opacity-100`}
+                role="navigation"
+                aria-label="القائمة الجانبية"
             >
                 {/* Header */}
                 <div className="flex-shrink-0 h-24 flex items-center justify-between px-6 pt-4 pb-2">

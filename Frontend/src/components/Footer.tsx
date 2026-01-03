@@ -26,57 +26,66 @@ const Footer: React.FC<FooterProps> = ({ settings, onNavigate, className = '' })
     const [showBackToTop, setShowBackToTop] = React.useState(false);
 
     React.useEffect(() => {
+        let ticking = false;
         const handleScroll = () => {
-            setShowBackToTop(window.scrollY > 500);
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    setShowBackToTop(window.scrollY > 500);
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
-        <footer className={`relative bg-gradient-to-b from-primary to-primary-900 text-white overflow-hidden ${className}`}>
+        <footer className={`relative bg-gradient-to-b from-primary to-primary-900 text-white overflow-hidden ${className}`} role="contentinfo">
 
-            {/* Texture Overlay */}
+            {/* Texture Overlay - lighter on mobile */}
             <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                className="absolute inset-0 opacity-[0.02] md:opacity-[0.03] pointer-events-none"
                 style={{
                     backgroundImage: `radial-gradient(#f0b71a 1px, transparent 1px)`,
-                    backgroundSize: '30px 30px'
+                    backgroundSize: '20px 20px'
                 }}
+                aria-hidden="true"
             />
 
             {/* Decorative Top Border */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent opacity-50"></div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent opacity-50" aria-hidden="true" />
 
-            <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-20 relative z-10">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-8">
 
                     {/* Company Info */}
-                    <div className="space-y-6">
+                    <div className="col-span-2 md:col-span-1 space-y-4 sm:space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 shadow-lg backdrop-blur-sm">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-lg sm:rounded-xl flex items-center justify-center border border-white/10 shadow-lg">
                                 <img
                                     src={settings.logoUrl}
-                                    alt={settings.appName}
-                                    className="w-8 h-8 object-contain"
+                                    alt={`شعار ${settings.appName}`}
+                                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                                    loading="lazy"
                                 />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-2xl font-black tracking-tight">{settings.appName}</span>
-                                <span className="text-xs font-bold text-secondary tracking-[0.3em] uppercase opacity-80">Auto Parts</span>
+                                <span className="text-xl sm:text-2xl font-black tracking-tight">{settings.appName}</span>
+                                <span className="text-[10px] sm:text-xs font-bold text-secondary tracking-[0.2em] sm:tracking-[0.3em] uppercase opacity-80">Auto Parts</span>
                             </div>
                         </div>
-                        <p className="text-slate-300 leading-relaxed text-sm md:text-base max-w-xs">
+                        <p className="text-slate-300 leading-relaxed text-xs sm:text-sm md:text-base max-w-xs">
                             المنصة الأولى في سوريا لخدمات السيارات. نصلك بأفضل الفنيين ومزودي قطع الغيار وسطحات النقل بسرعة وموثوقية.
                         </p>
 
-                        {/* Social Icons */}
-                        <div className="flex gap-4 pt-2">
+                        {/* Social Icons - touch-friendly */}
+                        <nav className="flex gap-3 sm:gap-4 pt-2" aria-label="وسائل التواصل الاجتماعي">
                             <SocialIcon href="#" icon="Facebook" label="فيسبوك" color="#1877F2" />
                             <SocialIcon href="#" icon="Instagram" label="انستغرام" color="#E4405F" />
                             <SocialIcon href="#" icon="Twitter" label="تويتر" color="#1DA1F2" />
                             <SocialIcon href="#" icon="Linkedin" label="لينكد إن" color="#0A66C2" />
-                        </div>
+                        </nav>
                     </div>
 
                     {/* Quick Links */}
@@ -185,13 +194,14 @@ const Footer: React.FC<FooterProps> = ({ settings, onNavigate, className = '' })
     );
 };
 
-// Social Icon Helper
+// Social Icon Helper (Touch-Friendly)
 const SocialIcon = ({ href, icon, label, color }: { href: string; icon: string; label: string; color: string }) => {
     return (
         <a
             href={href}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-300 hover:-translate-y-1 group border border-white/5 hover:border-white/20"
+            className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors duration-200 group border border-white/5 hover:border-white/20 min-w-[44px]"
             aria-label={label}
+            rel="noopener noreferrer"
         >
             <Icon name={icon as any} className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" />
         </a>

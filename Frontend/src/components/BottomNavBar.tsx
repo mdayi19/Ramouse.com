@@ -17,9 +17,9 @@ interface BottomNavBarProps {
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemClick }) => {
     return (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe">
-            {/* Glassmorphism Background */}
-            <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 shadow-lg-up" />
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe" role="navigation" aria-label="التنقل الرئيسي">
+            {/* Background - reduced blur for mobile performance */}
+            <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-slate-200/50 dark:border-slate-800/50 shadow-lg" aria-hidden="true" />
 
             <div className="relative flex items-center justify-around h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]">
                 {items.map((item) => {
@@ -29,18 +29,19 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemCl
                         <button
                             key={item.id}
                             onClick={() => onItemClick(item.id)}
-                            className="relative flex-1 flex flex-col items-center justify-center py-2 outline-none group"
+                            className="relative flex-1 flex flex-col items-center justify-center py-2 outline-none group min-h-[56px]"
                             aria-current={isActive ? 'page' : undefined}
+                            aria-label={item.label}
                         >
-                            {/* Active Indicator Background Pill */}
+                            {/* Active Indicator - simplified animation */}
                             {isActive && (
                                 <motion.div
                                     layoutId="bottomNavIndicator"
-                                    className="absolute inset-x-0 mx-auto top-2 w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-2xl"
+                                    className="absolute inset-x-0 mx-auto top-1.5 w-11 h-11 bg-primary/10 dark:bg-primary/20 rounded-xl"
                                     transition={{
-                                        type: "spring",
-                                        stiffness: 400,
-                                        damping: 30
+                                        type: "tween",
+                                        duration: 0.2,
+                                        ease: "easeOut"
                                     }}
                                 />
                             )}
@@ -48,15 +49,9 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemCl
                             {/* Icon Container */}
                             <div className="relative z-10">
                                 <motion.div
-                                    animate={isActive ? {
-                                        scale: 1.1,
-                                        y: -2,
-                                    } : {
-                                        scale: 1,
-                                        y: 0,
-                                    }}
-                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                    className={`relative ${isActive ? 'text-primary dark:text-primary-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400'}`}
+                                    animate={isActive ? { scale: 1.05 } : { scale: 1 }}
+                                    transition={{ type: "tween", duration: 0.15 }}
+                                    className={`relative ${isActive ? 'text-primary dark:text-primary-400' : 'text-slate-400 dark:text-slate-500'}`}
                                 >
                                     {item.icon}
 
@@ -72,24 +67,15 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemCl
                                 </motion.div>
                             </div>
 
-                            {/* Label */}
-                            <motion.span
-                                animate={isActive ? {
-                                    y: 0,
-                                    opacity: 1,
-                                    scale: 1
-                                } : {
-                                    y: 2,
-                                    opacity: 0.8,
-                                    scale: 0.95
-                                }}
-                                className={`text-[10px] font-semibold mt-1 transition-colors ${isActive
+                            {/* Label - simpler animation */}
+                            <span
+                                className={`text-[10px] font-semibold mt-0.5 ${isActive
                                     ? 'text-primary dark:text-primary-400'
                                     : 'text-slate-400 dark:text-slate-500'
                                     }`}
                             >
                                 {item.label}
-                            </motion.span>
+                            </span>
                         </button>
                     );
                 })}

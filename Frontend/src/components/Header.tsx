@@ -73,17 +73,24 @@ const Header: React.FC<HeaderProps> = ({
     }
 
     useEffect(() => {
+        let ticking = false;
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-
-            // Calculate scroll progress
-            const totalScroll = document.documentElement.scrollTop;
-            const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = `${totalScroll / windowHeight}`;
-            setScrollProgress(Number(scrolled));
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    setIsScrolled(window.scrollY > 10);
+                    // Calculate scroll progress - throttled  
+                    const totalScroll = document.documentElement.scrollTop;
+                    const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    if (windowHeight > 0) {
+                        setScrollProgress(totalScroll / windowHeight);
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
 
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -112,18 +119,20 @@ const Header: React.FC<HeaderProps> = ({
         return "عميل";
     };
 
+    // --- NavLink (Touch-Friendly) ---
     const NavLink = ({ label, onClick, icon, isActive = false }: any) => (
         <button
             onClick={onClick}
-            className={`relative px-4 py-2 rounded-full font-medium transition-all duration-300 flex items-center gap-2 group
+            className={`relative px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-medium transition-colors duration-200 flex items-center gap-1.5 sm:gap-2 group min-h-[40px]
         ${isActive
                     ? 'bg-secondary/10 text-secondary'
                     : 'text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary-300 hover:bg-slate-50 dark:hover:bg-white/5'
                 }`}
+            aria-current={isActive ? 'page' : undefined}
         >
             {icon && <Icon name={icon} className={`w-4 h-4 transition-colors ${isActive ? 'text-secondary' : 'text-slate-400 group-hover:text-primary'}`} />}
-            <span>{label}</span>
-            <span className={`absolute bottom-1.5 left-4 right-4 h-0.5 bg-secondary transform scale-x-0 transition-transform duration-300 origin-right group-hover:scale-x-100 ${isActive ? 'scale-x-100' : ''}`} />
+            <span className="text-sm sm:text-base">{label}</span>
+            <span className={`absolute bottom-1 left-3 right-3 h-0.5 bg-secondary transform scale-x-0 transition-transform duration-200 origin-right group-hover:scale-x-100 ${isActive ? 'scale-x-100' : ''}`} aria-hidden="true" />
         </button>
     );
 
