@@ -102,6 +102,13 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
         }
     });
 
+    // Sync registration status from auction data (fixes persistence after page refresh)
+    useEffect(() => {
+        if (auction?.is_registered !== undefined) {
+            setIsRegistered(auction.is_registered);
+        }
+    }, [auction?.is_registered, setIsRegistered]);
+
     // Watchlist check
     useEffect(() => {
         if (isAuthenticated && auctionId) {
