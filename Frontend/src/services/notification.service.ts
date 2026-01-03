@@ -43,32 +43,18 @@ export const NotificationService = {
      * Subscribe to Web Push Notifications
      */
     async subscribeToPush(): Promise<boolean> {
-        // AGGRESSIVE DEBUGGING
-        alert('DEBUG: subscribeToPush STARTED');
-        console.log('🔵 Starting push subscription...');
-
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            alert('DEBUG: Push Not Supported');
             console.warn('Push messaging is not supported');
             return false;
         }
 
         try {
-            console.log('waiting for ready...');
-            // Race against timeout
-            const registration: any = await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT: SW not ready after 5s')), 5000))
-            ]);
-
-            alert('DEBUG: SW Ready & Loaded');
-            console.log('✅ Service Worker ready');
+            // Wait for SW ready
+            const registration = await navigator.serviceWorker.ready;
 
             const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-            // console.log('🔑 Key:', vapidKey); // Don't log full key in prod usually, but for debug:
 
             if (!vapidKey) {
-                alert('FATAL: VITE_VAPID_PUBLIC_KEY is missing in env!');
                 console.error('VITE_VAPID_PUBLIC_KEY not found');
                 return false;
             }

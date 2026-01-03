@@ -53,6 +53,8 @@ const StoreView = lazy(() => import('./components/Store/StoreView').then(module 
 const AuctionListPage = lazy(() => import('./components/CarAuction/AuctionListPage'));
 const LiveAuctionRoom = lazy(() => import('./components/CarAuction/LiveAuctionRoom'));
 
+import NotificationPermissionModal from './components/NotificationPermissionModal';
+
 const PageLoader = () => (
     <div className="flex flex-col items-center justify-center min-h-[50vh] w-full text-primary animate-in fade-in duration-300">
         <Icon name="Loader" className="w-10 h-10 animate-spin mb-4" />
@@ -120,7 +122,7 @@ const AuctionRoomWrapper = ({ isAuthenticated, showToast, user }: any) => {
     );
 };
 
-function App() {
+const App: React.FC = () => {
     const {
         isDarkMode, setIsDarkMode, currentStep, currentView, formData, orderNumber, isAuthenticated, isAdmin,
         isProvider, isTechnician, isTowTruck, loggedInProvider, loggedInTechnician, loggedInTowTruck, loggedInCustomer, userPhone,
@@ -143,6 +145,7 @@ function App() {
     const location = useLocation();
     const navigate = useNavigate();
     const [showSplash, setShowSplash] = useState(true);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
 
     const handleSplashFinish = useCallback(() => {
         setShowSplash(false);
@@ -215,14 +218,16 @@ function App() {
                 })
                 .catch(err => console.error('Failed to fetch notifications:', err));
 
-            // Auto-subscribe to Web Push Notifications (silently - won't prompt if already granted/denied)
-            NotificationService.subscribeToPush()
-                .then(subscribed => {
-                    if (subscribed) {
-                        console.log('✅ Auto-subscribed to push notifications');
-                    }
-                })
-                .catch(err => console.warn('Push subscription skipped:', err.message));
+            // Handle Notification Logic
+            if ('Notification' in window) {
+                if (Notification.permission === 'default') {
+                    // Ask efficiently using our custom modal
+                    setShowNotificationModal(true);
+                } else if (Notification.permission === 'granted') {
+                    // Already granted, ensure key is up to date (Silent)
+                    NotificationService.subscribeToPush().catch(err => console.warn('Silent push sync failed:', err));
+                }
+            }
         }
 
         // Reset ref when user logs out
@@ -743,6 +748,11 @@ function App() {
                 )}
             </Suspense>
 
+            <NotificationPermissionModal
+                isOpen={showNotificationModal}
+                onClose={() => setShowNotificationModal(false)}
+                onPermissionGranted={() => setShowNotificationModal(false)}
+            />
             <ToastContainer messages={toastMessages} setMessages={setToastMessages} />
         </div>
     );
