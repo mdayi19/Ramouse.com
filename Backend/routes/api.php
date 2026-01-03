@@ -426,7 +426,8 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ======== PUBLIC AUCTION ROUTES ========
-Route::prefix('auctions')->group(function () {
+// Rate limited: 60 requests per minute for public viewing
+Route::prefix('auctions')->middleware(['throttle:60,1'])->group(function () {
     Route::get('/', [App\Http\Controllers\AuctionController::class, 'index']);
     Route::get('/{id}', [App\Http\Controllers\AuctionController::class, 'show']);
     Route::get('/{id}/bids', [App\Http\Controllers\BidController::class, 'getBids']);
@@ -434,10 +435,12 @@ Route::prefix('auctions')->group(function () {
 });
 
 // ======== AUTHENTICATED AUCTION ROUTES ========
-Route::middleware(['auth:sanctum'])->prefix('auctions')->group(function () {
+// Rate limited: 30 requests per minute for authenticated actions, stricter for bidding
+Route::middleware(['auth:sanctum', 'throttle:30,1'])->prefix('auctions')->group(function () {
     Route::post('/{id}/register', [App\Http\Controllers\AuctionController::class, 'register']);
     Route::post('/{id}/remind', [App\Http\Controllers\AuctionController::class, 'setReminder']);
     Route::delete('/{id}/remind', [App\Http\Controllers\AuctionController::class, 'cancelReminder']);
+    // Bidding has additional in-memory rate limiting (1/sec) in BidController
     Route::post('/{id}/bid', [App\Http\Controllers\BidController::class, 'placeBid']);
     Route::post('/{id}/buy-now', [App\Http\Controllers\BidController::class, 'buyNow']);
     Route::post('/{id}/pay', [App\Http\Controllers\AuctionController::class, 'pay']);

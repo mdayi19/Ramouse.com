@@ -30,6 +30,17 @@ class BidController extends Controller
         $user = $request->user();
         [$profile, $userType] = $this->getUserProfile($user);
 
+        // Audit logging for bid attempts
+        \Log::info('Bid attempt', [
+            'auction_id' => $auctionId,
+            'user_id' => $profile?->id,
+            'user_type' => $userType,
+            'amount' => $request->amount,
+            'max_auto_bid' => $request->input('max_auto_bid'),
+            'ip' => $request->ip(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
         if (!$profile) {
             return response()->json(['error' => 'الحساب غير موجود'], 404);
         }
@@ -197,6 +208,16 @@ class BidController extends Controller
 
             return $bid;
         });
+
+        // Log successful bid for audit trail
+        \Log::info('Bid placed successfully', [
+            'bid_id' => $bid->id,
+            'auction_id' => $auctionId,
+            'user_id' => $bid->user_id,
+            'amount' => $bid->amount,
+            'new_current_bid' => $bid->amount,
+            'timestamp' => now()->toIso8601String(),
+        ]);
 
         return response()->json([
             'message' => 'تم تقديم المزايدة بنجاح',
