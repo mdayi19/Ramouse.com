@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\User;
 use App\Services\WhatsAppService;
 use App\Events\UserNotification as UserNotificationEvent;
+use App\Notifications\GenericWebPushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -153,6 +155,38 @@ class NotificationController extends Controller
         // Broadcast real-time
         event(new UserNotificationEvent($request->user_id, $notification->toArray()));
 
+        // Send Web Push Notification
+        try {
+            $user = User::find($request->user_id);
+            if ($user) {
+                \Log::info('🔵 [WebPush] Sending push notification', [
+                    'user_id' => $user->id,
+                    'title' => $request->title,
+                    'has_subscriptions' => $user->pushSubscriptions()->count() > 0,
+                ]);
+
+                $user->notify(new GenericWebPushNotification(
+                    $request->title,
+                    $request->message,
+                    $request->link['url'] ?? null,
+                    $request->link['label'] ?? 'عرض',
+                    $request->type ?? 'general'
+                ));
+
+                \Log::info('✅ [WebPush] Push notification sent successfully', [
+                    'user_id' => $user->id,
+                ]);
+            } else {
+                \Log::warning('⚠️ [WebPush] User not found', ['user_id' => $request->user_id]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('❌ [WebPush] Failed to send push notification', [
+                'user_id' => $request->user_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+
         // Send WhatsApp if enabled
         if ($request->send_whatsapp ?? false) {
             $this->whatsappService->sendRawMessage(
@@ -227,6 +261,25 @@ class NotificationController extends Controller
 
                 // Broadcast real-time
                 event(new UserNotificationEvent($userId, $notification->toArray()));
+
+                // Send Web Push Notification
+                try {
+                    $user = User::find($userId);
+                    if ($user) {
+                        $user->notify(new GenericWebPushNotification(
+                            $request->title,
+                            $request->message,
+                            $request->link['url'] ?? null,
+                            $request->link['label'] ?? 'عرض',
+                            $request->type ?? 'general'
+                        ));
+                    }
+                } catch (\Exception $pushError) {
+                    \Log::error('Failed to send web push in bulk', [
+                        'user_id' => $userId,
+                        'error' => $pushError->getMessage()
+                    ]);
+                }
 
                 $sentCount++;
             } catch (\Exception $e) {
