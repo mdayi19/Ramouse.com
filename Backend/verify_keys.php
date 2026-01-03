@@ -2,7 +2,7 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Minishlink\WebPush\Vapid;
+use Minishlink\WebPush\VAPID;
 
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
@@ -16,10 +16,10 @@ if (isset($prefixes['Minishlink\\WebPush\\'])) {
     echo "❌ Namespace 'Minishlink\\WebPush\\' IS NOT REGISTERED.\n";
 }
 
-if (class_exists('Minishlink\WebPush\Vapid')) {
-    echo "✅ Class 'Minishlink\WebPush\Vapid' exists.\n";
+if (class_exists('Minishlink\WebPush\VAPID')) {
+    echo "✅ Class 'Minishlink\WebPush\VAPID' exists.\n";
 } else {
-    echo "❌ Class 'Minishlink\WebPush\Vapid' DOES NOT EXIST.\n";
+    echo "❌ Class 'Minishlink\WebPush\VAPID' DOES NOT EXIST.\n";
 }
 echo "--------------------------------------------------\n";
 
@@ -31,14 +31,14 @@ echo "Public: " . substr($publicKey, 0, 10) . "...\n";
 echo "Private: " . substr($privateKey, 0, 10) . "...\n";
 
 try {
-    $valid = Vapid::validate([
+    $valid = VAPID::validate([
         'publicKey' => $publicKey,
         'privateKey' => $privateKey,
         'subject' => env('VAPID_SUBJECT')
     ]);
 
     // Check if derived public key matches
-    $derivedPublic = Vapid::computePublicKey($privateKey);
+    $derivedPublic = VAPID::computePublicKey($privateKey);
 
     // Normalize both keys to remove padding/format diffs if any
     $cleanPublic = str_replace(['=', '+', '/'], ['', '-', '_'], $publicKey);
