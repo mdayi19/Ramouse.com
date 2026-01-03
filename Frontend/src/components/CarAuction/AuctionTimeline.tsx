@@ -19,6 +19,26 @@ type TimelineEvent = {
     data?: any;
 };
 
+/**
+ * Format timestamp as relative time in Arabic
+ */
+const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+
+    if (diffSecs < 5) return 'الآن';
+    if (diffSecs < 60) return `منذ ${diffSecs} ثانية`;
+
+    const diffMins = Math.floor(diffSecs / 60);
+    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+
+    return `منذ ${Math.floor(diffHours / 24)} يوم`;
+};
+
 export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
     auction,
     bids,
@@ -153,7 +173,7 @@ export const AuctionTimeline: React.FC<AuctionTimelineProps> = ({
                                                     }
                                                 </p>
                                                 <p className="text-slate-500 text-[10px]">
-                                                    {event.date.toLocaleTimeString('ar-SA')}
+                                                    {formatTimeAgo(event.date)}
                                                 </p>
                                             </div>
                                             <p className={`font-mono font-bold ${index === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
