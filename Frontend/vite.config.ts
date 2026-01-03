@@ -178,6 +178,7 @@ export default defineConfig(({ mode }) => {
             }
           ],
           globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          globIgnores: ['**/apple-touch-icon.png'],
           navigateFallbackDenylist: [/^\/api/, /^\/storage/],
           navigateFallbackAllowlist: [
             /^\/$/,
