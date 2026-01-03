@@ -10,6 +10,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import Modal from '../Modal';
 import { Input } from '../ui/Input';
+import { getEcho } from '../../lib/echo';
 
 interface ReviewsViewProps {
     towTruck: TowTruck;
@@ -57,10 +58,11 @@ const ReviewsView: React.FC<ReviewsViewProps> = ({ towTruck, showToast }) => {
 
     // Echo listener for new reviews
     useEffect(() => {
-        if (!window.Echo) return;
+        const echo = getEcho();
+        if (!echo) return;
 
         const providerId = towTruck.user_id;
-        const channel = window.Echo.private(`provider.${providerId}`);
+        const channel = echo.private(`provider.${providerId}`);
 
         channel.listen('.review.submitted', (data: any) => {
             console.log('📝 New review submitted:', data);
@@ -69,7 +71,7 @@ const ReviewsView: React.FC<ReviewsViewProps> = ({ towTruck, showToast }) => {
         });
 
         return () => {
-            channel.stopListening('.review.submitted');
+            echo.leave(`provider.${providerId}`);
         };
     }, [towTruck.user_id]);
 

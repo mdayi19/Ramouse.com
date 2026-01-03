@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../../lib/api';
+import { getEcho } from '../../lib/echo';
 
 import Icon from '../Icon';
 import { InternationalLicenseRequest } from '../../types';
@@ -69,11 +70,14 @@ const UserInternationalLicenseView: React.FC<UserInternationalLicenseViewProps> 
             console.error('Failed to parse currentUser for ID', e);
         }
 
-        if (!userId || !window.Echo) return;
+        if (!userId) return;
+
+        const echo = getEcho();
+        if (!echo) return;
 
         console.log(`🔔 UserInternationalLicenseView: Listening for license updates for user ${userId}`);
 
-        const channel = window.Echo.private(`user.${userId}`);
+        const channel = echo.private(`user.${userId}`);
 
         const handleLicenseUpdate = (data: any) => {
             console.log('📋 License status changed:', data);
@@ -98,7 +102,7 @@ const UserInternationalLicenseView: React.FC<UserInternationalLicenseViewProps> 
 
         return () => {
             console.log('🔴 UserInternationalLicenseView: Cleaning up license update listener');
-            channel.stopListening('.international-license.status.changed');
+            echo.leave(`user.${userId}`);
         };
     }, [fetchRequests, showToast]);
 

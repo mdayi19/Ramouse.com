@@ -5,6 +5,7 @@ import EmptyState from '../EmptyState';
 import Rating from '../Rating';
 import { ViewHeader } from '../DashboardParts/Shared';
 import Icon from '../Icon';
+import { getEcho } from '../../lib/echo';
 
 interface ReviewsViewProps {
     technician: Technician;
@@ -52,10 +53,11 @@ const ReviewsView: React.FC<ReviewsViewProps> = ({ technician, showToast }) => {
 
     // Echo listener for new reviews
     useEffect(() => {
-        if (!window.Echo) return;
+        const echo = getEcho();
+        if (!echo) return;
 
         const providerId = technician.user_id;
-        const channel = window.Echo.private(`provider.${providerId}`);
+        const channel = echo.private(`provider.${providerId}`);
 
         channel.listen('.review.submitted', (data: any) => {
             console.log('📝 New review submitted:', data);
@@ -64,7 +66,7 @@ const ReviewsView: React.FC<ReviewsViewProps> = ({ technician, showToast }) => {
         });
 
         return () => {
-            channel.stopListening('.review.submitted');
+            echo.leave(`provider.${providerId}`);
         };
     }, [technician.user_id]);
 

@@ -36,6 +36,7 @@ import SchedulerManagementView from './DashboardParts/SchedulerManagementView';
 import ShippingReceipt from './ShippingReceipt';
 import { AdminView } from './DashboardParts/types';
 import { adminAPI } from '../lib/api';
+import { getEcho } from '../lib/echo';
 import Icon from './Icon';
 import { Button } from './ui/Button';
 
@@ -214,11 +215,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
 
     // Real-time Listeners for Smooth Refresh
     useEffect(() => {
-        if (!window.Echo) return;
+        const echo = getEcho();
+        if (!echo) return;
 
         console.log('🔌 AdminDashboard: Setting up real-time listeners...');
 
-        const ordersChannel = window.Echo.channel('orders');
+        const ordersChannel = echo.channel('orders');
         ordersChannel.listen('.order.created', (data: any) => {
             console.log('📦 Admin: New Order Received:', data);
             showToast(`طلب جديد: ${data.order?.order_number || ''}`, 'info');
@@ -226,7 +228,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             fetchOrders(true);
         });
 
-        const adminChannel = window.Echo.private('admin.dashboard');
+        const adminChannel = echo.private('admin.dashboard');
 
         adminChannel.listen('.admin.order.created', (data: any) => {
             console.log('📦 Admin: Order Created:', data);
@@ -317,22 +319,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
 
         return () => {
             console.log('🔌 AdminDashboard: Cleaning up listeners');
-            window.Echo.leave('orders');
-            adminChannel.stopListening('.admin.order.created');
-            adminChannel.stopListening('.admin.quote.received');
-            adminChannel.stopListening('.admin.order.status_updated');
-            adminChannel.stopListening('.admin.order.payment_updated');
-            adminChannel.stopListening('.admin.order.quote_accepted');
-            adminChannel.stopListening('.admin.provider.registered');
-            adminChannel.stopListening('.admin.provider.balance_changed');
-            adminChannel.stopListening('.admin.withdrawal.requested');
-            adminChannel.stopListening('.admin.withdrawal.processed');
-            adminChannel.stopListening('.admin.store_order.created');
-            adminChannel.stopListening('.admin.user.registered');
-            adminChannel.stopListening('.admin.technician.registered');
-            adminChannel.stopListening('.admin.tow_truck.registered');
-            adminChannel.stopListening('.order.status.updated');
-            adminChannel.stopListening('.quote.received');
+            echo.leave('orders');
+            echo.leave('admin.dashboard');
         };
     }, []);
 

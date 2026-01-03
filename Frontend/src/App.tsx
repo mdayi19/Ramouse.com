@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from './hooks/useAppState';
 import { TOTAL_STEPS } from './constants';
 // Initialize Laravel Echo for real-time notifications
-import './lib/echo';
+import { getEcho } from './lib/echo';
 import { NotificationService } from './services/notification.service';
 import { AuthService } from './services/auth.service';
 import { DirectoryService } from './services/directory.service';
@@ -263,8 +263,9 @@ const App: React.FC = () => {
     useEffect(() => {
         if (isAdmin && userPhone) {
             console.log('🔔 Setting up real-time notifications for admin');
+            const echo = getEcho();
 
-            const channel = window.Echo.private('admin.dashboard');
+            const channel = echo.private('admin.dashboard');
 
             channel.listen('.user.registered', (data: any) => {
                 console.log('👤 New user registered:', data);
@@ -382,15 +383,7 @@ const App: React.FC = () => {
 
             return () => {
                 console.log('🔴 Cleaning up admin notification listeners');
-                window.Echo.leave('admin.dashboard');
-                channel.stopListening('.user.registered');
-                channel.stopListening('.admin.technician.registered');
-                channel.stopListening('.admin.provider.registered');
-                channel.stopListening('.admin.tow_truck.registered');
-                channel.stopListening('.admin.order.created');
-                channel.stopListening('.admin.USER_DEPOSIT_REQUEST');
-                channel.stopListening('.admin.USER_WITHDRAWAL_REQUEST');
-                channel.stopListening('.admin.store_order.created');
+                echo.leave('admin.dashboard');
             };
         }
     }, [isAdmin, userPhone, addNotificationForUser, showToast]);
@@ -412,9 +405,10 @@ const App: React.FC = () => {
 
         if (isAuthenticated && userId) {
             console.log(`🔔 Setting up personal notification listener for user ID: ${userId}`);
+            const echo = getEcho();
 
             // Use user ID directly (no encoding needed)
-            const channel = window.Echo.private(`user.${userId}`);
+            const channel = echo.private(`user.${userId}`);
 
             channel.listen('.user.notification', (data: any) => {
                 console.log('📨 New notification received:', data);
@@ -462,7 +456,7 @@ const App: React.FC = () => {
 
             return () => {
                 console.log(`🔴 Cleaning up personal notification listener for user ID: ${userId}`);
-                window.Echo.leave(`user.${userId}`);
+                echo.leave(`user.${userId}`);
             };
         }
     }, [isAuthenticated, userPhone, setNotifications, showToast, isAdmin]);
