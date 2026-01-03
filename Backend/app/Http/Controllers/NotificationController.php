@@ -418,6 +418,12 @@ class NotificationController extends Controller
      */
     public function subscribe(Request $request)
     {
+        \Log::info('🔵 [Backend] Push subscription request received', [
+            'endpoint' => $request->input('endpoint'),
+            'has_auth' => $request->has('keys.auth'),
+            'has_p256dh' => $request->has('keys.p256dh'),
+        ]);
+
         $request->validate([
             'endpoint' => 'required',
             'keys.auth' => 'required',
@@ -427,19 +433,46 @@ class NotificationController extends Controller
         $user = $request->user();
 
         if (!$user) {
+            \Log::error('❌ [Backend] User not authenticated for push subscription');
             return response()->json(['success' => false, 'message' => 'User not authenticated'], 401);
         }
 
-        // Update subscription using the trait method
-        // Use input() with dot notation for nested data
-        $user->updatePushSubscription(
-            $request->input('endpoint'),
-            $request->input('keys.p256dh'),
-            $request->input('keys.auth')
-        );
+        \Log::info('🔵 [Backend] User authenticated', [
+            'user_id' => $user->id,
+            'user_email' => $user->email ?? 'N/A',
+        ]);
 
-        \Log::info('Push subscription saved for user: ' . $user->id);
+        try {
+            // Update subscription using the trait method
+            // Use input() with dot notation for nested data
+            $subscription = $user->updatePushSubscription(
+                $request->input('endpoint'),
+                $request->input('keys.p256dh'),
+                $request->input('keys.auth')
+            );
 
-        return response()->json(['success' => true, 'message' => 'Subscribed to push notifications']);
+            \Log::info('✅ [Backend] Push subscription saved successfully', [
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id ?? 'N/A',
+                'endpoint' => substr($request->input('endpoint'), 0, 50) . '...',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscribed to push notifications',
+                'subscription_id' => $subscription->id ?? null,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('❌ [Backend] Failed to save push subscription', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save subscription: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

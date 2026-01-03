@@ -103,6 +103,12 @@ export const NotificationService = {
             const response = await api.post('/notifications/subscribe', subscription.toJSON());
             console.log('✅ [Push] Backend response:', response.data);
 
+            if (response.data.subscription_id) {
+                console.log('✅ [Push] Subscription saved to database with ID:', response.data.subscription_id);
+            } else {
+                console.warn('⚠️ [Push] No subscription ID returned from backend');
+            }
+
             console.log('✅ [Push] Subscription complete!');
             return true;
         } catch (error: any) {
