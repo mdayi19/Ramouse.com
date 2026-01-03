@@ -29,7 +29,10 @@ import { AuctionMedia } from './AuctionMedia';
 import { AuctionBiddingPanel } from './AuctionBiddingPanel';
 import { AuctionCarDetails } from './AuctionCarDetails';
 
-// Debounce utility
+/**
+ * Debounce utility - prevents rapid repeated calls
+ * Used for quick bid spam prevention
+ */
 const debounce = <T extends (...args: any[]) => any>(
     func: T,
     wait: number
