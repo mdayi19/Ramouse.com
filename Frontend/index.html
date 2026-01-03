@@ -11,10 +11,10 @@
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com https://maps.googleapis.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' data: blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.google.com https://*.googleapis.com https://placehold.co https://ramouse.com http://ramouse.com http://localhost:8000 http://127.0.0.1:8000 https://grainy-gradients.vercel.app https://*.google.com.tr;
+    img-src 'self' data: blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.google.com https://*.googleapis.com https://placehold.co https://ramouse.com https://www.ramouse.com http://ramouse.com http://www.ramouse.com http://localhost:8000 http://127.0.0.1:8000 https://grainy-gradients.vercel.app https://*.google.com.tr;
     font-src 'self' data: https://fonts.gstatic.com;
-    connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.googleapis.com wss://* ws://* https://ramouse.com http://ramouse.com http://localhost:8000 http://127.0.0.1:8000;
-    media-src 'self' blob: https://ramouse.com http://ramouse.com http://localhost:8000 http://127.0.0.1:8000;
+    connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.googleapis.com wss://* ws://* https://ramouse.com https://www.ramouse.com http://ramouse.com http://www.ramouse.com http://localhost:8000 http://127.0.0.1:8000 wss://ramouse.com wss://www.ramouse.com;
+    media-src 'self' blob: https://ramouse.com https://www.ramouse.com http://ramouse.com http://www.ramouse.com http://localhost:8000 http://127.0.0.1:8000;
     frame-src 'self' https://www.google.com;
     worker-src 'self' blob:;
     object-src 'none';
