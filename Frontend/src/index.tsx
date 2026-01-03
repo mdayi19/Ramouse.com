@@ -16,6 +16,10 @@ const updateSW = registerSW({
   onOfflineReady() {
     console.log('App is ready for offline usage');
   },
+  onRegisterError(error) {
+    console.error('SW Registration Failed:', error);
+    alert('System Error: Service Worker failed to register. ' + error);
+  }
 });
 
 const rootElement = document.getElementById('root');

@@ -50,8 +50,13 @@ export const NotificationService = {
 
         try {
             console.log('🔵 subscribing...');
-            // Wait for SW ready
-            const registration = await navigator.serviceWorker.ready;
+
+            // Wait for SW ready with Timeout (5s) to prevent hanging
+            const registration = (await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT: SW not ready (Check Console)')), 5000))
+            ])) as ServiceWorkerRegistration;
+
             console.log('✅ SW ready');
 
             const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
