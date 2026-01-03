@@ -220,12 +220,13 @@ const App: React.FC = () => {
 
             // Handle Notification Logic with improved flow
             if ('Notification' in window && 'serviceWorker' in navigator) {
-                console.log('🔵 [App] Checking notification permission:', Notification.permission);
+                console.log('🔵 [App] Notification Support: Supported. Current Permission:', Notification.permission);
 
                 if (Notification.permission === 'default') {
+                    console.log('🔵 [App] Permission is default. Scheduling modal...');
                     // Wait a bit for user to settle in before showing modal
                     setTimeout(() => {
-                        console.log('🔵 [App] Showing notification permission modal');
+                        console.log('🔵 [App] Showing notification permission modal now (2s delay passed)');
                         setShowNotificationModal(true);
                     }, 2000);
                 } else if (Notification.permission === 'granted') {
@@ -245,7 +246,7 @@ const App: React.FC = () => {
                             console.warn('⚠️ [App] Silent push sync failed:', err);
                         });
                 } else {
-                    console.log('⚠️ [App] Notification permission denied');
+                    console.log('⚠️ [App] Notification permission denied. Modal will NOT be shown.');
                 }
             } else {
                 console.warn('⚠️ [App] Notifications or Service Workers not supported');

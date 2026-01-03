@@ -14,6 +14,11 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
     onClose,
     onPermissionGranted
 }) => {
+    // Debug log for mount
+    React.useEffect(() => {
+        console.log('🔵 [NotificationModal] Component Mounted. isOpen:', isOpen);
+    }, [isOpen]);
+
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
