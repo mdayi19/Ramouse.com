@@ -248,7 +248,8 @@ export const useWalletUpdates = (
                     'FUNDS_DEPOSITED',
                     'WITHDRAWAL_REQUEST_CONFIRMATION',
                     'DEPOSIT_REQUEST_CONFIRMATION',
-                    'AUCTION_REGISTRATION' // Added this to trigger update on registration
+                    'AUCTION_REGISTRATION', // Added this to trigger update on registration
+                    'info' // Allow generic info notifications (e.g. from test endpoint)
                 ];
 
                 if (walletTypes.includes(type)) {
