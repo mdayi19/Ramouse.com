@@ -171,9 +171,10 @@ const MyBidsView: React.FC<MyBidsViewProps> = ({ provider, settings, showToast }
                 providerRating: (provider as any).rating || 0 // Cast to any to bypass strict type check for now if property exists in backend but not type def, or default to 0.
             }, media);
 
-            // Refresh bids after submission
+            // Refresh bids after submission to show the new quote immediately
             await fetchBids(true);
             setQuotingOrder(null);
+            showToast('تم إرسال العرض بنجاح!', 'success');
         } catch (error) {
             console.error('Failed to submit quote:', error);
             showToast('حدث خطأ أثناء إرسال العرض. يرجى المحاولة مرة أخرى.', 'error');

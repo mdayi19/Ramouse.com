@@ -239,6 +239,9 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
             });
             updateAllOrders(updatedOrders);
 
+            // Refresh open orders list to remove the quoted order immediately
+            fetchOpenOrders(true);
+
             showToast('تم إرسال العرض بنجاح!', 'success');
         } catch (error) {
             console.error("Failed to submit quote", error);
