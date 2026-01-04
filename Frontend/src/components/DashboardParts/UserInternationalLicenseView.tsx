@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../../lib/api';
-import { getEcho } from '../../lib/echo';
+import { useRealtime } from '../../hooks/useRealtime';
 
 import Icon from '../Icon';
 import { InternationalLicenseRequest } from '../../types';
@@ -71,6 +71,8 @@ const UserInternationalLicenseView: React.FC<UserInternationalLicenseViewProps> 
     }, []);
 
     // Real-time listener for international license status changes
+    const { getEcho } = useRealtime();
+
     useEffect(() => {
         if (!userId) return;
 
