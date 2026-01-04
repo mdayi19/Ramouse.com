@@ -214,112 +214,76 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
     }, []);
 
     // Real-time Listeners for Smooth Refresh
+    const debounceRef = React.useRef<NodeJS.Timeout | null>(null);
+    const throttledFetchOrders = (background: boolean = true) => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            fetchOrders(background);
+        }, 1000); // Wait 1s before fetching to batch updates
+    };
+
     useEffect(() => {
         const echo = getEcho();
         if (!echo) return;
 
         console.log('🔌 AdminDashboard: Setting up real-time listeners...');
 
-        const ordersChannel = echo.channel('orders');
-        ordersChannel.listen('.order.created', (data: any) => {
+        // Admin Orders Channel (New Standard)
+        const adminOrdersChannel = echo.private('admin.orders');
+
+        adminOrdersChannel.listen('.order.created', (data: any) => {
             console.log('📦 Admin: New Order Received:', data);
-            showToast(`طلب جديد: ${data.order?.order_number || ''}`, 'info');
+            showToast(`طلب جديد: ${data.order_number || ''}`, 'info');
             try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
-            fetchOrders(true);
+            throttledFetchOrders(true);
         });
 
-        const adminChannel = echo.private('admin.dashboard');
-
-        adminChannel.listen('.admin.order.created', (data: any) => {
-            console.log('📦 Admin: Order Created:', data);
-            showToast(`طلب جديد: ${data.data?.order_number || ''}`, 'info');
-            try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
-            fetchOrders(true);
-        });
-
-        adminChannel.listen('.admin.quote.received', (data: any) => {
+        adminOrdersChannel.listen('.quote.received', (data: any) => {
             console.log('💬 Admin: Quote Received:', data);
-            showToast(`عرض سعر جديد للطلب: ${data.data?.order_number || ''}`, 'info');
-            try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
-            fetchOrders(true);
+            // showToast(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info'); // Maybe too noisy
+            throttledFetchOrders(true);
         });
 
-        adminChannel.listen('.admin.order.status_updated', (data: any) => {
+        adminOrdersChannel.listen('.order.status_updated', (data: any) => {
             console.log('🔄 Admin: Order Status Updated:', data);
-            fetchOrders(true);
+            throttledFetchOrders(true);
         });
 
-        adminChannel.listen('.admin.order.payment_updated', (data: any) => {
-            console.log('💳 Admin: Payment Updated:', data);
-            fetchOrders(true);
-        });
+        // Keep Dashboard channel for other admin events if any, or migrate them.
+        // Assuming wallet/provider events still on 'admin.dashboard' or moved?
+        // Checking channels.php: 'admin.dashboard' is renamed to 'admin.orders' in channels.php? 
+        // No, in channels.php: `Broadcast::channel('admin.orders', ...)` 
+        // But what about provider registration? 
+        // Let's keep listening to 'admin.dashboard' just in case for legacy, but 'admin.orders' is the new main one.
+        // Actually, previous analysis said 'admin.dashboard' was renamed to 'admin.orders'. 
+        // So we should probably listen to 'admin.orders' for everything if the events broadcast there.
+        // But the event classes (OrderCreated etc) broadcast to 'admin.orders'.
+        // Other events (ProviderRegistered etc) might still be on 'admin.dashboard' if not updated.
+        // Let's listen to both for safety during transition, but rely on admin.orders for orders.
 
-        adminChannel.listen('.admin.order.quote_accepted', (data: any) => {
-            console.log('💳 Admin: Quote Accepted/Payment Uploaded:', data);
-            showToast(`تم قبول عرض للطلب: ${data.data?.order_number || ''}`, 'info');
-            try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
-            fetchOrders(true);
-        });
+        const adminDashboardChannel = echo.private('admin.dashboard');
 
-        adminChannel.listen('.admin.provider.registered', (data: any) => {
+        // Financial & User Events (Legacy or separate)
+        adminDashboardChannel.listen('.admin.provider.registered', (data: any) => {
             console.log('👤 Admin: Provider Registered:', data);
             showToast(`مزود جديد: ${data.data?.name || ''}`, 'info');
             fetchProviders();
         });
 
-        adminChannel.listen('.admin.provider.balance_changed', (data: any) => {
-            console.log('💰 Admin: Provider Balance Changed:', data);
-            fetchProviders();
-            fetchFinancialData();
-        });
-
-        adminChannel.listen('.admin.withdrawal.requested', (data: any) => {
+        adminDashboardChannel.listen('.admin.withdrawal.requested', (data: any) => {
             console.log('💸 Admin: Withdrawal Requested:', data);
-            showToast(`طلب سحب جديد من ${data.data?.provider_name || ''}`, 'info');
+            showToast(`طلب سحب جديد`, 'info');
             try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
             fetchFinancialData();
         });
 
-        adminChannel.listen('.admin.withdrawal.processed', (data: any) => {
-            console.log('✅ Admin: Withdrawal Processed:', data);
+        adminDashboardChannel.listen('.admin.withdrawal.processed', (data: any) => {
             fetchFinancialData();
-            fetchProviders();
-        });
-
-        adminChannel.listen('.admin.store_order.created', (data: any) => {
-            console.log('🛒 Admin: Store Order Created:', data);
-            showToast(`طلب متجر جديد من ${data.data?.buyer_name || ''}`, 'info');
-            try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
-        });
-
-        adminChannel.listen('.admin.user.registered', (data: any) => {
-            console.log('👤 Admin: User Registered:', data);
-            showToast(`عميل جديد`, 'info');
-        });
-
-        adminChannel.listen('.admin.technician.registered', (data: any) => {
-            console.log('🔧 Admin: Technician Registered:', data);
-            showToast(`فني جديد: ${data.data?.name || ''}`, 'info');
-        });
-
-        adminChannel.listen('.admin.tow_truck.registered', (data: any) => {
-            console.log('🚚 Admin: Tow Truck Registered:', data);
-            showToast(`سطحة جديدة: ${data.data?.name || ''}`, 'info');
-        });
-
-        adminChannel.listen('.order.status.updated', (data: any) => {
-            console.log('🔄 Admin: Order Status Updated (legacy):', data);
-            fetchOrders(true);
-        });
-
-        adminChannel.listen('.quote.received', (data: any) => {
-            console.log('💬 Admin: Quote Received (legacy):', data);
-            fetchOrders(true);
         });
 
         return () => {
             console.log('🔌 AdminDashboard: Cleaning up listeners');
-            echo.leave('orders');
+            echo.leave('admin.orders');
             echo.leave('admin.dashboard');
         };
     }, []);

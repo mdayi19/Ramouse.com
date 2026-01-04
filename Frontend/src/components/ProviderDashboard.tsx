@@ -18,7 +18,7 @@ import { StoreView } from './Store/StoreView';
 import { db } from '../lib/db';
 import { providerAPI, ordersAPI } from '../lib/api';
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
-import { useRealtime } from '../hooks/useRealtime';
+import { useRealtime, useProviderOrders } from '../hooks/useRealtime';
 import Sidebar, { SidebarItemType, SidebarUser } from './DashboardParts/Sidebar';
 
 interface ProviderDashboardProps {
@@ -167,12 +167,32 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
 
     const { listenToPrivateChannel } = useRealtime();
 
+    // Throttled refresh for open orders
+    const debounceRef = React.useRef<NodeJS.Timeout | null>(null);
+    const throttledFetchOpenOrders = () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            console.log('📦 Throttled refresh of open orders...');
+            fetchOpenOrders(true);
+        }, 1000);
+    };
+
+    // Listen for new orders (standardized events)
+    const userId = provider.user_id || provider.id;
+    useProviderOrders(userId, (data) => {
+        console.log('📦 ProviderDashboard: New Order Event:', data);
+        showToast(`طلب جديد متاح: ${data.order?.order_number || ''}`, 'info');
+        try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
+
+        if (activeView === 'openOrders' || activeView === 'overview') {
+            throttledFetchOpenOrders();
+        }
+    });
+
     useEffect(() => {
         if (!userPhone) return;
 
-        const userId = provider.user_id || provider.id;
         const channelName = `user.${userId}`;
-
         console.log(`🔌 ProviderDashboard: Setting up listeners on ${channelName}`);
 
         const cleanup = listenToPrivateChannel(channelName, '.user.notification', (data: any) => {
@@ -186,14 +206,14 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
                 fetchWalletData();
             }
 
-            if ((notificationType === 'NEW_ORDER' || notificationType === 'NEW_ORDER_FOR_PROVIDER') && activeView === 'openOrders') {
-                console.log('📦 New order notification received, refreshing open orders...');
-                fetchOpenOrders(true);
-            }
+            // Legacy notification listener for orders - REMOVED to avoid duplicates with useProviderOrders
+            // if ((notificationType === 'NEW_ORDER' || notificationType === 'NEW_ORDER_FOR_PROVIDER') && activeView === 'openOrders') { ... }
 
             if (notificationType === 'OFFER_ACCEPTED_PROVIDER_WIN') {
                 console.log('🏆 Offer accepted! Refreshing data...');
                 fetchWalletData();
+                showToast('مبروك! تم قبول عرضك.', 'success');
+                try { new Audio('/sound_success.wav').play().catch(() => { }); } catch (e) { }
             }
         });
 
@@ -201,7 +221,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
             console.log('🔌 ProviderDashboard: Cleaning up listeners');
             cleanup();
         };
-    }, [userPhone, activeView, provider.user_id, provider.id, listenToPrivateChannel]);
+    }, [userPhone, activeView, userId, listenToPrivateChannel]);
 
     const handleUpdateProvider = async (updatedData: Partial<Provider>) => {
         try {

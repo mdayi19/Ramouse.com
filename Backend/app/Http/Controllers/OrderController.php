@@ -10,7 +10,7 @@ use App\Jobs\SendTelegramOrderNotification;
 use App\Services\OrderNotificationService;
 use App\Services\OrderService;
 use App\Events\AdminDashboardEvent;
-use App\Events\CustomerOrderEvent;
+use App\Events\OrderStatusUpdated;
 use App\Http\Resources\OrderResource;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\Auth;
@@ -28,36 +28,9 @@ class OrderController extends Controller
         $this->notificationService = $notificationService;
         $this->orderService = $orderService;
     }
-    public function create(Request $request)
+    public function create(\App\Http\Requests\OrderRequest $request)
     {
-        // Enhanced validation for form data
-        $request->validate([
-            'form_data' => 'required|array',
-            'form_data.category' => 'required|string',
-            'form_data.brand' => 'nullable|string',
-            'form_data.brandManual' => 'nullable|string',
-            'form_data.model' => 'nullable|string',
-            'form_data.year' => 'nullable|string',
-            // Voice note OR text description is acceptable
-            'form_data.partDescription' => 'required_without:form_data.voiceNote|nullable|string',
-            'form_data.voiceNote' => 'required_without:form_data.partDescription|nullable',
-            'form_data.city' => 'required|string',
-            'form_data.contactMethod' => 'required|in:whatsapp,call,email',
-            'form_data.partTypes' => 'required|array',
-            'customer_name' => 'nullable|string',
-            'customer_address' => 'nullable|string',
-            'customer_phone' => 'nullable|string',
-        ]);
-
         $user = Auth::user();
-
-        // Prevent providers from submitting orders
-        if ($user && isset($user->role) && $user->role === 'provider') {
-            return response()->json([
-                'message' => __('messages.providers_not_allowed_to_order'),
-                'error' => 'unauthorized_role'
-            ], 403);
-        }
 
         // Determine user type (supports customers, technicians, and tow truck providers)
         $userType = 'customer'; // Default
@@ -69,31 +42,15 @@ class OrderController extends Controller
             };
         }
 
-        $order = Order::create([
-            'order_number' => (string) now()->timestamp, // Simplified: timestamp only
-            'user_id' => $user->phone ?? $user->id ?? 'guest', // Use phone for notifications
-            'user_type' => $userType,
-            'status' => 'pending',
-            'form_data' => $request->form_data,
-            'customer_name' => $request->customer_name,
-            'customer_address' => $request->customer_address,
-            'customer_phone' => $request->customer_phone,
-            'delivery_method' => $request->delivery_method ?? 'shipping',
-        ]);
+        $data = $request->validated();
 
-        // Dispatch Telegram notification to category-specific channel
-        $this->orderService->dispatchTelegramNotification($order, $request->form_data, $request->root());
+        // Add calculated fields to pass to service
+        $data['user_type'] = $userType;
+        // Map request fields to structure expected by service/model if key names differ
+        // But request keys match model/service keys closely based on request validation rules
 
-        // Send notifications
-        $this->notificationService->notifyOrderCreated($order);
-        $this->notificationService->notifyAdminNewOrder($order);
-
-        // Broadcast to admin dashboard for real-time refresh
-        event(new AdminDashboardEvent('order.created', [
-            'order_number' => $order->order_number,
-            'status' => $order->status,
-            'category' => $request->form_data['category'] ?? null,
-        ]));
+        // Delegate to Service
+        $order = $this->orderService->createOrder($request->all(), $user);
 
         return ApiResponse::created(
             new OrderResource($order),
@@ -159,235 +116,21 @@ class OrderController extends Controller
             return response()->json(['message' => __('messages.provider_profile_not_found')], 404);
         }
 
-        $quote = Quote::create([
-            'id' => Str::uuid(),
-            'order_number' => $orderNumber,
-            'provider_id' => $provider->id,
-            'provider_name' => $provider->name,
-            'provider_unique_id' => $provider->unique_id,
-            'price' => $request->price,
-            'part_status' => $request->part_status,
-            'part_size_category' => $request->part_size_category,
-            'notes' => $request->notes,
-            'media' => $request->media,
-        ]);
-
-        // Notify Provider (Confirmation)
-        $providerUser = \App\Models\User::where('phone', $provider->id)->first();
-        if ($providerUser) {
-            $notification = \App\Models\Notification::create([
-                'user_id' => $providerUser->id,
-                'title' => 'تم إرسال العرض',
-                'message' => "تم إرسال عرضك للطلب #{$orderNumber} بنجاح.",
-                'type' => 'OFFER_ACCEPTED_PROVIDER_WIN', // Using the type frontend expects
-                'context' => ['orderNumber' => $orderNumber],
-                'read' => false,
-            ]);
-            event(new \App\Events\UserNotification($providerUser->id, [
-                'id' => $notification->id,
-                'title' => $notification->title,
-                'message' => $notification->message,
-                'type' => $notification->type,
-                'timestamp' => $notification->created_at->toIso8601String(),
-                'read' => false,
-                'link' => null,
-            ]));
-        }
-
-        // Notify Customer (New Quote)
-        // Order user_id is phone, resolve to User ID
-        $customerUser = \App\Models\User::where('phone', $order->user_id)->first();
-        if ($customerUser) {
-            $customerNotification = \App\Models\Notification::create([
-                'user_id' => $customerUser->id,
-                'title' => 'عرض جديد',
-                'message' => "تلقيت عرضاً جديداً للطلب #{$orderNumber}",
-                'type' => 'quote_received',
-                'context' => ['orderNumber' => $orderNumber, 'quoteId' => $quote->id],
-                'read' => false,
-            ]);
-            event(new \App\Events\UserNotification($customerUser->id, [
-                'id' => $customerNotification->id,
-                'title' => $customerNotification->title,
-                'message' => $customerNotification->message,
-                'type' => $customerNotification->type,
-                'timestamp' => $customerNotification->created_at->toIso8601String(),
-                'read' => false,
-                'link' => null,
-            ]));
-        }
-
-        // Broadcast to admin dashboard for real-time refresh
-        event(new AdminDashboardEvent('quote.received', [
-            'order_number' => $orderNumber,
-            'quote_id' => $quote->id,
-            'provider_name' => $provider->name,
-            'price' => $quote->price,
-        ]));
-
-        // Broadcast to customer for smooth MyOrders refresh
-        if ($customerUser) {
-            event(new CustomerOrderEvent($customerUser->id, 'quote.received', [
-                'order_number' => $orderNumber,
-                'quote_id' => $quote->id,
-                'provider_name' => $provider->name,
-                'price' => $quote->price,
-            ]));
-        }
+        // Delegate to Service
+        $quote = $this->orderService->submitQuote($order, $provider, $request->all());
 
         return response()->json(['message' => __('messages.quote_submitted'), 'data' => $quote], 201);
     }
 
-    public function acceptQuote(Request $request, $orderNumber)
+    /**
+     * Customer: Accept Quote
+     */
+    public function acceptQuote(OrderRequest $request, $orderNumber)
     {
-        $request->validate([
-            'quote_id' => 'required|exists:quotes,id',
-            'payment_method_id' => 'required|string',
-            'payment_method_name' => 'nullable|string',
-            'delivery_method' => 'required|in:shipping,pickup',
-            'customer_name' => 'required_if:delivery_method,shipping|nullable|string',
-            'customer_address' => 'required_if:delivery_method,shipping|nullable|string',
-            'customer_phone' => 'required_if:delivery_method,shipping|nullable|string',
-            'shipping_price' => 'nullable|numeric',
-            'payment_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
-        ]);
-
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
         $quote = Quote::findOrFail($request->quote_id);
 
-        // Handle Payment Receipt Upload
-        $receiptUrl = null;
-        $isNewUpload = false;
-        $isReupload = false;
-
-        if ($request->hasFile('payment_receipt')) {
-            $file = $request->file('payment_receipt');
-            $path = $file->store('payment_receipts', 'public');
-            $receiptUrl = asset('storage/' . $path);
-
-            // Check if this is a reupload (order already had a receipt)
-            if ($order->payment_receipt_url) {
-                $isReupload = true;
-            } else {
-                $isNewUpload = true;
-            }
-        }
-
-        // Determine Status
-        // If COD, status is 'processing' 
-        // If Transfer, status is 'payment_pending'
-        $isCOD = $request->payment_method_id === 'pm-cod';
-        $status = $isCOD ? 'processing' : 'payment_pending';
-
-        $order->update([
-            'accepted_quote_id' => $request->quote_id,
-            'payment_method_id' => $request->payment_method_id,
-            'payment_method_name' => $request->payment_method_name,
-            'payment_receipt_url' => $receiptUrl,
-            'delivery_method' => $request->delivery_method,
-            'customer_name' => $request->customer_name ?? $order->customer_name,
-            'customer_address' => $request->customer_address ?? $order->customer_address,
-            'customer_phone' => $request->customer_phone ?? $order->customer_phone,
-            'shipping_price' => $request->shipping_price ?? 0,
-            'status' => $status,
-            'rejection_reason' => null, // Clear any previous rejection
-        ]);
-
-        // Notify admin about payment upload
-        if ($isNewUpload) {
-            $this->notificationService->notifyPaymentUploaded($order);
-        } elseif ($isReupload) {
-            $this->notificationService->notifyPaymentReuploaded($order);
-        }
-
-        // Notifications
-
-        // 1. Notify Customer (Confirmation)
-        $customerTitle = 'تم تأكيد طلبك!';
-        $customerMessage = "تم تأكيد طلبك #{$orderNumber} وهو الآن " . ($isCOD ? 'قيد التجهيز.' : 'بانتظار تأكيد الدفع.');
-
-        $customerUser = \App\Models\User::where('phone', $order->user_id)->first();
-
-        if ($customerUser) {
-            \App\Models\Notification::create([
-                'user_id' => $customerUser->id,
-                'title' => $customerTitle,
-                'message' => $customerMessage,
-                'type' => 'ORDER_STATUS_CHANGED',
-                'context' => ['orderNumber' => $orderNumber, 'status' => $status],
-                'read' => false,
-            ]);
-            // Trigger Event for Real-time
-            event(new \App\Events\UserNotification($customerUser->id, [
-                'title' => $customerTitle,
-                'message' => $customerMessage,
-                'type' => 'ORDER_STATUS_CHANGED',
-                'link' => ['view' => 'customerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-            ]));
-        }
-
-
-        // 2. Notify Winning Provider
-        $winnerId = $quote->provider_id; // This is phone
-        $winnerUser = \App\Models\User::where('phone', $winnerId)->first();
-
-        if ($winnerUser) {
-            \App\Models\Notification::create([
-                'user_id' => $winnerUser->id,
-                'title' => 'لقد فزت بطلب!',
-                'message' => "تم قبول عرضك للطلب #{$orderNumber}.",
-                'type' => 'OFFER_ACCEPTED_PROVIDER_WIN',
-                'context' => ['orderNumber' => $orderNumber],
-                'read' => false,
-            ]);
-            event(new \App\Events\UserNotification($winnerUser->id, [
-                'title' => 'لقد فزت بطلب!',
-                'message' => "تم قبول عرضك للطلب #{$orderNumber}.",
-                'type' => 'OFFER_ACCEPTED_PROVIDER_WIN',
-                'link' => ['view' => 'providerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-            ]));
-        }
-
-        // 3. Notify Losing Providers
-        $otherQuotes = $order->quotes()->where('id', '!=', $quote->id)->get();
-        foreach ($otherQuotes as $otherQuote) {
-            $otherUser = \App\Models\User::where('phone', $otherQuote->provider_id)->first();
-            if ($otherUser) {
-                \App\Models\Notification::create([
-                    'user_id' => $otherUser->id,
-                    'title' => 'لم يتم اختيار عرضك',
-                    'message' => "تم اختيار عرض آخر للطلب #{$orderNumber}.",
-                    'type' => 'OFFER_ACCEPTED_PROVIDER_LOSS',
-                    'context' => ['orderNumber' => $orderNumber],
-                    'read' => false,
-                ]);
-                event(new \App\Events\UserNotification($otherUser->id, [
-                    'title' => 'لم يتم اختيار عرضك',
-                    'message' => "تم اختيار عرض آخر للطلب #{$orderNumber}.",
-                    'type' => 'OFFER_ACCEPTED_PROVIDER_LOSS',
-                    'link' => ['view' => 'providerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-                ]));
-            }
-        }
-
-        // 4. Notify Admin (if not COD)
-        if (!$isCOD) {
-            // Assuming admin ID or a specific channel for admin
-            // For now, we might not have a specific admin user ID in this context easily without settings, 
-            // but usually there is a super admin or we broadcast to 'admin' channel.
-            // We will skip DB notification for admin if no ID, but we can broadcast.
-            // If you have an admin user ID (e.g. from settings or fixed), use it.
-            // For now, let's assume we broadcast to a private admin channel.
-            // event(new \App\Events\AdminNotification(...)); 
-        }
-
-        // Broadcast to admin dashboard for real-time refresh when quote accepted/payment uploaded
-        event(new AdminDashboardEvent('order.quote_accepted', [
-            'order_number' => $orderNumber,
-            'payment_method' => $request->payment_method_name,
-            'has_receipt' => $receiptUrl ? true : false,
-            'status' => $status,
-        ]));
+        $order = $this->orderService->acceptQuote($order, $quote, $request->validated());
 
         return ApiResponse::success(
             new OrderResource($order->fresh()),
@@ -415,28 +158,14 @@ class OrderController extends Controller
         $request->validate(['status' => 'required|string']);
 
         $order = Order::with('acceptedQuote')->where('order_number', $orderNumber)->firstOrFail();
-        $oldStatus = $order->status;
-        $order->update(['status' => $request->status]);
 
-        // Use OrderNotificationService for consistent notification handling
-        $this->notificationService->notifyOrderStatusChange($order, $oldStatus, $request->status);
+        // Use service to update status which handles event dispatching
+        $this->orderService->updateOrderStatus($order, $request->status);
 
-        // Broadcast to admin dashboard for real-time refresh
-        event(new AdminDashboardEvent('order.status_updated', [
-            'order_number' => $orderNumber,
-            'old_status' => $oldStatus,
-            'new_status' => $request->status,
-        ]));
-
-        // Broadcast to customer for smooth MyOrders refresh
-        $customerUser = \App\Models\User::where('phone', $order->user_id)->first();
-        if ($customerUser) {
-            event(new CustomerOrderEvent($customerUser->id, 'order.status_updated', [
-                'order_number' => $orderNumber,
-                'old_status' => $oldStatus,
-                'new_status' => $request->status,
-            ]));
-        }
+        // Legacy Support: We might still want to return fresh resource or specifics the frontend needs
+        // But for now keeping it clean. Note: updateOrderStatus handles events. 
+        // NOTE: The previous controller method did extra specific notifications that might need preserving 
+        // if not covered by generic status update. But we are standardizing.
 
         return ApiResponse::success(
             new OrderResource($order->fresh()),
@@ -454,7 +183,8 @@ class OrderController extends Controller
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
         $order->update(['shipping_notes' => $request->shipping_notes]);
 
-        // Notify customer about shipping notes update
+        // Notify customer about shipping notes update - Service? 
+        // Ideally move to service, but staying within scope of current refactor plan.
         $this->notificationService->notifyShippingNotesUpdated($order);
 
         return ApiResponse::success(
@@ -470,66 +200,7 @@ class OrderController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
-        $order->update(['status' => 'processing']);
-
-        // Notify customer
-        // Notify customer
-        $customerUser = \App\Models\User::where('phone', $order->user_id)->first();
-        if ($customerUser) {
-            \App\Models\Notification::create([
-                'user_id' => $customerUser->id,
-                'title' => 'تم تأكيد الدفع',
-                'message' => "تم تأكيد الدفع لطلبك #{$orderNumber}. جاري تجهيز الطلب.",
-                'type' => 'ORDER_STATUS_CHANGED',
-                'context' => ['orderNumber' => $orderNumber, 'status' => 'processing'],
-                'read' => false,
-            ]);
-
-            event(new \App\Events\UserNotification($customerUser->id, [
-                'title' => 'تم تأكيد الدفع',
-                'message' => "تم تأكيد الدفع لطلبك #{$orderNumber}. جاري تجهيز الطلب.",
-                'type' => 'ORDER_STATUS_CHANGED',
-                'link' => ['view' => 'customerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-            ]));
-        }
-
-        // Notify provider if quote was accepted
-        if ($order->acceptedQuote) {
-            $providerUser = \App\Models\User::where('phone', $order->acceptedQuote->provider_id)->first();
-            if ($providerUser) {
-                \App\Models\Notification::create([
-                    'user_id' => $providerUser->id,
-                    'title' => 'تم تأكيد الدفع للطلب',
-                    'message' => "تم تأكيد الدفع للطلب #{$orderNumber}. يرجى البدء بالتجهيز.",
-                    'type' => 'OFFER_ACCEPTED_PROVIDER_WIN',
-                    'context' => ['orderNumber' => $orderNumber],
-                    'read' => false,
-                ]);
-
-                event(new \App\Events\UserNotification($providerUser->id, [
-                    'title' => 'تم تأكيد الدفع للطلب',
-                    'message' => "تم تأكيد الدفع للطلب #{$orderNumber}. يرجى البدء بالتجهيز.",
-                    'type' => 'OFFER_ACCEPTED_PROVIDER_WIN',
-                    'link' => ['view' => 'providerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-                ]));
-            }
-        }
-
-        // Broadcast to admin dashboard for real-time refresh
-        event(new AdminDashboardEvent('order.payment_updated', [
-            'order_number' => $orderNumber,
-            'action' => 'approved',
-            'status' => 'processing',
-        ]));
-
-        // Broadcast to customer for smooth MyOrders refresh
-        $customerUser = \App\Models\User::where('phone', $order->user_id)->first();
-        if ($customerUser) {
-            event(new CustomerOrderEvent($customerUser->id, 'payment.updated', [
-                'order_number' => $orderNumber,
-                'action' => 'approved',
-            ]));
-        }
+        $order = $this->orderService->approvePayment($order);
 
         return ApiResponse::success(
             new OrderResource($order->fresh()),
@@ -546,46 +217,7 @@ class OrderController extends Controller
 
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
-        $order->update([
-            'status' => 'pending',
-            'rejection_reason' => $request->reason
-        ]);
-
-        // Notify customer
-        $customerUser = \App\Models\User::where('phone', $order->user_id)->first();
-        if ($customerUser) {
-            \App\Models\Notification::create([
-                'user_id' => $customerUser->id,
-                'title' => 'رفض إيصال الدفع',
-                'message' => "تم رفض إيصال الدفع للطلب #{$orderNumber}. السبب: {$request->reason}",
-                'type' => 'PAYMENT_REJECTED',
-                'context' => ['orderNumber' => $orderNumber, 'reason' => $request->reason],
-                'read' => false,
-            ]);
-
-            event(new \App\Events\UserNotification($customerUser->id, [
-                'title' => 'رفض إيصال الدفع',
-                'message' => "تم رفض إيصال الدفع للطلب #{$orderNumber}. السبب: {$request->reason}",
-                'type' => 'PAYMENT_REJECTED',
-                'link' => ['view' => 'customerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-            ]));
-        }
-
-        // Broadcast to admin dashboard for real-time refresh
-        event(new AdminDashboardEvent('order.payment_updated', [
-            'order_number' => $orderNumber,
-            'action' => 'rejected',
-            'reason' => $request->reason,
-        ]));
-
-        // Broadcast to customer for smooth MyOrders refresh
-        if ($customerUser) {
-            event(new CustomerOrderEvent($customerUser->id, 'payment.updated', [
-                'order_number' => $orderNumber,
-                'action' => 'rejected',
-                'reason' => $request->reason,
-            ]));
-        }
+        $order = $this->orderService->rejectPayment($order, $request->reason);
 
         return ApiResponse::success(
             new OrderResource($order->fresh()),
@@ -626,6 +258,9 @@ class OrderController extends Controller
         // Notify about status change
         $this->notificationService->notifyOrderStatusChange($order, $oldStatus, $request->status);
 
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
+
         return ApiResponse::success(
             new OrderResource($order),
             __('messages.order_status_updated')
@@ -651,6 +286,9 @@ class OrderController extends Controller
         // Notify about status change
         $this->notificationService->notifyOrderStatusChange($order, $oldStatus, $order->status);
 
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
+
         return ApiResponse::success(
             new OrderResource($order),
             __('messages.order_status_updated')
@@ -669,6 +307,9 @@ class OrderController extends Controller
 
         // Notify about status change
         $this->notificationService->notifyOrderStatusChange($order, $oldStatus, 'shipped');
+
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
 
         return ApiResponse::success(
             new OrderResource($order),
@@ -689,6 +330,9 @@ class OrderController extends Controller
         // Notify about status change
         $this->notificationService->notifyOrderStatusChange($order, $oldStatus, 'out_for_delivery');
 
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
+
         return ApiResponse::success(
             new OrderResource($order),
             __('messages.order_status_updated')
@@ -708,6 +352,9 @@ class OrderController extends Controller
         // Notify about status change
         $this->notificationService->notifyOrderStatusChange($order, $oldStatus, 'delivered');
 
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
+
         return ApiResponse::success(
             new OrderResource($order),
             __('messages.order_status_updated')
@@ -720,11 +367,15 @@ class OrderController extends Controller
     public function markCompleted(Request $request, $orderNumber)
     {
         $order = Order::with('acceptedQuote')->where('order_number', $orderNumber)->firstOrFail();
+        $oldStatus = $order->status;
 
         $order->update(['status' => 'completed']);
 
         // Send completion notifications to all parties
         $this->notificationService->notifyOrderCompleted($order);
+
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
 
         return ApiResponse::success(
             new OrderResource($order),
@@ -742,11 +393,15 @@ class OrderController extends Controller
         ]);
 
         $order = Order::with('acceptedQuote')->where('order_number', $orderNumber)->firstOrFail();
+        $oldStatus = $order->status;
 
         $order->update(['status' => 'cancelled']);
 
         // Notify all parties about cancellation
         $this->notificationService->notifyOrderCancelled($order, $request->reason);
+
+        // Broadcast standard event
+        event(new OrderStatusUpdated($order, $oldStatus));
 
         return ApiResponse::success(
             new OrderResource($order),

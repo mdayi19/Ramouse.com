@@ -4,9 +4,9 @@ namespace App\Events;
 
 use App\Models\Quote;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -30,18 +30,18 @@ class QuoteReceived implements ShouldBroadcast
 
     /**
      * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
      */
     public function broadcastOn(): array
     {
-        // Resolve user ID from the phone number stored in order
-        $user = \App\Models\User::where('phone', $this->order->user_id)->first();
-
+        // 1. Order Channel (for anyone authorized to view this order)
         $channels = [
             new PrivateChannel('orders.' . $this->order->order_number),
-            new PrivateChannel('admin.dashboard'),
+            new PrivateChannel('admin.orders')
         ];
+
+        // 2. Resolve User ID logic (Ideally this should be passed in, but we handle it here for now)
+        // We need to support the existing architecture where user_id might be a phone number
+        $user = User::where('phone', $this->order->user_id)->orWhere('id', $this->order->user_id)->first();
 
         if ($user) {
             $channels[] = new PrivateChannel('user.' . $user->id);
@@ -70,13 +70,14 @@ class QuoteReceived implements ShouldBroadcast
                 'provider_unique_id' => $this->quote->provider_unique_id,
                 'price' => $this->quote->price,
                 'part_status' => $this->quote->part_status,
-                'timestamp' => $this->quote->timestamp,
+                'created_at' => $this->quote->created_at->toIso8601String(),
+                'media' => $this->quote->media,
             ],
             'order' => [
                 'order_number' => $this->order->order_number,
                 'status' => $this->order->status,
             ],
-            'message' => 'تم استلام عرض سعر جديد',
+            'timestamp' => now()->toIso8601String(),
         ];
     }
 }
