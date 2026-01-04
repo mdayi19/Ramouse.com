@@ -38,6 +38,7 @@ export interface MyOrdersProps {
     updateAllOrders: (orders: Order[]) => void;
     userPhone: string;
     onBack?: () => void;
+    onRefresh?: () => void;
     addNotificationForUser: (userPhone: string, notification: Omit<Notification, 'id' | 'timestamp' | 'read'>, type: NotificationType, context?: Record<string, any>) => void;
     settings: Settings;
     isLoading: boolean;
@@ -85,12 +86,17 @@ const MyOrders: React.FC<MyOrdersProps> = ({
 
     // Initial Fetch
     useEffect(() => {
-        const fetchOrders = async () => {
-            if (allOrders.length > 0) return; // Use props if available
+        const fetchOrders = async (forceRefresh = false) => {
+            // If explicit refresh is requested, we should fetch regardless of props
+            if (!forceRefresh && allOrders.length > 0) return;
+
             setIsFetchingOrders(true);
             try {
-                // Ensure api.ts returns camelCase, but we handle both just in case
-                const response = await ordersAPI.getOrders();
+                // Check if parent provided a refresh handler logic 
+                // Note: The logic here is tricky because if onRefresh is provided, we expect parent to update allOrders prop.
+                // But MyOrders also has local state logic.
+                // We will fetch locally here to support forceRefresh
+                const response = await ordersAPI.getOrders(forceRefresh);
 
                 // Mapping logic to handle both camelCase (from updated api.ts) and snake_case (fallback)
                 const orders: Order[] = response.data.data?.map((order: any) => ({
@@ -125,9 +131,8 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                 })) || [];
 
                 setFetchedOrders(orders);
-                // Also update parent state if function provided and we fetched new data? 
-                // Typically props.updateAllOrders is for pushing updates UP, but here we might be fetching locally.
-                // Depending on architecture, we might want to call updateAllOrders(orders); 
+                // Also update parent state if function provided
+                if (updateAllOrders) updateAllOrders(orders);
 
             } catch (error) {
                 console.error('❌ Failed to fetch orders:', error);
@@ -138,7 +143,56 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         };
 
         fetchOrders();
-    }, [showToast, allOrders.length]); // Added dependency on length to avoid re-fetching if props provided
+    }, [showToast, allOrders.length, updateAllOrders]);
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            // We reuse the logic from useEffect essentially, but forced
+            const response = await ordersAPI.getOrders(true);
+            const orders: Order[] = response.data.data?.map((order: any) => ({
+                orderNumber: order.orderNumber || order.order_number,
+                userPhone: order.userPhone || order.user_id,
+                date: order.date || order.created_at,
+                status: order.status,
+                formData: order.formData || order.form_data, // Defensive check
+                quotes: order.quotes?.map((q: any) => ({
+                    id: q.id,
+                    providerId: q.providerId || q.provider_id,
+                    providerUniqueId: q.providerUniqueId || q.provider_unique_id,
+                    price: q.price,
+                    partStatus: q.partStatus || q.part_status,
+                    partSizeCategory: q.partSizeCategory || q.part_size_category,
+                    notes: q.notes,
+                    timestamp: q.timestamp,
+                    viewedByCustomer: q.viewedByCustomer || q.viewed_by_customer || false,
+                    media: q.media
+                })) || [],
+                acceptedQuote: order.acceptedQuote || (order.accepted_quote_id ? order.quotes?.find((q: any) => q.id === order.accepted_quote_id) : undefined),
+                paymentMethodId: order.paymentMethodId || order.payment_method_id,
+                paymentMethodName: order.paymentMethodName || order.payment_method_name,
+                paymentReceiptUrl: order.paymentReceiptUrl || order.payment_receipt_url,
+                deliveryMethod: order.deliveryMethod || order.delivery_method,
+                shippingPrice: order.shippingPrice || order.shipping_price,
+                customerName: order.customerName || order.customer_name,
+                customerAddress: order.customerAddress || order.customer_address,
+                customerPhone: order.customerPhone || order.customer_phone,
+                rejectionReason: order.rejectionReason || order.rejection_reason,
+                review: order.review
+            })) || [];
+
+            setFetchedOrders(orders);
+            if (updateAllOrders) updateAllOrders(orders);
+            // If parent provided onRefresh, call it too? Usually updateAllOrders is enough.
+        } catch (error) {
+            console.error('Failed to refresh orders:', error);
+            showToast('فشل تحديث الطلبات', 'error');
+        } finally {
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
     // Real-time Listeners - using getEcho() directly inside effect
     const { getEcho } = useRealtime();
@@ -577,13 +631,23 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                             </div>
                         </div>
                         {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 transition-colors"
-                            >
-                                <Icon name="ArrowRight" className="w-5 h-5" />
-                                <span className="hidden sm:inline">العودة</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    onClick={handleRefresh}
+                                    variant="secondary"
+                                    className={`flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 transition-colors ${isRefreshing ? 'animate-pulse' : ''}`}
+                                >
+                                    <Icon name="RefreshCw" className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    <span className="hidden sm:inline">تحديث</span>
+                                </Button>
+                                <button
+                                    onClick={onBack}
+                                    className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 transition-colors"
+                                >
+                                    <Icon name="ArrowRight" className="w-5 h-5" />
+                                    <span className="hidden sm:inline">العودة</span>
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -603,13 +667,24 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                             </div>
                         </div>
 
-                        {/* Mobile Filter Toggle */}
-                        <button
-                            onClick={() => setShowAddressModal(false)} // Just a placeholder for now if we want to toggle something
-                            className="md:hidden w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400"
-                        >
-                            <Icon name="Filter" className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                onClick={handleRefresh}
+                                variant="secondary"
+                                size="icon"
+                                className={`rounded-full h-9 w-9 shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 ${isRefreshing ? 'animate-pulse' : ''}`}
+                            >
+                                <Icon name="RefreshCw" className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            </Button>
+
+                            {/* Mobile Filter Toggle */}
+                            <button
+                                onClick={() => setShowAddressModal(false)} // Just a placeholder for now if we want to toggle something
+                                className="md:hidden w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400"
+                            >
+                                <Icon name="Filter" className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

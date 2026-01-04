@@ -18,14 +18,24 @@ interface OverviewViewProps {
     products: AdminFlashProduct[];
     stats: any; // Using any for now to match passed prop
     onNavigate: (view: AdminView) => void;
+    onRefresh?: () => void;
 }
 
-const OverviewView: React.FC<OverviewViewProps> = ({ orders, providers, customers, withdrawals, products, onNavigate }) => {
+const OverviewView: React.FC<OverviewViewProps> = ({ orders, providers, customers, withdrawals, products, onNavigate, onRefresh }) => {
     // Basic Counts
     const totalOrders = orders.length;
     const activeProviders = providers.filter(p => p.isActive).length;
     const totalCustomers = customers.length;
     const pendingWithdrawals = withdrawals.filter(w => w.status === 'Pending').length;
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+    const handleRefresh = async () => {
+        if (onRefresh) {
+            setIsRefreshing(true);
+            await onRefresh();
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
     // Financial calculations
     const totalRevenue = useMemo(() => {
@@ -92,15 +102,26 @@ const OverviewView: React.FC<OverviewViewProps> = ({ orders, providers, customer
     return (
         <div className="space-y-8 animate-fade-in pb-10">
             {/* Header Section */}
-            {/* Header Section */}
             <Card className="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl shadow-sm">
                 <div>
                     <h2 className="text-2xl font-black text-slate-800 dark:text-white">صباح الخير، أدمن 👋</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">إليك ملخص لنشاط المنصة اليوم.</p>
                 </div>
-                <div className="mt-4 md:mt-0 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                    <Icon name="Calendar" className="w-4 h-4 text-primary" />
-                    {currentDate}
+                <div className="flex gap-3 items-center mt-4 md:mt-0">
+                    <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                        <Icon name="Calendar" className="w-4 h-4 text-primary" />
+                        {currentDate}
+                    </div>
+                    {onRefresh && (
+                        <Button
+                            onClick={handleRefresh}
+                            variant="secondary"
+                            className={`h-10 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 ${isRefreshing ? 'animate-pulse' : ''}`}
+                        >
+                            <Icon name="RefreshCw" className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            <span className="mr-2 hidden sm:inline">تحديث</span>
+                        </Button>
+                    )}
                 </div>
             </Card>
 

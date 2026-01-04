@@ -86,10 +86,10 @@ const UserWalletView: React.FC<UserWalletViewProps> = ({ settings, onAddToast, u
         if (!isBackground) setLoading(true);
         try {
             const [balanceData, transactionsData, depositsData, withdrawalsData, paymentMethodsData] = await Promise.all([
-                walletService.getWalletBalance(),
-                walletService.getWalletTransactions(),
-                walletService.getDeposits(),
-                walletService.getWithdrawals(),
+                walletService.getWalletBalance(isBackground), // Pass forceRefresh if needed, wait, API updated
+                walletService.getWalletTransactions(1, isBackground),
+                walletService.getDeposits(isBackground),
+                walletService.getWithdrawals(isBackground),
                 walletService.getUserPaymentMethods(),
             ]);
             setBalance(balanceData);
@@ -108,6 +108,13 @@ const UserWalletView: React.FC<UserWalletViewProps> = ({ settings, onAddToast, u
     useEffect(() => {
         fetchWalletData();
     }, [fetchWalletData]);
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await fetchWalletData(true);
+        setTimeout(() => setIsRefreshing(false), 500);
+    };
 
     // Real-time updates using custom hook
     const handleWalletUpdate = useCallback(() => {
@@ -240,7 +247,17 @@ const UserWalletView: React.FC<UserWalletViewProps> = ({ settings, onAddToast, u
 
     return (
         <div className="p-4 sm:p-6 space-y-6 bg-slate-50 dark:bg-slate-900 min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <ViewHeader title="محفظتي" subtitle="إدارة رصيدك المالي وعمليات الإيداع والسحب" />
+            <div className="flex items-center justify-between">
+                <ViewHeader title="محفظتي" subtitle="إدارة رصيدك المالي وعمليات الإيداع والسحب" />
+                <Button
+                    onClick={handleRefresh}
+                    variant="secondary"
+                    className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 ${isRefreshing ? 'animate-pulse' : ''}`}
+                >
+                    <Icon name="RefreshCw" className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span>تحديث</span>
+                </Button>
+            </div>
 
             {/* Balance Card with Enhanced Design */}
             <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-600 to-primary-700 p-8 rounded-2xl shadow-2xl text-white">

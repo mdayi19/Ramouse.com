@@ -26,23 +26,31 @@ const OverviewView: React.FC<{
     const [stats, setStats] = useState<TowTruckStats | null>(null);
     const [loadingStats, setLoadingStats] = useState(true);
     const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | undefined>(towTruck.profilePhoto);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const fetchStats = async (forceRefresh = false) => {
+        try {
+            const params = forceRefresh ? { _t: Date.now() } : {};
+            const response = await api.get('/tow-truck/stats', { params });
+            if (response.data && response.data.success) {
+                setStats(response.data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch dashboard stats:', error);
+        } finally {
+            setLoadingStats(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const response = await api.get('/tow-truck/stats');
-                if (response.data && response.data.success) {
-                    setStats(response.data.data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch dashboard stats:', error);
-            } finally {
-                setLoadingStats(false);
-            }
-        };
-
         fetchStats();
     }, []);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await fetchStats(true);
+        setTimeout(() => setIsRefreshing(false), 500);
+    };
 
     useEffect(() => {
         const loadProfilePhoto = async () => {
@@ -136,9 +144,19 @@ const OverviewView: React.FC<{
                             <h2 className="text-lg font-black text-slate-900 dark:text-white">{towTruck.name}</h2>
                         </div>
                     </div>
-                    <div className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${towTruck.isVerified ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'}`}>
-                        <span>{towTruck.isVerified ? "✅" : "⏳"}</span>
-                        {towTruck.isVerified ? 'موثوق' : 'بانتظار'}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={handleRefresh}
+                            variant="secondary"
+                            size="icon"
+                            className={`rounded-full h-8 w-8 shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 ${isRefreshing ? 'animate-pulse' : ''}`}
+                        >
+                            <Icon name="RefreshCw" className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <div className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${towTruck.isVerified ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'}`}>
+                            <span>{towTruck.isVerified ? "✅" : "⏳"}</span>
+                            {towTruck.isVerified ? 'موثوق' : 'بانتظار'}
+                        </div>
                     </div>
                 </div>
 
@@ -166,6 +184,14 @@ const OverviewView: React.FC<{
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleRefresh}
+                        variant="secondary"
+                        className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 ${isRefreshing ? 'animate-pulse' : ''}`}
+                    >
+                        <Icon name="RefreshCw" className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span>تحديث</span>
+                    </Button>
                     <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-2">
                         <Icon name="Star" className="w-5 h-5 text-yellow-500" />
                         <span className="font-bold text-slate-800 dark:text-slate-200">{averageRating.toFixed(1)}</span>

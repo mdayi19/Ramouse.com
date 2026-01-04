@@ -118,9 +118,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
     const [flashRequests, setFlashRequests] = useState<FlashProductBuyerRequest[]>([]);
     const [ordersLoading, setOrdersLoading] = useState(false);
 
-    const fetchProviders = async () => {
+    const fetchProviders = async (background: boolean = false) => {
         try {
-            const response = await fetch('/api/admin/providers', {
+            const url = '/api/admin/providers' + (background ? `?_t=${Date.now()}` : '');
+            const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
             });
             if (response.ok) {
@@ -128,19 +129,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                 setAllProviders(data.data);
             } else {
                 console.error('Failed to fetch providers:', response.status, response.statusText);
-                showToast('فشل تحميل قائمة المزودين', 'error');
+                if (!background) showToast('فشل تحميل قائمة المزودين', 'error');
             }
         } catch (error) {
             console.error('Failed to fetch providers', error);
-            showToast('حدث خطأ أثناء تحميل المزودين', 'error');
+            if (!background) showToast('حدث خطأ أثناء تحميل المزودين', 'error');
         }
     };
 
-    const fetchFinancialData = async () => {
+    const fetchFinancialData = async (background: boolean = false) => {
         try {
             const [withdrawalsRes, transactionsRes] = await Promise.all([
-                adminAPI.getWithdrawals(),
-                adminAPI.getTransactions()
+                adminAPI.getWithdrawals(background),
+                adminAPI.getTransactions(background)
             ]);
 
             const withdrawalsData = withdrawalsRes.data.data || withdrawalsRes.data;
@@ -150,16 +151,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             setTransactions(Array.isArray(transactionsData) ? transactionsData : []);
         } catch (error) {
             console.error('Failed to fetch financial data', error);
-            showToast('فشل تحميل البيانات المالية', 'error');
-            setWithdrawalRequests([]);
-            setTransactions([]);
+            if (!background) showToast('فشل تحميل البيانات المالية', 'error');
+            // Don't reset data on error if background refresh
+            if (!background) {
+                setWithdrawalRequests([]);
+                setTransactions([]);
+            }
         }
     };
 
     const [dashboardStats, setDashboardStats] = useState<any>(null);
-    const fetchStats = async () => {
+    const fetchStats = async (background: boolean = false) => {
         try {
-            const response = await fetch('/api/admin/stats', {
+            const url = '/api/admin/stats' + (background ? `?_t=${Date.now()}` : '');
+            const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
             });
             if (response.ok) {
@@ -171,22 +176,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
         }
     };
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (background: boolean = false) => {
         try {
-            const response = await adminAPI.getProducts();
+            const response = await adminAPI.getProducts(background);
             const productsData = response.data.data || response.data;
             setAdminFlashProducts(Array.isArray(productsData) ? productsData : []);
         } catch (error) {
             console.error('Failed to fetch products', error);
-            showToast('فشل تحميل المنتجات', 'error');
-            setAdminFlashProducts([]);
+            if (!background) showToast('فشل تحميل المنتجات', 'error');
+            if (!background) setAdminFlashProducts([]);
         }
     };
 
     const fetchOrders = async (background: boolean = false) => {
         if (!background) setOrdersLoading(true);
         try {
-            const response = await adminAPI.getOrders();
+            const response = await adminAPI.getOrders(background);
             const ordersData = response.data.data || response.data;
             updateAllOrders(Array.isArray(ordersData) ? ordersData : []);
             if (background) console.log('🔄 Orders silently refreshed');
@@ -631,8 +636,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                 <div className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 scroll-smooth-mobile">
                     <div className="max-w-[1600px] mx-auto w-full space-y-6">
                         <Routes>
-                            <Route index element={<OverviewView orders={allOrders} providers={allProviders} customers={allCustomers} withdrawals={withdrawalRequests} transactions={transactions} products={adminFlashProducts} stats={dashboardStats} onNavigate={handleSetView} />} />
-                            <Route path="overview" element={<OverviewView orders={allOrders} providers={allProviders} customers={allCustomers} withdrawals={withdrawalRequests} transactions={transactions} products={adminFlashProducts} stats={dashboardStats} onNavigate={handleSetView} />} />
+                            <Route index element={<OverviewView orders={allOrders} providers={allProviders} customers={allCustomers} withdrawals={withdrawalRequests} transactions={transactions} products={adminFlashProducts} stats={dashboardStats} onNavigate={handleSetView} onRefresh={async () => { await Promise.all([fetchOrders(true), fetchProviders(true), fetchFinancialData(true), fetchStats(true)]); }} />} />
+                            <Route path="overview" element={<OverviewView orders={allOrders} providers={allProviders} customers={allCustomers} withdrawals={withdrawalRequests} transactions={transactions} products={adminFlashProducts} stats={dashboardStats} onNavigate={handleSetView} onRefresh={async () => { await Promise.all([fetchOrders(true), fetchProviders(true), fetchFinancialData(true), fetchStats(true)]); }} />} />
                             <Route path="orders" element={<OrdersView
                                 orders={allOrders}
                                 onToggleExpand={(id) => setExpandedOrderId(expandedOrderId === id ? null : id)}
@@ -643,15 +648,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                                 onOpenShippingReceipt={setPrintOrder}
                                 onUpdateShippingNotes={handleUpdateShippingNotes}
                                 filterStatus={currentFilterStatus}
+                                onRefresh={() => fetchOrders(true)}
                             />} />
-                            <Route path="providers" element={<ProvidersView allProviders={allProviders} onSaveProvider={handleSaveProvider} onDeleteProvider={handleDeleteProvider} showToast={showToast} carCategories={carCategories} navigationParams={navigationParams} addManualDeposit={handleAddManualDeposit} />} />
+                            <Route path="providers" element={<ProvidersView allProviders={allProviders} onSaveProvider={handleSaveProvider} onDeleteProvider={handleDeleteProvider} showToast={showToast} carCategories={carCategories} navigationParams={navigationParams} addManualDeposit={handleAddManualDeposit} onRefresh={() => fetchProviders(true)} />} />
                             <Route path="users" element={<UsersView allOrders={allOrders} />} />
                             <Route path="technicians" element={<TechniciansView addNotificationForUser={addNotificationForUser} showToast={showToast} navigationParams={navigationParams} technicianSpecialties={technicianSpecialties} settings={settings} />} />
                             <Route path="towTruckManagement" element={<TowTruckManagementView addNotificationForUser={addNotificationForUser} showToast={showToast} settings={settings} />} />
                             <Route path="settings" element={<SettingsView settings={settings} onSave={updateSettings} />} />
                             <Route path="ceoSettings" element={<CeoSettingsView settings={settings} onSave={updateSettings} />} />
                             <Route path="bulletinBoard" element={<BulletinBoardView showToast={showToast} />} />
-                            <Route path="accounting" element={<AccountingView providers={allProviders} withdrawals={withdrawalRequests} transactions={transactions} onApproveWithdrawal={handleApproveWithdrawal} onRejectWithdrawal={handleRejectWithdrawal} onAddFunds={handleAddManualDeposit} />} />
+                            <Route path="accounting" element={<AccountingView providers={allProviders} withdrawals={withdrawalRequests} transactions={transactions} onApproveWithdrawal={handleApproveWithdrawal} onRejectWithdrawal={handleRejectWithdrawal} onAddFunds={handleAddManualDeposit} onRefresh={() => fetchFinancialData(true)} />} />
                             <Route path="userWallet" element={<UserWalletManagementView showToast={showToast} />} />
                             <Route path="limits" element={<LimitsSettingsView settings={settings} onSave={updateSettings} />} />
                             <Route path="modelManagement" element={<ModelManagementView carCategories={carCategories} updateCarCategories={updateCarCategories} allBrands={allBrands} updateAllBrands={updateAllBrands} brandModels={brandModels} updateBrandModels={updateBrandModels} partTypes={partTypes} updatePartTypes={updatePartTypes} technicianSpecialties={technicianSpecialties} updateTechnicianSpecialties={updateTechnicianSpecialties} allModels={allModels} />} />
@@ -661,7 +667,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                             <Route path="shippingSettings" element={<ShippingSettingsView settings={settings} onSave={updateSettings} />} />
                             <Route path="messageTemplates" element={<MessageTemplatesView settings={settings} onSave={updateSettings} />} />
                             <Route path="notifications" element={<NotificationSettingsEditor settings={settings} onSave={updateSettings} />} />
-                            <Route path="store_overview" element={<StoreOverview products={adminFlashProducts} requests={flashRequests} onNavigate={handleSetView} />} />
+                            <Route path="store_overview" element={<StoreOverview products={adminFlashProducts} requests={flashRequests} onNavigate={handleSetView} onRefresh={() => fetchProducts(true)} />} />
                             <Route path="store_products" element={<ProductManagement products={adminFlashProducts} updateProducts={updateAdminFlashProducts} storeCategories={storeCategories} technicianSpecialties={technicianSpecialties} showToast={showToast} settings={settings} />} />
                             <Route path="storeProducts" element={<Navigate to="store_products" replace />} />
                             <Route path="flashStore" element={<FlashProductManagement products={adminFlashProducts} updateProducts={updateAdminFlashProducts} storeCategories={storeCategories} technicianSpecialties={technicianSpecialties} showToast={showToast} settings={settings} />} />

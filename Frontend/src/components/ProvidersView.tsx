@@ -19,6 +19,7 @@ interface ProvidersViewProps {
     carCategories: Category[];
     navigationParams: any;
     addManualDeposit: (providerId: string, amount: number, description: string) => void;
+    onRefresh?: () => void;
 }
 
 const ProviderFormModal: React.FC<{
@@ -188,7 +189,7 @@ const ProviderFormModal: React.FC<{
     );
 };
 
-const ProvidersView: React.FC<ProvidersViewProps> = ({ allProviders, onSaveProvider, onDeleteProvider, showToast, carCategories, navigationParams, addManualDeposit }) => {
+const ProvidersView: React.FC<ProvidersViewProps> = ({ allProviders, onSaveProvider, onDeleteProvider, showToast, carCategories, navigationParams, addManualDeposit, onRefresh }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isFundsModalOpen, setIsFundsModalOpen] = useState(false);
     const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
@@ -196,6 +197,15 @@ const ProvidersView: React.FC<ProvidersViewProps> = ({ allProviders, onSaveProvi
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        if (onRefresh) {
+            setIsRefreshing(true);
+            await onRefresh();
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
     useEffect(() => {
         if (navigationParams?.orderNumber) { // Using orderNumber to pass providerId
@@ -247,7 +257,19 @@ const ProvidersView: React.FC<ProvidersViewProps> = ({ allProviders, onSaveProvi
 
     return (
         <Card className="p-6">
-            <ViewHeader title="إدارة المزودين" subtitle="إضافة، تعديل، وتفعيل حسابات مزودي قطع الغيار." />
+            <div className="flex justify-between items-center mb-6">
+                <ViewHeader title="إدارة المزودين" subtitle="إضافة، تعديل، وتفعيل حسابات مزودي قطع الغيار." />
+                {onRefresh && (
+                    <Button
+                        onClick={handleRefresh}
+                        variant="secondary"
+                        size="icon"
+                        className={`rounded-full shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 ${isRefreshing ? 'animate-pulse' : ''}`}
+                    >
+                        <Icon name="RefreshCw" className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </Button>
+                )}
+            </div>
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                 <Input
                     type="text"

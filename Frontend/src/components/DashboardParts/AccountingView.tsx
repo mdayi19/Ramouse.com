@@ -18,11 +18,12 @@ interface AccountingViewProps {
     onApproveWithdrawal: (reqId: string, receiptUrl?: string) => void;
     onRejectWithdrawal: (reqId: string, reason: string) => void;
     onAddFunds: (providerId: string, amount: number, description: string) => Promise<void>;
+    onRefresh?: () => void;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-const AccountingView: React.FC<AccountingViewProps> = ({ providers, withdrawals, transactions, onApproveWithdrawal, onRejectWithdrawal, onAddFunds }) => {
+const AccountingView: React.FC<AccountingViewProps> = ({ providers, withdrawals, transactions, onApproveWithdrawal, onRejectWithdrawal, onAddFunds, onRefresh }) => {
     const [tab, setTab] = useState<AccountingViewTab>('withdrawals');
     const [rejectingRequest, setRejectingRequest] = useState<WithdrawalRequest | null>(null);
     const [rejectionReason, setRejectionReason] = useState('');
@@ -31,6 +32,15 @@ const AccountingView: React.FC<AccountingViewProps> = ({ providers, withdrawals,
     const [viewingReceipt, setViewingReceipt] = useState<string | null>(null);
     const [providerForFunds, setProviderForFunds] = useState<Provider | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        if (onRefresh) {
+            setIsRefreshing(true);
+            await onRefresh();
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -109,7 +119,19 @@ const AccountingView: React.FC<AccountingViewProps> = ({ providers, withdrawals,
 
     return (
         <Card className="p-6">
-            <ViewHeader title="المحاسبة والمالية" subtitle="إدارة أرصدة المزودين، طلبات السحب، وسجل العمليات." />
+            <div className="flex justify-between items-center mb-6">
+                <ViewHeader title="المحاسبة والمالية" subtitle="إدارة أرصدة المزودين، طلبات السحب، وسجل العمليات." />
+                {onRefresh && (
+                    <Button
+                        onClick={handleRefresh}
+                        variant="secondary"
+                        size="icon"
+                        className={`rounded-full shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 ${isRefreshing ? 'animate-pulse' : ''}`}
+                    >
+                        <Icon name="RefreshCw" className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </Button>
+                )}
+            </div>
             <div className="flex border-b mb-4">
                 <TabButton isActive={tab === 'withdrawals'} onClick={() => setTab('withdrawals')}>طلبات السحب</TabButton>
                 <TabButton isActive={tab === 'balances'} onClick={() => setTab('balances')}>أرصدة المزودين</TabButton>

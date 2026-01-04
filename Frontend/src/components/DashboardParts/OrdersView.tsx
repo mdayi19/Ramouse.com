@@ -576,6 +576,7 @@ interface OrdersViewProps {
     viewTitle?: string;
     viewSubtitle?: string;
     filterStatus?: OrderStatus | 'all';
+    onRefresh?: () => void;
 }
 
 const OrdersView: React.FC<OrdersViewProps> = ({
@@ -589,11 +590,21 @@ const OrdersView: React.FC<OrdersViewProps> = ({
     onUpdateShippingNotes,
     viewTitle,
     viewSubtitle,
-    filterStatus
+    filterStatus,
+    onRefresh
 }) => {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['active', 'shipping', 'completed']));
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        if (onRefresh) {
+            setIsRefreshing(true);
+            await onRefresh();
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
     const toggleSection = (section: string) => {
         setExpandedSections(prev => {

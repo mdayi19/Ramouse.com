@@ -125,8 +125,8 @@ export const providerAPI = {
 };
 
 export const ordersAPI = {
-    getOrders: async () => {
-        const response = await api.get('/orders');
+    getOrders: async (forceRefresh = false) => {
+        const response = await api.get('/orders', forceRefresh ? { params: { _t: Date.now() } } : {});
         return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
     },
     submitQuote: async (orderNumber: string, data: any, mediaFiles?: { images: File[], video: File | null, voiceNote: Blob | null }) => {
@@ -293,13 +293,10 @@ export const adminAPI = {
         api.post(`/admin/providers/${providerId}/add-funds`, { amount, description }),
 
     // Provider management
-    getProviders: () => api.get('/admin/providers'),
+    getProviders: (forceRefresh = false) => api.get('/admin/providers', forceRefresh ? { params: { _t: Date.now() } } : {}),
 
     // Product Management
-    getProducts: async () => {
-        const response = await api.get('/admin/products');
-        return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
-    },
+    getProducts: (forceRefresh = false) => api.get('/admin/products', forceRefresh ? { params: { _t: Date.now() } } : {}), // For Flash Products
     createProduct: (productData: any) =>
         api.post('/admin/products', productData),
     updateProduct: (id: string, productData: any) =>
@@ -308,20 +305,13 @@ export const adminAPI = {
         api.delete(`/admin/products/${id}`),
 
     // Order Payment Approval/Rejection
-    approveOrderPayment: (orderNumber: string, notes?: string) =>
-        api.patch(`/admin/orders/${orderNumber}/payment/approve`, { notes }),
-    rejectOrderPayment: (orderNumber: string, reason: string) =>
-        api.patch(`/admin/orders/${orderNumber}/payment/reject`, { reason }),
+    approveOrderPayment: (orderNumber: string) => api.post(`/admin/orders/${orderNumber}/approve-payment`),
+    rejectOrderPayment: (orderNumber: string, reason: string) => api.post(`/admin/orders/${orderNumber}/reject-payment`, { reason }),
 
     // Order Management
-    getOrders: async () => {
-        const response = await api.get('/admin/orders');
-        return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
-    },
-    updateOrderStatus: (orderNumber: string, status: string) =>
-        api.patch(`/admin/orders/${orderNumber}/status`, { status }),
-    updateShippingNotes: (orderNumber: string, shippingNotes: string) =>
-        api.patch(`/admin/orders/${orderNumber}/shipping-notes`, { shipping_notes: shippingNotes }),
+    getOrders: (forceRefresh = false) => api.get('/admin/orders', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    updateOrderStatus: (orderNumber: string, status: string) => api.put(`/admin/orders/${orderNumber}/status`, { status }),
+    updateShippingNotes: (orderNumber: string, notes: string) => api.put(`/admin/orders/${orderNumber}/shipping-notes`, { notes }),
 
     //  International Licenses
     getInternationalLicenseRequests: (params?: any) => api.get('/admin/international-license-requests', { params }),
@@ -367,8 +357,6 @@ export const storeAPI = {
         api.post(`/store/orders/${orderId}/cancel`),
     getSavedAddress: () =>
         api.get('/store/saved-address'),
-    calceShipping: (data: { items: Array<{ product_id: string; quantity: number }>; city: string }) =>
-        api.post('/store/calculate-shipping', data),
     calculateShipping: (data: { items: Array<{ product_id: string; quantity: number }>; city: string }) =>
         api.post('/store/calculate-shipping', data),
 };

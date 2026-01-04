@@ -29,23 +29,31 @@ const OverviewView: React.FC<{
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loadingStats, setLoadingStats] = useState(true);
     const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | undefined>(technician.profilePhoto);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const fetchStats = async (forceRefresh = false) => {
+        try {
+            const params = forceRefresh ? { _t: Date.now() } : {};
+            const response = await api.get('/technician/stats', { params });
+            if (response.data && response.data.success) {
+                setStats(response.data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch dashboard stats:', error);
+        } finally {
+            setLoadingStats(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const response = await api.get('/technician/stats');
-                if (response.data && response.data.success) {
-                    setStats(response.data.data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch dashboard stats:', error);
-            } finally {
-                setLoadingStats(false);
-            }
-        };
-
         fetchStats();
     }, []);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await fetchStats(true);
+        setTimeout(() => setIsRefreshing(false), 500);
+    };
 
     useEffect(() => {
         const loadProfilePhoto = async () => {
@@ -136,9 +144,19 @@ const OverviewView: React.FC<{
                             <h2 className="text-lg font-black text-slate-900 dark:text-white">{technician.name}</h2>
                         </div>
                     </div>
-                    <div className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${technician.isVerified ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'}`}>
-                        <span>{technician.isVerified ? "✅" : "⏳"}</span>
-                        {technician.isVerified ? 'موثوق' : 'بانتظار'}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={handleRefresh}
+                            variant="secondary"
+                            size="icon"
+                            className={`rounded-full h-8 w-8 shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 ${isRefreshing ? 'animate-pulse' : ''}`}
+                        >
+                            <Icon name="RefreshCw" className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <div className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${technician.isVerified ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'}`}>
+                            <span>{technician.isVerified ? "✅" : "⏳"}</span>
+                            {technician.isVerified ? 'موثوق' : 'بانتظار'}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -158,9 +176,19 @@ const OverviewView: React.FC<{
                         <p className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">{technician.specialty} • {technician.city}</p>
                     </div>
                 </div>
-                <div className={`px-4 py-2 rounded-xl border flex items-center gap-2 font-bold text-sm ${technician.isVerified ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' : 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400'}`}>
-                    <Icon name={technician.isVerified ? "BadgeCheck" : "Clock"} className="w-5 h-5" />
-                    {technician.isVerified ? 'حساب موثوق' : 'بانتظار التوثيق'}
+                <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleRefresh}
+                        variant="secondary"
+                        className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 ${isRefreshing ? 'animate-pulse' : ''}`}
+                    >
+                        <Icon name="RefreshCw" className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span>تحديث</span>
+                    </Button>
+                    <div className={`px-4 py-2 rounded-xl border flex items-center gap-2 font-bold text-sm ${technician.isVerified ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' : 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400'}`}>
+                        <Icon name={technician.isVerified ? "BadgeCheck" : "Clock"} className="w-5 h-5" />
+                        {technician.isVerified ? 'حساب موثوق' : 'بانتظار التوثيق'}
+                    </div>
                 </div>
             </div>
 
