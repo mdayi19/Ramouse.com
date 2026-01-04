@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from './hooks/useAppState';
@@ -260,6 +260,12 @@ const App: React.FC = () => {
     }, [isAuthenticated, userPhone, isTowTruck, isProvider, isTechnician]);
 
     // Real-time notification listener for admins
+    // Use refs for callbacks to prevent dependency changes causing re-subscription
+    const showToastRef = useRef(showToast);
+    showToastRef.current = showToast;
+    const addNotificationRef = useRef(addNotificationForUser);
+    addNotificationRef.current = addNotificationForUser;
+
     useEffect(() => {
         if (isAdmin && userPhone) {
             console.log('🔔 Setting up real-time notifications for admin');
@@ -271,7 +277,7 @@ const App: React.FC = () => {
                 console.log('👤 New user registered:', data);
 
                 // Add to notifications
-                addNotificationForUser(userPhone, {
+                addNotificationRef.current(userPhone, {
                     title: `مستخدم جديد: ${data.user.typeLabel}`,
                     message: `${data.user.name} (${data.user.phone})`,
                     type: 'NEW_PROVIDER_REQUEST',
@@ -280,13 +286,13 @@ const App: React.FC = () => {
                         params: { tab: 'users' }
                     }
                 }, 'NEW_PROVIDER_REQUEST', data.user);
-                showToast(`تم تسجيل مستخدم جديد: ${data.user.name}`, 'success');
+                showToastRef.current(`تم تسجيل مستخدم جديد: ${data.user.name}`, 'success');
             });
 
             channel.listen('.admin.technician.registered', (data: any) => {
                 const userData = data.data;
-                showToast(`فني جديد: ${userData.name}`, 'success');
-                addNotificationForUser(userPhone, {
+                showToastRef.current(`فني جديد: ${userData.name}`, 'success');
+                addNotificationRef.current(userPhone, {
                     title: 'فني جديد',
                     message: `${userData.name} - ${userData.specialty}`,
                     type: 'NEW_TECHNICIAN_REQUEST',
@@ -296,8 +302,8 @@ const App: React.FC = () => {
 
             channel.listen('.admin.provider.registered', (data: any) => {
                 const userData = data.data;
-                showToast(`مزود جديد: ${userData.name}`, 'success');
-                addNotificationForUser(userPhone, {
+                showToastRef.current(`مزود جديد: ${userData.name}`, 'success');
+                addNotificationRef.current(userPhone, {
                     title: 'مزود جديد',
                     message: `${userData.name}`,
                     type: 'NEW_PROVIDER_REQUEST',
@@ -307,8 +313,8 @@ const App: React.FC = () => {
 
             channel.listen('.admin.tow_truck.registered', (data: any) => {
                 const userData = data.data;
-                showToast(`سطحة جديدة: ${userData.name}`, 'success');
-                addNotificationForUser(userPhone, {
+                showToastRef.current(`سطحة جديدة: ${userData.name}`, 'success');
+                addNotificationRef.current(userPhone, {
                     title: 'سطحة جديدة',
                     message: `${userData.name} - ${userData.city}`,
                     type: 'NEW_TOW_TRUCK_REQUEST',
@@ -320,7 +326,7 @@ const App: React.FC = () => {
             channel.listen('.admin.order.created', (data: any) => {
                 console.log('📦 Admin: New Order Created:', data);
                 const orderData = data.data;
-                addNotificationForUser(userPhone, {
+                addNotificationRef.current(userPhone, {
                     title: 'طلب جديد',
                     message: `طلب رقم ${orderData.order_number}`,
                     type: 'ORDER_CREATED_ADMIN',
@@ -329,14 +335,14 @@ const App: React.FC = () => {
                         params: { adminView: 'orders' }
                     }
                 }, 'ORDER_CREATED_ADMIN', orderData);
-                showToast(`طلب جديد: ${orderData.order_number}`, 'info');
+                showToastRef.current(`طلب جديد: ${orderData.order_number}`, 'info');
                 try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
             });
 
             // Listen for New Deposit Requests
             channel.listen('.admin.USER_DEPOSIT_REQUEST', (data: any) => {
                 console.log('💰 Admin: New Deposit Request:', data);
-                addNotificationForUser(userPhone, {
+                addNotificationRef.current(userPhone, {
                     title: 'طلب إيداع جديد',
                     message: `طلب إيداع بقيمة ${data.amount} من ${data.userName}`,
                     type: 'DEPOSIT_REQUEST',
@@ -345,14 +351,14 @@ const App: React.FC = () => {
                         params: { adminView: 'userWallet' }
                     }
                 }, 'DEPOSIT_REQUEST', data);
-                showToast(`طلب إيداع جديد من ${data.userName}`, 'info');
+                showToastRef.current(`طلب إيداع جديد من ${data.userName}`, 'info');
                 try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
             });
 
             // Listen for New Withdrawal Requests
             channel.listen('.admin.USER_WITHDRAWAL_REQUEST', (data: any) => {
                 console.log('💸 Admin: New Withdrawal Request:', data);
-                addNotificationForUser(userPhone, {
+                addNotificationRef.current(userPhone, {
                     title: 'طلب سحب جديد',
                     message: `طلب سحب بقيمة ${data.amount} من ${data.userName}`,
                     type: 'WITHDRAWAL_REQUEST',
@@ -361,14 +367,14 @@ const App: React.FC = () => {
                         params: { adminView: 'userWallet' }
                     }
                 }, 'WITHDRAWAL_REQUEST', data);
-                showToast(`طلب سحب جديد من ${data.userName}`, 'info');
+                showToastRef.current(`طلب سحب جديد من ${data.userName}`, 'info');
                 try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
             });
 
             // Listen for New Store Orders
             channel.listen('.admin.store_order.created', (data: any) => {
                 console.log('🛒 Admin: New Store Order:', data);
-                addNotificationForUser(userPhone, {
+                addNotificationRef.current(userPhone, {
                     title: 'طلب متجر جديد',
                     message: `طلب جديد رقم ${data.data?.order_number || ''}`,
                     type: 'new_store_order',
@@ -377,7 +383,7 @@ const App: React.FC = () => {
                         params: { adminView: 'store_orders' }
                     }
                 }, 'new_store_order', data);
-                showToast('طلب متجر جديد', 'info');
+                showToastRef.current('طلب متجر جديد', 'info');
                 try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
             });
 
@@ -386,7 +392,7 @@ const App: React.FC = () => {
                 echo.leave('admin.dashboard');
             };
         }
-    }, [isAdmin, userPhone, addNotificationForUser, showToast]);
+    }, [isAdmin, userPhone]); // Removed callback deps - using refs instead
 
     // Global Real-time notification listener for ALL users
     useEffect(() => {
@@ -427,7 +433,7 @@ const App: React.FC = () => {
                 });
 
                 // Show toast
-                showToast(notificationData.title, 'info');
+                showToastRef.current(notificationData.title, 'info');
 
                 // Play sound (optional)
                 // Play sound based on notification type
@@ -459,7 +465,7 @@ const App: React.FC = () => {
                 echo.leave(`user.${userId}`);
             };
         }
-    }, [isAuthenticated, userPhone, setNotifications, showToast, isAdmin]);
+    }, [isAuthenticated, userPhone, isAdmin]); // Removed showToast - using ref
 
     const handleLoginClick = () => setShowLogin(true);
     const handleCloseLogin = () => setShowLogin(false);
