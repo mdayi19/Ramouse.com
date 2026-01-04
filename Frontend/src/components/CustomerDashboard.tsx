@@ -98,6 +98,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
     const handleBottomNavClick = (id: string) => {
         if (id === 'notifications') {
             props.onNavigate('notificationCenter');
+        } else if (id === 'add-order') {
+            props.onStartNewOrder();
         } else {
             handleViewChange(id as CustomerView);
         }
@@ -119,11 +121,11 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
 
     const bottomNavItems = useMemo(() => [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
+        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-6 h-6" />, isSpecial: true },
         { id: 'store', label: 'المتجر', icon: <Icon name="ShoppingBag" /> },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
-        { id: 'notifications', label: 'الإشعارات', icon: <Icon name="Bell" />, notificationCount: unreadCount },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
-    ], [unreadCount]);
+    ], []);
 
     const sidebarUser: SidebarUser = {
         name: customer?.name || userPhone || 'عميل',

@@ -80,6 +80,8 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
             props.onBack();
         } else if (id === 'notifications') {
             props.onNavigate('notificationCenter');
+        } else if (id === 'add-order') {
+            props.onStartNewOrder();
         } else {
             handleSetView(id as TowTruckView);
         }
@@ -100,9 +102,9 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
 
     const bottomNavItems = [
         { id: 'home', label: 'الرئيسية', icon: <Icon name="House" /> },
-        { id: 'overview', label: 'التحكم', icon: <Icon name="LayoutGrid" /> },
+        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-6 h-6" />, isSpecial: true },
         { id: 'store', label: 'المتجر', icon: <Icon name="Store" /> },
-        { id: 'notifications', label: 'الإشعارات', icon: <Icon name="Bell" />, notificationCount: unreadCount },
+        { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ];
 

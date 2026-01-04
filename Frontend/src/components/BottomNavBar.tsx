@@ -7,6 +7,7 @@ interface NavItem {
     label: string;
     icon: React.ReactNode;
     notificationCount?: number;
+    isSpecial?: boolean; // New prop for the special add button
 }
 
 interface BottomNavBarProps {
@@ -18,12 +19,27 @@ interface BottomNavBarProps {
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemClick }) => {
     return (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe" role="navigation" aria-label="التنقل الرئيسي">
-            {/* Background - reduced blur for mobile performance */}
+            {/* Background */}
             <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-slate-200/50 dark:border-slate-800/50 shadow-lg" aria-hidden="true" />
 
-            <div className="relative flex items-center justify-around h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]">
+            <div className="relative flex items-center justify-around h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2">
                 {items.map((item) => {
                     const isActive = activeItem === item.id;
+                    const isSpecial = item.isSpecial;
+
+                    if (isSpecial) {
+                        return (
+                            <div key={item.id} className="relative -top-5">
+                                <button
+                                    onClick={() => onItemClick(item.id)}
+                                    className="flex items-center justify-center w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-200"
+                                    aria-label={item.label}
+                                >
+                                    {item.icon}
+                                </button>
+                            </div>
+                        );
+                    }
 
                     return (
                         <button
@@ -33,7 +49,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemCl
                             aria-current={isActive ? 'page' : undefined}
                             aria-label={item.label}
                         >
-                            {/* Active Indicator - simplified animation */}
+                            {/* Active Indicator */}
                             {isActive && (
                                 <motion.div
                                     layoutId="bottomNavIndicator"
@@ -67,7 +83,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemCl
                                 </motion.div>
                             </div>
 
-                            {/* Label - simpler animation */}
+                            {/* Label */}
                             <span
                                 className={`text-[10px] font-semibold mt-0.5 ${isActive
                                     ? 'text-primary dark:text-primary-400'
