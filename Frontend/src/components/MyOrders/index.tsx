@@ -142,15 +142,15 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const { getEcho } = useRealtime();
 
     useEffect(() => {
-        console.log('🟢 MyOrders useEffect RUNNING'); // Debug: verify effect runs
+        console.warn('🟢 MyOrders useEffect RUNNING'); // warn not stripped in production
 
         let userId = localStorage.getItem('user_id');
-        console.log('🔍 MyOrders: user_id from localStorage:', userId); // Debug
+        console.warn('🔍 MyOrders: user_id from localStorage:', userId);
 
         if (!userId) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                console.log('🔍 MyOrders: currentUser from localStorage:', currentUser); // Debug
+                console.warn('🔍 MyOrders: currentUser from localStorage:', currentUser);
                 userId = currentUser.user_id ? String(currentUser.user_id) : null;
             } catch (e) {
                 console.error('Failed to parse currentUser:', e);
@@ -158,11 +158,11 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         }
 
         if (!userId) {
-            console.log('⚠️ MyOrders: No user ID found, skipping real-time listeners');
+            console.warn('⚠️ MyOrders: No user ID found, skipping real-time listeners');
             return;
         }
 
-        console.log('🔌 MyOrders: Setting up real-time listeners for user:', userId);
+        console.warn('🔌 MyOrders: Setting up real-time listeners for user:', userId);
 
         const fetchOrdersBackground = async () => {
             try {
