@@ -47,6 +47,7 @@ export interface MyOrdersProps {
     onUpdateCustomer: (customerId: string, updatedData: Partial<Customer>) => Promise<void>;
     isDashboardView?: boolean;
     currentUser?: Customer | Technician | TowTruck;
+    userId?: string | number; // Add userId prop for real-time channel subscription
 }
 
 const MyOrders: React.FC<MyOrdersProps> = ({
@@ -62,7 +63,8 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     onNavigationConsumed,
     onUpdateCustomer,
     isDashboardView = false,
-    currentUser
+    currentUser,
+    userId: userIdProp // Destructure userId prop
 }) => {
     const [fetchedOrders, setFetchedOrders] = useState<Order[]>([]);
     const [isFetchingOrders, setIsFetchingOrders] = useState(false);
@@ -145,19 +147,32 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const showToastRef = useRef(showToast);
     showToastRef.current = showToast;
 
-    // Extract userId for dependency tracking
+    // Extract userId for real-time channel subscription
+    // Priority: 1) prop, 2) currentUser.user_id (database ID), 3) localStorage fallback
     const userId = useMemo(() => {
-        let id = localStorage.getItem('user_id');
-        if (!id) {
-            try {
-                const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                id = user.user_id ? String(user.user_id) : null;
-            } catch (e) {
-                console.error('Failed to parse currentUser:', e);
-            }
+        // Use prop if provided (most reliable)
+        if (userIdProp) return String(userIdProp);
+
+        // Fall back to currentUser.user_id if available
+        // IMPORTANT: currentUser.id is the phone number, user_id is the database ID
+        if (currentUser && 'user_id' in currentUser && currentUser.user_id) {
+            return String(currentUser.user_id);
         }
-        return id;
-    }, []);
+
+        // Last resort: try to get from localStorage
+        try {
+            const storedCurrentUser = localStorage.getItem('currentUser');
+            if (storedCurrentUser) {
+                const parsed = JSON.parse(storedCurrentUser);
+                // user_id is the database ID we need for channel subscription
+                if (parsed.user_id) return String(parsed.user_id);
+            }
+        } catch (e) {
+            console.error('Failed to parse currentUser from localStorage:', e);
+        }
+
+        return null;
+    }, [userIdProp, currentUser]);
 
     useEffect(() => {
         console.warn('🟢 MyOrders useEffect RUNNING'); // warn not stripped in production

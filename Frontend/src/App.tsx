@@ -707,7 +707,19 @@ const App: React.FC = () => {
                                     settings={settings}
                                 />
                             } />
-                            <Route path="/my-orders" element={isAuthenticated ? <MyOrders allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} onUpdateCustomer={onUpdateCustomer} /> : <Navigate to="/" replace />} />
+                            <Route path="/my-orders" element={isAuthenticated ? <MyOrders allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} onUpdateCustomer={onUpdateCustomer} userId={(() => {
+                                // Extract userId from localStorage for real-time channel subscription
+                                try {
+                                    const userStr = localStorage.getItem('currentUser');
+                                    if (userStr) {
+                                        const user = JSON.parse(userStr);
+                                        return user.user_id || user.id;
+                                    }
+                                } catch (e) {
+                                    console.error('Failed to parse currentUser for userId', e);
+                                }
+                                return undefined;
+                            })()} /> : <Navigate to="/" replace />} />
                             <Route path="/announcements" element={<AnnouncementsScreen onBack={() => handleNavigate('welcome')} isAuthenticated={isAuthenticated} isProvider={isProvider} isTechnician={isTechnician} isTowTruck={isTowTruck} />} />
                             <Route path="/store" element={<StoreView customer={loggedInCustomer} provider={loggedInProvider} technician={loggedInTechnician} towTruck={loggedInTowTruck} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} onLoginRequest={() => { setPostLoginAction(() => () => { }); setShowLogin(true); }} storeCategories={storeCategories} />} />
                             <Route path="/store/product/:productId" element={<StoreView customer={loggedInCustomer} provider={loggedInProvider} technician={loggedInTechnician} towTruck={loggedInTowTruck} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} onLoginRequest={() => { setPostLoginAction(() => () => { }); setShowLogin(true); }} storeCategories={storeCategories} />} />
