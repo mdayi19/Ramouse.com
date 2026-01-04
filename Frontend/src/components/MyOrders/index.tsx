@@ -138,8 +138,8 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         fetchOrders();
     }, [showToast, allOrders.length]); // Added dependency on length to avoid re-fetching if props provided
 
-    // Real-time Listeners
-    const { listenToPrivateChannel, leaveChannel } = useRealtime();
+    // Real-time Listeners - using direct echo pattern like useWalletBalance
+    const { echo } = useRealtime();
 
     useEffect(() => {
         let userId = localStorage.getItem('user_id');
@@ -201,44 +201,38 @@ const MyOrders: React.FC<MyOrdersProps> = ({
 
         const channelName = `user.${userId}`;
 
-        const cleanupQuote = listenToPrivateChannel(channelName, '.quote.received', (data: any) => {
-            console.log('💬 MyOrders: Quote Received:', data);
-            showToast(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
-            try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
-            fetchOrdersBackground();
-        });
-
-        const cleanupStatus = listenToPrivateChannel(channelName, '.order.status_updated', (data: any) => {
-            console.log('🔄 MyOrders: Order Status Updated:', data);
-            showToast(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
-            fetchOrdersBackground();
-        });
-
-        const cleanupPayment = listenToPrivateChannel(channelName, '.payment.updated', (data: any) => {
-            console.log('💳 MyOrders: Payment Updated:', data);
-            const action = data.action === 'approved' ? 'تمت الموافقة على' : 'تم رفض';
-            showToast(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
-            try { new Audio(data.action === 'approved' ? '/sound_success.wav' : '/sound_error.wav').play().catch(() => { }); } catch (e) { }
-            fetchOrdersBackground();
-        });
-
-        const cleanupNotification = listenToPrivateChannel(channelName, '.user.notification', (data: any) => {
-            console.log('🔔 MyOrders: User Notification:', data);
-            if (data.type?.includes('ORDER') || data.type?.includes('QUOTE') || data.type?.includes('PAYMENT')) {
+        // Use direct echo.private().listen() pattern like useWalletBalance
+        echo.private(channelName)
+            .listen('.quote.received', (data: any) => {
+                console.log('💬 MyOrders: Quote Received:', data);
+                showToast(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
+                try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
                 fetchOrdersBackground();
-            }
-        });
+            })
+            .listen('.order.status_updated', (data: any) => {
+                console.log('🔄 MyOrders: Order Status Updated:', data);
+                showToast(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
+                fetchOrdersBackground();
+            })
+            .listen('.payment.updated', (data: any) => {
+                console.log('💳 MyOrders: Payment Updated:', data);
+                const action = data.action === 'approved' ? 'تمت الموافقة على' : 'تم رفض';
+                showToast(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
+                try { new Audio(data.action === 'approved' ? '/sound_success.wav' : '/sound_error.wav').play().catch(() => { }); } catch (e) { }
+                fetchOrdersBackground();
+            })
+            .listen('.user.notification', (data: any) => {
+                console.log('🔔 MyOrders: User Notification:', data);
+                if (data.type?.includes('ORDER') || data.type?.includes('QUOTE') || data.type?.includes('PAYMENT')) {
+                    fetchOrdersBackground();
+                }
+            });
 
         return () => {
             console.log('🔌 MyOrders: Cleaning up listeners');
-            cleanupQuote();
-            cleanupStatus();
-            cleanupPayment();
-            cleanupNotification();
-            // Leave the channel when component fully unmounts
-            leaveChannel(channelName);
+            echo.leave(channelName);
         };
-    }, [showToast, listenToPrivateChannel, leaveChannel]);
+    }, [showToast, echo]);
 
     const userOrders = useMemo(() => {
         const ordersToUse = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : (allOrders || []);
