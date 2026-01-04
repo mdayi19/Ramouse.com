@@ -138,8 +138,8 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         fetchOrders();
     }, [showToast, allOrders.length]); // Added dependency on length to avoid re-fetching if props provided
 
-    // Real-time Listeners - using direct echo pattern like useWalletBalance
-    const { echo } = useRealtime();
+    // Real-time Listeners - using getEcho() directly inside effect
+    const { getEcho } = useRealtime();
 
     useEffect(() => {
         let userId = localStorage.getItem('user_id');
@@ -200,8 +200,10 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         };
 
         const channelName = `user.${userId}`;
+        const echo = getEcho(); // Get Echo instance inside effect
 
-        // Use direct echo.private().listen() pattern like useWalletBalance
+        console.log('📡 MyOrders: Subscribing to channel:', channelName);
+
         echo.private(channelName)
             .listen('.quote.received', (data: any) => {
                 console.log('💬 MyOrders: Quote Received:', data);
@@ -232,7 +234,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
             console.log('🔌 MyOrders: Cleaning up listeners');
             echo.leave(channelName);
         };
-    }, [showToast, echo]);
+    }, [showToast, getEcho]);
 
     const userOrders = useMemo(() => {
         const ordersToUse = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : (allOrders || []);
