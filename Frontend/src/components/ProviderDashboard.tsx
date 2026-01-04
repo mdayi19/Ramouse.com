@@ -94,10 +94,10 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
     }, [navigationParams, onNavigationConsumed, activeView, navigate]);
 
 
-    const fetchOpenOrders = async (background: boolean = false) => {
+    const fetchOpenOrders = async (background: boolean = false, forceRefresh: boolean = false) => {
         try {
             if (!background) setIsLoadingOpenOrders(true);
-            const response = await providerAPI.getOpenOrders();
+            const response = await providerAPI.getOpenOrders(forceRefresh);
             setOpenOrders(response.data.data || []);
         } catch (error) {
             console.error("Failed to fetch open orders", error);
@@ -107,10 +107,10 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
         }
     };
 
-    const fetchOverviewData = async () => {
+    const fetchOverviewData = async (forceRefresh: boolean = false) => {
         try {
             setIsLoadingOverview(true);
-            const response = await providerAPI.getOverviewData();
+            const response = await providerAPI.getOverviewData(forceRefresh);
             setOverviewData(response.data);
             if (response.data.stats?.walletBalance !== undefined) {
                 setLocalProvider(prev => ({ ...prev, walletBalance: response.data.stats.walletBalance }));
@@ -123,12 +123,12 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
         }
     };
 
-    const fetchWalletData = async () => {
+    const fetchWalletData = async (forceRefresh: boolean = false) => {
         try {
             const [txRes, wdrRes, balRes] = await Promise.all([
-                providerAPI.getTransactions(),
-                providerAPI.getWithdrawals(),
-                providerAPI.getWalletBalance()
+                providerAPI.getTransactions(forceRefresh),
+                providerAPI.getWithdrawals(forceRefresh),
+                providerAPI.getWalletBalance(forceRefresh)
             ]);
             const transactionsData = txRes.data.data || txRes.data;
             const withdrawalsData = wdrRes.data.data || wdrRes.data;
@@ -344,12 +344,12 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
             <main className="flex-1 min-w-0 overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 md:rounded-l-2xl">
                 <div className="h-full overflow-y-auto custom-scrollbar scroll-smooth-mobile">
                     <Routes>
-                        <Route index element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} onRefresh={fetchOverviewData} />} />
-                        <Route path="overview" element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} onRefresh={fetchOverviewData} />} />
-                        <Route path="openOrders" element={<OpenOrdersView provider={localProvider} orders={openOrders} onSubmitQuote={handleSubmitQuote} settings={settings} isLoading={isLoadingOpenOrders} showToast={showToast} onRefresh={() => fetchOpenOrders(false)} />} />
+                        <Route index element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} onRefresh={() => fetchOverviewData(true)} />} />
+                        <Route path="overview" element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} onRefresh={() => fetchOverviewData(true)} />} />
+                        <Route path="openOrders" element={<OpenOrdersView provider={localProvider} orders={openOrders} onSubmitQuote={handleSubmitQuote} settings={settings} isLoading={isLoadingOpenOrders} showToast={showToast} onRefresh={() => fetchOpenOrders(false, true)} />} />
                         <Route path="myBids" element={<MyBidsView provider={localProvider} settings={settings} showToast={showToast} />} />
                         <Route path="accepted" element={<AcceptedOrdersView provider={localProvider} settings={settings} />} />
-                        <Route path="wallet" element={<WalletView provider={localProvider} withdrawals={withdrawalRequests} transactions={transactions} settings={settings} onSubmitWithdrawal={handleSubmitWithdrawal} onRefresh={fetchWalletData} />} />
+                        <Route path="wallet" element={<WalletView provider={localProvider} withdrawals={withdrawalRequests} transactions={transactions} settings={settings} onSubmitWithdrawal={handleSubmitWithdrawal} onRefresh={() => fetchWalletData(true)} />} />
                         <Route path="settings" element={<ProviderSettingsView provider={localProvider} settings={settings} showToast={showToast} onUpdateProvider={handleUpdateProvider} onLogout={onLogout} />} />
                         <Route path="flashProducts" element={<FlashProductsView provider={localProvider} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} />} />
                         <Route path="store" element={<StoreView provider={localProvider} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} storeCategories={storeCategories} />} />

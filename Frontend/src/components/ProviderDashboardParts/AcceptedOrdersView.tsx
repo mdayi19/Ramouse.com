@@ -297,11 +297,11 @@ const AcceptedOrdersView: React.FC<AcceptedOrdersViewProps> = ({ provider, setti
         };
     }, [provider, listenToPrivateChannel]);
 
-    const fetchOrders = async (background: boolean = false) => {
+    const fetchOrders = async (background: boolean = false, forceRefresh: boolean = false) => {
         try {
             if (!background) setLoading(true);
             console.log('🔄 Fetching accepted orders...');
-            const response = await providerAPI.getAcceptedOrders();
+            const response = await providerAPI.getAcceptedOrders(forceRefresh);
             console.log('📦 API Response:', response);
             console.log('📊 Orders data:', response.data.data);
             setOrders(response.data.data || []);
@@ -415,7 +415,7 @@ const AcceptedOrdersView: React.FC<AcceptedOrdersViewProps> = ({ provider, setti
             <div className="flex items-center justify-between mb-2">
                 <ViewHeader title="الطلبات المقبولة" subtitle="تابع حالة الطلبات التي فزت بها وتفاصيلها." />
                 <button
-                    onClick={() => fetchOrders(false)}
+                    onClick={() => fetchOrders(false, true)}
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 >

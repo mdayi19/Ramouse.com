@@ -114,10 +114,10 @@ const MyBidsView: React.FC<MyBidsViewProps> = ({ provider, settings, showToast }
     const [error, setError] = useState<string | null>(null);
     const [quotingOrder, setQuotingOrder] = useState<Order | null>(null);
 
-    const fetchBids = async (background: boolean = false) => {
+    const fetchBids = async (background: boolean = false, forceRefresh: boolean = false) => {
         try {
             if (!background) setLoading(true);
-            const response = await providerAPI.getMyBids();
+            const response = await providerAPI.getMyBids(forceRefresh);
             setOrders(response.data.data);
             setError(null);
         } catch (err) {
@@ -244,7 +244,7 @@ const MyBidsView: React.FC<MyBidsViewProps> = ({ provider, settings, showToast }
             <div className="flex items-center justify-between mb-4">
                 <ViewHeader title="عروضي" subtitle="تتبع حالة الطلبات التي قدمت عروض أسعار لها." />
                 <button
-                    onClick={() => fetchBids(false)}
+                    onClick={() => fetchBids(false, true)}
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >

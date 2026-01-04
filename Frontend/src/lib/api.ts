@@ -99,23 +99,23 @@ api.interceptors.response.use(
 );
 
 export const providerAPI = {
-    getOverviewData: () => api.get('/provider/overview-data'),
-    getTransactions: () => api.get('/provider/transactions'),
-    getWithdrawals: () => api.get('/provider/withdrawals'),
-    getWalletBalance: () => api.get('/provider/wallet-balance'),
+    getOverviewData: (forceRefresh = false) => api.get('/provider/overview-data', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    getTransactions: (forceRefresh = false) => api.get('/provider/transactions', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    getWithdrawals: (forceRefresh = false) => api.get('/provider/withdrawals', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    getWalletBalance: (forceRefresh = false) => api.get('/provider/wallet-balance', forceRefresh ? { params: { _t: Date.now() } } : {}),
     requestWithdrawal: (amount: number, paymentMethodId: string) =>
         api.post('/provider/withdrawals', { amount, paymentMethodId }),
     updateProfile: (data: any) => api.put('/provider/profile', data),
-    getOpenOrders: async () => {
-        const response = await api.get('/provider/open-orders');
+    getOpenOrders: async (forceRefresh = false) => {
+        const response = await api.get('/provider/open-orders', forceRefresh ? { params: { _t: Date.now() } } : {});
         return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
     },
-    getMyBids: async () => {
-        const response = await api.get('/provider/my-bids');
+    getMyBids: async (forceRefresh = false) => {
+        const response = await api.get('/provider/my-bids', forceRefresh ? { params: { _t: Date.now() } } : {});
         return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
     },
-    getAcceptedOrders: async () => {
-        const response = await api.get('/provider/accepted-orders');
+    getAcceptedOrders: async (forceRefresh = false) => {
+        const response = await api.get('/provider/accepted-orders', forceRefresh ? { params: { _t: Date.now() } } : {});
         return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
     },
     updateAcceptedOrderStatus: async (orderNumber: string, status: string, notes?: string) => {
