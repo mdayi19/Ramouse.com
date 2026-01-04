@@ -283,12 +283,12 @@ const toCamelCase = (obj: any): any => {
 
 export const adminAPI = {
     // Financial endpoints
-    getWithdrawals: () => api.get('/admin/withdrawals'),
+    getWithdrawals: (forceRefresh = false) => api.get('/admin/withdrawals', forceRefresh ? { params: { _t: Date.now() } } : {}),
     approveWithdrawal: (id: string, receiptUrl?: string) =>
         api.post(`/admin/withdrawals/${id}/approve`, { receiptUrl }),
     rejectWithdrawal: (id: string, reason: string) =>
         api.post(`/admin/withdrawals/${id}/reject`, { reason }),
-    getTransactions: () => api.get('/admin/transactions'),
+    getTransactions: (forceRefresh = false) => api.get('/admin/transactions', forceRefresh ? { params: { _t: Date.now() } } : {}),
     addFunds: (providerId: string, amount: number, description: string) =>
         api.post(`/admin/providers/${providerId}/add-funds`, { amount, description }),
 
