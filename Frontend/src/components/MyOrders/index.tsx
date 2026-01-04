@@ -298,7 +298,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                 // Notification handled globally by App.tsx, just refresh data here
                 fetchOrdersBackground();
             })
-            .listen('.order.status_updated', (data: any) => {
+            .listen('.order.status.updated', (data: any) => {
                 console.warn('🔄 MyOrders: Order Status Updated:', data);
                 // Notification handled globally by App.tsx, just refresh data here
                 fetchOrdersBackground();
