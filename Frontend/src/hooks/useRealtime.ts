@@ -65,12 +65,13 @@ export const useRealtime = () => {
     }, []);
 
     // Return getEcho reference for components that need direct access
+    // Using a getter so that components always get the CURRENT instance
     return {
         listenToPrivateChannel,
         listenToChannel,
         joinPresenceChannel,
         leaveChannel,
-        echo: getEcho(),
+        get echo() { return getEcho(); }, // Getter ensures fresh instance on every access
         getEcho, // Provide the getter for live access
     };
 };

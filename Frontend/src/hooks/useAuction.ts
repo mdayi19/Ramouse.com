@@ -86,7 +86,7 @@ export const useLiveAuction = (auctionId: string | undefined) => {
     const [error, setError] = useState<string | null>(null);
     const [participants, setParticipants] = useState<any[]>([]);
     const [announcement, setAnnouncement] = useState<{ message: string; type: string } | null>(null);
-    const { echo } = useRealtime();
+    const { getEcho } = useRealtime();
 
     // Fetch auction data
     const [bidsPage, setBidsPage] = useState(1);
@@ -141,6 +141,8 @@ export const useLiveAuction = (auctionId: string | undefined) => {
     // Subscribe to real-time updates
     useEffect(() => {
         if (!auctionId || !auction?.is_live) return;
+
+        const echo = getEcho(); // Get fresh Echo instance inside effect
 
         // 1. Presence Channel (for Participant list only)
         // console.log(`🎯 Joining auction presence channel: auction.${auctionId}`);
@@ -259,10 +261,11 @@ export const useLiveAuction = (auctionId: string | undefined) => {
             });
 
         return () => {
+            const echo = getEcho();
             echo.leave(`auction.${auctionId}`);
             echo.leave(`auction-updates.${auctionId}`);
         };
-    }, [auctionId, auction?.is_live, echo]);
+    }, [auctionId, auction?.is_live, getEcho]);
 
     const updateLocalAuction = useCallback((data: Partial<Auction>) => {
         setAuction(prev => prev ? { ...prev, ...data } : null);
