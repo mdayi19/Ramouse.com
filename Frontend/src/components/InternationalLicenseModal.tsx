@@ -151,35 +151,69 @@ const InternationalLicenseModal: React.FC<InternationalLicenseModalProps> = ({ o
             data.append('proof_of_payment', proofOfPayment);
             data.append('step_token', stepToken);
 
+            console.log('Uploading payment proof:', {
+                fileName: proofOfPayment.name,
+                fileType: proofOfPayment.type,
+                fileSize: proofOfPayment.size,
+                stepToken: stepToken
+            });
+
             const response = await api.post('/international-license/upload-payment-proof', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
+            console.log('Payment proof upload response:', response.data);
+
             if (response.data.success) {
                 setProofPath(response.data.url);
                 setStep(4);
+            } else {
+                // Handle unsuccessful response
+                const errorMsg = response.data.message || response.data.error || 'فشل في تحميل إثبات الدفع. يرجى المحاولة مرة أخرى';
+                console.error('Payment proof upload failed:', errorMsg, response.data);
+                setError(errorMsg);
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'فشل في تحميل إثبات الدفع');
+            console.error('Payment proof upload error:', err);
+            const errorMsg = err.response?.data?.message || err.response?.data?.error || 'فشل في تحميل إثبات الدفع. يرجى التحقق من الملف والمحاولة مرة أخرى';
+            setError(errorMsg);
         } finally {
             setLoading(false);
         }
     };
 
     const handleFinalSubmit = async () => {
+        if (!stepToken) {
+            setError('حدث خطأ في عملية التقديم. يرجى إعادة المحاولة من البداية');
+            console.error('Final submit error: step_token is missing');
+            return;
+        }
+
         setLoading(true);
         setError('');
         try {
+            console.log('Submitting final request with step_token:', stepToken);
+
             const response = await api.post('/international-license/final-submit', { step_token: stepToken });
+
+            console.log('Final submit response:', response.data);
+
             if (response.data.success) {
                 setFinalOrderNumber(response.data.order_number);
                 setShowSuccess(true);
                 setTimeout(() => {
                     onSuccess(response.data.order_number);
                 }, 2000);
+            } else {
+                // Handle unsuccessful response
+                const errorMsg = response.data.message || response.data.error || 'فشل في إرسال الطلب. يرجى المحاولة مرة أخرى';
+                console.error('Final submit failed:', errorMsg, response.data);
+                setError(errorMsg);
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'فشل في إرسال الطلب');
+            console.error('Final submit error:', err);
+            const errorMsg = err.response?.data?.message || err.response?.data?.error || 'فشل في إرسال الطلب. يرجى التحقق من الاتصال والمحاولة مرة أخرى';
+            setError(errorMsg);
         } finally {
             setLoading(false);
         }
