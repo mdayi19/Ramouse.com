@@ -102,8 +102,8 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
 
     const bottomNavItems = [
         { id: 'home', label: 'الرئيسية', icon: <Icon name="House" /> },
-        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-6 h-6" />, isSpecial: true },
         { id: 'store', label: 'المتجر', icon: <Icon name="Store" /> },
+        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ];

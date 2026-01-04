@@ -121,8 +121,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
 
     const bottomNavItems = useMemo(() => [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
-        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-6 h-6" />, isSpecial: true },
         { id: 'store', label: 'المتجر', icon: <Icon name="ShoppingBag" /> },
+        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ], []);
