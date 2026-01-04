@@ -328,6 +328,54 @@ class AdminController extends Controller
             'timestamp' => now()
         ]));
 
+        // Send notifications to targeted users
+        try {
+            $target = $announcement->target; // 'all', 'customer', 'provider', 'technician', 'tow_truck'
+
+            // Determine notification type based on target
+            $notificationTypes = [
+                'customer' => 'NEW_ANNOUNCEMENT_CUSTOMER',
+                'provider' => 'NEW_ANNOUNCEMENT_PROVIDER',
+                'technician' => 'NEW_ANNOUNCEMENT_TECHNICIAN',
+                'tow_truck' => 'NEW_ANNOUNCEMENT_TOW_TRUCK',
+            ];
+
+            $usersToNotify = [];
+
+            if ($target === 'all') {
+                // Notify all users
+                $usersToNotify = \App\Models\User::all();
+            } elseif (in_array($target, ['customer', 'provider', 'technician', 'tow_truck'])) {
+                // Notify specific user role
+                $usersToNotify = \App\Models\User::where('role', $target)->get();
+            }
+
+            foreach ($usersToNotify as $user) {
+                // Determine the notification type for this user
+                $notifType = $notificationTypes[$user->role] ?? 'NEW_ANNOUNCEMENT_CUSTOMER';
+
+                \App\Models\Notification::create([
+                    'user_id' => $user->id,
+                    'title' => $announcement->title,
+                    'message' => $announcement->message,
+                    'type' => $notifType,
+                    'context' => ['announcement_id' => $announcement->id],
+                    'read' => false,
+                ]);
+
+                event(new \App\Events\UserNotification($user->id, [
+                    'title' => $announcement->title,
+                    'message' => $announcement->message,
+                    'type' => $notifType,
+                    'link' => ['view' => 'announcements'],
+                ]));
+            }
+
+            \Log::info("Sent announcement notifications to " . count($usersToNotify) . " users");
+        } catch (\Exception $e) {
+            \Log::error('Failed to send announcement notifications: ' . $e->getMessage());
+        }
+
         return response()->json(['success' => true, 'data' => $announcement]);
     }
 
@@ -694,21 +742,42 @@ class AdminController extends Controller
             $buyerUser = \App\Models\User::where('phone', $order->buyer_id)->first();
 
             if ($buyerUser) {
+                // Check if this is a flash product to use appropriate notification type
+                $isFlashProduct = $product && $product->is_flash;
+                $isApproval = $request->status === 'approved';
+
+                // Determine title and type based on flash product status
+                if ($isFlashProduct) {
+                    if ($isApproval) {
+                        $title = 'تم قبول طلب المنتج الفوري';
+                        $notifType = 'FLASH_PRODUCT_REQUEST_APPROVED';
+                    } elseif ($isRejection) {
+                        $title = 'تم رفض طلب المنتج الفوري';
+                        $notifType = 'FLASH_PRODUCT_REQUEST_REJECTED';
+                    } else {
+                        $title = $isRejection ? 'رفض طلب المتجر' : 'تحديث حالة الطلب';
+                        $notifType = $isRejection ? 'STORE_ORDER_REJECTED' : 'STORE_ORDER_UPDATE';
+                    }
+                } else {
+                    $title = $isRejection ? 'رفض طلب المتجر' : 'تحديث حالة الطلب';
+                    $notifType = $isRejection ? 'STORE_ORDER_REJECTED' : 'STORE_ORDER_UPDATE';
+                }
+
                 // Create notification in database
                 \App\Models\Notification::create([
                     'user_id' => $buyerUser->id,
-                    'title' => $isRejection ? 'رفض طلب المتجر' : 'تحديث حالة الطلب',
+                    'title' => $title,
                     'message' => $message,
-                    'type' => $isRejection ? 'STORE_ORDER_REJECTED' : 'STORE_ORDER_UPDATE',
+                    'type' => $notifType,
                     'link' => json_encode(['view' => 'store', 'params' => []]),
                     'read' => false,
                 ]);
 
                 // Broadcast real-time notification
                 event(new \App\Events\UserNotification($buyerUser->id, [
-                    'title' => $isRejection ? 'رفض طلب المتجر' : 'تحديث حالة الطلب',
+                    'title' => $title,
                     'message' => $message,
-                    'type' => $isRejection ? 'STORE_ORDER_REJECTED' : 'STORE_ORDER_UPDATE',
+                    'type' => $notifType,
                     'link' => json_encode(['view' => 'store', 'params' => []]),
                 ]));
             }
