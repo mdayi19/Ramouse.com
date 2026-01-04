@@ -11,8 +11,6 @@ import type {
 /**
  * Get wallet balance (current, available, held)
  */
- * Get wallet balance(current, available, held)
-    */
 export const getWalletBalance = async (forceRefresh = false): Promise<UserWalletBalance> => {
     const response = await api.get('/wallet/balance' + (forceRefresh ? `?_t=${Date.now()}` : ''));
     return response.data;
@@ -21,8 +19,6 @@ export const getWalletBalance = async (forceRefresh = false): Promise<UserWallet
 /**
  * Get transaction history
  */
- * Get transaction history
-    */
 export const getWalletTransactions = async (page: number = 1, forceRefresh = false): Promise<{
     data: UserWalletTransaction[];
     current_page: number;
@@ -37,8 +33,6 @@ export const getWalletTransactions = async (page: number = 1, forceRefresh = fal
 /**
  * Get deposit request history
  */
- * Get deposit request history
-    */
 export const getDeposits = async (forceRefresh = false): Promise<{ data: UserDepositRequest[] }> => {
     const response = await api.get('/wallet/deposits' + (forceRefresh ? `?_t=${Date.now()}` : ''));
     return response.data;
@@ -47,8 +41,6 @@ export const getDeposits = async (forceRefresh = false): Promise<{ data: UserDep
 /**
  * Get withdrawal request history
  */
- * Get withdrawal request history
-    */
 export const getWithdrawals = async (forceRefresh = false): Promise<{ data: UserWithdrawalRequest[] }> => {
     const response = await api.get('/wallet/withdrawals' + (forceRefresh ? `?_t=${Date.now()}` : ''));
     return response.data;
