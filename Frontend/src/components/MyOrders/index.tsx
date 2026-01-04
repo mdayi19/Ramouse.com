@@ -80,6 +80,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+    const [userId, setUserId] = useState<string | null>(null);
 
     // Initial Fetch
     useEffect(() => {
@@ -145,26 +146,32 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const showToastRef = useRef(showToast);
     showToastRef.current = showToast;
 
+    // Get userId once on mount
     useEffect(() => {
-        console.warn('🟢 MyOrders useEffect RUNNING'); // warn not stripped in production
+        console.warn('🔍 MyOrders: Initializing userId from localStorage');
+        let id = localStorage.getItem('user_id');
 
-        let userId = localStorage.getItem('user_id');
-        console.warn('🔍 MyOrders: user_id from localStorage:', userId);
-
-        if (!userId) {
+        if (!id) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                console.warn('🔍 MyOrders: currentUser from localStorage:', currentUser);
-                userId = currentUser.user_id ? String(currentUser.user_id) : null;
+                id = currentUser.user_id ? String(currentUser.user_id) : null;
             } catch (e) {
                 console.error('Failed to parse currentUser:', e);
             }
         }
 
+        console.warn('🔍 MyOrders: Resolved userId:', id);
+        setUserId(id);
+    }, []); // Run once on mount
+
+    // Setup real-time listeners when userId changes
+    useEffect(() => {
         if (!userId) {
             console.warn('⚠️ MyOrders: No user ID found, skipping real-time listeners');
             return;
         }
+
+        console.warn('🟢 MyOrders: Setting up real-time listeners for user:', userId);
 
         console.warn('🔌 MyOrders: Setting up real-time listeners for user:', userId);
 
@@ -211,39 +218,59 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         const channelName = `user.${userId}`;
         const echo = getEcho(); // Get Echo instance inside effect
 
-        console.warn('📡 MyOrders: Subscribing to channel:', channelName);
+        console.warn('📡 MyOrders: Attempting to subscribe to private channel:', channelName);
 
-        echo.private(channelName)
+        // Subscribe to private channel with explicit error handling
+        const channel = echo.private(channelName);
+
+        // Listen for subscription success
+        channel.bind('pusher:subscription_succeeded', () => {
+            console.warn('✅ MyOrders: Successfully subscribed to channel:', channelName);
+        });
+
+        // Listen for subscription error
+        channel.bind('pusher:subscription_error', (status: any) => {
+            console.error('❌ MyOrders: Subscription error for channel:', channelName, 'Status:', status);
+            console.error('💡 This usually means channel authorization failed. Check:');
+            console.error('   1. Is authToken valid?', !!localStorage.getItem('authToken'));
+            console.error('   2. User ID:', userId);
+            console.error('   3. Auth endpoint:', '/api/broadcasting/auth');
+        });
+
+        // Add event listeners
+        channel
             .listen('.quote.received', (data: any) => {
-                console.warn('💬 MyOrders: Quote Received:', data);
+                console.warn('💬 MyOrders: Quote Received EVENT FIRED!', data);
                 showToastRef.current(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
                 try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
                 fetchOrdersBackground();
             })
             .listen('.order.status_updated', (data: any) => {
-                console.warn('🔄 MyOrders: Order Status Updated:', data);
+                console.warn('🔄 MyOrders: Order Status Updated EVENT FIRED!', data);
                 showToastRef.current(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
                 fetchOrdersBackground();
             })
             .listen('.payment.updated', (data: any) => {
-                console.warn('💳 MyOrders: Payment Updated:', data);
+                console.warn('💳 MyOrders: Payment Updated EVENT FIRED!', data);
                 const action = data.action === 'approved' ? 'تمت الموافقة على' : 'تم رفض';
                 showToastRef.current(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
                 try { new Audio(data.action === 'approved' ? '/sound_success.wav' : '/sound_error.wav').play().catch(() => { }); } catch (e) { }
                 fetchOrdersBackground();
             })
             .listen('.user.notification', (data: any) => {
-                console.warn('🔔 MyOrders: User Notification:', data);
+                console.warn('🔔 MyOrders: User Notification EVENT FIRED!', data);
                 if (data.type?.includes('ORDER') || data.type?.includes('QUOTE') || data.type?.includes('PAYMENT')) {
                     fetchOrdersBackground();
                 }
             });
 
+        console.warn('📋 MyOrders: Event listeners registered for:', ['.quote.received', '.order.status_updated', '.payment.updated', '.user.notification']);
+
         return () => {
-            console.warn('🔌 MyOrders: Cleaning up listeners');
+            console.warn('🔌 MyOrders: Cleaning up listeners for channel:', channelName);
             echo.leave(channelName);
         };
-    }, [getEcho]); // Removed showToast from deps - using ref instead
+    }, [userId, getEcho]); // ✅ Now includes userId dependency!
 
     const userOrders = useMemo(() => {
         const ordersToUse = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : (allOrders || []);

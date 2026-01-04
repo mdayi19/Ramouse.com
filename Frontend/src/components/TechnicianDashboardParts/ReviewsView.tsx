@@ -68,7 +68,7 @@ const ReviewsView: React.FC<ReviewsViewProps> = ({ technician, showToast }) => {
         return () => {
             echo.leave(`provider.${providerId}`);
         };
-    }, [technician.user_id]);
+    }, [technician.user_id, getEcho]); // ✅ Added getEcho dependency
 
 
     const filteredReviews = useMemo(() => {
