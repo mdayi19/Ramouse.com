@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { OrderFormData, Category } from '../types';
 import { HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import StepHelper from './StepHelper';
+import Icon from './Icon';
 
 interface Props {
   updateFormData: (data: Partial<OrderFormData>) => void;
@@ -11,6 +13,8 @@ interface Props {
 }
 
 const Step1Category: React.FC<Props> = ({ updateFormData, nextStep, carCategories }) => {
+  const navigate = useNavigate();
+
   const handleSelect = (category: string) => {
     // Haptic feedback for mobile
     if (navigator.vibrate) {
@@ -47,6 +51,17 @@ const Step1Category: React.FC<Props> = ({ updateFormData, nextStep, carCategorie
 
   return (
     <div className="max-w-5xl mx-auto pb-10 px-4 relative">
+      {/* Exit Button */}
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        onClick={() => navigate('/dashboard')}
+        className="absolute top-0 left-4 z-20 flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transaction-colors duration-200 text-base sm:text-lg"
+      >
+        <span className="text-xl">✕</span>
+        <span>خروج</span>
+      </motion.button>
+
       {/* Step Helper - Animated guide */}
       <StepHelper step={1} autoHideDelay={10000} />
 
@@ -54,7 +69,7 @@ const Step1Category: React.FC<Props> = ({ updateFormData, nextStep, carCategorie
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6 sm:mb-8"
+        className="text-center mb-6 sm:mb-8 pt-12 sm:pt-0"
       >
         <div className="text-6xl sm:text-7xl mb-3">🚗</div>
         <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-2">
