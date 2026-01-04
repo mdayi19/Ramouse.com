@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRealtime } from '../../hooks/useRealtime';
 import { Order, Quote, Notification, Settings, NotificationType, OrderReview, OrderStatus, Customer, Provider, Technician, TowTruck } from '../../types';
 import QuoteCard from './QuoteCard';
@@ -141,6 +141,10 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     // Real-time Listeners - using getEcho() directly inside effect
     const { getEcho } = useRealtime();
 
+    // Use ref for showToast to prevent dependency changes causing re-subscription
+    const showToastRef = useRef(showToast);
+    showToastRef.current = showToast;
+
     useEffect(() => {
         console.warn('🟢 MyOrders useEffect RUNNING'); // warn not stripped in production
 
@@ -198,7 +202,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                     review: order.review
                 })) || [];
                 setFetchedOrders(orders);
-                console.log('🔄 MyOrders: Orders refreshed silently');
+                console.warn('🔄 MyOrders: Orders refreshed silently');
             } catch (error) {
                 console.error('Failed to background refresh orders:', error);
             }
@@ -207,39 +211,39 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         const channelName = `user.${userId}`;
         const echo = getEcho(); // Get Echo instance inside effect
 
-        console.log('📡 MyOrders: Subscribing to channel:', channelName);
+        console.warn('📡 MyOrders: Subscribing to channel:', channelName);
 
         echo.private(channelName)
             .listen('.quote.received', (data: any) => {
-                console.log('💬 MyOrders: Quote Received:', data);
-                showToast(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
+                console.warn('💬 MyOrders: Quote Received:', data);
+                showToastRef.current(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
                 try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
                 fetchOrdersBackground();
             })
             .listen('.order.status_updated', (data: any) => {
-                console.log('🔄 MyOrders: Order Status Updated:', data);
-                showToast(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
+                console.warn('🔄 MyOrders: Order Status Updated:', data);
+                showToastRef.current(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
                 fetchOrdersBackground();
             })
             .listen('.payment.updated', (data: any) => {
-                console.log('💳 MyOrders: Payment Updated:', data);
+                console.warn('💳 MyOrders: Payment Updated:', data);
                 const action = data.action === 'approved' ? 'تمت الموافقة على' : 'تم رفض';
-                showToast(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
+                showToastRef.current(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
                 try { new Audio(data.action === 'approved' ? '/sound_success.wav' : '/sound_error.wav').play().catch(() => { }); } catch (e) { }
                 fetchOrdersBackground();
             })
             .listen('.user.notification', (data: any) => {
-                console.log('🔔 MyOrders: User Notification:', data);
+                console.warn('🔔 MyOrders: User Notification:', data);
                 if (data.type?.includes('ORDER') || data.type?.includes('QUOTE') || data.type?.includes('PAYMENT')) {
                     fetchOrdersBackground();
                 }
             });
 
         return () => {
-            console.log('🔌 MyOrders: Cleaning up listeners');
+            console.warn('🔌 MyOrders: Cleaning up listeners');
             echo.leave(channelName);
         };
-    }, [showToast, getEcho]);
+    }, [getEcho]); // Removed showToast from deps - using ref instead
 
     const userOrders = useMemo(() => {
         const ordersToUse = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : (allOrders || []);
