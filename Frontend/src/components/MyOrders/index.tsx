@@ -244,7 +244,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         const fetchOrdersBackground = async () => {
             const currentFetchId = ++fetchIdRef.current;
             try {
-                const response = await ordersAPI.getOrders();
+                const response = await ordersAPI.getOrders(true);
                 const orders: Order[] = response.data.data?.map((order: any) => ({
                     orderNumber: order.orderNumber || order.order_number,
                     userPhone: order.userPhone || order.user_id,
