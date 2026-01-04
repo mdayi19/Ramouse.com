@@ -7,6 +7,7 @@ import { TowTruckView } from './types';
 import { api } from '../../lib/api';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { useRealtime } from '../../hooks/useRealtime';
 
 interface TowTruckStats {
     averageRating: number | string;
@@ -27,22 +28,46 @@ const OverviewView: React.FC<{
     const [loadingStats, setLoadingStats] = useState(true);
     const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | undefined>(towTruck.profilePhoto);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const response = await api.get('/tow-truck/stats');
-                if (response.data && response.data.success) {
-                    setStats(response.data.data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch dashboard stats:', error);
-            } finally {
-                setLoadingStats(false);
-            }
-        };
+    const { listenToPrivateChannel } = useRealtime();
 
+    const fetchStats = async () => {
+        try {
+            const response = await api.get('/tow-truck/stats');
+            if (response.data && response.data.success) {
+                setStats(response.data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch dashboard stats:', error);
+        } finally {
+            setLoadingStats(false);
+        }
+    };
+
+    useEffect(() => {
         fetchStats();
     }, []);
+
+    // Real-time listener for Tow Truck events
+    useEffect(() => {
+        if (!towTruck.user_id) return;
+
+        const channelName = `user.${towTruck.user_id}`;
+        console.log(`🔌 TowTruckOverview: Listening on ${channelName}`);
+
+        const cleanup = listenToPrivateChannel(channelName, '.user.notification', (data: any) => {
+            console.log('🔔 TowTruckOverview: Notification received', data);
+
+            // Refresh stats on relevant events
+            const type = data.notification?.type || '';
+            if (type.includes('REVIEW') || type.includes('VERIFIED')) {
+                fetchStats();
+            }
+        });
+
+        return () => {
+            cleanup();
+        };
+    }, [towTruck.user_id, listenToPrivateChannel]);
 
     useEffect(() => {
         const loadProfilePhoto = async () => {

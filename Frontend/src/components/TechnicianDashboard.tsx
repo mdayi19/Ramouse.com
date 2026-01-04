@@ -5,6 +5,8 @@ import MyOrders from './MyOrders';
 import Icon from './Icon';
 import BottomNavBar from './BottomNavBar';
 import { StoreView } from './Store/StoreView';
+import { useRealtime } from '../hooks/useRealtime';
+import { ordersAPI } from '../lib/api';
 
 // New, modular imports
 import { TechnicianView } from './TechnicianDashboardParts/types';
@@ -59,22 +61,64 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
     const [technicianOrders, setTechnicianOrders] = useState<Order[]>([]);
     const [myRequests, setMyRequests] = useState<FlashProductBuyerRequest[]>([]);
 
+    const { listenToPrivateChannel } = useRealtime();
+
+    const fetchOrdersResults = async () => {
+        try {
+            const response = await ordersAPI.getOrders();
+            if (response.data && response.data.success) {
+                const fetchedOrders = response.data.data;
+                props.updateAllOrders(fetchedOrders);
+            }
+        } catch (error) {
+            console.error('Failed to fetch orders:', error);
+        }
+    };
+
     useEffect(() => {
-        const allOrdersRaw = localStorage.getItem('all_orders');
-        if (allOrdersRaw) {
-            const allOrders: Order[] = JSON.parse(allOrdersRaw);
-            const userOrders = allOrders
+        // Sync with props
+        if (props.allOrders) {
+            const userOrders = props.allOrders
                 .filter(o => o.userPhone === userPhone)
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             setTechnicianOrders(userOrders);
         }
 
+        // Load specific requests
         const requestsRaw = localStorage.getItem('flash_product_buyer_requests');
         if (requestsRaw) {
-            const allRequests: FlashProductBuyerRequest[] = JSON.parse(requestsRaw);
-            setMyRequests(allRequests.filter(r => r.buyerId === userPhone && r.buyerType === 'technician'));
+            try {
+                const allRequests: FlashProductBuyerRequest[] = JSON.parse(requestsRaw);
+                setMyRequests(allRequests.filter(r => r.buyerId === userPhone && r.buyerType === 'technician'));
+            } catch (e) { console.error(e); }
         }
-    }, [userPhone]);
+    }, [props.allOrders, userPhone, technician.user_id]);
+
+    // Real-time listener for orders
+    useEffect(() => {
+        if (!technician.user_id) return;
+
+        const channelName = `user.${technician.user_id}`;
+        console.log(`🔌 TechnicianDashboard: Listening on ${channelName}`);
+
+        const cleanup = listenToPrivateChannel(channelName, '.order.updated', (data: any) => {
+            console.log('📦 TechnicianDashboard: Order update received', data);
+            fetchOrdersResults();
+            props.showToast('تم تحديث حالة الطلب', 'info');
+        });
+
+        // Also listen for generic notifications if they carry order data
+        const cleanupNotify = listenToPrivateChannel(channelName, '.user.notification', (data: any) => {
+            if (data.notification?.type?.includes('ORDER')) {
+                fetchOrdersResults();
+            }
+        });
+
+        return () => {
+            cleanup();
+            cleanupNotify();
+        };
+    }, [technician.user_id, listenToPrivateChannel]);
 
     const handleSetView = (view: TechnicianView) => {
         if (view === 'overview') {

@@ -14,38 +14,36 @@ use Illuminate\Support\Facades\Broadcast;
 */
 
 // User-specific private channels
-// User-specific private channels
+// User-specific private channel
 Broadcast::channel('user.{userId}', function ($user, $userId) {
-    // Check if authenticated user matches the channel ID
     return (int) $user->id === (int) $userId;
 });
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+// Provider-specific channel for Direct Orders/Quotes
+Broadcast::channel('provider.{id}.orders', function ($user, $id) {
+    // ID here is the User ID of the provider (since we consistently use User ID for auth now)
+    return (int) $user->id === (int) $id && $user->role === 'provider';
 });
 
-// Provider-specific private channels (for review notifications)
-Broadcast::channel('provider.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+// General channel for all providers (e.g. Open Market Orders)
+Broadcast::channel('providers.updates', function ($user) {
+    return $user->role === 'provider';
 });
 
-// Order-specific private channels
+// Order-specific private channel
 Broadcast::channel('orders.{orderNumber}', function ($user, $orderNumber) {
-    // Get the order
     $order = \App\Models\Order::where('order_number', $orderNumber)->first();
-
     if (!$order) {
         return false;
     }
 
-    // Allow if user is the order creator
-    // Order uses phone number as user_id
-    if ($order->user_id === $user->phone) {
+    // 1. Order Creator
+    if ($order->user_id === $user->phone || (int) $order->user_id === (int) $user->id) {
         return true;
     }
 
-    // Allow if user is a provider who submitted a quote
-    // Quote uses provider phone number as provider_id
+    // 2. Quoting Providers
+    // We check if this user (via phone) has submitted a quote
     if (
         isset($user->phone) && \App\Models\Quote::where('order_number', $orderNumber)
             ->where('provider_id', $user->phone)
@@ -54,22 +52,16 @@ Broadcast::channel('orders.{orderNumber}', function ($user, $orderNumber) {
         return true;
     }
 
-    // Allow if user is admin
-    if (isset($user->is_admin) && $user->is_admin) {
+    // 3. Admin
+    if ($user->role === 'admin') {
         return true;
     }
 
     return false;
 });
 
-// Provider category channels (for new order notifications)
-// These are public channels - no authorization needed
-// Broadcast::channel('orders.category.{category}', function ($user, $category) {
-//     return true; // Public channel
-// });
-
-// Admin channel for dashboard updates
-Broadcast::channel('admin.dashboard', function ($user) {
+// Admin channels
+Broadcast::channel('admin.orders', function ($user) {
     return $user->role === 'admin';
 });
 

@@ -3,9 +3,9 @@
 namespace App\Events;
 
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -18,48 +18,41 @@ class OrderStatusUpdated implements ShouldBroadcast
     public $order;
     public $previousStatus;
 
-    /**
-     * Create a new event instance.
-     */
     public function __construct(Order $order, string $previousStatus)
     {
         $this->order = $order;
         $this->previousStatus = $previousStatus;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): array
     {
-        // Resolve user ID from the phone number stored in order
-        $user = \App\Models\User::where('phone', $this->order->user_id)->first();
-
         $channels = [
             new PrivateChannel('orders.' . $this->order->order_number),
-            new PrivateChannel('admin.dashboard'),
+            new PrivateChannel('admin.orders'),
         ];
 
+        // Resolve user
+        $user = User::where('phone', $this->order->user_id)->orWhere('id', $this->order->user_id)->first();
         if ($user) {
             $channels[] = new PrivateChannel('user.' . $user->id);
+        }
+
+        // Also notify provider if assigned
+        if ($this->order->acceptedQuote && $this->order->acceptedQuote->provider_id) {
+            $providerUser = User::where('phone', $this->order->acceptedQuote->provider_id)->first();
+            if ($providerUser) {
+                $channels[] = new PrivateChannel('user.' . $providerUser->id);
+            }
         }
 
         return $channels;
     }
 
-    /**
-     * The event's broadcast name.
-     */
     public function broadcastAs(): string
     {
-        return 'order.status.updated';
+        return 'order.status_updated';
     }
 
-    /**
-     * Get the data to broadcast.
-     */
     public function broadcastWith(): array
     {
         return [
@@ -67,9 +60,9 @@ class OrderStatusUpdated implements ShouldBroadcast
                 'order_number' => $this->order->order_number,
                 'status' => $this->order->status,
                 'previous_status' => $this->previousStatus,
-                'updated_at' => $this->order->updated_at,
+                'updated_at' => $this->order->updated_at->toIso8601String(),
             ],
-            'message' => 'تم تحديث حالة الطلب',
+            'timestamp' => now()->toIso8601String(),
         ];
     }
 }

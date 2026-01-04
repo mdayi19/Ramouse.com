@@ -116,7 +116,7 @@ export const useOrderStatus = (orderNumber: string, onStatusUpdate: (data: any) 
         console.log(`🔔 Listening for status updates on order: ${orderNumber}`);
 
         echo.private(`orders.${orderNumber}`)
-            .listen('.order.status.updated', (data: any) => {
+            .listen('.order.status_updated', (data: any) => {
                 console.log('📊 Order status updated:', data);
                 callbackRef.current(data);
             });
@@ -142,60 +142,65 @@ export const useUserNotifications = (userId: string | number, onNotification: (n
         const echo = getEcho();
 
         // Standard Laravel Notification Channel
-        const channel = echo.private(`App.Models.User.${userId}`);
+        const channel = echo.private(`user.${userId}`);
 
+        // Listen for Laravel's native Notification event
         channel.notification((data: any) => {
             console.log('🔔 New notification:', data);
             callbackRef.current(data);
         });
 
+        // Also listen for our manual UserNotification event if still used
+        channel.listen('.App\\Events\\UserNotification', (data: any) => {
+            console.log('🔔 New UserNotification event:', data);
+            callbackRef.current(data);
+        });
+
         return () => {
-            channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
-            echo.leave(`App.Models.User.${userId}`);
+            // channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
+            echo.leave(`user.${userId}`);
         };
     }, [userId, getEcho]);
 };
 
 /**
- * Hook for providers to listen for new orders in their categories
+ * Hook for providers to listen for new orders
+ * Now uses a single private channel provider.{id}.orders instead of looping public categories
  */
-export const useNewOrders = (categories: string[], onNewOrder: (order: any) => void) => {
+export const useProviderOrders = (providerId: string | number, onNewOrder: (order: any) => void) => {
     const { echo } = useRealtime();
     const callbackRef = useRef(onNewOrder);
     callbackRef.current = onNewOrder;
 
     useEffect(() => {
-        if (!categories || categories.length === 0) return;
+        if (!providerId) return;
 
-        const channels: string[] = [];
+        const directChannelName = `provider.${providerId}.orders`;
+        const globalChannelName = 'providers.updates';
 
-        // Listen to each category channel
-        categories.forEach(category => {
-            console.log(`🔔 Listening for new orders in category: ${category}`);
-            const channelName = `orders.category.${category}`;
-            channels.push(channelName);
+        console.log(`🔔 Listening for orders on ${directChannelName} and ${globalChannelName}`);
 
-            echo.channel(channelName)
-                .listen('.order.created', (data: any) => {
-                    console.log('📦 New order in category:', data);
-                    callbackRef.current(data);
-                });
+        // Listen to Direct Orders
+        const directChannel = echo.private(directChannelName);
+        directChannel.listen('.order.created', (data: any) => {
+            console.log('📦 New DIRECT order received:', data);
+            callbackRef.current({ ...data, isDirect: true });
         });
 
-        // Also listen to general orders channel
-        console.log(`🔔 Listening for new orders on general channel`);
-        channels.push('orders');
-        echo.channel('orders')
-            .listen('.order.created', (data: any) => {
-                console.log('📦 New order:', data);
-                callbackRef.current(data);
-            });
+        // Listen to Open Market Orders
+        const globalChannel = echo.private(globalChannelName);
+        globalChannel.listen('.order.created', (data: any) => {
+            console.log('📦 New OPEN order received:', data);
+            callbackRef.current({ ...data, isDirect: false });
+        });
 
         return () => {
-            channels.forEach(ch => echo.leave(ch));
+            echo.leave(directChannelName);
+            echo.leave(globalChannelName);
         };
-    }, [categories.join(','), echo]);
+    }, [providerId, echo]);
 };
+
 
 /**
  * Hook to monitor online users (presence channel)
@@ -303,9 +308,11 @@ export const useWalletUpdates = (
                 }
             }
         };
-        notificationChannel.listen('.user.notification', handleNotification);
+        // Listen to standard notification event
+        notificationChannel.notification(handleNotification);
 
         // Listen for Balance Updates (Dedicated Channel)
+        // Note: We might merge this into the main user channel eventually, but keeping for now as per backend
         const walletChannel = echo.private(`user.${userId}.wallet`);
         const handleBalanceUpdate = (e: any) => {
             handleUpdate(e, 'balance_event');
@@ -314,8 +321,7 @@ export const useWalletUpdates = (
 
         return () => {
             console.log(`💰 useWalletUpdates: Unsubscribing from user.${userId} and user.${userId}.wallet`);
-            notificationChannel.stopListening('.user.notification');
-            walletChannel.stopListening('.balance.updated');
+            // Stop listening logic needs to match how we started listening (notification helper vs manual listen)
             echo.leave(`user.${userId}`);
             echo.leave(`user.${userId}.wallet`);
         };
@@ -346,6 +352,9 @@ export const useAdminWalletUpdates = (
         console.log('💰 useAdminWalletUpdates: Subscribing to admin.dashboard');
         const echo = getEcho();
 
+        // Note: Backend might be moving to 'admin.orders' or 'admin.financial', but existing code uses 'admin.dashboard'
+        // If we renamed channel in backend, update here.
+        // Assuming we keep 'admin.dashboard' for wallet stuff for now as per Phase 3 plan (Admin split is later)
         const channel = echo.private('admin.dashboard');
 
         // Helper to invalidate admin cache

@@ -66,9 +66,10 @@ const OverviewView: React.FC<{
         loadProfilePhoto();
     }, [technician]);
 
-    const displayTotalOrders = stats ? stats.totalOrders : orders.length;
-    const displayActiveOrders = stats ? stats.activeOrders : orders.filter(o => !['تم التوصيل', 'ملغي'].includes(o.status)).length;
-    const displayPendingRequests = stats ? stats.pendingRequests : myRequests.filter(r => r.status === 'pending').length;
+    // Use real-time data from props over static stats where possible
+    const displayTotalOrders = orders.length;
+    const displayActiveOrders = orders.filter(o => !['completed', 'cancelled', 'ملغي', 'تم الاستلام من الشركة'].includes(o.status)).length;
+    const displayPendingRequests = myRequests.filter(r => r.status === 'pending').length;
     const displayConfirmedPurchases = stats ? stats.confirmedPurchases : (technician.flashPurchases?.length || 0);
 
     const recentOrders = orders.slice(0, 3);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRealtime } from '../../hooks/useRealtime';
-import { Order, Quote, Notification, Settings, NotificationType, OrderReview, OrderStatus, Customer, Provider, Technician, TowTruck } from '../../types';
+import { Order, Quote, Notification, Settings, NotificationType, OrderReview, OrderStatus, Customer, Provider, Technician, TowTruck, PartStatus } from '../../types';
 import QuoteCard from './QuoteCard';
 import QuoteGrid from './QuoteGrid';
 import OrderListItem from './OrderListItem';
@@ -184,7 +184,19 @@ const MyOrders: React.FC<MyOrdersProps> = ({
 
         console.warn('🔌 MyOrders: Setting up real-time listeners for user:', userId);
 
+        const updateOrderOptimistically = (orderNumber: string, updateFn: (order: Order) => Order) => {
+            setFetchedOrders(currentOrders => {
+                return currentOrders.map(order => {
+                    if (order.orderNumber === orderNumber) {
+                        return updateFn(order);
+                    }
+                    return order;
+                });
+            });
+        };
+
         const fetchOrdersBackground = async () => {
+            // Keep this as fallback for complex updates
             try {
                 const response = await ordersAPI.getOrders();
                 const orders = response.data.data?.map((order: any) => ({
@@ -234,24 +246,76 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                 console.warn('💬 MyOrders: Quote Received:', data);
                 showToastRef.current(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
                 try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
-                fetchOrdersBackground();
+
+                // Optimistic Update: Add quote
+                if (data.quote_id && data.order_number) {
+                    updateOrderOptimistically(data.order_number, (order) => {
+                        const newQuote: Quote = {
+                            id: data.quote_id,
+                            providerId: data.provider_id || 'unknown',
+                            providerName: data.provider_name || 'مزود',
+                            providerUniqueId: data.provider_unique_id || 'unknown',
+                            price: data.price,
+                            partStatus: (data.part_status as PartStatus) || 'used',
+                            notes: '',
+                            timestamp: new Date().toISOString(),
+                            viewedByCustomer: false
+                        };
+                        // Avoid duplicates
+                        if (order.quotes?.some(q => q.id === newQuote.id)) return order;
+
+                        return {
+                            ...order,
+                            quotes: [...(order.quotes || []), newQuote],
+                            status: order.status === 'pending' ? 'quoted' : order.status
+                        };
+                    });
+                } else {
+                    fetchOrdersBackground();
+                }
             })
             .listen('.order.status_updated', (data: any) => {
                 console.warn('🔄 MyOrders: Order Status Updated:', data);
                 showToastRef.current(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
-                fetchOrdersBackground();
+
+                // Optimistic Update: Status
+                if (data.order_number && data.new_status) {
+                    updateOrderOptimistically(data.order_number, (order) => ({
+                        ...order,
+                        status: data.new_status
+                    }));
+                } else {
+                    fetchOrdersBackground();
+                }
             })
             .listen('.payment.updated', (data: any) => {
                 console.warn('💳 MyOrders: Payment Updated:', data);
                 const action = data.action === 'approved' ? 'تمت الموافقة على' : 'تم رفض';
                 showToastRef.current(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
                 try { new Audio(data.action === 'approved' ? '/sound_success.wav' : '/sound_error.wav').play().catch(() => { }); } catch (e) { }
+
+                // For payment, we might want full refresh to get receipt URLs etc, but we can optimistically update status first
+                if (data.order_number) {
+                    const newStatus = data.action === 'approved' ? 'processing' : 'payment_rejected'; // Logic depends on backend
+                    // If rejected, usually goes back to pending or specific status.
+                    // Let's safe bet trigger background fetch for this complex one, 
+                    // OR update status only if we are sure.
+                    // Backend says: approved -> processing, rejected -> pending + rejection_reason
+                    if (data.action === 'approved') {
+                        updateOrderOptimistically(data.order_number, o => ({ ...o, status: 'processing' }));
+                    } else if (data.action === 'rejected') {
+                        updateOrderOptimistically(data.order_number, o => ({ ...o, status: 'pending', rejectionReason: data.reason }));
+                    }
+                }
+                // Also fetch to be safe about receipt URLs and deep data
                 fetchOrdersBackground();
             })
             .listen('.user.notification', (data: any) => {
                 console.warn('🔔 MyOrders: User Notification:', data);
+                // General fallback
                 if (data.type?.includes('ORDER') || data.type?.includes('QUOTE') || data.type?.includes('PAYMENT')) {
-                    fetchOrdersBackground();
+                    // If we haven't handled it via specific events, refresh.
+                    // But ideally specific events cover it.
                 }
             });
 
