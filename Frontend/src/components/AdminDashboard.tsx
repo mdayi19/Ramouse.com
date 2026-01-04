@@ -250,7 +250,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
         });
 
         adminChannel.listen('.admin.order.status_updated', (data: any) => {
-            console.log('🔄 Admin: Order Status Updated:', data);
+            console.log('🔄 Admin: Order Status Updated (admin channel):', data);
+            fetchOrders(true);
+        });
+
+        // Add listener for the confirmed backend event name on the admin channel
+        adminChannel.listen('.order.status.updated', (data: any) => {
+            console.log('🔄 Admin: Order Status Updated (admin channel standard):', data);
             fetchOrders(true);
         });
 

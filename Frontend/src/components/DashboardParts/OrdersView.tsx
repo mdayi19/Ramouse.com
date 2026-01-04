@@ -66,11 +66,11 @@ const QuoteDisplay: React.FC<{ quote: Quote, orderNumber: string, isAccepted?: b
                             : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
                         }
                     `}>
-                        {quote.providerName?.charAt(0) || '؟'}
+                        {(quote.providerName || (quote as any).provider_name)?.charAt(0) || '؟'}
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">{quote.providerName || 'مزود مجهول'}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">#{quote.providerUniqueId || 'N/A'}</p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">{quote.providerName || (quote as any).provider_name || 'مزود مجهول'}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">#{quote.providerUniqueId || (quote as any).provider_unique_id || 'N/A'}</p>
                     </div>
                 </div>
                 <time className="text-xs text-slate-400 dark:text-slate-500">
