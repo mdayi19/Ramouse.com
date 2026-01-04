@@ -348,27 +348,7 @@ class OrderController extends Controller
             ]));
         }
 
-        // 3. Notify Losing Providers
-        $otherQuotes = $order->quotes()->where('id', '!=', $quote->id)->get();
-        foreach ($otherQuotes as $otherQuote) {
-            $otherUser = \App\Models\User::where('phone', $otherQuote->provider_id)->first();
-            if ($otherUser) {
-                \App\Models\Notification::create([
-                    'user_id' => $otherUser->id,
-                    'title' => 'لم يتم اختيار عرضك',
-                    'message' => "تم اختيار عرض آخر للطلب #{$orderNumber}.",
-                    'type' => 'OFFER_ACCEPTED_PROVIDER_LOSS',
-                    'context' => ['orderNumber' => $orderNumber],
-                    'read' => false,
-                ]);
-                event(new \App\Events\UserNotification($otherUser->id, [
-                    'title' => 'لم يتم اختيار عرضك',
-                    'message' => "تم اختيار عرض آخر للطلب #{$orderNumber}.",
-                    'type' => 'OFFER_ACCEPTED_PROVIDER_LOSS',
-                    'link' => ['view' => 'providerDashboard', 'params' => ['orderNumber' => $orderNumber]]
-                ]));
-            }
-        }
+        // 3. Loss notifications removed - only winning providers receive notifications
 
         // 4. Notify Admin (if not COD)
         if (!$isCOD) {
