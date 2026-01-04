@@ -142,10 +142,15 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const { getEcho } = useRealtime();
 
     useEffect(() => {
+        console.log('🟢 MyOrders useEffect RUNNING'); // Debug: verify effect runs
+
         let userId = localStorage.getItem('user_id');
+        console.log('🔍 MyOrders: user_id from localStorage:', userId); // Debug
+
         if (!userId) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                console.log('🔍 MyOrders: currentUser from localStorage:', currentUser); // Debug
                 userId = currentUser.user_id ? String(currentUser.user_id) : null;
             } catch (e) {
                 console.error('Failed to parse currentUser:', e);
