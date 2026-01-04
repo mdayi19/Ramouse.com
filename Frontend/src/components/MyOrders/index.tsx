@@ -145,21 +145,22 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const showToastRef = useRef(showToast);
     showToastRef.current = showToast;
 
-    useEffect(() => {
-        console.warn('🟢 MyOrders useEffect RUNNING'); // warn not stripped in production
-
-        let userId = localStorage.getItem('user_id');
-        console.warn('🔍 MyOrders: user_id from localStorage:', userId);
-
-        if (!userId) {
+    // Extract userId for dependency tracking
+    const userId = useMemo(() => {
+        let id = localStorage.getItem('user_id');
+        if (!id) {
             try {
-                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                console.warn('🔍 MyOrders: currentUser from localStorage:', currentUser);
-                userId = currentUser.user_id ? String(currentUser.user_id) : null;
+                const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                id = user.user_id ? String(user.user_id) : null;
             } catch (e) {
                 console.error('Failed to parse currentUser:', e);
             }
         }
+        return id;
+    }, []);
+
+    useEffect(() => {
+        console.warn('🟢 MyOrders useEffect RUNNING'); // warn not stripped in production
 
         if (!userId) {
             console.warn('⚠️ MyOrders: No user ID found, skipping real-time listeners');
@@ -243,7 +244,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
             console.warn('🔌 MyOrders: Cleaning up listeners');
             echo.leave(channelName);
         };
-    }, [getEcho]); // Removed showToast from deps - using ref instead
+    }, [userId, getEcho]); // ✅ Added userId dependency
 
     const userOrders = useMemo(() => {
         const ordersToUse = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : (allOrders || []);
