@@ -73,7 +73,7 @@ const ReviewsView: React.FC<ReviewsViewProps> = ({ towTruck, showToast }) => {
         return () => {
             echo.leave(`provider.${providerId}`);
         };
-    }, [towTruck.user_id, getEcho]); // ✅ Added getEcho dependency
+    }, [towTruck.user_id]);
 
 
     const filteredReviews = useMemo(() => {

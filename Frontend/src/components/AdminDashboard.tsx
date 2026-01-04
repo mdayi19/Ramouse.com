@@ -322,7 +322,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             echo.leave('orders');
             echo.leave('admin.dashboard');
         };
-    }, [getEcho]); // ✅ Added getEcho dependency
+    }, []);
 
 
     const handleSaveProvider = async (provider: Provider) => {

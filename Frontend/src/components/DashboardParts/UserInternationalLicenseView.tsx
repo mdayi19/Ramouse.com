@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../../lib/api';
-import { useRealtime } from '../../hooks/useRealtime';
+import { getEcho } from '../../lib/echo';
 
 import Icon from '../Icon';
 import { InternationalLicenseRequest } from '../../types';
@@ -56,24 +56,20 @@ const UserInternationalLicenseView: React.FC<UserInternationalLicenseViewProps> 
         fetchRequests();
     }, [fetchRequests]);
 
-    // Extract userId to avoid reading from localStorage inside useEffect
-    const userId = useMemo(() => {
+    // Real-time listener for international license status changes
+    useEffect(() => {
+        // Get current user ID from localStorage
+        let userId: string | number | null = null;
         try {
             const userStr = localStorage.getItem('currentUser');
             if (userStr) {
                 const user = JSON.parse(userStr);
-                return user.user_id || user.id;
+                userId = user.user_id || user.id;
             }
         } catch (e) {
             console.error('Failed to parse currentUser for ID', e);
         }
-        return null;
-    }, []);
 
-    // Real-time listener for international license status changes
-    const { getEcho } = useRealtime();
-
-    useEffect(() => {
         if (!userId) return;
 
         const echo = getEcho();
@@ -108,7 +104,7 @@ const UserInternationalLicenseView: React.FC<UserInternationalLicenseViewProps> 
             console.log('🔴 UserInternationalLicenseView: Cleaning up license update listener');
             echo.leave(`user.${userId}`);
         };
-    }, [userId, fetchRequests, showToast, getEcho]); // ✅ Added userId and getEcho dependencies
+    }, [fetchRequests, showToast]);
 
 
     // Calculate progress percentage
