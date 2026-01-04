@@ -23,9 +23,10 @@ interface ProviderOverviewViewProps {
     } | null;
     onNavigate: (view: ProviderView) => void;
     isLoading: boolean;
+    onRefresh: () => void;
 }
 
-const ProviderOverviewView: React.FC<ProviderOverviewViewProps> = ({ provider, overviewData, onNavigate, isLoading }) => {
+const ProviderOverviewView: React.FC<ProviderOverviewViewProps> = ({ provider, overviewData, onNavigate, isLoading, onRefresh }) => {
 
     const stats = overviewData?.stats || {
         walletBalance: provider.walletBalance ?? 0,
@@ -85,12 +86,20 @@ const ProviderOverviewView: React.FC<ProviderOverviewViewProps> = ({ provider, o
                             {provider.name} 👋
                         </h2>
                     </div>
-                    <button
-                        onClick={() => onNavigate('settings')}
-                        className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-90 transition-transform"
-                    >
-                        <span className="text-xl">⚙️</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={onRefresh}
+                            className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-90 transition-transform text-slate-600 dark:text-slate-300"
+                        >
+                            <Icon name="RefreshCw" className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+                        </button>
+                        <button
+                            onClick={() => onNavigate('settings')}
+                            className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-90 transition-transform"
+                        >
+                            <span className="text-xl">⚙️</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Wallet Balance - Mobile */}
@@ -130,13 +139,21 @@ const ProviderOverviewView: React.FC<ProviderOverviewViewProps> = ({ provider, o
                                 </span>
                             </div>
                         </div>
-                        <button
-                            onClick={() => onNavigate('wallet')}
-                            className="bg-white text-slate-900 hover:bg-slate-100 font-bold py-3 px-6 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
-                        >
-                            <span>إدارة المحفظة</span>
-                            <Icon name="ArrowLeft" className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={onRefresh}
+                                className="bg-white/10 hover:bg-white/20 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 backdrop-blur-sm border border-white/10"
+                            >
+                                <Icon name="RefreshCw" className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+                            </button>
+                            <button
+                                onClick={() => onNavigate('wallet')}
+                                className="bg-white text-slate-900 hover:bg-slate-100 font-bold py-3 px-6 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                            >
+                                <span>إدارة المحفظة</span>
+                                <Icon name="ArrowLeft" className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -344,12 +344,12 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
             <main className="flex-1 min-w-0 overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 md:rounded-l-2xl">
                 <div className="h-full overflow-y-auto custom-scrollbar scroll-smooth-mobile">
                     <Routes>
-                        <Route index element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} />} />
-                        <Route path="overview" element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} />} />
-                        <Route path="openOrders" element={<OpenOrdersView provider={localProvider} orders={openOrders} onSubmitQuote={handleSubmitQuote} settings={settings} isLoading={isLoadingOpenOrders} showToast={showToast} />} />
+                        <Route index element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} onRefresh={fetchOverviewData} />} />
+                        <Route path="overview" element={<ProviderOverviewView provider={localProvider} overviewData={overviewData} onNavigate={handleSetView} isLoading={isLoadingOverview} onRefresh={fetchOverviewData} />} />
+                        <Route path="openOrders" element={<OpenOrdersView provider={localProvider} orders={openOrders} onSubmitQuote={handleSubmitQuote} settings={settings} isLoading={isLoadingOpenOrders} showToast={showToast} onRefresh={() => fetchOpenOrders(false)} />} />
                         <Route path="myBids" element={<MyBidsView provider={localProvider} settings={settings} showToast={showToast} />} />
                         <Route path="accepted" element={<AcceptedOrdersView provider={localProvider} settings={settings} />} />
-                        <Route path="wallet" element={<WalletView provider={localProvider} withdrawals={withdrawalRequests} transactions={transactions} settings={settings} onSubmitWithdrawal={handleSubmitWithdrawal} />} />
+                        <Route path="wallet" element={<WalletView provider={localProvider} withdrawals={withdrawalRequests} transactions={transactions} settings={settings} onSubmitWithdrawal={handleSubmitWithdrawal} onRefresh={fetchWalletData} />} />
                         <Route path="settings" element={<ProviderSettingsView provider={localProvider} settings={settings} showToast={showToast} onUpdateProvider={handleUpdateProvider} onLogout={onLogout} />} />
                         <Route path="flashProducts" element={<FlashProductsView provider={localProvider} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} />} />
                         <Route path="store" element={<StoreView provider={localProvider} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} storeCategories={storeCategories} />} />

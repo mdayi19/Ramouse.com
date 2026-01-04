@@ -14,11 +14,12 @@ interface WalletViewProps {
     transactions: Transaction[];
     settings: Settings;
     onSubmitWithdrawal: (amount: number, paymentMethodId: string) => void;
+    onRefresh: () => void;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-const WalletView: React.FC<WalletViewProps> = ({ provider, withdrawals, transactions, settings, onSubmitWithdrawal }) => {
+const WalletView: React.FC<WalletViewProps> = ({ provider, withdrawals, transactions, settings, onSubmitWithdrawal, onRefresh }) => {
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'transactions' | 'withdrawals'>('transactions');
     const [currentPage, setCurrentPage] = useState(1);
@@ -54,7 +55,16 @@ const WalletView: React.FC<WalletViewProps> = ({ provider, withdrawals, transact
 
     return (
         <div className="p-4 sm:p-6 space-y-6">
-            <ViewHeader title="المحفظة" subtitle="إدارة رصيدك، طلبات السحب، وسجل العمليات المالية." />
+            <div className="flex items-center justify-between">
+                <ViewHeader title="المحفظة" subtitle="إدارة رصيدك، طلبات السحب، وسجل العمليات المالية." />
+                <button
+                    onClick={onRefresh}
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                >
+                    <Icon name="RefreshCw" className="w-4 h-4" />
+                    <span>تحديث</span>
+                </button>
+            </div>
 
             <div className="bg-white dark:bg-darkcard p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-center text-center sm:text-right">
                 <div>

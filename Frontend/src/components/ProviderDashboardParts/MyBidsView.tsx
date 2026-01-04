@@ -241,7 +241,17 @@ const MyBidsView: React.FC<MyBidsViewProps> = ({ provider, settings, showToast }
 
     return (
         <div className="p-6">
-            <ViewHeader title="عروضي" subtitle="تتبع حالة الطلبات التي قدمت عروض أسعار لها." />
+            <div className="flex items-center justify-between mb-4">
+                <ViewHeader title="عروضي" subtitle="تتبع حالة الطلبات التي قدمت عروض أسعار لها." />
+                <button
+                    onClick={() => fetchBids(false)}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <Icon name="RefreshCw" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span>تحديث</span>
+                </button>
+            </div>
 
             <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-darkbg rounded-xl mb-6 overflow-x-auto">
                 <FilterButton value="all" label="الكل" icon={<span className="text-lg">📂</span>} />

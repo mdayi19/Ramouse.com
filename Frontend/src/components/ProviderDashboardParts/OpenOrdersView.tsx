@@ -22,6 +22,7 @@ interface OpenOrdersViewProps {
     settings: Settings;
     isLoading?: boolean;
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
+    onRefresh: () => void;
 }
 
 // A more advanced Lightbox component for viewing images
@@ -303,7 +304,7 @@ const OrderCard: React.FC<{ order: Order; onQuote: () => void; isQuoted: boolean
 };
 
 
-const OpenOrdersView: React.FC<OpenOrdersViewProps> = ({ provider, orders, onSubmitQuote, settings, isLoading, showToast }) => {
+const OpenOrdersView: React.FC<OpenOrdersViewProps> = ({ provider, orders, onSubmitQuote, settings, isLoading, showToast, onRefresh }) => {
     // Safety check: ensure orders is always an array
     const safeOrders = orders || [];
 
@@ -391,7 +392,17 @@ const OpenOrdersView: React.FC<OpenOrdersViewProps> = ({ provider, orders, onSub
 
     return (
         <div className="p-4 sm:p-6 space-y-6">
-            <ViewHeader title="الطلبات المتاحة" subtitle="تصفح الطلبات الجديدة في الفئات المخصصة لك وقدم عروض أسعار." />
+            <div className="flex items-center justify-between">
+                <ViewHeader title="الطلبات المتاحة" subtitle="تصفح الطلبات الجديدة في الفئات المخصصة لك وقدم عروض أسعار." />
+                <button
+                    onClick={onRefresh}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <Icon name="RefreshCw" className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    <span>تحديث</span>
+                </button>
+            </div>
 
             {isLoading ? (
                 <div className="text-center py-12">
