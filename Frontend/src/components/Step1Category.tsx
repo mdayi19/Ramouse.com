@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { OrderFormData, Category } from '../types';
 import { HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,11 +9,10 @@ interface Props {
   updateFormData: (data: Partial<OrderFormData>) => void;
   nextStep: () => void;
   carCategories: Category[];
+  onExit: () => void;
 }
 
-const Step1Category: React.FC<Props> = ({ updateFormData, nextStep, carCategories }) => {
-  const navigate = useNavigate();
-
+const Step1Category: React.FC<Props> = ({ updateFormData, nextStep, carCategories, onExit }) => {
   const handleSelect = (category: string) => {
     // Haptic feedback for mobile
     if (navigator.vibrate) {
@@ -55,7 +53,7 @@ const Step1Category: React.FC<Props> = ({ updateFormData, nextStep, carCategorie
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate('/dashboard')}
+        onClick={onExit}
         className="absolute top-0 left-4 z-20 flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transaction-colors duration-200 text-base sm:text-lg"
       >
         <span className="text-xl">✕</span>

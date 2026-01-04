@@ -29,6 +29,7 @@ interface Props {
     brandModels: { [key: string]: string[] };
     partTypes: PartType[];
     settings: Settings;
+    onExit: () => void;
 }
 
 const OrderWizard: React.FC<Props> = ({
@@ -48,7 +49,8 @@ const OrderWizard: React.FC<Props> = ({
     allBrands,
     brandModels,
     partTypes,
-    settings
+    settings,
+    onExit
 }) => {
 
     React.useEffect(() => {
@@ -58,7 +60,7 @@ const OrderWizard: React.FC<Props> = ({
     const renderStep = () => {
         switch (currentStep) {
             case 1:
-                return <Step1Category updateFormData={updateFormData} nextStep={nextStep} carCategories={carCategories} />;
+                return <Step1Category updateFormData={updateFormData} nextStep={nextStep} carCategories={carCategories} onExit={onExit} />;
             case 2:
                 return <Step2Brand formData={formData} updateFormData={updateFormData} nextStep={nextStep} prevStep={prevStep} carCategories={carCategories} allBrands={allBrands} />;
             case 3:

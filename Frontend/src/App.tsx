@@ -705,6 +705,7 @@ const App: React.FC = () => {
                                     brandModels={brandModels}
                                     partTypes={partTypes}
                                     settings={settings}
+                                    onExit={getDashboardAction()}
                                 />
                             } />
                             <Route path="/my-orders" element={isAuthenticated ? <MyOrders allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} onUpdateCustomer={onUpdateCustomer} userId={(() => {
