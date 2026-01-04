@@ -201,6 +201,9 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     const showToastRef = useRef(showToast);
     showToastRef.current = showToast;
 
+    // Ref to track latest fetch request for race condition handling
+    const fetchIdRef = useRef(0);
+
     // Extract userId for real-time channel subscription
     // Priority: 1) prop, 2) currentUser.user_id (database ID), 3) localStorage fallback
     const userId = useMemo(() => {
@@ -239,9 +242,10 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         console.warn('🔌 MyOrders: Setting up real-time listeners for user:', userId);
 
         const fetchOrdersBackground = async () => {
+            const currentFetchId = ++fetchIdRef.current;
             try {
                 const response = await ordersAPI.getOrders();
-                const orders = response.data.data?.map((order: any) => ({
+                const orders: Order[] = response.data.data?.map((order: any) => ({
                     orderNumber: order.orderNumber || order.order_number,
                     userPhone: order.userPhone || order.user_id,
                     date: order.date || order.created_at,
@@ -271,8 +275,13 @@ const MyOrders: React.FC<MyOrdersProps> = ({
                     rejectionReason: order.rejectionReason || order.rejection_reason,
                     review: order.review
                 })) || [];
-                setFetchedOrders(orders);
-                console.warn('🔄 MyOrders: Orders refreshed silently');
+
+                // Race condition check: Only update if this is still the latest request
+                if (currentFetchId === fetchIdRef.current) {
+                    setFetchedOrders(orders);
+                    if (updateAllOrders) updateAllOrders(orders); // Sync global state
+                    console.warn('🔄 MyOrders: Orders refreshed silently');
+                }
             } catch (error) {
                 console.error('Failed to background refresh orders:', error);
             }
@@ -286,20 +295,17 @@ const MyOrders: React.FC<MyOrdersProps> = ({
         echo.private(channelName)
             .listen('.quote.received', (data: any) => {
                 console.warn('💬 MyOrders: Quote Received:', data);
-                showToastRef.current(`عرض سعر جديد للطلب: ${data.order_number || ''}`, 'info');
-                try { new Audio('/sound_info.wav').play().catch(() => { }); } catch (e) { }
+                // Notification handled globally by App.tsx, just refresh data here
                 fetchOrdersBackground();
             })
             .listen('.order.status_updated', (data: any) => {
                 console.warn('🔄 MyOrders: Order Status Updated:', data);
-                showToastRef.current(`تحديث حالة الطلب: ${data.order_number || ''}`, 'info');
+                // Notification handled globally by App.tsx, just refresh data here
                 fetchOrdersBackground();
             })
             .listen('.payment.updated', (data: any) => {
                 console.warn('💳 MyOrders: Payment Updated:', data);
-                const action = data.action === 'approved' ? 'تمت الموافقة على' : 'تم رفض';
-                showToastRef.current(`${action} الدفع للطلب: ${data.order_number || ''}`, data.action === 'approved' ? 'success' : 'error');
-                try { new Audio(data.action === 'approved' ? '/sound_success.wav' : '/sound_error.wav').play().catch(() => { }); } catch (e) { }
+                // Notification handled globally by App.tsx, just refresh data here
                 fetchOrdersBackground();
             })
             .listen('.user.notification', (data: any) => {
