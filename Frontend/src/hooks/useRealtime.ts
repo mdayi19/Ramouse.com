@@ -19,9 +19,10 @@ export const useRealtime = () => {
         const channel = echo.private(channelName);
         channel.listen(eventName, callback);
 
+        // Only stop listening on cleanup - don't leave channel as other listeners may be active
+        // The component should call leaveChannel explicitly when fully unmounting
         return () => {
             channel.stopListening(eventName);
-            echo.leave(channelName); // Properly leave channel to avoid ghost subscriptions
         };
     }, []);
 
@@ -30,9 +31,9 @@ export const useRealtime = () => {
         const channel = echo.channel(channelName);
         channel.listen(eventName, callback);
 
+        // Only stop listening on cleanup - don't leave channel
         return () => {
             channel.stopListening(eventName);
-            echo.leave(channelName); // Properly leave channel
         };
     }, []);
 

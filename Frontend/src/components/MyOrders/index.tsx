@@ -139,7 +139,7 @@ const MyOrders: React.FC<MyOrdersProps> = ({
     }, [showToast, allOrders.length]); // Added dependency on length to avoid re-fetching if props provided
 
     // Real-time Listeners
-    const { listenToPrivateChannel } = useRealtime();
+    const { listenToPrivateChannel, leaveChannel } = useRealtime();
 
     useEffect(() => {
         let userId = localStorage.getItem('user_id');
@@ -235,8 +235,10 @@ const MyOrders: React.FC<MyOrdersProps> = ({
             cleanupStatus();
             cleanupPayment();
             cleanupNotification();
+            // Leave the channel when component fully unmounts
+            leaveChannel(channelName);
         };
-    }, [showToast, listenToPrivateChannel]);
+    }, [showToast, listenToPrivateChannel, leaveChannel]);
 
     const userOrders = useMemo(() => {
         const ordersToUse = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : (allOrders || []);
