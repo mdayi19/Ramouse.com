@@ -78,10 +78,10 @@ export const useRealtime = () => {
 
 /**
  * Hook to listen for new quotes on an order
- * Uses ref pattern to avoid stale closures
+ * Uses same pattern as useWalletBalance which works
  */
 export const useOrderQuotes = (orderNumber: string, onQuoteReceived: (quote: any) => void) => {
-    const { listenToPrivateChannel } = useRealtime();
+    const { echo } = useRealtime();
     const callbackRef = useRef(onQuoteReceived);
     callbackRef.current = onQuoteReceived;
 
@@ -90,24 +90,23 @@ export const useOrderQuotes = (orderNumber: string, onQuoteReceived: (quote: any
 
         console.log(`🔔 Listening for quotes on order: ${orderNumber}`);
 
-        const cleanup = listenToPrivateChannel(
-            `orders.${orderNumber}`,
-            '.quote.received',
-            (data) => {
+        echo.private(`orders.${orderNumber}`)
+            .listen('.quote.received', (data: any) => {
                 console.log('📨 New quote received:', data);
                 callbackRef.current(data);
-            }
-        );
+            });
 
-        return cleanup;
-    }, [orderNumber, listenToPrivateChannel]);
+        return () => {
+            echo.leave(`orders.${orderNumber}`);
+        };
+    }, [orderNumber, echo]);
 };
 
 /**
  * Hook to listen for order status updates
  */
 export const useOrderStatus = (orderNumber: string, onStatusUpdate: (data: any) => void) => {
-    const { listenToPrivateChannel } = useRealtime();
+    const { echo } = useRealtime();
     const callbackRef = useRef(onStatusUpdate);
     callbackRef.current = onStatusUpdate;
 
@@ -116,17 +115,16 @@ export const useOrderStatus = (orderNumber: string, onStatusUpdate: (data: any) 
 
         console.log(`🔔 Listening for status updates on order: ${orderNumber}`);
 
-        const cleanup = listenToPrivateChannel(
-            `orders.${orderNumber}`,
-            '.order.status.updated',
-            (data) => {
+        echo.private(`orders.${orderNumber}`)
+            .listen('.order.status.updated', (data: any) => {
                 console.log('📊 Order status updated:', data);
                 callbackRef.current(data);
-            }
-        );
+            });
 
-        return cleanup;
-    }, [orderNumber, listenToPrivateChannel]);
+        return () => {
+            echo.leave(`orders.${orderNumber}`);
+        };
+    }, [orderNumber, echo]);
 };
 
 /**
@@ -162,46 +160,41 @@ export const useUserNotifications = (userId: string | number, onNotification: (n
  * Hook for providers to listen for new orders in their categories
  */
 export const useNewOrders = (categories: string[], onNewOrder: (order: any) => void) => {
-    const { listenToChannel } = useRealtime();
+    const { echo } = useRealtime();
     const callbackRef = useRef(onNewOrder);
     callbackRef.current = onNewOrder;
 
     useEffect(() => {
         if (!categories || categories.length === 0) return;
 
-        const cleanups: (() => void)[] = [];
+        const channels: string[] = [];
 
         // Listen to each category channel
         categories.forEach(category => {
             console.log(`🔔 Listening for new orders in category: ${category}`);
+            const channelName = `orders.category.${category}`;
+            channels.push(channelName);
 
-            const cleanup = listenToChannel(
-                `orders.category.${category}`,
-                '.order.created',
-                (data) => {
+            echo.channel(channelName)
+                .listen('.order.created', (data: any) => {
                     console.log('📦 New order in category:', data);
                     callbackRef.current(data);
-                }
-            );
-
-            cleanups.push(cleanup);
+                });
         });
 
         // Also listen to general orders channel
-        const generalCleanup = listenToChannel(
-            'orders',
-            '.order.created',
-            (data) => {
+        console.log(`🔔 Listening for new orders on general channel`);
+        channels.push('orders');
+        echo.channel('orders')
+            .listen('.order.created', (data: any) => {
                 console.log('📦 New order:', data);
                 callbackRef.current(data);
-            }
-        );
-        cleanups.push(generalCleanup);
+            });
 
         return () => {
-            cleanups.forEach(cleanup => cleanup());
+            channels.forEach(ch => echo.leave(ch));
         };
-    }, [categories.join(','), listenToChannel]);
+    }, [categories.join(','), echo]);
 };
 
 /**
