@@ -1,8 +1,5 @@
 import { api } from '@/lib/api';
 
-// Use relative path for Vite proxy to work
-const API_URL = '/api';
-
 export interface Watchlist {
     id: string;
     user_id: string;
@@ -15,7 +12,7 @@ export interface Watchlist {
  * Add auction to watchlist
  */
 export const addToWatchlist = async (auctionId: string): Promise<Watchlist> => {
-    const response = await api.post(`${API_URL}/watchlist/${auctionId}`);
+    const response = await api.post(`/watchlist/${auctionId}`);
     return response.data;
 };
 
@@ -23,7 +20,7 @@ export const addToWatchlist = async (auctionId: string): Promise<Watchlist> => {
  * Remove auction from watchlist
  */
 export const removeFromWatchlist = async (auctionId: string): Promise<void> => {
-    await api.delete(`${API_URL}/watchlist/${auctionId}`);
+    await api.delete(`/watchlist/${auctionId}`);
 };
 
 /**
@@ -31,7 +28,7 @@ export const removeFromWatchlist = async (auctionId: string): Promise<void> => {
  */
 export const getWatchlist = async (): Promise<Watchlist[]> => {
     try {
-        const response = await api.get(`${API_URL}/watchlist`);
+        const response = await api.get('/watchlist');
         // Handle different response structures
         return response.data.data || response.data || [];
     } catch (error) {
@@ -45,7 +42,7 @@ export const getWatchlist = async (): Promise<Watchlist[]> => {
  */
 export const isInWatchlist = async (auctionId: string): Promise<boolean> => {
     try {
-        const response = await api.get(`${API_URL}/watchlist/${auctionId}/check`);
+        const response = await api.get(`/watchlist/${auctionId}/check`);
         return response.data.in_watchlist;
     } catch {
         return false;

@@ -119,7 +119,7 @@ export const providerAPI = {
         return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
     },
     updateAcceptedOrderStatus: async (orderNumber: string, status: string, notes?: string) => {
-        const response = await api.put(`/ provider / orders / ${orderNumber}/status`, { status, notes });
+        const response = await api.put(`/provider/orders/${orderNumber}/status`, { status, notes });
         return { ...response, data: { ...response.data, data: toCamelCase(response.data.data) } };
     }
 };

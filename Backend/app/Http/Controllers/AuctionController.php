@@ -52,8 +52,9 @@ class AuctionController extends Controller
 
         $auctions = $query->paginate($request->get('per_page', 12));
 
+
         // If authenticated, add registration status
-        $user = $request->user();
+        $user = auth('sanctum')->user();
         if ($user) {
             [$profile, $userType] = $this->getUserProfile($user);
             if ($profile) {
@@ -86,7 +87,7 @@ class AuctionController extends Controller
         $data['minimum_bid'] = $auction->minimum_bid;
 
         // If authenticated, add user-specific data
-        $user = $request->user();
+        $user = auth('sanctum')->user();
         if ($user) {
             [$profile, $userType] = $this->getUserProfile($user);
             if ($profile) {
