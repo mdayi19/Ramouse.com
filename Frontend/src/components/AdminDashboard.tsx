@@ -430,12 +430,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
     };
 
     const handleApprovePayment = async (order: Order) => {
+        // Optimistic Update
+        const originalOrders = [...allOrders];
+        updateAllOrders(allOrders.map(o =>
+            o.orderNumber === order.orderNumber
+                ? { ...o, status: 'processing' }
+                : o
+        ));
+
         try {
             await adminAPI.approveOrderPayment(order.orderNumber);
-            await fetchOrders();
+            await fetchOrders(true);
             showToast('تمت الموافقة على الدفع.', 'success');
         } catch (error: any) {
             console.error('Failed to approve payment', error);
+            updateAllOrders(originalOrders);
             showToast(error.response?.data?.message || 'فشل الموافقة على الدفع', 'error');
         }
     };
@@ -443,12 +452,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
     const handleRejectPayment = async (order: Order) => {
         const reason = prompt("سبب رفض الدفع:");
         if (reason) {
+            // Optimistic Update
+            const originalOrders = [...allOrders];
+            updateAllOrders(allOrders.map(o =>
+                o.orderNumber === order.orderNumber
+                    ? { ...o, status: 'pending', rejectionReason: reason }
+                    : o
+            ));
+
             try {
                 await adminAPI.rejectOrderPayment(order.orderNumber, reason);
-                await fetchOrders();
+                await fetchOrders(true);
                 showToast('تم رفض الدفع.', 'info');
             } catch (error: any) {
                 console.error('Failed to reject payment', error);
+                updateAllOrders(originalOrders);
                 showToast(error.response?.data?.message || 'فشل رفض الدفع', 'error');
             }
         }

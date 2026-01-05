@@ -305,8 +305,8 @@ export const adminAPI = {
         api.delete(`/admin/products/${id}`),
 
     // Order Payment Approval/Rejection
-    approveOrderPayment: (orderNumber: string) => api.post(`/admin/orders/${orderNumber}/approve-payment`),
-    rejectOrderPayment: (orderNumber: string, reason: string) => api.post(`/admin/orders/${orderNumber}/reject-payment`, { reason }),
+    approveOrderPayment: (orderNumber: string) => api.patch(`/admin/orders/${orderNumber}/payment/approve`),
+    rejectOrderPayment: (orderNumber: string, reason: string) => api.patch(`/admin/orders/${orderNumber}/payment/reject`, { reason }),
 
     // Order Management
     getOrders: (forceRefresh = false) => api.get('/admin/orders', forceRefresh ? { params: { _t: Date.now() } } : {}),
