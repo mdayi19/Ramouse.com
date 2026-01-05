@@ -186,9 +186,11 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
                 fetchWalletData();
             }
 
-            if ((notificationType === 'NEW_ORDER' || notificationType === 'NEW_ORDER_FOR_PROVIDER') && activeView === 'openOrders') {
+            if (notificationType === 'NEW_ORDER' || notificationType === 'NEW_ORDER_FOR_PROVIDER') {
                 console.log('📦 New order notification received, refreshing open orders...');
-                fetchOpenOrders(true);
+                fetchOpenOrders(true, true); // background=true, forceRefresh=true
+                // Play notification sound
+                try { new Audio('/sound_new_order.wav').play().catch(() => { }); } catch (e) { }
             }
 
             if (notificationType === 'OFFER_ACCEPTED_PROVIDER_WIN') {
