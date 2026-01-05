@@ -83,7 +83,7 @@ export const StatusBadge: React.FC<{ status: OrderStatus | WithdrawalStatus | Fl
             case 'out_for_delivery': return 'قيد التوصيل';
             case 'delivered': return 'تم التوصيل';
             case 'completed': return 'تم الاستلام من الشركة';
-            case 'cancelled': return 'ملغي';
+            case 'cancelled': case 'canceled': return 'ملغي'; // Both spellings
 
             // Withdrawal statuses
             case 'Pending': return 'قيد المراجعة';
@@ -95,7 +95,14 @@ export const StatusBadge: React.FC<{ status: OrderStatus | WithdrawalStatus | Fl
             case 'preparing': return 'جاري التجهيز';
 
             // Default - return as is (for legacy Arabic statuses)
-            default: return s;
+            default:
+                // If status contains Arabic characters, return as is
+                if (/[؀-ۿ]/.test(s)) {
+                    return s;
+                }
+                // Log unknown English statuses for debugging
+                console.warn(`[StatusBadge] Unknown status: "${s}" - displaying as-is. Please add translation.`);
+                return s;
         }
     };
 
