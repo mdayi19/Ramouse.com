@@ -310,7 +310,7 @@ export const adminAPI = {
 
     // Order Management
     getOrders: (forceRefresh = false) => api.get('/admin/orders', forceRefresh ? { params: { _t: Date.now() } } : {}),
-    updateOrderStatus: (orderNumber: string, status: string) => api.put(`/admin/orders/${orderNumber}/status`, { status }),
+    updateOrderStatus: (orderNumber: string, status: string) => api.patch(`/admin/orders/${orderNumber}/status`, { status }),
     updateShippingNotes: (orderNumber: string, notes: string) => api.put(`/admin/orders/${orderNumber}/shipping-notes`, { notes }),
 
     //  International Licenses

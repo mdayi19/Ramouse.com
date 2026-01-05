@@ -394,12 +394,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
 
     const handleUpdateOrderStatus = async (orderNumber: string, newStatus: OrderStatus) => {
         console.log(`🔄 handleUpdateOrderStatus called for ${orderNumber} -> ${newStatus}`);
+
+        // 1. Optimistic Update: Update local state immediately
+        const originalOrders = [...allOrders]; // Keep copy for rollback
+        updateAllOrders(allOrders.map(order =>
+            order.orderNumber === orderNumber
+                ? { ...order, status: newStatus }
+                : order
+        ));
+
         try {
+            // 2. Call API
             await adminAPI.updateOrderStatus(orderNumber, newStatus);
-            await fetchOrders();
+
+            // 3. Force Fetch from server to ensure consistency (and get side effects like updated timestamps)
+            await fetchOrders(true);
             showToast('تم تحديث حالة الطلب.', 'success');
         } catch (error: any) {
             console.error('Failed to update order status', error);
+            // 4. Rollback on error
+            updateAllOrders(originalOrders);
             showToast(error.response?.data?.message || 'فشل تحديث حالة الطلب', 'error');
         }
     };

@@ -53,6 +53,15 @@ docker compose exec app php artisan view:cache
 docker compose logs queue (it should say "Processing jobs" or be silent/ready).
 Real-time: Refresh the app. If it still fails, check logs with: docker compose logs reverb
 ------------
+# 1. Fetch the latest history from GitHub
+git fetch origin
+
+# 2. Force your server's branch to match the origin exactly (Undoing the bad commits)
+git reset --hard origin/main
+
+# 3. Rebuild the frontend container to apply the changes
+docker compose up -d --build frontend
+-----------
 clear docker cache
 
 docker system df
