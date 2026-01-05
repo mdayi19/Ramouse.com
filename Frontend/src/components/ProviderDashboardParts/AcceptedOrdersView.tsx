@@ -191,22 +191,51 @@ const OrderDetailsModal: React.FC<{
                 {/* Quote Media */}
                 {(mediaUrls.images.length > 0 || mediaUrls.video || mediaUrls.voiceNote) && (
                     <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <h5 className="font-black text-slate-700 dark:text-slate-300 mb-3">📸 وسائط العرض</h5>
+                        <h5 className="font-black text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                            <span>📸</span> وسائط العرض التي قدمتها
+                        </h5>
                         <div className="space-y-4">
+                            {/* Images */}
                             {mediaUrls.images.length > 0 && (
-                                <div className="grid grid-cols-3 gap-2">
-                                    {mediaUrls.images.map((img: string, idx: number) => (
-                                        <img
-                                            key={idx}
-                                            src={img}
-                                            alt={`Quote image ${idx + 1}`}
-                                            className="w-full h-24 object-cover rounded-xl border-2 border-slate-100 dark:border-slate-700 hover:scale-105 transition-transform cursor-pointer shadow-sm"
-                                            onClick={() => window.open(img, '_blank')}
-                                        />
-                                    ))}
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">📷 الصور ({mediaUrls.images.length})</p>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                        {mediaUrls.images.map((img: string, idx: number) => (
+                                            <img
+                                                key={idx}
+                                                src={img}
+                                                alt={`Quote image ${idx + 1}`}
+                                                className="w-full h-24 object-cover rounded-xl border-2 border-slate-100 dark:border-slate-700 hover:scale-105 transition-transform cursor-pointer shadow-sm"
+                                                onClick={() => window.open(img, '_blank')}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             )}
-                            {/* Video and Audio logic remains similar but simplified visually if needed */}
+
+                            {/* Video */}
+                            {mediaUrls.video && (
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">🎥 فيديو توضيحي</p>
+                                    <video
+                                        src={mediaUrls.video}
+                                        controls
+                                        className="w-full max-h-64 rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-black shadow-sm"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Voice Note */}
+                            {mediaUrls.voiceNote && (
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">🎤 ملاحظة صوتية</p>
+                                    <audio
+                                        src={mediaUrls.voiceNote}
+                                        controls
+                                        className="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 shadow-sm"
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
