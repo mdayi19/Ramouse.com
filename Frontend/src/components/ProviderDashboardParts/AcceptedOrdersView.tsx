@@ -102,6 +102,59 @@ const OrderDetailsModal: React.FC<{
                     </div>
                 )}
 
+                {/* Order Details Section */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800 mb-4">
+                    <h5 className="font-black text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2 text-sm">
+                        <span>🚗</span> تفاصيل الطلب
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <DetailRow emoji="🏭" label="الماركة" value={formData.brand} />
+                        <DetailRow emoji="🚘" label="الموديل" value={formData.model} />
+                        <DetailRow emoji="📅" label="السنة" value={formData.year} />
+                        <DetailRow emoji="🔖" label="VIN" value={formData.vin} />
+                        <DetailRow emoji="🔧" label="القطعة المطلوبة">
+                            <span className="font-semibold text-blue-900 dark:text-blue-100">{formData.partDescription}</span>
+                        </DetailRow>
+                        <DetailRow emoji="📋" label="أنواع القطع" value={(formData.partTypes || []).join(', ')} />
+                    </div>
+                </div>
+
+                {/* Quote Details Section */}
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800 mb-4">
+                    <h5 className="font-black text-emerald-800 dark:text-emerald-200 mb-3 flex items-center gap-2 text-sm">
+                        <span>💎</span> تفاصيل عرضك المقبول
+                    </h5>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <DetailRow emoji="🏷️" label="حالة القطعة">
+                            <span className="font-semibold">{acceptedQuote.partStatus === 'new' ? '✨ جديد' : '🛠️ مستعمل'}</span>
+                        </DetailRow>
+                        <DetailRow emoji="📏" label="حجم القطعة">
+                            <span className="font-semibold">
+                                {acceptedQuote.partSizeCategory === 'xs' ? '📦 صغير جداً' :
+                                    acceptedQuote.partSizeCategory === 's' ? '📦 صغير' :
+                                        acceptedQuote.partSizeCategory === 'm' ? '📦📦 متوسط' :
+                                            acceptedQuote.partSizeCategory === 'l' ? '📦📦📦 كبير' :
+                                                acceptedQuote.partSizeCategory === 'vl' ? '📦📦📦📦 كبير جداً' :
+                                                    'غير محدد'}
+                            </span>
+                        </DetailRow>
+                        <DetailRow emoji="💵" label="سعر القطعة">
+                            <span className="font-black text-emerald-700 dark:text-emerald-300 text-lg">${Number(acceptedQuote.price).toFixed(0)}</span>
+                        </DetailRow>
+                        <DetailRow emoji="🚚" label="التوصيل">
+                            <span className="text-xs">{deliveryMethod === 'pickup' ? '🏪 استلام من الشركة' : '🚛 توصيل وشحن'}</span>
+                        </DetailRow>
+                        {deliveryMethod === 'shipping' && shippingPrice && (
+                            <DetailRow emoji="📦" label="تكلفة الشحن">
+                                <span className="font-bold text-purple-700 dark:text-purple-300">${Number(shippingPrice).toFixed(0)}</span>
+                            </DetailRow>
+                        )}
+                        <DetailRow emoji="💰" label="المبلغ الإجمالي">
+                            <span className="font-black text-amber-700 dark:text-amber-300 text-lg">${totalPrice.toFixed(0)}</span>
+                        </DetailRow>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
                     <div>
                         <h5 className="font-black text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
@@ -114,11 +167,12 @@ const OrderDetailsModal: React.FC<{
 
                     <div>
                         <h5 className="font-black text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
-                            <span>💰</span> التفاصيل المالية
+                            <span>�</span> معلومات الدفع
                         </h5>
-                        <DetailRow emoji="🏷️" label="حالة القطعة">{acceptedQuote.partStatus === 'new' ? '✨ جديد' : '🛠️ مستعمل'}</DetailRow>
-                        <DetailRow emoji="💵" label="سعر القطعة">${Number(acceptedQuote.price).toFixed(0)}</DetailRow>
-                        <DetailRow emoji="🚚" label="طريقة الاستلام">{deliveryMethod === 'pickup' ? '🏪 استلام من الشركة' : '🚛 توصيل وشحن'}</DetailRow>
+                        <DetailRow emoji="💳" label="طريقة الدفع" value={paymentMethodName || 'غير محدد'} />
+                        <DetailRow emoji="✨" label="ربحك الصافي">
+                            <span className="font-black text-emerald-600 dark:text-emerald-400 text-xl">${Number(acceptedQuote.price).toFixed(0)}</span>
+                        </DetailRow>
                     </div>
                 </div>
 
