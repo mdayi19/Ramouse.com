@@ -393,6 +393,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
     };
 
     const handleUpdateOrderStatus = async (orderNumber: string, newStatus: OrderStatus) => {
+        console.log(`🔄 handleUpdateOrderStatus called for ${orderNumber} -> ${newStatus}`);
         try {
             await adminAPI.updateOrderStatus(orderNumber, newStatus);
             await fetchOrders();

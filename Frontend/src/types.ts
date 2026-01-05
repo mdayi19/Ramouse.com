@@ -244,6 +244,7 @@ export interface Quote {
   providerId: string;
   providerName: string;
   providerUniqueId: string;
+  providerPhone?: string; // Added for display
   price: number;
   partStatus: PartStatus;
   partSizeCategory?: PartSizeCategory;

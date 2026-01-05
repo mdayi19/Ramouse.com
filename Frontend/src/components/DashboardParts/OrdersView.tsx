@@ -70,7 +70,15 @@ const QuoteDisplay: React.FC<{ quote: Quote, orderNumber: string, isAccepted?: b
                     </div>
                     <div>
                         <p className="font-semibold text-slate-800 dark:text-slate-100">{quote.providerName || (quote as any).provider_name || 'مزود مجهول'}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">#{quote.providerUniqueId || (quote as any).provider_unique_id || 'N/A'}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono">
+                            <span>#{quote.providerUniqueId || (quote as any).provider_unique_id || 'N/A'}</span>
+                            {(quote.providerPhone || (quote as any).provider_phone) && (
+                                <>
+                                    <span>•</span>
+                                    <span dir="ltr" className="select-all">{quote.providerPhone || (quote as any).provider_phone}</span>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <time className="text-xs text-slate-400 dark:text-slate-500">
@@ -875,7 +883,11 @@ const OrdersView: React.FC<OrdersViewProps> = ({
         };
         return (
             <Button
-                onClick={onClick}
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent accidental collapse if inside clickable area
+                    console.log('🔘 ActionButton Clicked:', children);
+                    onClick();
+                }}
                 variant="ghost"
                 className={`inline-flex items-center gap-2 ${colorMap[color as keyof typeof colorMap]} text-white px-4 py-2.5 h-auto rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:scale-105`}
             >
