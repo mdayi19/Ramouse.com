@@ -310,7 +310,7 @@ class FinancialController extends Controller
                 $notification = Notification::create([
                     'user_id' => $deposit->user_id,
                     'title' => 'تمت الموافقة على الإيداع',
-                    'message' => 'تمت الموافقة على إيداعك بقيمة ' . number_format($deposit->amount, 2) . ' ر.س',
+                    'message' => 'تمت الموافقة على إيداعك بقيمة $' . number_format($deposit->amount, 2),
                     'type' => 'DEPOSIT_APPROVED',
                     'read' => false,
                 ]);
@@ -596,7 +596,7 @@ class FinancialController extends Controller
             $notification = Notification::create([
                 'user_id' => $id,
                 'title' => 'تم إضافة رصيد لمحفظتك',
-                'message' => 'تم إضافة ' . number_format($amount, 2) . ' ر.س إلى محفظتك - ' . $description,
+                'message' => 'تم إضافة $' . number_format($amount, 2) . ' إلى محفظتك - ' . $description,
                 'type' => 'FUNDS_DEPOSITED',
                 'read' => false,
             ]);

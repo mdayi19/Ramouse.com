@@ -76,7 +76,7 @@ const BidCard: React.FC<{ order: Order, myQuotes: Quote[], status: BidStatus, on
                             </span>
                         </div>
                         <div className="font-black text-lg text-slate-800 dark:text-white">
-                            {Number(quote.price).toFixed(0)} <span className="text-xs text-slate-400 font-medium">ر.س</span>
+                            ${Number(quote.price).toFixed(0)}
                         </div>
                     </div>
                 ))}

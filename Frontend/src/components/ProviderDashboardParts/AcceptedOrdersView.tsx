@@ -117,7 +117,7 @@ const OrderDetailsModal: React.FC<{
                             <span>💰</span> التفاصيل المالية
                         </h5>
                         <DetailRow emoji="🏷️" label="حالة القطعة">{acceptedQuote.partStatus === 'new' ? '✨ جديد' : '🛠️ مستعمل'}</DetailRow>
-                        <DetailRow emoji="💵" label="سعر القطعة">{Number(acceptedQuote.price).toFixed(0)} ر.س</DetailRow>
+                        <DetailRow emoji="💵" label="سعر القطعة">${Number(acceptedQuote.price).toFixed(0)}</DetailRow>
                         <DetailRow emoji="🚚" label="طريقة الاستلام">{deliveryMethod === 'pickup' ? '🏪 استلام من الشركة' : '🚛 توصيل وشحن'}</DetailRow>
                     </div>
                 </div>
@@ -233,7 +233,7 @@ const KanbanCard: React.FC<{ order: Order; onDetailsClick: () => void; colorClas
                         <p className="text-[10px] text-slate-400 font-bold mb-0.5">صافي الربح</p>
                         <div className="font-black text-lg text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <span>{Number(acceptedQuote?.price).toFixed(0)}</span>
-                            <span className="text-[10px] font-medium text-slate-400">ر.س</span>
+                            <span className="text-[10px] font-medium text-slate-400">$</span>
                         </div>
                     </div>
                 </div>
