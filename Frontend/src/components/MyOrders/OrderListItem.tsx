@@ -11,11 +11,17 @@ const getStatusEmoji = (status: string): string => {
         case 'quoted':
         case 'تم استلام عروض': return '💬';
         case 'payment_pending':
-        case 'بانتظار الدفع': return '💳';
+        case 'بانتظار تأكيد الدفع': return '💳';
         case 'processing':
         case 'جاري التجهيز': return '🔧';
+        case 'provider_received':
+        case 'تم الاستلام من المزود': return '📦';
+        case 'ready_for_pickup':
+        case 'جاهز للاستلام': return '📦';
         case 'shipped':
-        case 'تم الشحن': return '🚚';
+        case 'تم الشحن للعميل': return '🚚';
+        case 'out_for_delivery':
+        case 'قيد التوصيل': return '🚚';
         case 'delivered':
         case 'تم التوصيل': return '✅';
         case 'completed':
@@ -34,11 +40,17 @@ const getSimpleStatus = (status: string): string => {
         case 'quoted':
         case 'تم استلام عروض': return 'لديك عروض! 🎉';
         case 'payment_pending':
-        case 'بانتظار الدفع': return 'أرسل الإيصال';
+        case 'بانتظار تأكيد الدفع': return 'أرسل الإيصال';
         case 'processing':
         case 'جاري التجهيز': return 'يتم تجهيزه';
+        case 'provider_received':
+        case 'تم الاستلام من المزود': return 'تم استلام القطعة';
+        case 'ready_for_pickup':
+        case 'جاهز للاستلام': return 'جاهز للاستلام';
         case 'shipped':
-        case 'تم الشحن': return 'في الطريق إليك!';
+        case 'تم الشحن للعميل': return 'تم الشحن';
+        case 'out_for_delivery':
+        case 'قيد التوصيل': return 'في الطريق إليك!';
         case 'delivered':
         case 'تم التوصيل': return 'تم التوصيل ✅';
         case 'completed':
