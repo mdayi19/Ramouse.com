@@ -775,6 +775,8 @@ class AuthController extends Controller
             $profile = $user->technician;
         } elseif ($user->role === 'tow_truck') {
             $profile = $user->towTruck;
+        } elseif ($user->role === 'car_provider') {
+            $profile = $user->carProvider;
         }
 
         if ($profile) {
@@ -790,6 +792,10 @@ class AuthController extends Controller
 
             // Role specific updates
             if ($user->role === 'customer') {
+                if ($request->has('address')) {
+                    $profile->address = $validated['address'];
+                }
+            } elseif ($user->role === 'car_provider') {
                 if ($request->has('address')) {
                     $profile->address = $validated['address'];
                 }
