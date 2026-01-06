@@ -98,12 +98,12 @@ const CarListingDetail: React.FC = () => {
 
     const nextImage = () => {
         if (!listing?.images || listing.images.length === 0) return;
-        setSelectedImageIndex((prev) => (prev + 1) % listing.images.length);
+        setSelectedImageIndex((prev) => (prev + 1) % listing.images!.length);
     };
 
     const prevImage = () => {
         if (!listing?.images || listing.images.length === 0) return;
-        setSelectedImageIndex((prev) => (prev - 1 + listing.images.length) % listing.images.length);
+        setSelectedImageIndex((prev) => (prev - 1 + listing.images!.length) % listing.images!.length);
     };
 
     if (loading) {
