@@ -19,7 +19,6 @@ return new class extends Migration {
             $table->integer('shares')->default(0);
             $table->timestamps();
 
-            // Unique constraint to prevent duplicates
             $table->unique(['car_listing_id', 'date']);
         });
     }

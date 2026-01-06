@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->foreign('car_provider_id')->references('id')->on('car_providers')->onDelete('cascade');
 
             $table->string('phone', 20);
-            $table->string('label')->nullable(); // e.g., "Sales", "Service", "WhatsApp Only"
+            $table->string('label')->nullable();
             $table->boolean('is_whatsapp')->default(false);
             $table->boolean('is_primary')->default(false);
 

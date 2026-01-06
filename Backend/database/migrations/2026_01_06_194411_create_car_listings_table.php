@@ -3,11 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('car_listings', function (Blueprint $table) {
@@ -19,21 +17,22 @@ return new class extends Migration {
 
             // Listing info
             $table->enum('listing_type', ['sale', 'rent']);
-            $table->foreignId('car_category_id')->nullable()->constrained('car_categories')->onDelete('set null');
+            $table->foreignId('car_listing_category_id')->nullable()->constrained('car_listing_categories')->onDelete('set null');
 
-            // Car details
+            // Car details - USING EXISTING brands table
             $table->string('title');
             $table->string('slug')->unique();
-            $table->string('brand');
+            $table->string('brand_id'); // FK to existing brands.id
+            $table->foreign('brand_id')->references('id')->on('brands')->onDelete('restrict');
             $table->string('model');
             $table->year('year');
-            $table->integer('mileage'); // kilometers
+            $table->integer('mileage');
             $table->enum('condition', ['new', 'used', 'certified_pre_owned']);
 
             // Pricing
             $table->decimal('price', 10, 2);
             $table->boolean('is_negotiable')->default(false);
-            $table->json('rental_terms')->nullable(); // {daily, weekly, monthly}
+            $table->json('rental_terms')->nullable();
 
             // Colors
             $table->string('exterior_color')->nullable();
@@ -45,18 +44,18 @@ return new class extends Migration {
             $table->integer('doors_count')->nullable();
             $table->integer('seats_count')->nullable();
             $table->string('license_plate')->nullable();
-            $table->string('chassis_number', 17)->nullable(); // VIN
-            $table->string('engine_size')->nullable(); // e.g., "2.0L"
+            $table->string('chassis_number', 17)->nullable();
+            $table->string('engine_size')->nullable();
             $table->integer('horsepower')->nullable();
             $table->string('body_style')->nullable();
-            $table->json('body_condition')->nullable(); // per part
+            $table->json('body_condition')->nullable();
             $table->integer('previous_owners')->nullable();
             $table->string('warranty')->nullable();
 
             // Content
             $table->json('features')->nullable();
             $table->text('description')->nullable();
-            $table->json('photos'); // 1-15 photos
+            $table->json('photos');
             $table->string('video_url')->nullable();
 
             // Contact
@@ -65,13 +64,13 @@ return new class extends Migration {
 
             // Status
             $table->boolean('is_available')->default(true);
-            $table->boolean('is_hidden')->default(false); // Admin moderation
+            $table->boolean('is_hidden')->default(false);
 
-            // Sponsorship (providers only)
+            // Sponsorship
             $table->boolean('is_sponsored')->default(false);
             $table->timestamp('sponsored_until')->nullable();
 
-            // Featured (admin only, free)
+            // Featured (admin)
             $table->boolean('is_featured')->default(false);
             $table->timestamp('featured_until')->nullable();
             $table->integer('featured_position')->nullable();
@@ -81,33 +80,26 @@ return new class extends Migration {
 
             // Soft delete
             $table->softDeletes();
-
             $table->timestamps();
 
             // INDEXES
             $table->index(['owner_id', 'seller_type']);
             $table->index('listing_type');
-            $table->index('car_category_id');
+            $table->index('car_listing_category_id');
+            $table->index('brand_id');
             $table->index('price');
-            $table->index('brand');
             $table->index(['is_sponsored', 'sponsored_until']);
             $table->index(['is_featured', 'featured_position']);
             $table->index('is_available');
             $table->index('is_hidden');
             $table->index('created_at');
             $table->index('deleted_at');
-
-            // FULLTEXT index for search (add after table creation)
-            // Will be added in a separate raw query
         });
 
-        // Add FULLTEXT index
-        DB::statement('ALTER TABLE car_listings ADD FULLTEXT INDEX ft_search (title, description, brand, model)');
+        // FULLTEXT index
+        DB::statement('ALTER TABLE car_listings ADD FULLTEXT INDEX ft_search (title, description, model)');
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('car_listings');

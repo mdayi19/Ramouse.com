@@ -5,19 +5,16 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('car_providers', function (Blueprint $table) {
-            // Primary key (phone number)
-            $table->string('id', 20)->primary(); // Phone number
+            // Primary key (phone number - following existing pattern)
+            $table->string('id', 20)->primary();
 
             // User relationship
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
-            // Basic info
+            //Basic info
             $table->string('unique_id', 10)->unique();
             $table->string('name');
             $table->string('password');
@@ -27,8 +24,9 @@ return new class extends Migration {
             // Location
             $table->string('city');
             $table->text('address');
-            $table->point('location')->nullable(); // For "Near Me" feature
-            $table->spatialIndex('location'); // Spatial index
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->index(['latitude', 'longitude']);
 
             // Details
             $table->text('description')->nullable();
@@ -46,15 +44,15 @@ return new class extends Migration {
             $table->json('socials')->nullable();
             $table->string('qr_code_url')->nullable();
 
-            // Settings
+            // Settings (following existing pattern)
             $table->json('notification_settings')->nullable();
             $table->json('flash_purchases')->nullable();
 
-            // Ratings & Wallet
+            // Ratings & Wallet (following existing pattern)
             $table->decimal('average_rating', 3, 2)->default(0);
-            $table->decimal('wallet_balance', 10, 2)->default(0);
+            $table->decimal('wallet_balance', 10, 2)->default(0); // Uses existing user_transactions
 
-            // Additional
+            // Additional (following existing pattern)
             $table->json('saved_addresses')->nullable();
             $table->json('payment_info')->nullable();
 
@@ -62,9 +60,6 @@ return new class extends Migration {
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('car_providers');

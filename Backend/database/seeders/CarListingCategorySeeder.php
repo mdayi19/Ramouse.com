@@ -5,11 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class CarCategorySeeder extends Seeder
+class CarListingCategorySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $categories = [
@@ -24,7 +21,7 @@ class CarCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            DB::table('car_categories')->insert([
+            DB::table('car_listing_categories')->insert([
                 'name_ar' => $category['name_ar'],
                 'name_en' => $category['name_en'],
                 'icon' => $category['icon'],
