@@ -685,7 +685,37 @@ const App: React.FC = () => {
                     <Suspense fallback={<PageLoader />}>
                         <RouteTracker />
                         <Routes>
-                            <Route path="/" element={<WelcomeScreen onStart={handleStartNewOrder} onViewOrders={() => handleNavigate(isAdmin ? 'adminDashboard' : isProvider ? 'providerDashboard' : 'customerDashboard')} onViewAnnouncements={() => handleNavigate('announcements')} isAuthenticated={isAuthenticated} onNavigate={handleNavigate} onLoginClick={handleLoginClick} showInstallPrompt={!!deferredPrompt && !isInstalled} installApp={installApp} isInstalled={isInstalled} technicianSpecialties={technicianSpecialties} />} />
+                            {/* Welcome Screen Route - Redirect authenticated users to dashboard */}
+                            <Route
+                                path="/"
+                                element={
+                                    isAuthenticated ? (
+                                        <Navigate
+                                            to={
+                                                isAdmin ? '/admin' :
+                                                    isTechnician ? '/technician' :
+                                                        isProvider ? '/provider' :
+                                                            isTowTruck ? '/tow-truck-dashboard' :
+                                                                '/dashboard'
+                                            }
+                                            replace
+                                        />
+                                    ) : (
+                                        <WelcomeScreen
+                                            onStart={handleStartNewOrder}
+                                            onViewOrders={() => handleNavigate(isAdmin ? 'adminDashboard' : isProvider ? 'providerDashboard' : 'customerDashboard')}
+                                            onViewAnnouncements={() => handleNavigate('announcements')}
+                                            isAuthenticated={isAuthenticated}
+                                            onNavigate={handleNavigate}
+                                            onLoginClick={handleLoginClick}
+                                            showInstallPrompt={!!deferredPrompt && !isInstalled}
+                                            installApp={installApp}
+                                            isInstalled={isInstalled}
+                                            technicianSpecialties={technicianSpecialties}
+                                        />
+                                    )
+                                }
+                            />
                             <Route path="/order" element={
                                 <OrderWizard
                                     currentStep={currentStep}
@@ -753,7 +783,14 @@ const App: React.FC = () => {
                 </ErrorBoundary>
             </main>
 
-            {!isDashboardView && <Footer settings={settings} onNavigate={(view) => handleNavigate(view as any)} className={showBottomNav ? 'hidden md:block' : ''} />}
+            {/* Footer - Hide for authenticated users */}
+            {!isDashboardView && !isAuthenticated && (
+                <Footer
+                    settings={settings}
+                    onNavigate={(view) => handleNavigate(view as any)}
+                    className={showBottomNav ? 'hidden md:block' : ''}
+                />
+            )}
 
             {isPublicMenuOpen && (
                 <PublicMobileMenu
