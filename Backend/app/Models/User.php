@@ -81,6 +81,26 @@ class User extends Authenticatable
         return $this->hasOne(TowTruck::class);
     }
 
+    public function carProvider()
+    {
+        return $this->hasOne(CarProvider::class);
+    }
+
+    public function carListings()
+    {
+        return $this->hasMany(CarListing::class, 'owner_id');
+    }
+
+    public function providerListings()
+    {
+        return $this->carListings()->where('seller_type', 'provider');
+    }
+
+    public function individualListings()
+    {
+        return $this->carListings()->where('seller_type', 'individual');
+    }
+
     /**
      * Get the last saved address for the user from their order history.
      */
