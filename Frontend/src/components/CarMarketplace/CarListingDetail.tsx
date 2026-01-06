@@ -97,12 +97,12 @@ const CarListingDetail: React.FC = () => {
     };
 
     const nextImage = () => {
-        if (!listing?.images) return;
+        if (!listing?.images || listing.images.length === 0) return;
         setSelectedImageIndex((prev) => (prev + 1) % listing.images.length);
     };
 
     const prevImage = () => {
-        if (!listing?.images) return;
+        if (!listing?.images || listing.images.length === 0) return;
         setSelectedImageIndex((prev) => (prev - 1 + listing.images.length) % listing.images.length);
     };
 
@@ -219,8 +219,8 @@ const CarListingDetail: React.FC = () => {
                                             key={idx}
                                             onClick={() => setSelectedImageIndex(idx)}
                                             className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === selectedImageIndex
-                                                    ? 'border-blue-500 ring-2 ring-blue-200'
-                                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                                                ? 'border-blue-500 ring-2 ring-blue-200'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                                                 }`}
                                         >
                                             <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
@@ -259,8 +259,8 @@ const CarListingDetail: React.FC = () => {
                                     <button
                                         onClick={handleFavoriteToggle}
                                         className={`p-3 rounded-lg transition-colors ${isFavorited
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                             }`}
                                     >
                                         <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
