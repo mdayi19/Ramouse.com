@@ -771,11 +771,11 @@ const App: React.FC = () => {
                             <Route path="/tow-truck-dashboard/*" element={isTowTruck ? (loggedInTowTruck ? <TowTruckDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} towTruck={loggedInTowTruck} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTowTruckData={onUpdateTowTruck} settings={settings} onStartNewOrder={handleStartNewOrder} addNotificationForUser={addNotificationForUser} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <PageLoader />) : <Navigate to="/" replace />} />
                             <Route path="/blog" element={<BlogScreen onReadMore={(slug) => handleNavigate('blogPost', { slug })} onBack={() => handleNavigate('welcome')} />} />
                             <Route path="/blog/:slug" element={<BlogPostRoute />} />
-                            <Route path="/blog/:identifier" element={<BlogPostScreen onBack={() => handleNavigate('blog')} />} />
-                            <Route path="/faq" element={<FaqScreen />} />
-                            <Route path="/privacy" element={<PrivacyPolicyScreen />} />
-                            <Route path="/terms" element={<TermsOfUseScreen />} />
-                            <Route path="/contact" element={<ContactScreen />} />
+                            <Route path="/blog/:identifier" element={<BlogPostScreen slug="" onBack={() => handleNavigate('blog')} />} />
+                            <Route path="/faq" element={<FaqScreen onBack={() => handleNavigate('welcome')} />} />
+                            <Route path="/privacy" element={<PrivacyPolicyScreen onBack={() => handleNavigate('welcome')} />} />
+                            <Route path="/terms" element={<TermsOfUseScreen onBack={() => handleNavigate('welcome')} />} />
+                            <Route path="/contact" element={<ContactScreen onBack={() => handleNavigate('welcome')} settings={settings} showToast={showToast} />} />
 
                             {/* Car Marketplace Routes */}
                             <Route path="/car-marketplace" element={
