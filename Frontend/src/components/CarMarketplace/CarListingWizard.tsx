@@ -209,8 +209,8 @@ const Step1BasicInfo: React.FC<any> = ({ formData, updateField }) => (
                 <button
                     onClick={() => updateField('listing_type', 'sale')}
                     className={`p-4 rounded-xl border-2 transition-all ${formData.listing_type === 'sale'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-slate-300 dark:border-slate-600'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-slate-300 dark:border-slate-600'
                         }`}
                 >
                     <div className="font-bold">للبيع</div>
@@ -218,8 +218,8 @@ const Step1BasicInfo: React.FC<any> = ({ formData, updateField }) => (
                 <button
                     onClick={() => updateField('listing_type', 'rent')}
                     className={`p-4 rounded-xl border-2 transition-all ${formData.listing_type === 'rent'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-slate-300 dark:border-slate-600'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-slate-300 dark:border-slate-600'
                         }`}
                 >
                     <div className="font-bold">للإيجار</div>
@@ -315,36 +315,351 @@ const Step2CategoryBrand: React.FC<any> = ({ formData, updateField }) => (
     </motion.div>
 );
 
-// Step 3-6: Simplified versions (you can expand these)
+// Step 3: Vehicle Specifications
 const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
         className="space-y-6"
     >
-        <p className="text-slate-600 dark:text-slate-400">المواصفات التقنية...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Year */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    سنة الصنع *
+                </label>
+                <input
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => updateField('year', parseInt(e.target.value))}
+                    min={1990}
+                    max={new Date().getFullYear() + 1}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    required
+                />
+            </div>
+
+            {/* Mileage */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    الكيلومترات المقطوعة *
+                </label>
+                <input
+                    type="number"
+                    value={formData.mileage}
+                    onChange={(e) => updateField('mileage', e.target.value)}
+                    placeholder="0"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    required
+                />
+            </div>
+
+            {/* Transmission */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    ناقل الحركة *
+                </label>
+                <select
+                    value={formData.transmission}
+                    onChange={(e) => updateField('transmission', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                >
+                    <option value="automatic">أوتوماتيك</option>
+                    <option value="manual">يدوي</option>
+                    <option value="cvt">CVT</option>
+                </select>
+            </div>
+
+            {/* Fuel Type */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    نوع الوقود *
+                </label>
+                <select
+                    value={formData.fuel_type}
+                    onChange={(e) => updateField('fuel_type', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                >
+                    <option value="gasoline">بنزين</option>
+                    <option value="diesel">ديزل</option>
+                    <option value="hybrid">هايبرد</option>
+                    <option value="electric">كهربائي</option>
+                </select>
+            </div>
+
+            {/* Color */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    اللون
+                </label>
+                <input
+                    type="text"
+                    value={formData.color}
+                    onChange={(e) => updateField('color', e.target.value)}
+                    placeholder="أبيض، أسود، فضي..."
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+
+            {/* Doors */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    عدد الأبواب
+                </label>
+                <select
+                    value={formData.doors}
+                    onChange={(e) => updateField('doors', parseInt(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                >
+                    <option value={2}>2</option>
+                    <option value={4}>4</option>
+                    <option value={5}>5</option>
+                </select>
+            </div>
+
+            {/* Seats */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    عدد المقاعد
+                </label>
+                <select
+                    value={formData.seats}
+                    onChange={(e) => updateField('seats', parseInt(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                >
+                    <option value={2}>2</option>
+                    <option value={4}>4</option>
+                    <option value={5}>5</option>
+                    <option value={7}>7</option>
+                    <option value={8}>8</option>
+                </select>
+            </div>
+        </div>
+
+        {/* Description */}
+        <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                وصف السيارة
+            </label>
+            <textarea
+                value={formData.description}
+                onChange={(e) => updateField('description', e.target.value)}
+                placeholder="أضف تفاصيل إضافية عن السيارة..."
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 resize-none"
+            />
+        </div>
     </motion.div>
 );
 
-const Step4Condition: React.FC<any> = ({ formData, updateField }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="space-y-6"
-    >
-        <p className="text-slate-600 dark:text-slate-400">حالة السيارة...</p>
-    </motion.div>
-);
+const Step4Condition: React.FC<any> = ({ formData, updateField }) => {
+    const features = [
+        { id: 'leather_seats', label: 'مقاعد جلد' },
+        { id: 'sunroof', label: 'فتحة سقف' },
+        { id: 'navigation', label: 'نظام ملاحة' },
+        { id: 'backup_camera', label: 'كاميرا خلفية' },
+        { id: 'parking_sensors', label: 'حساسات ركن' },
+        { id: 'cruise_control', label: 'مثبت سرعة' },
+        { id: 'bluetooth', label: 'بلوتوث' },
+        { id: 'usb', label: 'USB' },
+        { id: 'keyless_entry', label: 'دخول بدون مفتاح' },
+        { id: 'push_start', label: 'تشغيل بصمة' },
+        { id: 'heated_seats', label: 'مقاعد مدفأة' },
+        { id: 'led_lights', label: 'إضاءة LED' },
+    ];
 
-const Step5Media: React.FC<any> = ({ formData, updateField }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="space-y-6"
-    >
-        <p className="text-slate-600 dark:text-slate-400">رفع الصور...</p>
-    </motion.div>
-);
+    const toggleFeature = (featureId: string) => {
+        const current = formData.features || [];
+        const updated = current.includes(featureId)
+            ? current.filter((f: string) => f !== featureId)
+            : [...current, featureId];
+        updateField('features', updated);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+        >
+            {/* Condition */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    حالة السيارة *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                        type="button"
+                        onClick={() => updateField('condition', 'new')}
+                        className={`p-4 rounded-xl border-2 transition-all ${formData.condition === 'new'
+                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                            : 'border-slate-300 dark:border-slate-600 hover:border-green-400'
+                            }`}
+                    >
+                        <div className="font-bold text-slate-900 dark:text-white">جديدة</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">لم تستخدم</div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => updateField('condition', 'used')}
+                        className={`p-4 rounded-xl border-2 transition-all ${formData.condition === 'used'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-slate-300 dark:border-slate-600 hover:border-blue-400'
+                            }`}
+                    >
+                        <div className="font-bold text-slate-900 dark:text-white">مستعملة</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">حالة جيدة</div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => updateField('condition', 'certified_pre_owned')}
+                        className={`p-4 rounded-xl border-2 transition-all ${formData.condition === 'certified_pre_owned'
+                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                            : 'border-slate-300 dark:border-slate-600 hover:border-purple-400'
+                            }`}
+                    >
+                        <div className="font-bold text-slate-900 dark:text-white">معتمدة</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">فحص كامل</div>
+                    </button>
+                </div>
+            </div>
+
+            {/* Features */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    الميزات (اختر ما ينطبق)
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {features.map(feature => (
+                        <button
+                            key={feature.id}
+                            type="button"
+                            onClick={() => toggleFeature(feature.id)}
+                            className={`p-3 rounded-lg border transition-all text-sm ${(formData.features || []).includes(feature.id)
+                                ? 'border-primary bg-primary/10 text-primary font-medium'
+                                : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-primary/50'
+                                }`}
+                        >
+                            {feature.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Phone Visibility */}
+            <div className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                <input
+                    type="checkbox"
+                    id="phone_visible"
+                    checked={formData.phone_visible}
+                    onChange={(e) => updateField('phone_visible', e.target.checked)}
+                    className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="phone_visible" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                    إظهار رقم الهاتف في الإعلان
+                </label>
+            </div>
+        </motion.div>
+    );
+};
+
+const Step5Media: React.FC<any> = ({ formData, updateField }) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        updateField('photos', [...formData.photos, ...files]);
+    };
+
+    const removePhoto = (index: number) => {
+        const updated = formData.photos.filter((_: any, i: number) => i !== index);
+        updateField('photos', updated);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+        >
+            {/* Image Upload */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    صور السيارة (حتى 10 صور) *
+                </label>
+                <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center hover:border-primary transition-colors">
+                    <input
+                        type="file"
+                        id="photo-upload"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileChange}
+                        className="hidden"
+                    />
+                    <label
+                        htmlFor="photo-upload"
+                        className="cursor-pointer flex flex-col items-center gap-3"
+                    >
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Image className="w-8 h-8 text-primary" />
+                        </div>
+                        <div>
+                            <p className="font-medium text-slate-900 dark:text-white">اضغط لرفع الصور</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                JPG, PNG, WEBP (حد أقصى 5MB لكل صورة)
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
+                {/* Preview Images */}
+                {formData.photos.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        {formData.photos.map((file: File, index: number) => (
+                            <div key={index} className="relative group">
+                                <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-lg"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removePhoto(index)}
+                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                >
+                                    ×
+                                </button>
+                                {index === 0 && (
+                                    <span className="absolute bottom-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">
+                                        الصورة الرئيسية
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Video URL (Optional) */}
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    رابط فيديو (اختياري)
+                </label>
+                <input
+                    type="url"
+                    value={formData.video_url}
+                    onChange={(e) => updateField('video_url', e.target.value)}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    يمكنك إضافة رابط فيديو من YouTube أو Vimeo
+                </p>
+            </div>
+        </motion.div>
+    );
+};
 
 const Step6Review: React.FC<any> = ({ formData }) => (
     <motion.div
