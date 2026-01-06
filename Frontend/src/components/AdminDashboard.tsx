@@ -47,6 +47,12 @@ import FlashProductManagement from './DashboardParts/Store/FlashProductManagemen
 import StoreOrderManagement from './DashboardParts/Store/StoreOrderManagement';
 import StoreSettings from './DashboardParts/Store/StoreSettings';
 
+// CarProvider Admin Components
+import CarProvidersView from './DashboardParts/CarProvidersView';
+import CarListingsSponsorView from './DashboardParts/CarListingsSponsorView';
+import CarCategoriesView from './DashboardParts/CarCategoriesView';
+
+
 export interface AdminDashboardProps {
     allOrders: Order[];
     updateAllOrders: (orders: Order[]) => void;
@@ -584,6 +590,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             ]
         },
         {
+            id: 'carProviders',
+            label: 'مزودو السيارات',
+            icon: 'Car',
+            children: [
+                { id: 'carProviders', label: 'إدارة المزودين', onClick: () => handleSetView('carProviders'), isActive: currentView === 'carProviders', icon: 'Users' },
+                { id: 'carSponsorships', label: 'الإعلانات الممولة', onClick: () => handleSetView('carSponsorships'), isActive: currentView === 'carSponsorships', icon: 'Star' },
+                { id: 'carCategories', label: 'فئات السيارات', onClick: () => handleSetView('carCategories'), isActive: currentView === 'carCategories', icon: 'Tag' },
+            ]
+        },
+        {
             id: 'content',
             label: 'إدارة المحتوى',
             icon: 'FileText',
@@ -724,6 +740,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                             <Route path="auctionManagement" element={<AuctionManagementView showToast={showToast} />} />
                             <Route path="schedulerManagement" element={<SchedulerManagementView showToast={showToast} />} />
                             <Route path="internationalLicenses" element={<InternationalLicenseManagementView showToast={showToast} />} />
+
+                            {/* CarProvider Admin Routes */}
+                            <Route path="carProviders" element={<CarProvidersView showToast={showToast} />} />
+                            <Route path="carSponsorships" element={<CarListingsSponsorView showToast={showToast} />} />
+                            <Route path="carCategories" element={<CarCategoriesView showToast={showToast} />} />
+
                             <Route path="*" element={<Navigate to="" replace />} />
                         </Routes>
                     </div>
