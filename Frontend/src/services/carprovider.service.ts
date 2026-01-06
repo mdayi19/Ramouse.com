@@ -88,4 +88,35 @@ export class CarProviderService {
         const response = await api.get('/favorites');
         return response.data;
     }
+
+    // Provider Dashboard Methods
+    static async getProviderStats() {
+        const response = await api.get('/car-provider/stats');
+        return response.data;
+    }
+
+    static async getMyListings() {
+        const response = await api.get('/car-provider/listings');
+        return response.data;
+    }
+
+    static async createListing(data: FormData) {
+        const response = await api.post('/car-provider/listings', data);
+        return response.data;
+    }
+
+    static async updateListing(id: number, data: FormData) {
+        const response = await api.put(`/car-provider/listings/${id}`, data);
+        return response.data;
+    }
+
+    static async deleteListing(id: number) {
+        const response = await api.delete(`/car-provider/listings/${id}`);
+        return response.data;
+    }
+
+    static async toggleListingVisibility(id: number) {
+        const response = await api.patch(`/car-provider/listings/${id}/toggle`);
+        return response.data;
+    }
 }
