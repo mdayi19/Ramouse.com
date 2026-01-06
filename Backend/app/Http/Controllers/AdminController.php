@@ -1626,6 +1626,9 @@ class AdminController extends Controller
 
         // Limit total results
         return response()->json(['data' => $results->take(10)->values()]);
+
+
+
     }
 
     // ======== CAR PROVIDER MANAGEMENT ========
@@ -1753,5 +1756,4 @@ class AdminController extends Controller
         \App\Models\CarListingCategory::findOrFail($id)->delete();
         return response()->json(['success' => true]);
     }
-
 }
