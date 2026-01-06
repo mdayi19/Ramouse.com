@@ -36,6 +36,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/register/customer', [AuthController::class, 'registerCustomer']);
     Route::post('/register/technician', [AuthController::class, 'registerTechnician']);
     Route::post('/register/tow-truck', [AuthController::class, 'registerTowTruck']);
+    Route::post('/register-car-provider', [AuthController::class, 'registerCarProvider']);
+
 
     // OTP endpoints with strict rate limiting to prevent abuse
     Route::middleware(['throttle:5,1'])->group(function () {

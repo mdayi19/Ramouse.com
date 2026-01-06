@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Technician;
 use App\Models\TowTruck;
 use App\Models\Provider;
+use App\Models\CarProvider;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -822,5 +823,99 @@ class AuthController extends Controller
             'message' => __('auth.profile_updated'),
             'user' => $profile ?? $user
         ]);
+    }
+
+    public function registerCarProvider(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|unique:users,phone',
+            'password' => 'required|string|min:6',
+            'name' => 'required|string', // business_name
+            'business_type' => 'required|in:dealership,individual,rental_agency',
+            'city' => 'required|string',
+            'address' => 'required|string',
+            'business_license' => 'nullable|string',
+            'description' => 'nullable|string',
+            'email' => 'nullable|email',
+            'profile_photo' => 'nullable|file|image|max:5120',
+            'gallery' => 'nullable|array',
+            'gallery.*' => 'nullable|file|image|max:5120',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Create User
+            $user = \App\Models\User::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'role' => 'car_provider',
+                'is_admin' => false,
+            ]);
+
+            // Clean phone for folder name
+            $cleanPhone = str_replace('+', '', $request->phone);
+
+            // Handle Profile Photo
+            $profilePhotoPath = null;
+            if ($request->hasFile('profile_photo')) {
+                $file = $request->file('profile_photo');
+                $filename = 'profile_' . time() . '.' . $file->getClientOriginalExtension();
+                $profilePhotoPath = $file->storeAs("car-providers/{$cleanPhone}/profile", $filename, 'public');
+            }
+
+            // Handle Gallery
+            $galleryPaths = [];
+            if ($request->hasFile('gallery')) {
+                foreach ($request->file('gallery') as $index => $file) {
+                    $filename = 'gallery_' . time() . '_' . $index . '.' . $file->getClientOriginalExtension();
+                    $path = $file->storeAs("car-providers/{$cleanPhone}/gallery", $filename, 'public');
+                    $galleryPaths[] = $path;
+                }
+            }
+
+            // Create CarProvider Profile
+            $carProvider = CarProvider::create([
+                'phone' => $request->phone,
+                'user_id' => $user->id,
+                'password' => Hash::make($request->password),
+                'name' => $request->name,
+                'business_type' => $request->business_type,
+                'city' => $request->city,
+                'address' => $request->address,
+                'business_license' => $request->business_license,
+                'description' => $request->description,
+                'email' => $request->email,
+                'profile_photo' => $profilePhotoPath,
+                'gallery' => $galleryPaths,
+                'is_verified' => false, // Requires admin verification
+                'is_active' => false, // Inactive until verified
+                'is_trusted' => false,
+            ]);
+
+            DB::commit();
+
+            // Broadcast registration event to admin
+            event(new AdminDashboardEvent('car_provider.registered', [
+                'name' => $carProvider->name,
+                'business_type' => $carProvider->business_type,
+                'city' => $carProvider->city,
+            ]));
+
+            return response()->json([
+                'message' => 'Car provider registration submitted. Awaiting admin approval.',
+                'user' => $carProvider,
+                'token' => $user->createToken('auth_token')->plainTextToken,
+                'role' => 'car_provider',
+                'user_type' => 'car_provider',
+                'is_admin' => false,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Registration failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
