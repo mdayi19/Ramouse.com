@@ -4,6 +4,8 @@ export interface CarListing {
     id: number;
     slug: string;
     title: string;
+    description: string;
+    location?: string;
     price: number;
     listing_type: 'sale' | 'rent';
     seller_type: 'individual' | 'provider';
@@ -13,10 +15,12 @@ export interface CarListing {
     transmission: string;
     fuel_type: string;
     photos: string[];
+    images?: string[];
     is_sponsored: boolean;
     is_featured: boolean;
     views_count: number;
     owner: any;
+    provider?: any;
     category: any;
     brand: any;
     created_at: string;
@@ -51,6 +55,11 @@ export class CarProviderService {
         return response.data;
     }
 
+    static async getListingBySlug(slug: string) {
+        const response = await api.get(`/car-listings/${slug}`);
+        return response.data.data;
+    }
+
     static async getListing(slug: string) {
         const response = await api.get(`/car-marketplace/${slug}`);
         return response.data;
@@ -81,7 +90,12 @@ export class CarProviderService {
 
     static async checkFavorite(listingId: number) {
         const response = await api.get(`/favorites/${listingId}/check`);
-        return response.data;
+        return response.data.is_favorited || false;
+    }
+
+    // Alias for trackEvent - used by CarListingDetail
+    static async trackAnalytics(listingId: number, eventType: string, metadata: any = {}) {
+        return this.trackEvent(listingId, eventType, metadata);
     }
 
     static async getMyFavorites() {

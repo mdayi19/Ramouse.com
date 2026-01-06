@@ -53,6 +53,7 @@ const StoreView = lazy(() => import('./components/Store/StoreView').then(module 
 const AuctionListPage = lazy(() => import('./components/CarAuction/AuctionListPage'));
 const LiveAuctionRoom = lazy(() => import('./components/CarAuction/LiveAuctionRoom'));
 const CarMarketplacePage = lazy(() => import('./components/CarMarketplace/CarMarketplacePage').then(module => ({ default: module.CarMarketplacePage })));
+const CarListingDetail = lazy(() => import('./components/CarMarketplace/CarListingDetail'));
 
 import NotificationPermissionModal from './components/NotificationPermissionModal';
 
@@ -792,6 +793,9 @@ const App: React.FC = () => {
                                     onLoginClick={handleLoginClick}
                                 />
                             } />
+
+                            {/* Car Listing Detail */}
+                            <Route path="/car-listings/:slug" element={<CarListingDetail />} />
 
                             {/* Auction Routes */}
                             <Route path="/auctions" element={<AuctionListPage onSelectAuction={(auction) => navigate(`/auctions/${auction.id}`)} showToast={showToast} />} />
