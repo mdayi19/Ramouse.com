@@ -1627,4 +1627,131 @@ class AdminController extends Controller
         // Limit total results
         return response()->json(['data' => $results->take(10)->values()]);
     }
+
+    // ======== CAR PROVIDER MANAGEMENT ========
+    
+    public function listCarProviders(Request $request)
+    {
+        $query = \App\Models\CarProvider::with(['user', 'phones']);
+
+        if ($request->is_verified) {
+            $query->where('is_verified', $request->is_verified === 'true');
+        }
+        if ($request->is_trusted) {
+            $query->where('is_trusted', $request->is_trusted === 'true');
+        }
+        if ($request->is_active) {
+            $query->where('is_active', $request->is_active === 'true');
+        }
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('id', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $providers = $query->orderBy('created_at', 'desc')->paginate(50);
+        return response()->json($providers);
+    }
+
+    public function verifyCarProvider(Request $request, $id)
+    {
+        $provider = \App\Models\CarProvider::findOrFail($id);
+        $provider->update([
+            'is_verified' => true,
+            'verified_at' => now(),
+            'verified_by' => auth()->id()
+        ]);
+        return response()->json(['success' => true, 'message' => 'Car provider verified']);
+    }
+
+    public function toggleTrustedProvider(Request $request, $id)
+    {
+        $provider = \App\Models\CarProvider::findOrFail($id);
+        $provider->update(['is_trusted' => !$provider->is_trusted]);
+        return response()->json(['success' => true, 'is_trusted' => $provider->is_trusted]);
+    }
+
+    public function listCarListings(Request $request)
+    {
+        $query = \App\Models\CarListing::with(['owner', 'category', 'brand']);
+        
+        if ($request->listing_type) $query->where('listing_type', $request->listing_type);
+        if ($request->seller_type) $query->where('seller_type', $request->seller_type);
+        if ($request->is_hidden !== null) $query->where('is_hidden', $request->is_hidden === 'true');
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%');
+            });
+        }
+        if ($request->with_trashed) $query->withTrashed();
+
+        $listings = $query->orderBy('created_at', 'desc')->paginate(50);
+        return response()->json($listings);
+    }
+
+    public function toggleHideListing(Request $request, $id)
+    {
+        $listing = \App\Models\CarListing::withTrashed()->findOrFail($id);
+        $listing->update(['is_hidden' => !$listing->is_hidden]);
+        return response()->json(['success' => true, 'is_hidden' => $listing->is_hidden]);
+    }
+
+    public function featureListing(Request $request, $id)
+    {
+        $validated = $request->validate(['days' => 'required|integer|min:1|max:365', 'position' => 'nullable|integer']);
+        $listing = \App\Models\CarListing::findOrFail($id);
+        $listing->update([
+            'is_featured' => true,
+            'featured_until' => now()->addDays($validated['days']),
+            'featured_position' => $validated['position'] ?? null
+        ]);
+        return response()->json(['success' => true]);
+    }
+
+    public function sponsorListing(Request $request, $id)
+    {
+        $validated = $request->validate(['days' => 'required|integer|min:1|max:365']);
+        $listing = \App\Models\CarListing::findOrFail($id);
+        $listing->update([
+            'is_sponsored' => true,
+            'sponsored_until' => now()->addDays($validated['days'])
+        ]);
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteCarListing($id)
+    {
+        $listing = \App\Models\CarListing::withTrashed()->findOrFail($id);
+        $listing->forceDelete();
+        return response()->json(['success' => true]);
+    }
+
+    public function listCarCategories()
+    {
+        return response()->json(\App\Models\CarListingCategory::orderBy('sort_order')->get());
+    }
+
+    public function createCarCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name_ar' => 'required|string', 'name_en' => 'required|string',
+            'icon' => 'nullable|string', 'sort_order' => 'integer'
+        ]);
+        return response()->json(['success' => true, 'category' => \App\Models\CarListingCategory::create($validated)]);
+    }
+
+    public function updateCarCategory(Request $request, $id)
+    {
+        $category = \App\Models\CarListingCategory::findOrFail($id);
+        $category->update($request->only(['name_ar', 'name_en', 'icon', 'sort_order', 'is_active']));
+        return response()->json(['success' => true, 'category' => $category]);
+    }
+
+    public function deleteCarCategory($id)
+    {
+        \App\Models\CarListingCategory::findOrFail($id)->delete();
+        return response()->json(['success' => true]);
+    }
+
 }
