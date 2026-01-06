@@ -414,6 +414,28 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/{id}/payment', [App\Http\Controllers\Admin\AuctionManagementController::class, 'updatePaymentStatus']);
         });
 
+        // ======== CAR PROVIDER MANAGEMENT ========
+        Route::prefix('car-providers')->group(function () {
+            Route::get('/', [AdminController::class, 'listCarProviders']);
+            Route::patch('/{id}/verify', [AdminController::class, 'verifyCarProvider']);
+            Route::patch('/{id}/trusted', [AdminController::class, 'toggleTrustedProvider']);
+        });
+
+        Route::prefix('car-listings')->group(function () {
+            Route::get('/', [AdminController::class, 'listCarListings']);
+            Route::patch('/{id}/hide', [AdminController::class, 'toggleHideListing']);
+            Route::post('/{id}/feature', [AdminController::class, 'featureListing']);
+            Route::post('/{id}/sponsor', [AdminController::class, 'sponsorListing']);
+            Route::delete('/{id}/force', [AdminController::class, 'deleteCarListing']);
+        });
+
+        Route::prefix('car-listing-categories')->group(function () {
+            Route::get('/', [AdminController::class, 'listCarCategories']);
+            Route::post('/', [AdminController::class, 'createCarCategory']);
+            Route::put('/{id}', [AdminController::class, 'updateCarCategory']);
+            Route::delete('/{id}', [AdminController::class, 'deleteCarCategory']);
+        });
+
         // ======== SCHEDULER MANAGEMENT ========
         Route::prefix('scheduler')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\SchedulerController::class, 'index']);
