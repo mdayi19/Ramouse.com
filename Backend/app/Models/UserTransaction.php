@@ -76,6 +76,7 @@ class UserTransaction extends Model
             'customer' => Customer::whereHas('user', fn($q) => $q->where('id', $this->user_id))->first(),
             'technician' => Technician::whereHas('user', fn($q) => $q->where('id', $this->user_id))->first(),
             'tow_truck' => TowTruck::whereHas('user', fn($q) => $q->where('id', $this->user_id))->first(),
+            'car_provider' => CarProvider::where('user_id', $this->user_id)->first(),
             default => null,
         };
     }
