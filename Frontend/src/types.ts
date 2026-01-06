@@ -88,6 +88,23 @@ export interface Provider {
   flashPurchases?: FlashProductPurchase[];
 }
 
+export interface CarProvider {
+  user_id?: number;
+  id: string;
+  name: string;
+  business_name?: string;
+  business_type: string;
+  city: string;
+  address: string;
+  profile_photo?: string;
+  gallery?: string[];
+  is_verified: boolean;
+  is_active: boolean;
+  description?: string;
+  email?: string;
+  wallet_balance?: number;
+}
+
 export interface Customer {
   user_id?: number;
   id: string;
@@ -732,7 +749,7 @@ export interface AdminFlashProduct {
   reviews?: StoreProductReview[];
 }
 
-export type View = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store' | 'internationalLicense';
+export type View = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store' | 'internationalLicense' | 'carProviderDashboard';
 
 export interface CarModel {
   id: string;
@@ -943,8 +960,8 @@ export interface CartItem {
 
 export interface AuthResponse {
   token: string;
-  user: Customer | Provider | Technician | TowTruck;
-  role: 'customer' | 'provider' | 'technician' | 'tow_truck';
+  user: Customer | Provider | Technician | TowTruck | CarProvider;
+  role: 'customer' | 'provider' | 'technician' | 'tow_truck' | 'car_provider';
   is_admin?: boolean;
   user_type?: string;
   user_id?: number | string;

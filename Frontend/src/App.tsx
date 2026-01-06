@@ -56,6 +56,7 @@ const CarMarketplacePage = lazy(() => import('./components/CarMarketplace/CarMar
 const CarListingDetail = lazy(() => import('./components/CarMarketplace/CarListingDetail'));
 const CarProviderProfile = lazy(() => import('./components/CarMarketplace/CarProviderProfile'));
 const CarProviderRegistration = lazy(() => import('./components/CarMarketplace/CarProviderRegistration'));
+const CarProviderDashboard = lazy(() => import('./components/CarMarketplace/CarProviderDashboard').then(module => ({ default: module.CarProviderDashboard })));
 
 import NotificationPermissionModal from './components/NotificationPermissionModal';
 
@@ -129,7 +130,8 @@ const AuctionRoomWrapper = ({ isAuthenticated, showToast, user }: any) => {
 const App: React.FC = () => {
     const {
         isDarkMode, setIsDarkMode, currentStep, currentView, formData, orderNumber, isAuthenticated, isAdmin,
-        isProvider, isTechnician, isTowTruck, loggedInProvider, loggedInTechnician, loggedInTowTruck, loggedInCustomer, userPhone,
+        isProvider, isTechnician, isTowTruck, loggedInProvider, loggedInTechnician, loggedInTowTruck, loggedInCustomer,
+        isCarProvider, loggedInCarProvider, userPhone,
         setLoggedInProvider, setLoggedInTechnician, setLoggedInTowTruck, setLoggedInCustomer,
         showLogin, notifications, setNotifications, isSubmitting, settings, announcements, toastMessages, setToastMessages,
         isLoading, navigationParams, setNavigationParams, isSidebarOpen, setIsSidebarOpen, isPublicMenuOpen, setIsPublicMenuOpen,
@@ -564,8 +566,9 @@ const App: React.FC = () => {
         if (isProvider) return () => handleNavigate('providerDashboard');
         if (isTechnician) return () => handleNavigate('technicianDashboard');
         if (isTowTruck) return () => handleNavigate('towTruckDashboard');
+        if (isCarProvider) return () => handleNavigate('carProviderDashboard');
         return () => handleNavigate('customerDashboard');
-    }, [isAdmin, isProvider, isTechnician, isTowTruck, handleNavigate]);
+    }, [isAdmin, isProvider, isTechnician, isTowTruck, isCarProvider, handleNavigate]);
 
     const getLoggedInCustomer = useMemo(() => {
         if (isAuthenticated && !isAdmin && !isProvider && !isTechnician && !isTowTruck) {
@@ -628,7 +631,7 @@ const App: React.FC = () => {
 
     const showBottomNav = ['customerDashboard', 'providerDashboard', 'technicianDashboard', 'towTruckDashboard', 'notificationCenter'].includes(currentView);
     const isPublicView = ['welcome', 'store', 'technicianDirectory', 'technicianProfile', 'technicianRegistration', 'blog', 'blogPost', 'faq', 'privacyPolicy', 'termsOfUse', 'contact', 'towTruckDirectory', 'towTruckProfile', 'towTruckRegistration'].includes(currentView);
-    const isDashboardView = ['adminDashboard', 'providerDashboard', 'customerDashboard', 'technicianDashboard', 'towTruckDashboard'].includes(currentView);
+    const isDashboardView = ['adminDashboard', 'providerDashboard', 'customerDashboard', 'technicianDashboard', 'towTruckDashboard', 'carProviderDashboard'].includes(currentView);
 
     if (isLoading) {
         // We can render Preloader here if we want to block completely, OR we can render the app hidden behind it.
@@ -700,7 +703,8 @@ const App: React.FC = () => {
                                                     isTechnician ? '/technician' :
                                                         isProvider ? '/provider' :
                                                             isTowTruck ? '/tow-truck-dashboard' :
-                                                                '/dashboard'
+                                                                isCarProvider ? '/car-provider-dashboard' :
+                                                                    '/dashboard'
                                             }
                                             replace
                                         />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Provider, Customer, Settings, Technician, Notification, NotificationType, TowTruck } from '../types';
+import { Provider, Customer, Settings, Technician, Notification, NotificationType, TowTruck, CarProvider } from '../types';
 import { COUNTRY_CODES } from '../constants/countries';
 import Icon from './Icon';
 import { AuthService } from '../services/auth.service';
@@ -10,7 +10,7 @@ import { Card, CardContent } from './ui/Card';
 import { cn } from '../lib/utils';
 
 interface LoginScreenProps {
-  onLoginSuccess: (phone: string, rememberMe: boolean, provider?: Provider, technician?: Technician, towTruck?: TowTruck, isAdmin?: boolean) => void;
+  onLoginSuccess: (phone: string, rememberMe: boolean, provider?: Provider, technician?: Technician, towTruck?: TowTruck, isAdmin?: boolean, customer?: Customer, carProvider?: CarProvider) => void;
   onClose: () => void;
   onGoToTechnicianRegistration: () => void;
   onGoToTowTruckRegistration: () => void;
@@ -200,6 +200,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, response.user as TowTruck);
       } else if ((response.role as string) === 'admin') {
         onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, undefined, true);
+      } else if (response.role === 'car_provider') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, undefined, undefined, undefined, response.user as CarProvider);
       } else {
         onLoginSuccess(fullPhoneNumber, rememberMe);
       }
@@ -315,6 +317,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, response.user as TowTruck);
       } else if ((response.role as string) === 'admin') {
         onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, undefined, true);
+      } else if (response.role === 'car_provider') {
+        onLoginSuccess(fullPhoneNumber, rememberMe, undefined, undefined, undefined, undefined, undefined, response.user as CarProvider);
       } else {
         onLoginSuccess(fullPhoneNumber, rememberMe);
       }

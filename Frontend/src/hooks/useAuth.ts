@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Provider, Technician, TowTruck, Customer } from '../types';
+import { Provider, Technician, TowTruck, Customer, CarProvider } from '../types';
 import { Settings } from '../types';
 
 export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
@@ -10,6 +10,7 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
     const [isProvider, setIsProvider] = useState(() => localStorage.getItem('userType') === 'provider');
     const [isTechnician, setIsTechnician] = useState(() => localStorage.getItem('userType') === 'technician');
     const [isTowTruck, setIsTowTruck] = useState(() => localStorage.getItem('userType') === 'tow_truck');
+    const [isCarProvider, setIsCarProvider] = useState(() => localStorage.getItem('userType') === 'car_provider');
 
     // Helper to load data from localStorage fallback
     const loadData = <T,>(key: string, defaultValue: T): T => {
@@ -65,6 +66,17 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
         return null;
     });
 
+    const [loggedInCarProvider, setLoggedInCarProvider] = useState<CarProvider | null>(() => {
+        if (localStorage.getItem('userType') === 'car_provider') {
+            const saved = localStorage.getItem('currentUser');
+            if (saved) {
+                try { return JSON.parse(saved); }
+                catch (e) { return null; }
+            }
+        }
+        return null;
+    });
+
     const [userPhone, setUserPhone] = useState(() => localStorage.getItem('userPhone') || '');
     const [showLogin, setShowLogin] = useState(false);
     const [postLoginAction, setPostLoginAction] = useState<(() => void) | null>(null);
@@ -102,7 +114,15 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
                 setIsTowTruck(true);
                 const allTowTrucks = loadData<TowTruck[]>('all_tow_trucks', []);
                 const foundTowTruck = allTowTrucks.find(t => t.id === phone);
+
                 if (foundTowTruck) setLoggedInTowTruck(foundTowTruck);
+            } else if (storedUserType === 'car_provider') {
+                setIsCarProvider(true);
+                const saved = localStorage.getItem('currentUser');
+                if (saved) {
+                    try { setLoggedInCarProvider(JSON.parse(saved)); }
+                    catch (e) { }
+                }
             } else {
                 // Default to customer
                 // Note: We don't load customer from local storage here because we want to rely on API
@@ -113,7 +133,7 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
         }
     }, [settings.adminPhone]);
 
-    const handleLoginSuccess = useCallback((phone: string, rememberMe: boolean, provider?: Provider, technician?: Technician, towTruck?: TowTruck, isAdminUser?: boolean, customer?: Customer) => {
+    const handleLoginSuccess = useCallback((phone: string, rememberMe: boolean, provider?: Provider, technician?: Technician, towTruck?: TowTruck, isAdminUser?: boolean, customer?: Customer, carProvider?: CarProvider) => {
         setIsAuthenticated(true);
         setUserPhone(phone);
         localStorage.setItem('isAuthenticated', 'true');
@@ -147,6 +167,12 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
             targetPath = '/tow-truck-dashboard';
             localStorage.setItem('userType', 'tow_truck');
             localStorage.setItem('currentUser', JSON.stringify(towTruck));
+        } else if (carProvider) {
+            setIsCarProvider(true);
+            setLoggedInCarProvider(carProvider);
+            targetPath = '/car-provider-dashboard';
+            localStorage.setItem('userType', 'car_provider');
+            localStorage.setItem('currentUser', JSON.stringify(carProvider));
         } else {
             // Customer
             if (customer) {
@@ -166,10 +192,13 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
         setIsAdmin(false);
         setIsProvider(false);
         setIsTechnician(false);
+
         setIsTowTruck(false);
+        setIsCarProvider(false);
         setLoggedInProvider(null);
         setLoggedInTechnician(null);
         setLoggedInTowTruck(null);
+        setLoggedInCarProvider(null);
         setLoggedInCustomer(null);
         localStorage.removeItem('isAuthenticated');
         localStorage.removeItem('userPhone');
@@ -183,7 +212,9 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
         if (isAdmin) return 'مدير النظام';
         if (loggedInProvider) return loggedInProvider.name;
         if (loggedInTechnician) return loggedInTechnician.name;
+
         if (loggedInTowTruck) return loggedInTowTruck.name;
+        if (loggedInCarProvider) return loggedInCarProvider.name;
         if (loggedInCustomer) return loggedInCustomer.name;
 
         // Fallback to finding in allCustomers (legacy/backup)
@@ -196,10 +227,13 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
         isAdmin, setIsAdmin,
         isProvider, setIsProvider,
         isTechnician, setIsTechnician,
+
         isTowTruck, setIsTowTruck,
+        isCarProvider, setIsCarProvider,
         loggedInProvider, setLoggedInProvider,
         loggedInTechnician, setLoggedInTechnician,
         loggedInTowTruck, setLoggedInTowTruck,
+        loggedInCarProvider, setLoggedInCarProvider,
         loggedInCustomer, setLoggedInCustomer,
         userPhone, setUserPhone,
         showLogin, setShowLogin,
