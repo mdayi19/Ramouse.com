@@ -453,6 +453,73 @@ Route::middleware(['auth:sanctum', 'throttle:30,1'])->prefix('auctions')->group(
     Route::get('/watchlist/{auctionId}/check', [App\Http\Controllers\WatchlistController::class, 'check']);
 });
 
+// ======== CAR MARKETPLACE PUBLIC ROUTES ========
+use App\Http\Controllers\Api\CarListingController;
+use App\Http\Controllers\Api\CarListingCategoryController;
+use App\Http\Controllers\Api\CarProviderController;
+use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\CarAnalyticsController;
+
+// Public Car Marketplace
+Route::prefix('car-marketplace')->group(function () {
+    Route::get('/', [CarListingController::class, 'index']); // Browse sale listings
+    Route::get('/{slug}', [CarListingController::class, 'show']); // Listing detail
+    Route::post('/search', [CarListingController::class, 'search']); // FULLTEXT search
+});
+
+// Public Rent Car
+Route::prefix('rent-car')->group(function () {
+    Route::get('/', [CarListingController::class, 'index']); // Browse rent listings
+});
+
+// Public Car Categories
+Route::get('/car-categories', [CarListingCategoryController::class, 'index']);
+Route::get('/car-categories/{id}', [CarListingCategoryController::class, 'show']);
+
+// Public Car Provider Profiles
+Route::get('/car-providers/{id}', [CarProviderController::class, 'getPublicProfile']);
+Route::get('/car-providers/{id}/listings', [CarProviderController::class, 'getProviderListings']);
+
+// Public Analytics Tracking
+Route::post('/analytics/track', [CarAnalyticsController::class, 'trackEvent']);
+
+// Public Favorites Count
+Route::get('/favorites/{listingId}/count', [FavoriteController::class, 'count']);
+
+// ======== CAR PROVIDER AUTHENTICATED ROUTES ========
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Car Provider Profile Management
+    Route::prefix('car-provider')->group(function () {
+        Route::get('/profile', [CarProviderController::class, 'getProfile']);
+        Route::put('/profile', [CarProviderController::class, 'updateProfile']);
+        Route::get('/stats', [CarProviderController::class, 'getStats']);
+        Route::get('/analytics', [CarProviderController::class, 'getAnalytics']);
+
+        // Car Listing Management (Provider)
+        Route::post('/listings', [CarListingController::class, 'store']);
+        Route::put('/listings/{id}', [CarListingController::class, 'update']);
+        Route::delete('/listings/{id}', [CarListingController::class, 'destroy']);
+        Route::patch('/listings/{id}/toggle', [CarListingController::class, 'toggleAvailability']);
+
+        // Listing Analytics (Owner only)
+        Route::get('/listings/{id}/analytics', [CarAnalyticsController::class, 'getListingAnalytics']);
+    });
+
+    // Individual Customer Listings (max 3)
+    Route::prefix('customer')->group(function () {
+        Route::post('/listings', [CarListingController::class, 'store']);
+        Route::put('/listings/{id}', [CarListingController::class, 'update']);
+        Route::delete('/listings/{id}', [CarListingController::class, 'destroy']);
+    });
+
+    // Favorites
+    Route::prefix('favorites')->group(function () {
+        Route::get('/', [FavoriteController::class, 'index']);
+        Route::post('/{listingId}/toggle', [FavoriteController::class, 'toggle']);
+        Route::get('/{listingId}/check', [FavoriteController::class, 'check']);
+    });
+});
+
 // ======== USER CAR SUBMISSION ========
 Route::middleware(['auth:sanctum'])->post('/sell-car', [App\Http\Controllers\AuctionCarController::class, 'userSubmit']);
 Route::middleware(['auth:sanctum'])->post('/auctions/cars/upload-media', [App\Http\Controllers\AuctionCarController::class, 'uploadMedia']);
