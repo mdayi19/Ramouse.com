@@ -118,6 +118,28 @@ class CarProviderController extends Controller
     }
 
     /**
+     * Get authenticated provider's listings (Dashboard)
+     */
+    public function getMyListings(Request $request)
+    {
+        $user = auth('sanctum')->user();
+
+        $listings = CarListing::with(['category', 'brand'])
+            ->where('owner_id', $user->id)
+            ->where('seller_type', 'provider')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'listings' => $listings->items(),
+            'total' => $listings->total(),
+            'current_page' => $listings->currentPage(),
+            'per_page' => $listings->perPage(),
+        ]);
+    }
+
+    /**
      * Get provider analytics (detailed)
      */
     public function getAnalytics(Request $request)

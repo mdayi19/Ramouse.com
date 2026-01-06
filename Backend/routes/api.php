@@ -520,6 +520,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/analytics', [CarProviderController::class, 'getAnalytics']);
 
         // Car Listing Management (Provider)
+        Route::get('/listings', [CarProviderController::class, 'getMyListings']);
         Route::post('/listings', [CarListingController::class, 'store']);
         Route::put('/listings/{id}', [CarListingController::class, 'update']);
         Route::delete('/listings/{id}', [CarListingController::class, 'destroy']);
