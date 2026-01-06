@@ -53,6 +53,8 @@ docker compose exec app php artisan view:cache
 docker compose logs queue (it should say "Processing jobs" or be silent/ready).
 Real-time: Refresh the app. If it still fails, check logs with: docker compose logs reverb
 ------------
+ git pull origin feature/carprovider
+
 # 1. Fetch the latest history from GitHub
 git fetch origin
 
