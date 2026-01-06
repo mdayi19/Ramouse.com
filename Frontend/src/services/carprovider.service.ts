@@ -147,7 +147,9 @@ export class CarProviderService {
 
     // Registration
     static async registerProvider(data: FormData) {
-        const response = await api.post('/auth/register-car-provider', data);
+        const response = await api.post('/auth/register-car-provider', data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     }
 }
