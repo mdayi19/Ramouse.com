@@ -144,4 +144,10 @@ export class CarProviderService {
         const response = await api.get(`/car-providers/${providerId}/listings`, { params: filters });
         return response.data;
     }
+
+    // Registration
+    static async registerProvider(data: FormData) {
+        const response = await api.post('/auth/register-car-provider', data);
+        return response.data;
+    }
 }

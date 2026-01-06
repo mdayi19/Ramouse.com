@@ -55,6 +55,7 @@ const LiveAuctionRoom = lazy(() => import('./components/CarAuction/LiveAuctionRo
 const CarMarketplacePage = lazy(() => import('./components/CarMarketplace/CarMarketplacePage').then(module => ({ default: module.CarMarketplacePage })));
 const CarListingDetail = lazy(() => import('./components/CarMarketplace/CarListingDetail'));
 const CarProviderProfile = lazy(() => import('./components/CarMarketplace/CarProviderProfile'));
+const CarProviderRegistration = lazy(() => import('./components/CarMarketplace/CarProviderRegistration'));
 
 import NotificationPermissionModal from './components/NotificationPermissionModal';
 
@@ -800,6 +801,15 @@ const App: React.FC = () => {
 
                             {/* Car Provider Profile */}
                             <Route path="/car-providers/:id" element={<CarProviderProfile />} />
+
+                            {/* Car Provider Registration */}
+                            <Route path="/register-car-provider" element={
+                                <CarProviderRegistration
+                                    onComplete={() => handleNavigate('welcome')}
+                                    onCancel={() => handleNavigate('welcome')}
+                                    showToast={showToast}
+                                />
+                            } />
 
                             {/* Auction Routes */}
                             <Route path="/auctions" element={<AuctionListPage onSelectAuction={(auction) => navigate(`/auctions/${auction.id}`)} showToast={showToast} />} />
