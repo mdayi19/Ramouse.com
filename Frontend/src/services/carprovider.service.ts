@@ -211,12 +211,12 @@ export class CarProviderService {
     }
 
     // Public Provider Profile Methods
-    static async getPublicProfile(providerId: number) {
+    static async getPublicProfile(providerId: string | number) {
         const response = await api.get(`/car-providers/${providerId}`);
         return response.data.data || response.data;
     }
 
-    static async getProviderListings(providerId: number, filters: any = {}) {
+    static async getProviderListings(providerId: string | number, filters: any = {}) {
         const response = await api.get(`/car-providers/${providerId}/listings`, { params: filters });
         return response.data;
     }

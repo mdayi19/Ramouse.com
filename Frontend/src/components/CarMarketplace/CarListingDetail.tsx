@@ -4,6 +4,7 @@ import {
     Car, MapPin, Calendar, Gauge, Fuel, Settings, Phone,
     Heart, Share2, ChevronRight, CheckCircle, Star, Eye, MessageCircle,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 import CarGallery from './ListingParts/CarGallery';
@@ -84,13 +85,13 @@ const safePrice = (price: number | undefined) => {
 const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null | any }> = ({ icon: Icon, label, value }) => {
     if (value === undefined || value === null || value === '' || typeof value === 'object') return null;
     return (
-        <div className="flex items-center gap-3">
-            <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                <Icon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+        <div className="flex items-center gap-3 group">
+            <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
+                <Icon className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors" />
             </div>
             <div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">{label}</p>
-                <p className="font-medium text-slate-900 dark:text-white capitalize">{typeof value === 'string' ? translateValue(value) : value}</p>
+                <p className="font-medium text-slate-900 dark:text-white capitalize line-clamp-1">{typeof value === 'string' ? translateValue(value) : value}</p>
             </div>
         </div>
     );
@@ -230,9 +231,13 @@ const CarListingDetail: React.FC = () => {
     const hasWhatsapp = listing.contact_whatsapp || (provider?.phone);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0"
+        >
             {/* Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <button
                         onClick={() => navigate(-1)}
@@ -247,7 +252,12 @@ const CarListingDetail: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="lg:col-span-2 space-y-6"
+                    >
 
                         {/* New Gallery Component */}
                         <CarGallery
@@ -396,10 +406,15 @@ const CarListingDetail: React.FC = () => {
                             brandId={listing.brand?.id}
                             t={t}
                         />
-                    </div>
+                    </motion.div>
 
                     {/* Sidebar */}
-                    <div className="hidden lg:block space-y-6">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="hidden lg:block space-y-6"
+                    >
                         <ProviderSidebar
                             provider={provider}
                             listing={listing}
@@ -407,12 +422,17 @@ const CarListingDetail: React.FC = () => {
                             onContact={handleContact}
                             onReport={() => setShowReportModal(true)}
                         />
-                    </div>
+                    </motion.div>
                 </div>
             </div>
 
             {/* Mobile Sticky Contact Bar */}
-            <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-40">
+            <motion.div
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
+                className="lg:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-40"
+            >
                 <div className="flex gap-3">
                     <button
                         onClick={() => handleContact('phone')}
@@ -431,7 +451,7 @@ const CarListingDetail: React.FC = () => {
                         </button>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             <ReportListingModal
                 isOpen={showReportModal}
@@ -440,7 +460,7 @@ const CarListingDetail: React.FC = () => {
                 t={t}
             />
 
-        </div>
+        </motion.div>
     );
 };
 

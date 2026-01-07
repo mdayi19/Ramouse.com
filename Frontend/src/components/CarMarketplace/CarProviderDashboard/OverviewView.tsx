@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Car, Eye, Heart, TrendingUp, Plus, Wallet,
-    ClipboardList, ChevronLeft, ArrowRight
+    ClipboardList, ChevronLeft, ArrowRight, ArrowUp, ArrowDown, Activity
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarProvider } from '../../../types';
+import { useRealtime, useWalletUpdates } from '../../../hooks/useRealtime';
 
 interface OverviewViewProps {
     provider: CarProvider;
@@ -15,21 +17,24 @@ interface OverviewViewProps {
 export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast }) => {
     const navigate = useNavigate();
     const [stats, setStats] = useState<any>(null);
+    const [analyticsData, setAnalyticsData] = useState<any>(null);
     const [recentListings, setRecentListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [balance, setBalance] = useState(provider.wallet_balance || 0);
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    const { listenToPrivateChannel } = useRealtime();
 
+    // Fetch Initial Data
     const loadData = async () => {
         try {
-            const [statsRes, listingsRes] = await Promise.all([
+            const [statsRes, analyticsRes, listingsRes] = await Promise.all([
                 CarProviderService.getProviderStats(),
+                CarProviderService.getProviderAnalytics(7), // Get last 7 days for trends
                 CarProviderService.getMyListings()
             ]);
+
             setStats(statsRes.stats);
-            // Get first 5 recent listings
+            setAnalyticsData(analyticsRes);
             setRecentListings((listingsRes.listings || []).slice(0, 5));
         } catch (error) {
             console.error(error);
@@ -38,49 +43,150 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
         }
     };
 
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    // Real-time Updates
+    useEffect(() => {
+        // Listen for order/listing changes that might affect stats
+        const stopListeningUser = listenToPrivateChannel(`user.${provider.user_id}`, '.stats.updated', () => {
+            loadData();
+        });
+
+        return () => {
+            stopListeningUser();
+        };
+    }, [provider.id, listenToPrivateChannel]);
+
+    // Wallet Real-time Updates
+    useWalletUpdates(provider.user_id, (data) => {
+        if (data.new_balance !== undefined) {
+            setBalance(data.new_balance);
+        } else {
+            // Fallback if full data not provided
+            CarProviderService.getPublicProfile(provider.id).then(p => {
+                if (p && p.wallet_balance) setBalance(p.wallet_balance);
+            });
+        }
+    }, showToast);
+
+
+    // Animation Variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
+
     return (
-        <div className="space-y-8">
-            {/* Header section with Greeting */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <motion.div
+            className="space-y-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
+            {/* Header section */}
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">نظرة عامة</h2>
                     <p className="text-slate-600 dark:text-slate-400 mt-1">مرحباً {provider.name}، إليك ملخص نشاطك</p>
                 </div>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => navigate('/car-provider-dashboard/listings')}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-all font-medium shadow-lg shadow-blue-600/20"
                 >
                     <Plus className="w-5 h-5" />
                     <span>إضافة سيارة جديدة</span>
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
-            {/* Quick Stats Grid */}
+            {/* Enhanced Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatsCard
-                    title="إجمالي السيارات"
+                <DashboardMetricCard
+                    title="السيارات النشطة"
                     value={stats?.total_listings || 0}
+                    // For listings, 'trend' might not be as relevant daily, so we can omit or show generic
                     icon={Car}
                     color="blue"
+                    delay={0.1}
                 />
-                <StatsCard
-                    title="إجمالي المشاهدات"
-                    value={stats?.total_views || 0}
+                <DashboardMetricCard
+                    title="المشاهدات (7 أيام)"
+                    value={analyticsData?.summary?.total_views || stats?.total_views || 0}
+                    trend={analyticsData?.summary?.views_growth}
                     icon={Eye}
-                    color="green"
+                    color="purple"
+                    delay={0.2}
                 />
-                <StatsCard
-                    title="إجمالي الإعجابات"
-                    value={stats?.total_favorites || 0}
-                    icon={Heart}
-                    color="red"
+                <DashboardMetricCard
+                    title="نقرات الاتصال (7 أيام)"
+                    value={analyticsData?.summary?.total_contacts || 0}
+                    trend={analyticsData?.summary?.contacts_growth}
+                    icon={ClipboardList}
+                    color="green"
+                    delay={0.3}
                 />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content Area (Recent Listings) - Takes up 2/3 width */}
+                {/* Main Content Area (Recent Listings + Mini Chart) */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+
+                    {/* Views Chart Mini Section */}
+                    {analyticsData?.views_history && (
+                        <motion.div
+                            variants={itemVariants}
+                            className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Activity className="w-5 h-5 text-blue-500" />
+                                    نشاط المشاهدات
+                                </h3>
+                                <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg">آخر 7 أيام</span>
+                            </div>
+
+                            <div className="h-40 flex items-end justify-between gap-2 px-2">
+                                {analyticsData.views_history.map((item: any, i: number) => {
+                                    const max = Math.max(...analyticsData.views_history.map((d: any) => d.value), 1);
+                                    const height = (item.value / max) * 100;
+                                    return (
+                                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-default">
+                                            <div className="w-full relative h-32 flex items-end justify-center">
+                                                <motion.div
+                                                    initial={{ height: 0 }}
+                                                    animate={{ height: `${height}%` }}
+                                                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                                                    className="w-full max-w-[24px] bg-blue-100 dark:bg-blue-900/40 rounded-t-md group-hover:bg-blue-500 transition-colors relative"
+                                                >
+                                                    {/* Tooltip */}
+                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                                        {item.value}
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                            <span className="text-[10px] text-slate-400">{item.date}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Recent Listings */}
+                    <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Car className="w-5 h-5 text-blue-500" />
@@ -88,10 +194,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                             </h3>
                             <button
                                 onClick={() => navigate('/car-provider-dashboard/listings')}
-                                className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group"
                             >
                                 عرض الكل
-                                <ArrowRight className="w-4 h-4" />
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-[-2px] transition-transform rtl:rotate-180" />
                             </button>
                         </div>
 
@@ -102,16 +208,20 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                     <p className="text-slate-500 dark:text-slate-400">لا توجد سيارات مضافة حديثاً</p>
                                 </div>
                             ) : (
-                                recentListings.map(listing => (
-                                    <div
+                                recentListings.map((listing, idx) => (
+                                    <motion.div
                                         key={listing.id}
-                                        className="flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors border border-slate-100 dark:border-slate-700/50"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className="flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors border border-slate-100 dark:border-slate-700/50 group cursor-pointer"
+                                        onClick={() => navigate(`/car-marketplace/listing/${listing.slug || listing.id}`)}
                                     >
-                                        <div className="h-16 w-24 flex-shrink-0 bg-slate-200 dark:bg-slate-700 rounded-lg overflow-hidden">
+                                        <div className="h-16 w-24 flex-shrink-0 bg-slate-200 dark:bg-slate-700 rounded-lg overflow-hidden relative">
                                             <img
                                                 src={listing.photos?.[0] || '/placeholder-car.jpg'}
                                                 alt={listing.title}
-                                                className="h-full w-full object-cover"
+                                                className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             />
                                         </div>
                                         <div className="mr-4 flex-1">
@@ -126,8 +236,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${listing.is_hidden
-                                                    ? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
-                                                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                ? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                                                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                 }`}>
                                                 {listing.is_hidden ? 'مخفي' : 'نشط'}
                                             </span>
@@ -136,48 +246,60 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                                 {listing.views_count}
                                             </span>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
 
-                {/* Sidebar Column (Wallet & Actions) - Takes up 1/3 width */}
-                <div className="space-y-6">
-                    {/* Wallet Card */}
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+                {/* Sidebar Column */}
+                <motion.div variants={itemVariants} className="space-y-6">
+                    {/* Enhanced Wallet Card */}
+                    <div className="relative group overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-500/20">
+                        {/* Abstract Background Shapes */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl transition-transform group-hover:scale-110 duration-700"></div>
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full -ml-12 -mb-12 blur-2xl transition-transform group-hover:scale-110 duration-700"></div>
 
                         <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
                                     <Wallet className="w-6 h-6 text-white" />
                                 </div>
-                                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/10">
-                                    المحفظة
+                                <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/10 flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                                    متصل
                                 </span>
                             </div>
 
-                            <div className="mb-6">
-                                <p className="text-blue-100 text-sm mb-1">الرصيد الحالي</p>
-                                <h3 className="text-3xl font-bold">
-                                    {provider.wallet_balance?.toLocaleString() || 0}
-                                    <span className="text-lg font-normal opacity-80 mr-2">ل.س</span>
+                            <div className="mb-8">
+                                <p className="text-blue-100 text-sm mb-2 font-medium opacity-80">الرصيد الحالي</p>
+                                <h3 className="text-4xl font-bold tracking-tight">
+                                    <AnimatePresence mode="wait">
+                                        <motion.span
+                                            key={balance}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                        >
+                                            {balance?.toLocaleString() || 0}
+                                        </motion.span>
+                                    </AnimatePresence>
+                                    <span className="text-xl font-medium opacity-70 mr-2">ل.س</span>
                                 </h3>
                             </div>
 
                             <button
                                 onClick={() => navigate('/car-provider-dashboard/wallet')}
-                                className="w-full py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-sm"
+                                className="w-full py-4 bg-white text-blue-700 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/5 active:scale-95 flex items-center justify-center gap-2"
                             >
+                                <Plus className="w-5 h-5" />
                                 شحن المحفظة
                             </button>
                         </div>
                     </div>
 
-                    {/* Quick Action Buttons */}
+                    {/* Quick Actions */}
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
                         <h3 className="font-bold text-slate-900 dark:text-white mb-4 text-sm uppercase tracking-wider text-opacity-70">
                             وصول سريع
@@ -193,7 +315,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                     </div>
                                     <span className="font-semibold text-slate-700 dark:text-slate-200">طلباتي</span>
                                 </div>
-                                <ChevronLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1 transition-transform" />
+                                <ChevronLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
                             </button>
 
                             <button
@@ -206,41 +328,61 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                     </div>
                                     <span className="font-semibold text-slate-700 dark:text-slate-200">متجري</span>
                                 </div>
-                                <ChevronLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1 transition-transform" />
+                                <ChevronLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
                             </button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
-const StatsCard: React.FC<{
+const DashboardMetricCard: React.FC<{
     title: string;
     value: number;
+    trend?: number;
     icon: any;
-    color: 'blue' | 'green' | 'red';
-}> = ({ title, value, icon: Icon, color }) => {
+    color: 'blue' | 'green' | 'red' | 'purple';
+    delay?: number;
+}> = ({ title, value, trend, icon: Icon, color, delay = 0 }) => {
     const colors = {
-        blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/20',
-        green: 'bg-green-100 text-green-600 dark:bg-green-900/20',
-        red: 'bg-red-100 text-red-600 dark:bg-red-900/20'
+        blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20',
+        green: 'bg-green-50 text-green-600 dark:bg-green-900/20',
+        red: 'bg-red-50 text-red-600 dark:bg-red-900/20',
+        purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20'
     };
 
+    const isPositive = trend && trend >= 0;
+
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
-            <div>
-                <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
-                    {title}
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.4 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all hover:-translate-y-1"
+        >
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-xl ${colors[color]} transition-transform hover:scale-110`}>
+                    <Icon className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                    {value.toLocaleString()}
-                </div>
+                {trend !== undefined && (
+                    <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${isPositive
+                            ? 'text-green-600 bg-green-100 dark:bg-green-900/20'
+                            : 'text-red-500 bg-red-100 dark:bg-red-900/20'
+                        }`}>
+                        {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                        {Math.abs(trend)}%
+                    </div>
+                )}
             </div>
-            <div className={`p-4 rounded-2xl ${colors[color]}`}>
-                <Icon className="w-7 h-7" />
-            </div>
-        </div>
+
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1 truncate">
+                {title}
+            </h3>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                {value.toLocaleString()}
+            </p>
+        </motion.div>
     );
 };
