@@ -134,18 +134,59 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         if (currentStep > 1) setCurrentStep(prev => prev - 1);
     };
 
+    // Frontend validation
+    const validateForm = (): { valid: boolean; errors: string[] } => {
+        const errors: string[] = [];
+
+        if (!formData.title.trim()) errors.push('عنوان الإعلان مطلوب');
+        if (!formData.brand_id) errors.push('الماركة مطلوبة');
+        if (!formData.model.trim()) errors.push('الموديل مطلوب');
+        if (!formData.year || formData.year < 1990) errors.push('سنة الصنع غير صحيحة');
+        if (!formData.mileage || Number(formData.mileage) < 0) errors.push('الكيلومترات غير صحيحة');
+        if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
+        if (!formData.city.trim()) errors.push('المدينة مطلوبة');
+        if (formData.photos.length === 0 && (!editingListing || !editingListing.photos?.length)) {
+            errors.push('يجب إضافة صورة واحدة على الأقل');
+        }
+
+        return { valid: errors.length === 0, errors };
+    };
+
     const handleSubmit = async () => {
         try {
+            // Frontend validation first
+            const validation = validateForm();
+            if (!validation.valid) {
+                console.error('❌ Validation failed:', validation.errors);
+                showToast(`تحقق من البيانات: ${validation.errors[0]}`, 'error');
+                return;
+            }
+
             console.log('🚀 Starting submission...', formData);
 
             // Upload photos
             let photoUrls: string[] = editingListing?.photos || [];
             if (formData.photos.length > 0) {
                 showToast('جاري رفع الصور...', 'info');
-                const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(formData.photos));
-                const newUrls = uploadRes.urls || uploadRes.paths || [];
-                photoUrls = [...photoUrls, ...newUrls];
-                console.log('📸 Photos uploaded:', photoUrls);
+                try {
+                    const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(formData.photos));
+                    const newUrls = uploadRes.urls || uploadRes.paths || [];
+                    if (!newUrls || newUrls.length === 0) {
+                        throw new Error('فشل رفع الصور');
+                    }
+                    photoUrls = [...photoUrls, ...newUrls];
+                    console.log('📸 Photos uploaded:', photoUrls);
+                } catch (uploadError) {
+                    console.error('Photo upload failed:', uploadError);
+                    showToast('فشل رفع الصور. حاول مرة أخرى', 'error');
+                    return;
+                }
+            }
+
+            // Validate photos exist
+            if (!photoUrls || photoUrls.length === 0) {
+                showToast('يجب إضافة صورة واحدة على الأقل', 'error');
+                return;
             }
 
             // Prepare payload
@@ -172,16 +213,26 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
             console.log('📦 Payload prepared:', payload);
 
+            let response;
             if (editingListing) {
-                // Update expects same format as create - JSON object
-                const response = await CarProviderService.updateListing(editingListing.id, payload as any);
+                response = await CarProviderService.updateListing(editingListing.id, payload as any);
                 console.log('✅ Update response:', response);
-                showToast('تم تحديث السيارة بنجاح!', 'success');
             } else {
-                const response = await CarProviderService.createListing(payload);
+                response = await CarProviderService.createListing(payload);
                 console.log('✅ Create response:', response);
-                showToast('تم نشر السيارة بنجاح!', 'success');
             }
+
+            // Validate response has listing data
+            if (!response || (!response.listing && !response.data)) {
+                console.error('❌ Invalid response:', response);
+                showToast('حدث خطأ غير متوقع. لم يتم الحفظ', 'error');
+                return;
+            }
+
+            const listing = response.listing || response.data;
+            console.log('✅ Listing saved with ID:', listing.id);
+
+            showToast(editingListing ? 'تم تحديث السيارة بنجاح!' : 'تم نشر السيارة بنجاح!', 'success');
 
             // Wait a bit for user to see success toast
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -189,7 +240,23 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         } catch (error: any) {
             console.error('❌ Listing submission failed:', error);
             console.error('Error response:', error.response?.data);
-            showToast(error.response?.data?.message || 'فشل نشر السيارة', 'error');
+
+            // Handle specific error types
+            if (error.response?.status === 401) {
+                showToast('انتهت جلستك. يرجى تسجيل الدخول مرة أخرى', 'error');
+            } else if (error.response?.status === 422) {
+                const errors = error.response.data.errors;
+                if (errors) {
+                    const firstError = Object.values(errors)[0];
+                    showToast(`خطأ في البيانات: ${firstError}`, 'error');
+                } else {
+                    showToast(error.response.data.message || 'البيانات غير صحيحة', 'error');
+                }
+            } else if (error.response?.status === 403) {
+                showToast(error.response.data.message || 'غير مصرح لك بهذا الإجراء', 'error');
+            } else {
+                showToast(error.response?.data?.message || error.message || 'فشل نشر السيارة', 'error');
+            }
         }
     };
 
