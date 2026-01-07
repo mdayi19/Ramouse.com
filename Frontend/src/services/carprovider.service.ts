@@ -75,6 +75,32 @@ export class CarProviderService {
         return response.data;
     }
 
+    static async getBrands() {
+        // TODO: Backend needs to add /car-brands endpoint
+        // For now, return common brands used in Syria
+        // These should match the Brand model IDs in the database
+        return {
+            success: true,
+            brands: [
+                { id: 1, name: 'Toyota', name_ar: 'تويوتا' },
+                { id: 2, name: 'Hyundai', name_ar: 'هيونداي' },
+                { id: 3, name: 'Kia', name_ar: 'كيا' },
+                { id: 4, name: 'Nissan', name_ar: 'نيسان' },
+                { id: 5, name: 'Mercedes-Benz', name_ar: 'مرسيدس بنز' },
+                { id: 6, name: 'BMW', name_ar: 'بي ام دبليو' },
+                { id: 7, name: 'Chevrolet', name_ar: 'شفروليه' },
+                { id: 8, name: 'Ford', name_ar: 'فورد' },
+                { id: 9, name: 'Volkswagen', name_ar: 'فولكس فاجن' },
+                { id: 10, name: 'Mazda', name_ar: 'مازدا' },
+                { id: 11, name: 'Honda', name_ar: 'هوندا' },
+                { id: 12, name: 'Mitsubishi', name_ar: 'ميتسوبيشي' },
+                { id: 13, name: 'Peugeot', name_ar: 'بيجو' },
+                { id: 14, name: 'Renault', name_ar: 'رينو' },
+                { id: 15, name: 'Suzuki', name_ar: 'سوزوكي' },
+            ]
+        };
+    }
+
     static async trackEvent(listingId: number, eventType: string, metadata: any = {}) {
         await api.post('/analytics/track', {
             car_listing_id: listingId,
@@ -106,6 +132,11 @@ export class CarProviderService {
     // Provider Dashboard Methods
     static async getProviderStats() {
         const response = await api.get('/car-provider/stats');
+        return response.data;
+    }
+
+    static async getProviderAnalytics(days: number = 30) {
+        const response = await api.get('/car-provider/analytics', { params: { days } });
         return response.data;
     }
 

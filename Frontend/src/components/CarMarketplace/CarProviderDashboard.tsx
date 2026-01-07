@@ -3,6 +3,7 @@ import { Car, Eye, Heart, TrendingUp, Edit, Trash2, ToggleLeft, ToggleRight, Plu
 import Icon from '../Icon';
 import { CarProviderService } from '../../services/carprovider.service';
 import { CarListingWizard } from './CarListingWizard';
+import { AnalyticsView } from './AnalyticsView';
 import { View } from '../../types';
 
 import { CarProvider } from '../../types';
@@ -25,6 +26,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showWizard, setShowWizard] = useState(false);
+    const [editingListing, setEditingListing] = useState<any>(null);
 
     useEffect(() => {
         loadDashboard();
@@ -66,6 +68,11 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
         } catch (error) {
             showToast('فشل حذف الإعلان', 'error');
         }
+    };
+
+    const handleEditListing = (listing: any) => {
+        setEditingListing(listing);
+        setShowWizard(true);
     };
 
     if (loading) {
@@ -216,7 +223,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
                                                         {listing.is_hidden ? <ToggleLeft className="w-5 h-5" /> : <ToggleRight className="w-5 h-5" />}
                                                     </button>
                                                     <button
-                                                        onClick={() => {/* Edit logic */ }}
+                                                        onClick={() => handleEditListing(listing)}
                                                         className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg"
                                                         title="تعديل"
                                                     >
@@ -240,14 +247,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
                 )}
 
                 {activeTab === 'analytics' && (
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            تحليلات متقدمة
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-400">
-                            قريباً: تحليلات تفصيلية للمشاهدات والإعجابات
-                        </p>
-                    </div>
+                    <AnalyticsView showToast={showToast} />
                 )}
             </div>
 
@@ -256,11 +256,16 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
                 <CarListingWizard
                     onComplete={() => {
                         setShowWizard(false);
+                        setEditingListing(null);
                         loadDashboard();
                     }}
-                    onCancel={() => setShowWizard(false)}
+                    onCancel={() => {
+                        setShowWizard(false);
+                        setEditingListing(null);
+                    }}
                     showToast={showToast}
                     userPhone={userPhone}
+                    editingListing={editingListing}
                 />
             )}
         </div>

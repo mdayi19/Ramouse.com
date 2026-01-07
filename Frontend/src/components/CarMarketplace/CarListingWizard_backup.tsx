@@ -3,16 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, Check, Car, ShoppingCart, RefreshCw,
     Tag, Tags, Settings, Wrench, Camera, CheckCircle, DollarSign,
-    Calendar, Gauge, Zap, Fuel, Droplets, Star, Upload, Image,
-    DoorOpen, Users, Palette, Rocket
+    Calendar, Gauge, Zap, Fuel, Droplets, Star, Palette, Upload, Image
 } from 'lucide-react';
 import Icon from '../Icon';
 import { CarProviderService } from '../../services/carprovider.service';
 import { IconCard } from './IconCard';
 import { PhotoUploader } from './PhotoUploader';
-import { NumberSelector } from './NumberSelector';
-import { ColorPicker } from './ColorPicker';
-import { ConditionPresets } from './ConditionPresets';
 
 interface CarListingWizardProps {
     onComplete: () => void;
@@ -26,9 +22,13 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     onComplete,
     onCancel,
     showToast,
-    userPhone
+    userPhone,
+    editingListing
 }) => {
     const [currentStep, setCurrentStep] = useState(1);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [brands, setBrands] = useState<any[]>([]);
+    const [loadingData, setLoadingData] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
         listing_type: 'sale' as 'sale' | 'rent',
@@ -62,7 +62,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         'Ïğ┘äÏ¡Ïğ┘äÏ® ┘êÏğ┘ä┘à┘èÏ▓ÏğÏ¬',
         'Ïğ┘äÏÁ┘êÏ▒ ┘êÏğ┘ä┘ü┘èÏ»┘è┘ê',
         'Ïğ┘ä┘àÏ▒ÏğÏ¼Ï╣Ï® ┘êÏğ┘ä┘åÏ┤Ï▒'
-    ];
+    ]; \n\n    useEffect(() => { \n        loadCategoriesAndBrands(); \n }, []); \n\n    useEffect(() => { \n        if (editingListing) { \n            setFormData({ \n                title: editingListing.title || '', \n                listing_type: editingListing.listing_type || 'sale', \n                price: editingListing.price?.toString() || '', \n                rent_period: editingListing.rent_period || 'daily', \n                category_id: editingListing.car_listing_category_id?.toString() || '', \n                brand_id: editingListing.brand_id?.toString() || '', \n                model: editingListing.model || '', \n                year: editingListing.year || new Date().getFullYear(), \n                mileage: editingListing.mileage?.toString() || '', \n                transmission: editingListing.transmission || 'automatic', \n                fuel_type: editingListing.fuel_type || 'gasoline', \n                color: editingListing.exterior_color || '', \n                doors: editingListing.doors_count || 4, \n                seats: editingListing.seats_count || 5, \n                condition: editingListing.condition || 'used', \n                body_condition: editingListing.body_condition ? JSON.stringify(editingListing.body_condition) : '{\"front\": \"good\", \"rear\": \"good\", \"left\": \"good\", \"right\": \"good\"}', \n                features: editingListing.features || [], \n                photos: [], \n                video_url: editingListing.video_url || '', \n                description: editingListing.description || '', \n                city: editingListing.city || '', \n                phone_visible: !!editingListing.contact_phone\n }); \n } \n }, [editingListing]); \n\n    const loadCategoriesAndBrands = async () => { \n        setLoadingData(true); \n        try { \n            const [categoriesRes, brandsRes] = await Promise.all([\n                CarProviderService.getCategories(), \n                CarProviderService.getBrands() \n]); \n            setCategories(categoriesRes.categories || []); \n            setBrands(brandsRes.brands || []); \n } catch (error) { \n            console.error('Failed to load categories/brands:', error); \n            showToast('فشل تحميل البيانات', 'error'); \n } finally { \n            setLoadingData(false); \n } \n };
 
     const updateField = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -156,7 +156,13 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                             <Step1BasicInfo formData={formData} updateField={updateField} />
                         )}
                         {currentStep === 2 && (
-                            <Step2CategoryBrand formData={formData} updateField={updateField} />
+                            <Step2CategoryBrand
+                                formData={formData}
+                                updateField={updateField}
+                                categories={categories}
+                                brands={brands}
+                                loading={loadingData}
+                            />
                         )}
                         {currentStep === 3 && (
                             <Step3Specs formData={formData} updateField={updateField} />
