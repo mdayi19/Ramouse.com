@@ -508,11 +508,7 @@ const CarListingDetail: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {(provider.member_since || provider.created_at) && (
-                                            <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                عضو منذ {new Date(provider.member_since || provider.created_at).getFullYear()}
-                                            </p>
-                                        )}
+
                                     </div>
 
                                     <div className="space-y-3">
