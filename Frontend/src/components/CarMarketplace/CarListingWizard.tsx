@@ -170,9 +170,13 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 showToast('جاري رفع الصور...', 'info');
                 try {
                     const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(formData.photos));
-                    const newUrls = uploadRes.urls || uploadRes.paths || [];
+                    console.log('📤 Upload response:', uploadRes);
+
+                    // Backend returns { success: true, data: [{ full_url, url, path, ... }] }
+                    const newUrls = uploadRes.data?.map((file: any) => file.full_url || file.url) || [];
+
                     if (!newUrls || newUrls.length === 0) {
-                        throw new Error('فشل رفع الصور');
+                        throw new Error('فشل رفع الصور - لم يتم إرجاع روابط الصور');
                     }
                     photoUrls = [...photoUrls, ...newUrls];
                     console.log('📸 Photos uploaded:', photoUrls);
