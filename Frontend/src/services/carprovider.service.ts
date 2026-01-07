@@ -114,7 +114,7 @@ export class CarProviderService {
         return response.data;
     }
 
-    static async createListing(data: FormData) {
+    static async createListing(data: any) {
         const response = await api.post('/car-provider/listings', data);
         return response.data;
     }

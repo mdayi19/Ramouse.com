@@ -793,6 +793,8 @@ const App: React.FC = () => {
                                         <CarProviderDashboard
                                             showToast={showToast}
                                             onNavigate={handleNavigate}
+                                            carProvider={loggedInCarProvider}
+                                            userPhone={userPhone}
                                         />
                                     </Suspense>
                                 ) : (

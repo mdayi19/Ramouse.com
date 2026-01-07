@@ -8,12 +8,14 @@ interface CarListingWizardProps {
     onComplete: () => void;
     onCancel: () => void;
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+    userPhone: string;
 }
 
 export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     onComplete,
     onCancel,
-    showToast
+    showToast,
+    userPhone
 }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -65,21 +67,46 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
     const handleSubmit = async () => {
         try {
-            const data = new FormData();
-            Object.keys(formData).forEach(key => {
-                if (key === 'photos') {
-                    formData.photos.forEach(file => data.append('photos[]', file));
-                } else if (key === 'features') {
-                    data.append('features', JSON.stringify(formData.features));
-                } else {
-                    data.append(key, (formData as any)[key]);
-                }
-            });
+            // 1. Upload photos first
+            let photoUrls: string[] = [];
+            if (formData.photos.length > 0) {
+                showToast('جاري رفع الصور...', 'info');
+                const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(formData.photos));
+                photoUrls = uploadRes.urls || uploadRes.paths || []; // Adjust based on UploadController response
+            }
 
-            await CarProviderService.createListing(data);
+            // 2. Prepare payload
+            const payload = {
+                ...formData,
+                photos: photoUrls,
+                // Ensure numbers are numbers
+                price: Number(formData.price),
+                year: Number(formData.year),
+                mileage: Number(formData.mileage),
+                // Map frontend keys to backend expected keys
+                car_listing_category_id: Number(formData.category_id),
+                doors_count: Number(formData.doors),
+                seats_count: Number(formData.seats),
+                contact_phone: formData.phone_visible ? userPhone : null,
+                // Remove keys that shouldn't be sent or are renamed
+                category_id: undefined, // transformed to car_listing_category_id
+                doors: undefined,       // transformed to doors_count
+                seats: undefined,       // transformed to seats_count
+            };
+
+            // Explicitly set brand_id correctly (handle empty string)
+            if (formData.brand_id) {
+                (payload as any).brand_id = Number(formData.brand_id);
+            } else {
+                // If required by backend, this might fail validation, but we handle it in UI
+                (payload as any).brand_id = null;
+            }
+
+            await CarProviderService.createListing(payload);
             showToast('تم نشر السيارة بنجاح!', 'success');
             onComplete();
         } catch (error: any) {
+            console.error('Listing creation failed:', error);
             showToast(error.response?.data?.message || 'فشل نشر السيارة', 'error');
         }
     };
@@ -209,8 +236,8 @@ const Step1BasicInfo: React.FC<any> = ({ formData, updateField }) => (
                 <button
                     onClick={() => updateField('listing_type', 'sale')}
                     className={`p-4 rounded-xl border-2 transition-all ${formData.listing_type === 'sale'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-slate-300 dark:border-slate-600'
+                            ? 'border-primary bg-primary/10'
+                            : 'border-slate-300 dark:border-slate-600'
                         }`}
                 >
                     <div className="font-bold">للبيع</div>
@@ -218,8 +245,8 @@ const Step1BasicInfo: React.FC<any> = ({ formData, updateField }) => (
                 <button
                     onClick={() => updateField('listing_type', 'rent')}
                     className={`p-4 rounded-xl border-2 transition-all ${formData.listing_type === 'rent'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-slate-300 dark:border-slate-600'
+                            ? 'border-primary bg-primary/10'
+                            : 'border-slate-300 dark:border-slate-600'
                         }`}
                 >
                     <div className="font-bold">للإيجار</div>
@@ -494,8 +521,8 @@ const Step4Condition: React.FC<any> = ({ formData, updateField }) => {
                         type="button"
                         onClick={() => updateField('condition', 'new')}
                         className={`p-4 rounded-xl border-2 transition-all ${formData.condition === 'new'
-                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                            : 'border-slate-300 dark:border-slate-600 hover:border-green-400'
+                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                : 'border-slate-300 dark:border-slate-600 hover:border-green-400'
                             }`}
                     >
                         <div className="font-bold text-slate-900 dark:text-white">جديدة</div>
@@ -505,8 +532,8 @@ const Step4Condition: React.FC<any> = ({ formData, updateField }) => {
                         type="button"
                         onClick={() => updateField('condition', 'used')}
                         className={`p-4 rounded-xl border-2 transition-all ${formData.condition === 'used'
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-slate-300 dark:border-slate-600 hover:border-blue-400'
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                : 'border-slate-300 dark:border-slate-600 hover:border-blue-400'
                             }`}
                     >
                         <div className="font-bold text-slate-900 dark:text-white">مستعملة</div>
@@ -516,8 +543,8 @@ const Step4Condition: React.FC<any> = ({ formData, updateField }) => {
                         type="button"
                         onClick={() => updateField('condition', 'certified_pre_owned')}
                         className={`p-4 rounded-xl border-2 transition-all ${formData.condition === 'certified_pre_owned'
-                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                            : 'border-slate-300 dark:border-slate-600 hover:border-purple-400'
+                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                : 'border-slate-300 dark:border-slate-600 hover:border-purple-400'
                             }`}
                     >
                         <div className="font-bold text-slate-900 dark:text-white">معتمدة</div>
@@ -538,8 +565,8 @@ const Step4Condition: React.FC<any> = ({ formData, updateField }) => {
                             type="button"
                             onClick={() => toggleFeature(feature.id)}
                             className={`p-3 rounded-lg border transition-all text-sm ${(formData.features || []).includes(feature.id)
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-primary/50'
+                                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                                    : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-primary/50'
                                 }`}
                         >
                             {feature.label}

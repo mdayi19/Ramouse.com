@@ -5,14 +5,20 @@ import { CarProviderService } from '../../services/carprovider.service';
 import { CarListingWizard } from './CarListingWizard';
 import { View } from '../../types';
 
+import { CarProvider } from '../../types';
+
 interface CarProviderDashboardProps {
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
     onNavigate: (view: View, params?: any) => void;
+    carProvider: CarProvider | null;
+    userPhone: string;
 }
 
 export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
     showToast,
-    onNavigate
+    onNavigate,
+    carProvider,
+    userPhone
 }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'listings' | 'analytics'>('overview');
     const [stats, setStats] = useState<any>(null);
@@ -254,6 +260,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
                     }}
                     onCancel={() => setShowWizard(false)}
                     showToast={showToast}
+                    userPhone={userPhone}
                 />
             )}
         </div>
