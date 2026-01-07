@@ -639,6 +639,7 @@ class FinancialController extends Controller
             'customer' => $user->customer,
             'technician' => $user->technician,
             'tow_truck' => $user->towTruck,
+            'car_provider' => $user->carProvider,
             default => null,
         };
     }

@@ -29,11 +29,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
         try {
             const [statsRes, analyticsRes, listingsRes] = await Promise.all([
                 CarProviderService.getProviderStats(),
-                CarProviderService.getProviderAnalytics(7), // Get last 7 days for trends
+                CarProviderService.getProviderAnalytics(7),
                 CarProviderService.getMyListings()
             ]);
 
             setStats(statsRes.stats);
+            // Sync balance with fetched stats if available
+            if (statsRes.stats?.wallet_balance !== undefined) {
+                setBalance(statsRes.stats.wallet_balance);
+            }
             setAnalyticsData(analyticsRes);
             setRecentListings((listingsRes.listings || []).slice(0, 5));
         } catch (error) {
@@ -49,7 +53,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
 
     // Real-time Updates
     useEffect(() => {
-        // Listen for order/listing changes that might affect stats
+        if (!provider.user_id) return;
+
+        // Listen for order/listing changes
         const stopListeningUser = listenToPrivateChannel(`user.${provider.user_id}`, '.stats.updated', () => {
             loadData();
         });
@@ -57,17 +63,19 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
         return () => {
             stopListeningUser();
         };
-    }, [provider.id, listenToPrivateChannel]);
+    }, [provider.id, provider.user_id, listenToPrivateChannel]);
 
     // Wallet Real-time Updates
     useWalletUpdates(provider.user_id, (data) => {
+        console.log('💰 Wallet update received in Overview:', data);
         if (data.new_balance !== undefined) {
             setBalance(data.new_balance);
+        } else if (data.wallet_balance !== undefined) {
+            // Handle alternative payload format
+            setBalance(data.wallet_balance);
         } else {
-            // Fallback if full data not provided
-            CarProviderService.getPublicProfile(provider.id).then(p => {
-                if (p && p.wallet_balance) setBalance(p.wallet_balance);
-            });
+            // Fallback: reload all data to be safe
+            loadData();
         }
     }, showToast);
 
@@ -368,8 +376,8 @@ const DashboardMetricCard: React.FC<{
                 </div>
                 {trend !== undefined && (
                     <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${isPositive
-                            ? 'text-green-600 bg-green-100 dark:bg-green-900/20'
-                            : 'text-red-500 bg-red-100 dark:bg-red-900/20'
+                        ? 'text-green-600 bg-green-100 dark:bg-green-900/20'
+                        : 'text-red-500 bg-red-100 dark:bg-red-900/20'
                         }`}>
                         {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                         {Math.abs(trend)}%

@@ -267,7 +267,8 @@ export const useWalletUpdates = (
                 '/wallet/balance',
                 '/wallet/transactions',
                 '/wallet/deposits',
-                '/wallet/withdrawals'
+                '/wallet/withdrawals',
+                '/car-provider/stats' // Ensure provider dashboard stats are refreshed
             ]);
             callbackRef.current(e);
         };
