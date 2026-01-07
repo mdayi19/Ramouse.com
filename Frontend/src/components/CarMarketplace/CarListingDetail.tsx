@@ -111,7 +111,7 @@ const CarListingDetail: React.FC = () => {
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Loading listing...</p>
+                    <p className="text-gray-600 dark:text-gray-400">جاري التحميل...</p>
                 </div>
             </div>
         );
@@ -122,13 +122,13 @@ const CarListingDetail: React.FC = () => {
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
                     <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Listing Not Found</h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'This listing may have been removed.'}</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">القائمة غير موجودة</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'ربما تم حذف هذه القائمة.'}</p>
                     <button
                         onClick={() => navigate('/car-marketplace')}
                         className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
-                        Back to Marketplace
+                        العودة للسوق
                     </button>
                 </div>
             </div>
