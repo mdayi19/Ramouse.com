@@ -698,17 +698,20 @@ const App: React.FC = () => {
                                 path="/"
                                 element={
                                     isAuthenticated ? (
-                                        <Navigate
-                                            to={
-                                                isAdmin ? '/admin' :
-                                                    isTechnician ? '/technician' :
-                                                        isProvider ? '/provider' :
-                                                            isTowTruck ? '/tow-truck-dashboard' :
-                                                                isCarProvider ? '/car-provider-dashboard' :
-                                                                    '/dashboard'
-                                            }
-                                            replace
-                                        />
+                                        (() => {
+                                            console.log('Using redirect logic:', { isAdmin, isTechnician, isProvider, isTowTruck, isCarProvider });
+                                            return <Navigate
+                                                to={
+                                                    isAdmin ? '/admin' :
+                                                        isTechnician ? '/technician' :
+                                                            isProvider ? '/provider' :
+                                                                isTowTruck ? '/tow-truck-dashboard' :
+                                                                    isCarProvider ? '/car-provider-dashboard' :
+                                                                        '/dashboard'
+                                                }
+                                                replace
+                                            />;
+                                        })()
                                     ) : (
                                         <WelcomeScreen
                                             onStart={handleStartNewOrder}
@@ -783,6 +786,22 @@ const App: React.FC = () => {
                             <Route path="/terms" element={<TermsOfUseScreen onBack={() => handleNavigate('welcome')} />} />
                             <Route path="/contact" element={<ContactScreen onBack={() => handleNavigate('welcome')} settings={settings} showToast={showToast} />} />
 
+                            {/* Car Provider Dashboard */}
+                            <Route path="/car-provider-dashboard" element={
+                                isCarProvider ? (
+                                    <Suspense fallback={<PageLoader />}>
+                                        <CarProviderDashboard
+                                            showToast={showToast}
+                                            onNavigate={handleNavigate}
+                                        />
+                                    </Suspense>
+                                ) : (
+                                    (() => {
+                                        console.log('Redirecting from /car-provider-dashboard because isCarProvider is false');
+                                        return <Navigate to="/" replace />;
+                                    })()
+                                )
+                            } />
                             {/* Car Marketplace Routes */}
                             <Route path="/car-marketplace" element={
                                 <CarMarketplacePage
