@@ -74,11 +74,11 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
         }
     };
 
-    const filteredProviders = providers.filter(p =>
-        p.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.phone.includes(searchQuery) ||
-        p.city.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredProviders = Array.isArray(providers) ? providers.filter(p =>
+        (p.business_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.phone || '').includes(searchQuery) ||
+        (p.city || '').toLowerCase().includes(searchQuery.toLowerCase())
+    ) : [];
 
     if (loading) {
         return (
@@ -175,20 +175,20 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
                                     <td className="px-6 py-4">
                                         <div>
                                             <div className="font-medium text-gray-900 dark:text-white">
-                                                {provider.business_name}
+                                                {provider.business_name || 'N/A'}
                                             </div>
                                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                {provider.phone}
+                                                {provider.phone || 'N/A'}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded">
-                                            {provider.business_type}
+                                            {provider.business_type || 'N/A'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                                        {provider.city}
+                                        {provider.city || 'N/A'}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                                         {provider.total_listings || 0}
