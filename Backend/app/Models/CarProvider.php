@@ -39,7 +39,11 @@ class CarProvider extends Model
         'average_rating',
         'wallet_balance',
         'saved_addresses',
-        'payment_info'
+        'payment_info',
+        'cover_photo',
+        'working_hours',
+        'website',
+        'public_email'
     ];
 
     protected $casts = [

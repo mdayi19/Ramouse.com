@@ -103,6 +103,17 @@ export interface CarProvider {
   description?: string;
   email?: string;
   wallet_balance?: number;
+  // Extended Profile Fields
+  cover_photo?: string;
+  working_hours?: string;
+  website?: string;
+  public_email?: string;
+  socials?: {
+    facebook?: string;
+    instagram?: string;
+    whatsapp?: string;
+    twitter?: string;
+  };
 }
 
 export interface Customer {

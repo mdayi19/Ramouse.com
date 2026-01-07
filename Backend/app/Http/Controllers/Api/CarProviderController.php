@@ -40,23 +40,90 @@ class CarProviderController extends Controller
     public function updateProfile(Request $request)
     {
         $user = auth('sanctum')->user();
-
         $provider = CarProvider::where('user_id', $user->id)->firstOrFail();
 
         $validated = $request->validate([
             'name' => 'string|max:255',
+            'business_name' => 'string|max:255',
             'business_type' => 'in:dealership,individual,rental_agency',
             'city' => 'string|max:255',
             'address' => 'string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'description' => 'nullable|string',
-            'profile_photo' => 'nullable|string',
+            'website' => 'nullable|url',
+            'working_hours' => 'nullable|string',
+            'public_email' => 'nullable|email',
+            // File validations
+            'profile_photo' => 'nullable|image|max:5120', // logo
+            'cover_photo' => 'nullable|image|max:10240',
             'gallery' => 'nullable|array',
-            'socials' => 'nullable|array',
+            'gallery.*' => 'image|max:5120',
+            // Existing gallery URLs to keep (if managing via frontend array)
+            'existing_gallery' => 'nullable|array',
+            'socials' => 'nullable', // can be JSON string or array
         ]);
 
-        $provider->update($validated);
+        $data = $request->only([
+            'name',
+            'business_name',
+            'business_type',
+            'city',
+            'address',
+            'latitude',
+            'longitude',
+            'description',
+            'website',
+            'working_hours',
+            'public_email'
+        ]);
+
+        // Handle Logo Upload (profile_photo)
+        if ($request->hasFile('profile_photo')) {
+            $path = $request->file('profile_photo')->store('providers/logos', 'public');
+            $data['profile_photo'] = '/storage/' . $path;
+        }
+
+        // Handle Cover Photo Upload
+        if ($request->hasFile('cover_photo')) {
+            $path = $request->file('cover_photo')->store('providers/covers', 'public');
+            $data['cover_photo'] = '/storage/' . $path;
+        }
+
+        // Handle Gallery Uploads
+        $currentGallery = $provider->gallery ?? [];
+
+        // If frontend sends 'existing_gallery', we use that to filter out removed images
+        if ($request->has('existing_gallery')) {
+            $existing = $request->input('existing_gallery');
+            // Ensure $existing is array
+            if (is_string($existing)) {
+                $existing = json_decode($existing, true) ?? [];
+            }
+            // Keep only those in currentGallery that are also in existing_gallery
+            $currentGallery = array_values(array_intersect($currentGallery, $existing));
+        }
+
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $image) {
+                $path = $image->store('providers/gallery', 'public');
+                $currentGallery[] = '/storage/' . $path;
+            }
+        }
+
+        $data['gallery'] = $currentGallery;
+
+        // Handle Socials (could be JSON string from FormData)
+        if ($request->has('socials')) {
+            $socials = $request->input('socials');
+            if (is_string($socials)) {
+                $data['socials'] = json_decode($socials, true);
+            } else {
+                $data['socials'] = $socials;
+            }
+        }
+
+        $provider->update($data);
 
         return response()->json([
             'success' => true,

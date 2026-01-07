@@ -80,8 +80,32 @@ export class CarProviderService {
     }
 
     static async updateProfile(data: any): Promise<CarProvider> {
-        const response = await api.put('/car-providers/profile', data);
-        return response.data.provider;
+        let payload = data;
+        let headers = {};
+
+        // If 'data' is a plain object but needs to include files, convert to FormData
+        // However, if the component already sends FormData, we just use it.
+        // Or if the component sends a plain object but we need to support files now, we should ensure the component handles FormData creation.
+        // Based on the plan, the component will send FormData.
+
+        if (!(data instanceof FormData)) {
+            // Fallback for legacy calls if any (though we are rewriting the component)
+            // Ideally we should enforce FormData if files are involved, but for simple text updates JSON is fine.
+            // But the backend now handles both or expects files.
+            // Let's assume the component will pass FormData if file upload is needed.
+        } else {
+            headers = { 'Content-Type': 'multipart/form-data' };
+        }
+
+        // Note: For Laravel PUT requests with FormData (files), we must use POST with _method=PUT
+        if (data instanceof FormData) {
+            data.append('_method', 'PUT');
+            const response = await api.post('/car-providers/profile', data, { headers });
+            return response.data.provider;
+        } else {
+            const response = await api.put('/car-providers/profile', data);
+            return response.data.provider;
+        }
     }
 
     static async getListingBySlug(slug: string): Promise<CarListing> {
