@@ -6,59 +6,10 @@ import {
 } from 'lucide-react';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
+import CarGallery from './ListingParts/CarGallery';
+import ProviderSidebar from './ListingParts/ProviderSidebar';
+import SimilarListings from './ListingParts/SimilarListings';
 import ReportListingModal from './ListingParts/ReportListingModal';
-
-// ... (existing imports)
-
-const CarListingDetail: React.FC = () => {
-    // ... (existing state)
-    const [showReportModal, setShowReportModal] = useState(false);
-
-    // ... (existing functions)
-
-    const handleReportSubmit = async (reason: string, details: string) => {
-        if (!listing) return;
-        await CarProviderService.reportListing(listing.id, { reason, details });
-    };
-
-    // ... (render)
-
-    return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0">
-            {/* ... (existing JSX) */}
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* ... (Main Content) */}
-
-                    {/* Sidebar */}
-                    <div className="hidden lg:block space-y-6">
-                        <ProviderSidebar
-                            provider={provider}
-                            listing={listing}
-                            t={t}
-                            onContact={handleContact}
-                            onReport={() => setShowReportModal(true)}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Sticky Contact Bar */}
-            {/* ... (existing mobile bar) */}
-
-            <ReportListingModal
-                isOpen={showReportModal}
-                onClose={() => setShowReportModal(false)}
-                onSubmit={handleReportSubmit}
-                t={t}
-            />
-
-            {/* Gallery Modal */}
-            {/* ... (existing gallery modal) */}
-        </div>
-    );
-};
 
 // Helper for translations
 const t = {
@@ -153,6 +104,7 @@ const CarListingDetail: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isFavorited, setIsFavorited] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
 
     useEffect(() => {
         loadListing();
@@ -190,6 +142,11 @@ const CarListingDetail: React.FC = () => {
         } catch (err) {
             console.error('Failed to toggle favorite:', err);
         }
+    };
+
+    const handleReportSubmit = async (reason: string, details: string) => {
+        if (!listing) return;
+        await CarProviderService.reportListing(listing.id, { reason, details });
     };
 
     const handleContact = (type: 'phone' | 'email' | 'whatsapp') => {
@@ -448,6 +405,7 @@ const CarListingDetail: React.FC = () => {
                             listing={listing}
                             t={t}
                             onContact={handleContact}
+                            onReport={() => setShowReportModal(true)}
                         />
                     </div>
                 </div>
@@ -474,6 +432,13 @@ const CarListingDetail: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            <ReportListingModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                onSubmit={handleReportSubmit}
+                t={t}
+            />
 
         </div>
     );
