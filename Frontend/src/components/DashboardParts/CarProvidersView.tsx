@@ -32,11 +32,11 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
             setLoading(true);
             const response = await fetch('/api/admin/car-providers', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
             const data = await response.json();
-            setProviders(data.data || data);
+            setProviders(data.data || data.data?.data || data);
         } catch (error) {
             showToast('Failed to load providers', 'error');
         } finally {
@@ -49,7 +49,7 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
             await fetch(`/api/admin/car-providers/${providerId}/verify`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
             showToast('Provider verification updated', 'success');
@@ -61,10 +61,10 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
 
     const toggleTrustedStatus = async (providerId: string) => {
         try {
-            await fetch(`/api/admin/car-providers/${providerId}/trust`, {
+            await fetch(`/api/admin/car-providers/${providerId}/trusted`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
             showToast('Trusted status updated', 'success');
@@ -220,8 +220,8 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
                                             <button
                                                 onClick={() => toggleVerification(provider.id)}
                                                 className={`p-2 rounded-lg transition-colors ${provider.is_verified
-                                                        ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                     }`}
                                                 title="Toggle Verification"
                                             >
@@ -230,8 +230,8 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
                                             <button
                                                 onClick={() => toggleTrustedStatus(provider.id)}
                                                 className={`p-2 rounded-lg transition-colors ${provider.is_trusted
-                                                        ? 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    ? 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                     }`}
                                                 title="Toggle Trusted"
                                             >
