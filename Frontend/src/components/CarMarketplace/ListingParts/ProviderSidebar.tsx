@@ -10,13 +10,15 @@ interface ProviderSidebarProps {
     listing: any;
     t: any;
     onContact: (type: 'phone' | 'email' | 'whatsapp') => void;
+    onReport: () => void;
 }
 
 const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
     provider,
     listing,
     t,
-    onContact
+    onContact,
+    onReport
 }) => {
     const navigate = useNavigate();
 
@@ -99,7 +101,10 @@ const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
             </div>
 
             <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-                <button className="w-full text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1.5 group">
+                <button
+                    onClick={onReport}
+                    className="w-full text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1.5 group"
+                >
                     <Shield className="w-3 h-3 group-hover:text-red-500" />
                     <span>{t.ui.report}</span>
                 </button>

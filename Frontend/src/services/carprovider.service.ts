@@ -200,4 +200,9 @@ export class CarProviderService {
         });
         return response.data;
     }
+    // Reporting
+    static async reportListing(id: number, data: { reason: string; details: string }) {
+        const response = await api.post(`/car-marketplace/${id}/report`, data);
+        return response.data;
+    }
 }
