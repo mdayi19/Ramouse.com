@@ -67,8 +67,8 @@ export class CarProviderService {
     }
 
     static async getListingBySlug(slug: string) {
-        const response = await api.get(`/car-listings/${slug}`);
-        return response.data.data;
+        const response = await api.get(`/car-marketplace/${slug}`);
+        return response.data.listing;
     }
 
     static async getListing(slug: string) {
