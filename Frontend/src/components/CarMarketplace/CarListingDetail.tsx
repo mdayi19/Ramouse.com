@@ -371,7 +371,7 @@ const CarListingDetail: React.FC = () => {
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.features_title}</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {listing.features.map((feature, idx) => (
+                                    {listing.features.map((feature: string, idx: number) => (
                                         <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                                             <CheckCircle className="w-4 h-4 text-green-500" />
                                             <span>{feature}</span>

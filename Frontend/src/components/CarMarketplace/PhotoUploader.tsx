@@ -2,8 +2,8 @@ import React, { useCallback } from 'react';
 import { Upload, X, Star } from 'lucide-react';
 
 interface PhotoUploaderProps {
-    photos: File[];
-    onPhotosChange: (photos: File[]) => void;
+    photos: (File | string)[];
+    onPhotosChange: (photos: (File | string)[]) => void;
     maxPhotos?: number;
 }
 
@@ -40,6 +40,11 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         const [photo] = newPhotos.splice(index, 1);
         newPhotos.unshift(photo);
         onPhotosChange(newPhotos);
+    };
+
+    const getPreviewUrl = (file: File | string) => {
+        if (typeof file === 'string') return file;
+        return URL.createObjectURL(file);
     };
 
     return (
@@ -79,7 +84,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
                     {photos.map((file, index) => (
                         <div key={index} className="relative group">
                             <img
-                                src={URL.createObjectURL(file)}
+                                src={getPreviewUrl(file)}
                                 alt={`Preview ${index + 1}`}
                                 className="w-full h-32 object-cover rounded-lg"
                             />

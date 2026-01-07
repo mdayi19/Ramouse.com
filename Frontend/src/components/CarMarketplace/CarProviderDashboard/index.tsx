@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+// Force refresh
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { CarProvider, Settings, Order, StoreCategory, Notification, NotificationType, Brand, Customer } from '../../../types';
 import Sidebar, { SidebarItemType, SidebarUser } from '../../DashboardParts/Sidebar';
@@ -21,7 +22,7 @@ import UserInternationalLicenseView from '../../DashboardParts/UserInternational
 import AISuggestions from '../../AISuggestions';
 import CustomerGarage from '../../CustomerGarage';
 
-interface CarProviderDashboardProps {
+export interface CarProviderDashboardProps {
     carProvider: CarProvider | null;
     userPhone: string;
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
@@ -34,7 +35,7 @@ interface CarProviderDashboardProps {
     setIsSidebarOpen: (isOpen: boolean) => void;
 
     // Props needed for Customer Features
-    allOrders: Order[]; // For MyOrders
+    orders: Order[]; // For MyOrders
     settings: Settings;
     addNotificationForUser: (userPhone: string, notification: Omit<Notification, 'id' | 'timestamp' | 'read'>, type: NotificationType, context?: Record<string, any>) => void;
     onStartNewOrder: (prefillData?: any) => void;
@@ -58,7 +59,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
         unreadCount,
         onNavigate,
         isLoading,
-        allOrders,
+        orders,
         updateAllOrders,
         onUpdateCarProvider
     } = props;
@@ -184,6 +185,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
                         {/* Customer Featuers Routes */}
                         <Route path="orders" element={<MyOrders
                             {...props}
+                            allOrders={props.orders}
                             isDashboardView={true}
                             currentUser={mockCustomerForStore}
                             isLoading={isLoading}
@@ -230,4 +232,5 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
         </div>
     );
 };
+// Force refresh types
 export default CarProviderDashboard;

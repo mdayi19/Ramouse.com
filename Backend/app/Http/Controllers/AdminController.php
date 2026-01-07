@@ -71,6 +71,7 @@ class AdminController extends Controller
         // 1. Basic Counts
         $ordersCount = \App\Models\Order::count();
         $providersCount = \App\Models\Provider::where('is_active', true)->count();
+        $carProvidersCount = \App\Models\CarProvider::where('is_active', true)->count();
         $customersCount = \App\Models\Customer::count();
         $pendingWithdrawals = \App\Models\Withdrawal::where('status', 'Pending')->count();
 
@@ -121,7 +122,7 @@ class AdminController extends Controller
 
         return response()->json([
             'total_orders' => $ordersCount,
-            'active_providers' => $providersCount,
+            'active_providers' => $providersCount + $carProvidersCount,
             'total_customers' => $customersCount,
             'pending_withdrawals' => $pendingWithdrawals,
             'total_revenue' => $revenue,
@@ -1632,7 +1633,7 @@ class AdminController extends Controller
     }
 
     // ======== CAR PROVIDER MANAGEMENT ========
-    
+
     public function listCarProviders(Request $request)
     {
         $query = \App\Models\CarProvider::with(['user', 'phones']);
@@ -1647,9 +1648,9 @@ class AdminController extends Controller
             $query->where('is_active', $request->is_active === 'true');
         }
         if ($request->search) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('id', 'like', '%' . $request->search . '%');
+                    ->orWhere('id', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -1678,16 +1679,20 @@ class AdminController extends Controller
     public function listCarListings(Request $request)
     {
         $query = \App\Models\CarListing::with(['owner', 'category', 'brand']);
-        
-        if ($request->listing_type) $query->where('listing_type', $request->listing_type);
-        if ($request->seller_type) $query->where('seller_type', $request->seller_type);
-        if ($request->is_hidden !== null) $query->where('is_hidden', $request->is_hidden === 'true');
+
+        if ($request->listing_type)
+            $query->where('listing_type', $request->listing_type);
+        if ($request->seller_type)
+            $query->where('seller_type', $request->seller_type);
+        if ($request->is_hidden !== null)
+            $query->where('is_hidden', $request->is_hidden === 'true');
         if ($request->search) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('title', 'like', '%' . $request->search . '%');
             });
         }
-        if ($request->with_trashed) $query->withTrashed();
+        if ($request->with_trashed)
+            $query->withTrashed();
 
         $listings = $query->orderBy('created_at', 'desc')->paginate(50);
         return response()->json($listings);
@@ -1738,8 +1743,10 @@ class AdminController extends Controller
     public function createCarCategory(Request $request)
     {
         $validated = $request->validate([
-            'name_ar' => 'required|string', 'name_en' => 'required|string',
-            'icon' => 'nullable|string', 'sort_order' => 'integer'
+            'name_ar' => 'required|string',
+            'name_en' => 'required|string',
+            'icon' => 'nullable|string',
+            'sort_order' => 'integer'
         ]);
         return response()->json(['success' => true, 'category' => \App\Models\CarListingCategory::create($validated)]);
     }

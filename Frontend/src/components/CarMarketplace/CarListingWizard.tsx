@@ -51,7 +51,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         condition: 'used' as 'new' | 'used' | 'certified_pre_owned',
         body_condition: '{"front": "good", "rear": "good", "left": "good", "right": "good"}',
         features: [] as string[],
-        photos: [] as File[],
+        photos: [] as (File | string)[],
         video_url: '',
         description: '',
         city: '',
@@ -96,7 +96,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 condition: editingListing.condition || 'used',
                 body_condition: editingListing.body_condition ? JSON.stringify(editingListing.body_condition) : '{"front": "good", "rear": "good", "left": "good", "right": "good"}',
                 features: editingListing.features || [],
-                photos: [],
+                photos: editingListing.photos || [],
                 video_url: editingListing.video_url || '',
                 description: editingListing.description || '',
                 city: editingListing.city || '',
@@ -164,22 +164,22 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
             console.log('🚀 Starting submission...', formData);
 
-            // Upload photos
-            let photoUrls: string[] = editingListing?.photos || [];
-            if (formData.photos.length > 0) {
+            // Separate existing URLs from new Files
+            const existingPhotos = formData.photos.filter(p => typeof p === 'string') as string[];
+            const newPhotoFiles = formData.photos.filter(p => typeof p !== 'string') as File[];
+
+            // Upload new photos
+            let uploadedUrls: string[] = [];
+            if (newPhotoFiles.length > 0) {
                 showToast('جاري رفع الصور...', 'info');
                 try {
-                    const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(formData.photos));
-                    console.log('📤 Upload response:', uploadRes);
-
+                    const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(newPhotoFiles));
                     // Backend returns { success: true, data: [{ full_url, url, path, ... }] }
-                    const newUrls = uploadRes.data?.map((file: any) => file.full_url || file.url) || [];
+                    uploadedUrls = uploadRes.data?.map((file: any) => file.full_url || file.url) || [];
 
-                    if (!newUrls || newUrls.length === 0) {
+                    if (!uploadedUrls || uploadedUrls.length === 0) {
                         throw new Error('فشل رفع الصور - لم يتم إرجاع روابط الصور');
                     }
-                    photoUrls = [...photoUrls, ...newUrls];
-                    console.log('📸 Photos uploaded:', photoUrls);
                 } catch (uploadError) {
                     console.error('Photo upload failed:', uploadError);
                     showToast('فشل رفع الصور. حاول مرة أخرى', 'error');
@@ -187,8 +187,11 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 }
             }
 
+            // Combine existing and new URLs
+            const finalPhotoUrls = [...existingPhotos, ...uploadedUrls];
+
             // Validate photos exist
-            if (!photoUrls || photoUrls.length === 0) {
+            if (!finalPhotoUrls || finalPhotoUrls.length === 0) {
                 showToast('يجب إضافة صورة واحدة على الأقل', 'error');
                 return;
             }
@@ -196,7 +199,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
             // Prepare payload
             const payload = {
                 ...formData,
-                photos: photoUrls,
+                photos: finalPhotoUrls,
                 price: Number(formData.price),
                 year: Number(formData.year),
                 mileage: Number(formData.mileage),

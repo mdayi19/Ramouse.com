@@ -21,7 +21,7 @@ interface UserWalletManagementViewProps {
 
 type TabType = 'deposits' | 'withdrawals' | 'transactions';
 type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
-type UserTypeFilter = 'all' | 'customer' | 'technician' | 'tow_truck';
+type UserTypeFilter = 'all' | 'customer' | 'technician' | 'tow_truck' | 'car_provider';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -169,6 +169,7 @@ const UserWalletManagementView: React.FC<UserWalletManagementViewProps> = ({ sho
             case 'customer': return 'عميل';
             case 'technician': return 'فني';
             case 'tow_truck': return 'ونش';
+            case 'car_provider': return 'معرض سيارات';
             default: return type;
         }
     };
@@ -178,6 +179,7 @@ const UserWalletManagementView: React.FC<UserWalletManagementViewProps> = ({ sho
             case 'customer': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
             case 'technician': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300';
             case 'tow_truck': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
+            case 'car_provider': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300';
             default: return 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300';
         }
     };
@@ -476,6 +478,7 @@ const UserWalletManagementView: React.FC<UserWalletManagementViewProps> = ({ sho
                                 <option value="customer">👤 {getUserTypeLabel('customer')}</option>
                                 <option value="technician">🔧 {getUserTypeLabel('technician')}</option>
                                 <option value="tow_truck">🚚 {getUserTypeLabel('tow_truck')}</option>
+                                <option value="car_provider">🚗 {getUserTypeLabel('car_provider')}</option>
                             </select>
                         </div>
 

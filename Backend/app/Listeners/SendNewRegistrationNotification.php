@@ -62,6 +62,15 @@ class SendNewRegistrationNotification implements ShouldQueue
                 $link = ['view' => 'adminDashboard', 'params' => ['adminView' => 'towTruckManagement']];
                 break;
 
+            case 'car_provider':
+                $title = 'طلب انضمام معرض سيارات جديد';
+                $name = $userData['name'] ?? 'معرض';
+                $phone = $userData['phone'] ?? '';
+                $message = "سجل المعرض {$name} ({$phone}) وينتظر المراجعة والتوثيق.";
+                $type = 'NEW_CAR_PROVIDER_REQUEST';
+                $link = ['view' => 'adminDashboard', 'params' => ['adminView' => 'carProviderManagement']]; // Assuming this view exists or will exist
+                break;
+
             case 'customer':
                 $title = 'مستخدم جديد: عميل';
                 $name = $userData['name'] ?? 'عميل';

@@ -16,7 +16,7 @@ import ToastContainer from './components/Toast';
 import PublicMobileMenu from './components/PublicMobileMenu';
 import Icon from './components/Icon';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { Customer, Technician, TowTruck } from './types';
+import { Customer, Technician, TowTruck, CarProvider, Settings } from './types';
 import { InstallPrompt } from './components/PWA/InstallPrompt';
 import { usePWA } from './hooks/usePWA';
 import { OfflineIndicator } from './components/PWA/OfflineIndicator';
@@ -795,7 +795,7 @@ const App: React.FC = () => {
                                             onNavigate={handleNavigate}
                                             carProvider={loggedInCarProvider}
                                             userPhone={userPhone}
-                                            allOrders={allOrders}
+                                            orders={allOrders}
                                             settings={settings}
                                             addNotificationForUser={addNotificationForUser}
                                             onStartNewOrder={handleStartNewOrder}
@@ -803,7 +803,7 @@ const App: React.FC = () => {
                                             storeCategories={storeCategories}
                                             onUpdateCustomer={onUpdateCustomer}
                                             allBrands={allBrands}
-                                            onUpdateCarProvider={(data) => {
+                                            onUpdateCarProvider={(data: Partial<CarProvider>) => {
                                                 if (loggedInCarProvider) {
                                                     setLoggedInCarProvider({ ...loggedInCarProvider, ...data });
                                                 }

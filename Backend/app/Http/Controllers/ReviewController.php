@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Review;
 use App\Models\Technician;
 use App\Models\TowTruck;
+use App\Models\CarProvider;
 use App\Models\User;
 use App\Events\ReviewSubmitted;
 use App\Events\ReviewModerated;
@@ -24,16 +25,18 @@ class ReviewController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'reviewable_type' => ['required', Rule::in(['technician', 'tow_truck'])],
+            'reviewable_type' => ['required', Rule::in(['technician', 'tow_truck', 'car_provider'])],
             'reviewable_id' => 'required|string',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|max:1000',
         ]);
 
         // Get the model class
-        $modelClass = $validated['reviewable_type'] === 'technician'
-            ? Technician::class
-            : TowTruck::class;
+        $modelClass = match ($validated['reviewable_type']) {
+            'technician' => Technician::class,
+            'tow_truck' => TowTruck::class,
+            'car_provider' => CarProvider::class,
+        };
 
         // Check if provider exists
         $provider = $modelClass::find($validated['reviewable_id']);
@@ -103,7 +106,11 @@ class ReviewController extends Controller
             $modelClass = Technician::class;
         } elseif ($user->towTruck) {
             $provider = $user->towTruck;
+            $provider = $user->towTruck;
             $modelClass = TowTruck::class;
+        } elseif ($user->carProvider) {
+            $provider = $user->carProvider;
+            $modelClass = CarProvider::class;
         } else {
             return response()->json(['message' => 'غير مصرح.'], 403);
         }
@@ -138,6 +145,8 @@ class ReviewController extends Controller
             $provider = $user->technician;
         } elseif ($user->towTruck && $review->reviewable_type === TowTruck::class && $review->reviewable_id === $user->towTruck->id) {
             $provider = $user->towTruck;
+        } elseif ($user->carProvider && $review->reviewable_type === CarProvider::class && $review->reviewable_id === $user->carProvider->id) {
+            $provider = $user->carProvider;
         } else {
             return response()->json(['message' => 'غير مصرح.'], 403);
         }
@@ -216,8 +225,15 @@ class ReviewController extends Controller
         }
 
         if ($request->has('reviewable_type')) {
-            $modelClass = $request->reviewable_type === 'technician' ? Technician::class : TowTruck::class;
-            $query->where('reviewable_type', $modelClass);
+            $modelClass = match ($request->reviewable_type) {
+                'technician' => Technician::class,
+                'tow_truck' => TowTruck::class,
+                'car_provider' => CarProvider::class,
+                default => null
+            };
+            if ($modelClass) {
+                $query->where('reviewable_type', $modelClass);
+            }
         }
 
         if ($request->has('from_date')) {
@@ -376,6 +392,21 @@ class ReviewController extends Controller
     public function towTruckReviews($id)
     {
         $reviews = Review::where('reviewable_type', TowTruck::class)
+            ->where('reviewable_id', $id)
+            ->where('status', 'approved')
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($reviews);
+    }
+    /**
+     * PUBLIC: Get approved reviews for a car provider
+     * GET /api/car-providers/{id}/reviews
+     */
+    public function carProviderReviews($id)
+    {
+        $reviews = Review::where('reviewable_type', CarProvider::class)
             ->where('reviewable_id', $id)
             ->where('status', 'approved')
             ->with('user')

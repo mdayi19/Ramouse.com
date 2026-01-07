@@ -82,7 +82,8 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+            {/* Desktop View (Table) */}
+            <div className="hidden md:block bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-slate-50 dark:bg-slate-700">
@@ -162,6 +163,68 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {/* Mobile View (Cards) */}
+            <div className="md:hidden space-y-4">
+                {listings.length === 0 ? (
+                    <div className="bg-white dark:bg-slate-800 rounded-xl p-8 text-center text-slate-500">
+                        <Car className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                        <p>لا توجد سيارات مضافة حتى الآن</p>
+                    </div>
+                ) : (
+                    listings.map(listing => (
+                        <div key={listing.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border border-slate-100 dark:border-slate-700">
+                            <div className="flex gap-4 mb-4">
+                                <img
+                                    src={listing.photos[0] || '/placeholder-car.jpg'}
+                                    alt={listing.title}
+                                    className="w-24 h-24 rounded-lg object-cover bg-slate-100"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between">
+                                        <h3 className="font-bold text-slate-900 dark:text-white truncate">{listing.title}</h3>
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${listing.is_hidden
+                                            ? 'bg-red-100 text-red-700'
+                                            : 'bg-green-100 text-green-700'
+                                            }`}>
+                                            {listing.is_hidden ? 'مخفي' : 'نشط'}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-500 mt-1">{listing.year} • {listing.mileage} كم</p>
+                                    <p className="font-bold text-primary mt-2">{listing.price.toLocaleString()} ل.س</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
+                                <span className="text-xs text-slate-500 flex items-center gap-1">
+                                    <Icon name="Eye" className="w-3 h-3" />
+                                    {listing.views_count} مشاهدة
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleToggleVisibility(listing.id)}
+                                        className="p-2 text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100"
+                                    >
+                                        {listing.is_hidden ? <ToggleLeft className="w-4 h-4" /> : <ToggleRight className="w-4 h-4" />}
+                                    </button>
+                                    <button
+                                        onClick={() => handleEditListing(listing)}
+                                        className="p-2 text-green-600 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteListing(listing.id)}
+                                        className="p-2 text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* Wizard Modal */}

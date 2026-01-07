@@ -35,6 +35,9 @@ class WalletController extends Controller
         } elseif ($user->towTruck) {
             $profile = $user->towTruck;
             $userType = 'tow_truck';
+        } elseif ($user->carProvider) {
+            $profile = $user->carProvider;
+            $userType = 'car_provider';
         }
 
         return [$profile, $userType];

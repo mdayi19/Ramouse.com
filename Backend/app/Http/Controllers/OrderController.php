@@ -65,6 +65,7 @@ class OrderController extends Controller
             $userType = match ($user->role) {
                 'technician' => 'technician',
                 'tow_truck' => 'tow_truck',
+                'car_provider' => 'car_provider',
                 default => 'customer',
             };
         }

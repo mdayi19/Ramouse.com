@@ -204,7 +204,7 @@ export interface FlashProductBuyerRequest {
   id: string;
   productId: string;
   buyerId: string;
-  buyerType: 'technician' | 'customer' | 'provider' | 'tow_truck';
+  buyerType: 'technician' | 'customer' | 'provider' | 'tow_truck' | 'car_provider';
   buyerName: string;
   buyerUniqueId: string;
   quantity: number;
@@ -331,7 +331,8 @@ export type NotificationType =
   | 'quote_received'
   | 'DEPOSIT_REQUEST'
   | 'WITHDRAWAL_REQUEST'
-  | 'new_store_order';
+  | 'new_store_order'
+  | 'NEW_CAR_PROVIDER_REQUEST';
 
 export interface Notification {
   id: string;
@@ -420,7 +421,7 @@ export interface AnnouncementPost {
   title: string;
   message: string;
   imageUrl?: string;
-  target: 'all' | 'customers' | 'providers' | 'technicians' | 'tow_trucks';
+  target: 'all' | 'customers' | 'providers' | 'technicians' | 'tow_trucks' | 'car_providers';
 }
 
 export interface ToastMessage {
@@ -492,7 +493,7 @@ export interface StoreProductReview {
   id: string;
   buyerId: string;
   buyerName: string;
-  buyerType: 'customer' | 'technician' | 'provider' | 'tow_truck';
+  buyerType: 'customer' | 'technician' | 'provider' | 'tow_truck' | 'car_provider';
   rating: number;
   comment: string;
   timestamp: string;
@@ -518,7 +519,7 @@ export interface AdminFlashProduct {
   description: string;
   price: number;
   media: GalleryItem[];
-  targetAudience: 'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks';
+  targetAudience: 'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks' | 'car_providers';
   specialty?: string;
   totalStock: number;
   purchaseLimitPerBuyer: number;
@@ -708,7 +709,7 @@ export interface StoreProductReview {
   id: string;
   buyerId: string;
   buyerName: string;
-  buyerType: 'customer' | 'technician' | 'provider' | 'tow_truck';
+  buyerType: 'customer' | 'technician' | 'provider' | 'tow_truck' | 'car_provider';
   rating: number;
   comment: string;
   timestamp: string;
@@ -734,7 +735,7 @@ export interface AdminFlashProduct {
   description: string;
   price: number;
   media: GalleryItem[];
-  targetAudience: 'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks';
+  targetAudience: 'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks' | 'car_providers';
   specialty?: string;
   totalStock: number;
   purchaseLimitPerBuyer: number;
@@ -749,7 +750,7 @@ export interface AdminFlashProduct {
   reviews?: StoreProductReview[];
 }
 
-export type View = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store' | 'internationalLicense' | 'carProviderDashboard';
+export type View = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store' | 'internationalLicense' | 'carProviderDashboard' | 'carProviderRegistration';
 
 export interface CarModel {
   id: string;
