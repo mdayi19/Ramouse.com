@@ -94,13 +94,7 @@ const SpecItem: React.FC<{ icon: any; label: string; value: string | number | un
 };
 // ...
 // Inside the component render where provider card is:
-{
-    (provider.member_since || provider.created_at) && (
-        <p className="text-xs text-gray-400 dark:text-gray-500">
-            عضو منذ {new Date(provider.member_since || provider.created_at).getFullYear()}
-        </p>
-    )
-}
+
 
 const CarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
