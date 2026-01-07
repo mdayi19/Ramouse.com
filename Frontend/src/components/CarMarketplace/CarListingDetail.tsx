@@ -3,10 +3,77 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     Car, MapPin, Calendar, Gauge, Fuel, Settings, Phone,
     Mail, Heart, Share2, ChevronLeft, ChevronRight, X,
-    CheckCircle, Star, Eye, MessageCircle, ExternalLink
+    CheckCircle, Star, Eye, MessageCircle, ExternalLink, Shield
 } from 'lucide-react';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
+
+// Helper for translations
+const t = {
+    specs: {
+        year: 'السنة',
+        mileage: 'الممشى',
+        transmission: 'ناقل الحركة',
+        fuel_type: 'الوقود',
+        engine_size: 'حجم المحرك',
+        horsepower: 'قوة المحرك',
+        exterior_color: 'اللون الخارجي',
+        interior_color: 'اللون الداخلي',
+        body_style: 'نمط الهيكل',
+        body_condition: 'حالة الهيكل',
+        doors_count: 'عدد الأبواب',
+        seats_count: 'عدد المقاعد',
+        warranty: 'الضمان',
+    },
+    values: {
+        automatic: 'أوتوماتيك',
+        manual: 'عادي',
+        gasoline: 'بنزين',
+        diesel: 'ديزل',
+        electric: 'كهرباء',
+        hybrid: 'هجين',
+        new: 'جديدة',
+        used: 'مستعملة',
+        certified_pre_owned: 'مستعملة معتمدة',
+    },
+    ui: {
+        sponsored: 'مميزة',
+        featured: 'مختارة',
+        rent: 'للإيجار',
+        video: 'فيديو توضيحي',
+        specs_title: 'المواصفات',
+        features_title: 'المميزات',
+        description_title: 'الوصف',
+        view_count: 'مشاهدة',
+        km: 'كم',
+        call: 'اتصال',
+        whatsapp: 'واتساب',
+        view_profile: 'زيارة المعرض',
+        report: 'إبلاغ عن محتوى مخالف',
+        verified: 'موثّق',
+        hp: 'حصان',
+    }
+};
+
+const translateValue = (val: string | undefined): string => {
+    if (!val) return '';
+    return (t.values as any)[val.toLowerCase()] || val;
+};
+
+const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null }> = ({ icon: Icon, label, value }) => {
+    if (!value) return null;
+    return (
+        <div className="flex items-center gap-3">
+            <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                <Icon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+            </div>
+            <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">{label}</p>
+                <p className="font-medium text-slate-900 dark:text-white capitalize">{typeof value === 'string' ? translateValue(value) : value}</p>
+            </div>
+        </div>
+    );
+};
 
 const CarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -135,20 +202,7 @@ const CarListingDetail: React.FC = () => {
         );
     }
 
-    const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null }> = ({ icon: Icon, label, value }) => {
-        if (!value) return null;
-        return (
-            <div className="flex items-center gap-3">
-                <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                    <Icon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                </div>
-                <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">{label}</p>
-                    <p className="font-medium text-slate-900 dark:text-white capitalize">{value}</p>
-                </div>
-            </div>
-        );
-    };
+
 
     // ... inside CarListingDetail component ...
     const images = (listing.photos && listing.photos.length > 0)
@@ -208,17 +262,17 @@ const CarListingDetail: React.FC = () => {
                                 <div className="absolute top-4 left-4 flex gap-2">
                                     {listing.is_sponsored && (
                                         <span className="px-3 py-1 bg-purple-500 text-white text-sm font-semibold rounded-full">
-                                            Sponsored
+                                            {t.ui.sponsored}
                                         </span>
                                     )}
                                     {listing.is_featured && (
                                         <span className="px-3 py-1 bg-blue-500 text-white text-sm font-semibold rounded-full">
-                                            Featured
+                                            {t.ui.featured}
                                         </span>
                                     )}
                                     {listing.listing_type === 'rent' && (
                                         <span className="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-full">
-                                            For Rent
+                                            {t.ui.rent}
                                         </span>
                                     )}
                                 </div>
@@ -251,7 +305,7 @@ const CarListingDetail: React.FC = () => {
                         {/* Video Section */}
                         {listing.video_url && (
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Video Tour</h2>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.video}</h2>
                                 <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
                                     <iframe
                                         src={listing.video_url.replace('watch?v=', 'embed/')}
@@ -279,11 +333,11 @@ const CarListingDetail: React.FC = () => {
                                         )}
                                         <span className="flex items-center gap-1">
                                             <Eye className="w-4 h-4" />
-                                            {listing.views_count || 0} views
+                                            {listing.views_count || 0} {t.ui.view_count}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4" />
-                                            {new Date(listing.created_at).toLocaleDateString()}
+                                            {new Date(listing.created_at).toLocaleDateString('ar-SA')}
                                         </span>
                                     </div>
                                 </div>
@@ -309,10 +363,10 @@ const CarListingDetail: React.FC = () => {
 
                             <div className="flex items-baseline gap-2 mb-4">
                                 <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                                    ${listing.price.toLocaleString()}
+                                    {new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(listing.price)}
                                 </span>
                                 {listing.listing_type === 'rent' && (
-                                    <span className="text-gray-600 dark:text-gray-400">/ day</span>
+                                    <span className="text-gray-600 dark:text-gray-400">/ يوم</span>
                                 )}
                             </div>
 
@@ -321,7 +375,7 @@ const CarListingDetail: React.FC = () => {
                                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
                                         <CheckCircle className="w-5 h-5 text-green-500" />
                                         <span className="text-gray-900 dark:text-white font-medium capitalize">
-                                            {listing.condition} Condition
+                                            {translateValue(listing.condition)}
                                         </span>
                                     </div>
                                 )}
@@ -329,7 +383,7 @@ const CarListingDetail: React.FC = () => {
                                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                                         <Star className="w-5 h-5 text-blue-500" />
                                         <span className="text-blue-700 dark:text-blue-300 font-medium">
-                                            Warranty: {listing.warranty}
+                                            {t.specs.warranty}: {listing.warranty}
                                         </span>
                                     </div>
                                 )}
@@ -338,34 +392,34 @@ const CarListingDetail: React.FC = () => {
 
                         {/* Specifications Grid */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Specifications</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.specs_title}</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {/* Basic Specs */}
-                                <SpecItem icon={Calendar} label="Year" value={listing.year} />
-                                <SpecItem icon={Gauge} label="Mileage" value={`${listing.mileage.toLocaleString()} km`} />
-                                <SpecItem icon={Settings} label="Transmission" value={listing.transmission} />
-                                <SpecItem icon={Fuel} label="Fuel Type" value={listing.fuel_type} />
+                                <SpecItem icon={Calendar} label={t.specs.year} value={listing.year} />
+                                <SpecItem icon={Gauge} label={t.specs.mileage} value={`${listing.mileage.toLocaleString()} ${t.ui.km}`} />
+                                <SpecItem icon={Settings} label={t.specs.transmission} value={listing.transmission} />
+                                <SpecItem icon={Fuel} label={t.specs.fuel_type} value={listing.fuel_type} />
 
                                 {/* Engine & Performance */}
-                                <SpecItem icon={Settings} label="Engine Size" value={listing.engine_size} />
-                                <SpecItem icon={Gauge} label="Horsepower" value={listing.horsepower ? `${listing.horsepower} HP` : undefined} />
+                                <SpecItem icon={Settings} label={t.specs.engine_size} value={listing.engine_size} />
+                                <SpecItem icon={Gauge} label={t.specs.horsepower} value={listing.horsepower ? `${listing.horsepower} ${t.ui.hp}` : undefined} />
 
                                 {/* Exterior/Interior */}
-                                <SpecItem icon={Car} label="Exterior Color" value={listing.exterior_color} />
-                                <SpecItem icon={Settings} label="Interior Color" value={listing.interior_color} />
+                                <SpecItem icon={Car} label={t.specs.exterior_color} value={listing.exterior_color} />
+                                <SpecItem icon={Settings} label={t.specs.interior_color} value={listing.interior_color} />
 
                                 {/* Body & Dimensions */}
-                                <SpecItem icon={Car} label="Body Style" value={listing.category?.name_ar || listing.category?.name} />
-                                <SpecItem icon={CheckCircle} label="Body Condition" value={listing.body_condition} />
-                                <SpecItem icon={Settings} label="Doors" value={listing.doors_count} />
-                                <SpecItem icon={Settings} label="Seats" value={listing.seats_count} />
+                                <SpecItem icon={Car} label={t.specs.body_style} value={listing.category?.name_ar || listing.category?.name} />
+                                <SpecItem icon={CheckCircle} label={t.specs.body_condition} value={listing.body_condition} />
+                                <SpecItem icon={Settings} label={t.specs.doors_count} value={listing.doors_count} />
+                                <SpecItem icon={Settings} label={t.specs.seats_count} value={listing.seats_count} />
                             </div>
                         </div>
 
                         {/* Features List */}
                         {listing.features && listing.features.length > 0 && (
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Features</h2>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.features_title}</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {listing.features.map((feature, idx) => (
                                         <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
@@ -379,7 +433,7 @@ const CarListingDetail: React.FC = () => {
 
                         {/* Description */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Description</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.description_title}</h2>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
                                 {listing.description}
                             </p>
@@ -389,62 +443,92 @@ const CarListingDetail: React.FC = () => {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         {/* Provider Card */}
-                        {listing.provider && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sticky top-4">
-                                <div className="text-center mb-6">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-2xl font-bold">
-                                        {listing.provider.business_name?.charAt(0) || 'P'}
+                        {(() => {
+                            const provider = listing.provider || listing.owner?.car_provider;
+                            // Safe render even if no provider
+                            if (!provider) return null;
+
+                            return (
+                                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sticky top-4">
+                                    <div className="text-center mb-6">
+                                        <div className="relative inline-block">
+                                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-md">
+                                                {provider.logo_url ? (
+                                                    <img
+                                                        src={provider.logo_url}
+                                                        alt="Provider Logo"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    provider.business_name?.charAt(0) || 'P'
+                                                )}
+                                            </div>
+                                            {provider.is_verified && (
+                                                <div className="absolute bottom-2 right-1/2 translate-x-10 bg-green-500 text-white p-1 rounded-full border-2 border-white dark:border-gray-800" title={t.ui.verified}>
+                                                    <CheckCircle className="w-4 h-4" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                                            {provider.business_name}
+                                        </h3>
+
+                                        {provider.city && (
+                                            <div className="flex items-center justify-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                                <MapPin className="w-3 h-3" />
+                                                <span>{provider.city}</span>
+                                            </div>
+                                        )}
+
+                                        {provider.member_since && (
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                عضو منذ {new Date(provider.member_since).getFullYear()}
+                                            </p>
+                                        )}
                                     </div>
-                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
-                                        {listing.provider.business_name}
-                                    </h3>
-                                    {listing.provider.is_verified && (
-                                        <span className="inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                                            <CheckCircle className="w-4 h-4" />
-                                            Verified Provider
-                                        </span>
-                                    )}
-                                </div>
 
-                                <div className="space-y-3">
-                                    {(listing.contact_phone || listing.provider.phone) && (
-                                        <button
-                                            onClick={() => handleContact('phone')}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
-                                        >
-                                            <Phone className="w-5 h-5" />
-                                            Call Now
+                                    <div className="space-y-3">
+                                        {(listing.contact_phone || provider.phone) && (
+                                            <button
+                                                onClick={() => handleContact('phone')}
+                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
+                                            >
+                                                <Phone className="w-5 h-5" />
+                                                {t.ui.call}
+                                            </button>
+                                        )}
+
+                                        {(listing.contact_whatsapp || provider.phone) && (
+                                            <button
+                                                onClick={() => handleContact('whatsapp')}
+                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium"
+                                            >
+                                                <MessageCircle className="w-5 h-5" />
+                                                {t.ui.whatsapp}
+                                            </button>
+                                        )}
+
+                                        {listing.seller_type === 'provider' && (
+                                            <button
+                                                onClick={() => navigate(`/car-providers/${provider.id}`)}
+                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium border border-gray-200 dark:border-gray-600"
+                                            >
+                                                <ExternalLink className="w-5 h-5" />
+                                                {t.ui.view_profile}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                        <button className="w-full text-xs text-gray-500 dark:text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1">
+                                            <Shield className="w-3 h-3" />
+                                            {t.ui.report}
                                         </button>
-                                    )}
-
-                                    {(listing.contact_whatsapp || listing.provider.phone) && (
-                                        <button
-                                            onClick={() => handleContact('whatsapp')}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium"
-                                        >
-                                            <MessageCircle className="w-5 h-5" />
-                                            WhatsApp
-                                        </button>
-                                    )}
-
-                                    {listing.seller_type === 'provider' && (
-                                        <button
-                                            onClick={() => navigate(`/car-providers/${listing.provider?.id}`)}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium"
-                                        >
-                                            <ExternalLink className="w-5 h-5" />
-                                            View Profile
-                                        </button>
-                                    )}
+                                    </div>
                                 </div>
-
-                                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                    <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
-                                        Report inappropriate listing
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </div>
             </div>
