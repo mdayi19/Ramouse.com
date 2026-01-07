@@ -120,6 +120,7 @@ export const useAppState = () => {
     if (path.startsWith('/tow-trucks/')) return 'towTruckProfile';
     if (path === '/register-tow-truck') return 'towTruckRegistration';
     if (path === '/tow-truck-dashboard') return 'towTruckDashboard';
+    if (path === '/car-provider-dashboard') return 'carProviderDashboard';
     if (path === '/blog') return 'blog';
     if (path.startsWith('/blog/')) return 'blogPost';
     if (path === '/faq') return 'faq';
@@ -155,6 +156,7 @@ export const useAppState = () => {
       case 'towTruckProfile': path = params?.towTruckId ? `/tow-trucks/${params.towTruckId}` : '/tow-trucks'; break;
       case 'towTruckRegistration': path = '/register-tow-truck'; break;
       case 'towTruckDashboard': path = '/tow-truck-dashboard'; break;
+      case 'carProviderDashboard': path = '/car-provider-dashboard'; break;
       case 'blog': path = '/blog'; break;
       case 'blogPost': path = params?.slug ? `/blog/${params.slug}` : '/blog'; break;
       case 'faq': path = '/faq'; break;
