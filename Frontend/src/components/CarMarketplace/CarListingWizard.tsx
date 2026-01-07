@@ -520,42 +520,40 @@ const Step2CategoryBrand: React.FC<any> = ({ formData, updateField, categories, 
                     </div>
                 </div>
 
-            </div>
-
-        <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                الموديل *
-            </label>
-            <div className="space-y-3">
-                {/* Show model suggestions if brand selected and models available */}
-                {formData.brand_id && brands.find((b: any) => String(b.id) === formData.brand_id) &&
-                    (brands.find((b: any) => String(b.id) === formData.brand_id)?.models ||
-                        // If models are grouped by brand name key in the response object (as per VehicleDataController)
-                        // We need to match brand name. Let's assume we get models passed as prop to step or we filter here.
-                        // Wait, we need to pass models state to this step component first.
-                        // For now, let's just keep the input but maybe add suggestions if we can access models.
-                        // Since we didn't pass 'models' prop to Step2CategoryBrand yet, let's just enhance the input for now
-                        // to be safe, or we need to update the parent component first to pass models.
-                        // Let's stick to the text input for immediate stability but with a clear placeholder.
-                        false) ? (
-                    <div>Model Selector Placeholder</div>
-                ) : (
-                    <input
-                        type="text"
-                        value={formData.model}
-                        onChange={(e) => updateField('model', e.target.value)}
-                        placeholder="مثال: كامري، كورولا، سوناتا..."
-                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        required
-                    />
-                )}
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                    اكتب اسم الموديل يدوياً (مثال: كامري 2024)
-                </p>
-            </div>
-        </div>
-    </>
-)}
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        الموديل *
+                    </label>
+                    <div className="space-y-3">
+                        {/* Show model suggestions if brand selected and models available */}
+                        {formData.brand_id && brands.find((b: any) => String(b.id) === formData.brand_id) &&
+                            (brands.find((b: any) => String(b.id) === formData.brand_id)?.models ||
+                                // If models are grouped by brand name key in the response object (as per VehicleDataController)
+                                // We need to match brand name. Let's assume we get models passed as prop to step or we filter here.
+                                // Wait, we need to pass models state to this step component first.
+                                // For now, let's just keep the input but maybe add suggestions if we can access models.
+                                // Since we didn't pass 'models' prop to Step2CategoryBrand yet, let's just enhance the input for now
+                                // to be safe, or we need to update the parent component first to pass models.
+                                // Let's stick to the text input for immediate stability but with a clear placeholder.
+                                false) ? (
+                            <div>Model Selector Placeholder</div>
+                        ) : (
+                            <input
+                                type="text"
+                                value={formData.model}
+                                onChange={(e) => updateField('model', e.target.value)}
+                                placeholder="مثال: كامري، كورولا، سوناتا..."
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                required
+                            />
+                        )}
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                            اكتب اسم الموديل يدوياً (مثال: كامري 2024)
+                        </p>
+                    </div>
+                </div>
+            </>
+        )}
     </motion.div >
 );
 
