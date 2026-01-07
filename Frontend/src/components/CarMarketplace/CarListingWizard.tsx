@@ -200,20 +200,21 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 price: Number(formData.price),
                 year: Number(formData.year),
                 mileage: Number(formData.mileage),
-                car_listing_category_id: Number(formData.category_id),
+                car_listing_category_id: formData.category_id ? Number(formData.category_id) : null,
+                brand_id: formData.brand_id ? Number(formData.brand_id) : null,
                 doors_count: Number(formData.doors),
                 seats_count: Number(formData.seats),
                 exterior_color: formData.color,
                 contact_phone: formData.phone_visible ? userPhone : null,
+                // Convert body_condition from JSON string to object/array
+                body_condition: formData.body_condition ? JSON.parse(formData.body_condition) : {},
+                // Remove frontend-only fields
                 category_id: undefined,
                 doors: undefined,
                 seats: undefined,
-                color: undefined
+                color: undefined,
+                phone_visible: undefined
             };
-
-            if (formData.brand_id) {
-                (payload as any).brand_id = Number(formData.brand_id);
-            }
 
             console.log('📦 Payload prepared:', payload);
 
