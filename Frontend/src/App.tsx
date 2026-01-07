@@ -8,6 +8,7 @@ import { getEcho } from './lib/echo';
 import { NotificationService } from './services/notification.service';
 import { AuthService } from './services/auth.service';
 import { DirectoryService } from './services/directory.service';
+import { CarProviderDashboardProps } from './types';
 
 // Eager imports for critical path
 import Header from './components/Header';
@@ -56,7 +57,7 @@ const CarMarketplacePage = lazy(() => import('./components/CarMarketplace/CarMar
 const CarListingDetail = lazy(() => import('./components/CarMarketplace/CarListingDetail'));
 const CarProviderProfile = lazy(() => import('./components/CarMarketplace/CarProviderProfile'));
 const CarProviderRegistration = lazy(() => import('./components/CarMarketplace/CarProviderRegistration'));
-const CarProviderDashboard = lazy(() => import('./components/CarMarketplace/CarProviderDashboard').then(module => ({ default: module.CarProviderDashboard })));
+const CarProviderDashboard = lazy<React.FC<CarProviderDashboardProps>>(() => import('./components/CarMarketplace/CarProviderDashboard').then(module => ({ default: module.CarProviderDashboard })));
 
 import NotificationPermissionModal from './components/NotificationPermissionModal';
 
