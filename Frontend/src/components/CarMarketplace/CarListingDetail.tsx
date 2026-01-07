@@ -60,8 +60,26 @@ const translateValue = (val: string | undefined): string => {
     return (t.values as any)[val.toLowerCase()] || val;
 };
 
+const safeDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    try {
+        return new Date(dateString).toLocaleDateString('ar-SA');
+    } catch (e) {
+        return '';
+    }
+};
+
+const safePrice = (price: number | undefined) => {
+    if (typeof price !== 'number') return '';
+    try {
+        return new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(price);
+    } catch (e) {
+        return `${price} SYP`;
+    }
+};
+
 const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null }> = ({ icon: Icon, label, value }) => {
-    if (!value) return null;
+    if (value === undefined || value === null || value === '') return null;
     return (
         <div className="flex items-center gap-3">
             <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
@@ -337,7 +355,7 @@ const CarListingDetail: React.FC = () => {
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4" />
-                                            {new Date(listing.created_at).toLocaleDateString('ar-SA')}
+                                            {safeDate(listing.created_at)}
                                         </span>
                                     </div>
                                 </div>
@@ -363,7 +381,7 @@ const CarListingDetail: React.FC = () => {
 
                             <div className="flex items-baseline gap-2 mb-4">
                                 <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                                    {new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(listing.price)}
+                                    {safePrice(listing.price)}
                                 </span>
                                 {listing.listing_type === 'rent' && (
                                     <span className="text-gray-600 dark:text-gray-400">/ يوم</span>
@@ -417,7 +435,7 @@ const CarListingDetail: React.FC = () => {
                         </div>
 
                         {/* Features List */}
-                        {listing.features && listing.features.length > 0 && (
+                        {listing.features && Array.isArray(listing.features) && listing.features.length > 0 && (
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.features_title}</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
