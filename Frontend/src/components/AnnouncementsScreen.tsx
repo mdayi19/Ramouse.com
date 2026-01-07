@@ -23,6 +23,7 @@ const AudienceBadge: React.FC<{ target: AnnouncementPost['target'] }> = ({ targe
         providers: { label: 'للمزودين', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300', icon: 'Building2' },
         technicians: { label: 'للفنيين', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300', icon: 'Wrench' },
         tow_trucks: { label: 'للسطحات', color: 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300', icon: 'Truck' },
+        car_providers: { label: 'لمعارض السيارات', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300', icon: 'Car' },
     };
 
     const info = audienceMap[target] || audienceMap.all;

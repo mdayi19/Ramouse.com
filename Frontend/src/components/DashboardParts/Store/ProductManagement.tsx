@@ -47,7 +47,7 @@ const StoreProductFormModal: React.FC<{
     const [existingMedia, setExistingMedia] = useState<GalleryItem[]>(product?.media || []);
     const [resolvedExistingMedia, setResolvedExistingMedia] = useState<{ item: GalleryItem, url: string }[]>([]);
 
-    const [targetAudience, setTargetAudience] = useState<'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks'>(product?.targetAudience || 'all');
+    const [targetAudience, setTargetAudience] = useState<'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks' | 'car_providers'>(product?.targetAudience || 'all');
     const [selectedSpecialty, setSelectedSpecialty] = useState(product?.specialty || technicianSpecialties[0]?.name || '');
     const [totalStock, setTotalStock] = useState(product?.totalStock.toString() || '');
     const [purchaseLimit, setPurchaseLimit] = useState(product?.purchaseLimitPerBuyer.toString() || '');
@@ -167,7 +167,7 @@ const StoreProductFormModal: React.FC<{
     };
 
     const subcategories = storeCategories.find(c => c.id === storeCategoryId)?.subcategories || [];
-    const audienceOptions = [{ value: 'all', label: 'الجميع' }, { value: 'customers', label: 'العملاء' }, { value: 'technicians', label: 'الفنيين' }, { value: 'providers', label: 'المزودين' }, { value: 'tow_trucks', label: 'السطحات' }];
+    const audienceOptions = [{ value: 'all', label: 'الجميع' }, { value: 'customers', label: 'العملاء' }, { value: 'technicians', label: 'الفنيين' }, { value: 'providers', label: 'المزودين' }, { value: 'tow_trucks', label: 'السطحات' }, { value: 'car_providers', label: 'معارض السيارات' }];
 
     const tabs = [
         { id: 'basic', label: 'البيانات الأساسية', icon: 'FileText' },

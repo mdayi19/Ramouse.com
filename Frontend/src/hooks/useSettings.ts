@@ -40,6 +40,7 @@ const initialNotificationSettings: NotificationSettings = {
     ORDER_CANCELLED_ADMIN: true, SHIPPING_NOTES_UPDATED: true, NEW_REVIEW_PROVIDER: true,
     NEW_REVIEW_ADMIN: true, PAYMENT_UPLOADED_ADMIN: true, PAYMENT_REUPLOADED_ADMIN: true,
     quote_received: true, DEPOSIT_REQUEST: true, WITHDRAWAL_REQUEST: true, new_store_order: true,
+    NEW_CAR_PROVIDER_REQUEST: true,
 };
 
 const initialSeoSettings: SeoSettings = {

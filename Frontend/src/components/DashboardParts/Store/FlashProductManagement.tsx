@@ -46,7 +46,7 @@ const FlashProductFormModal: React.FC<{
     const [existingMedia, setExistingMedia] = useState<GalleryItem[]>(product?.media || []);
     const [resolvedExistingMedia, setResolvedExistingMedia] = useState<{ item: GalleryItem, url: string }[]>([]);
 
-    const [targetAudience, setTargetAudience] = useState<'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks'>(product?.targetAudience || 'all');
+    const [targetAudience, setTargetAudience] = useState<'technicians' | 'customers' | 'all' | 'providers' | 'tow_trucks' | 'car_providers'>(product?.targetAudience || 'all');
     const [selectedSpecialty, setSelectedSpecialty] = useState(product?.specialty || technicianSpecialties[0]?.name || '');
     const [totalStock, setTotalStock] = useState(product?.totalStock.toString() || '');
     const [purchaseLimit, setPurchaseLimit] = useState(product?.purchaseLimitPerBuyer.toString() || '');
@@ -183,7 +183,7 @@ const FlashProductFormModal: React.FC<{
         }
     };
 
-    const audienceOptions = [{ value: 'all', label: 'الجميع' }, { value: 'customers', label: 'العملاء' }, { value: 'technicians', label: 'الفنيين' }, { value: 'providers', label: 'المزودين' }, { value: 'tow_trucks', label: 'السطحات' }];
+    const audienceOptions = [{ value: 'all', label: 'الجميع' }, { value: 'customers', label: 'العملاء' }, { value: 'technicians', label: 'الفنيين' }, { value: 'providers', label: 'المزودين' }, { value: 'tow_trucks', label: 'السطحات' }, { value: 'car_providers', label: 'معارض السيارات' }];
 
     return (
         <Modal title={product ? "تعديل العرض الفوري" : "إضافة عرض فوري جديد"} onClose={onClose} size="2xl">
@@ -492,7 +492,8 @@ const FlashProductManagement: React.FC<FlashProductManagementProps> = ({ product
                                         {p.targetAudience === 'all' ? 'الجميع' :
                                             p.targetAudience === 'customers' ? 'العملاء' :
                                                 p.targetAudience === 'technicians' ? 'الفنيين' :
-                                                    p.targetAudience === 'providers' ? 'المزودين' : 'السطحات'}
+                                                    p.targetAudience === 'providers' ? 'المزودين' :
+                                                        p.targetAudience === 'tow_trucks' ? 'السطحات' : 'معارض السيارات'}
                                     </td>
                                     <td className="p-4">
                                         <div className="flex gap-2">
