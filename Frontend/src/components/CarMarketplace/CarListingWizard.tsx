@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, Check, Car, ShoppingCart, RefreshCw,
     Tag, Settings, Wrench, Camera, CheckCircle, DollarSign,
-    Calendar, Gauge, Zap, Fuel, Droplets, Star, DoorOpen, Users, Rocket
+    Calendar, Gauge, Zap, Fuel, Droplets, Star, DoorOpen, Users, Rocket,
+    Hammer, FileText, Hash, User, Shield, MessageCircle
 } from 'lucide-react';
 import Icon from '../Icon';
 import { CarProviderService } from '../../services/carprovider.service';
@@ -11,7 +12,7 @@ import { IconCard } from './IconCard';
 import { PhotoUploader } from './PhotoUploader';
 import { NumberSelector } from './NumberSelector';
 import { ColorPicker } from './ColorPicker';
-import { ConditionPresets } from './ConditionPresets';
+import { CarBodyDiagram } from './CarBodyDiagram';
 
 interface CarListingWizardProps {
     onComplete: () => void;
@@ -32,7 +33,6 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     const [categories, setCategories] = useState<any[]>([]);
     const [brands, setBrands] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(true);
-    const [selectedPresetId, setSelectedPresetId] = useState<string>('');
     const [formData, setFormData] = useState({
         title: '',
         listing_type: 'sale' as 'sale' | 'rent',
@@ -46,16 +46,28 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         transmission: 'automatic' as 'automatic' | 'manual',
         fuel_type: 'gasoline' as 'gasoline' | 'diesel' | 'electric' | 'hybrid',
         color: 'white',
+        interior_color: 'black',
         doors: 4,
         seats: 5,
+        horsepower: '',
+        engine_size: '',
         condition: 'used' as 'new' | 'used' | 'certified_pre_owned',
-        body_condition: '{"front": "good", "rear": "good", "left": "good", "right": "good"}',
+        body_condition: '{}',
+        license_plate: '',
+        vin_number: '',
+        previous_owners: 0,
+        warranty: '',
         features: [] as string[],
         photos: [] as (File | string)[],
         video_url: '',
         description: '',
         city: '',
-        phone_visible: true
+        negotiable: true,
+        daily_rate: '',
+        weekly_rate: '',
+        monthly_rate: '',
+        phone_visible: true,
+        whatsapp: ''
     });
 
     const totalSteps = 6;
@@ -91,16 +103,28 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 transmission: editingListing.transmission || 'automatic',
                 fuel_type: editingListing.fuel_type || 'gasoline',
                 color: editingListing.exterior_color || 'white',
+                interior_color: editingListing.interior_color || 'black',
                 doors: editingListing.doors_count || 4,
                 seats: editingListing.seats_count || 5,
+                horsepower: editingListing.horsepower?.toString() || '',
+                engine_size: editingListing.engine_size || '',
                 condition: editingListing.condition || 'used',
-                body_condition: editingListing.body_condition ? JSON.stringify(editingListing.body_condition) : '{"front": "good", "rear": "good", "left": "good", "right": "good"}',
+                body_condition: editingListing.body_condition ? JSON.stringify(editingListing.body_condition) : '{}',
+                license_plate: editingListing.license_plate || '',
+                vin_number: editingListing.chassis_number || '',
+                previous_owners: editingListing.previous_owners || 0,
+                warranty: editingListing.warranty || '',
                 features: editingListing.features || [],
                 photos: editingListing.photos || [],
                 video_url: editingListing.video_url || '',
                 description: editingListing.description || '',
                 city: editingListing.city || '',
-                phone_visible: !!editingListing.contact_phone
+                negotiable: editingListing.is_negotiable ?? true,
+                daily_rate: editingListing.rental_terms?.daily_rate?.toString() || '',
+                weekly_rate: editingListing.rental_terms?.weekly_rate?.toString() || '',
+                monthly_rate: editingListing.rental_terms?.monthly_rate?.toString() || '',
+                phone_visible: !!editingListing.contact_phone,
+                whatsapp: editingListing.contact_whatsapp || ''
             });
         }
     }, [editingListing]);
@@ -208,7 +232,21 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 doors_count: Number(formData.doors),
                 seats_count: Number(formData.seats),
                 exterior_color: formData.color,
+                interior_color: formData.interior_color,
+                horsepower: formData.horsepower ? Number(formData.horsepower) : null,
+                engine_size: formData.engine_size || null,
+                license_plate: formData.license_plate || null,
+                chassis_number: formData.vin_number || null,
+                previous_owners: formData.previous_owners || 0,
+                warranty: formData.warranty || null,
+                is_negotiable: formData.negotiable,
+                rental_terms: formData.listing_type === 'rent' ? {
+                    daily_rate: formData.daily_rate ? Number(formData.daily_rate) : null,
+                    weekly_rate: formData.weekly_rate ? Number(formData.weekly_rate) : null,
+                    monthly_rate: formData.monthly_rate ? Number(formData.monthly_rate) : null
+                } : null,
                 contact_phone: formData.phone_visible ? userPhone : null,
+                contact_whatsapp: formData.whatsapp || null,
                 // Convert body_condition from JSON string to object/array
                 body_condition: formData.body_condition ? JSON.parse(formData.body_condition) : {},
                 // Remove frontend-only fields
@@ -216,7 +254,13 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 doors: undefined,
                 seats: undefined,
                 color: undefined,
-                phone_visible: undefined
+                phone_visible: undefined,
+                negotiable: undefined,
+                daily_rate: undefined,
+                weekly_rate: undefined,
+                monthly_rate: undefined,
+                whatsapp: undefined,
+                vin_number: undefined
             };
 
             console.log('📦 Payload prepared:', payload);
@@ -326,8 +370,6 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                             <Step4Condition
                                 formData={formData}
                                 updateField={updateField}
-                                selectedPresetId={selectedPresetId}
-                                setSelectedPresetId={setSelectedPresetId}
                             />
                         )}
                         {currentStep === 5 && (
@@ -621,25 +663,111 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
             selectedColor={formData.color}
             onChange={(color) => updateField('color', color)}
         />
+
+        <ColorPicker
+            label="اللون الداخلي"
+            selectedColor={formData.interior_color}
+            onChange={(color) => updateField('interior_color', color)}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <Hammer className="w-4 h-4" />
+                    قوة المحرك (HP)
+                </label>
+                <input
+                    type="number"
+                    value={formData.horsepower}
+                    onChange={(e) => updateField('horsepower', e.target.value)}
+                    placeholder="150"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    حجم المحرك
+                </label>
+                <input
+                    type="text"
+                    value={formData.engine_size}
+                    onChange={(e) => updateField('engine_size', e.target.value)}
+                    placeholder="2.0L"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+        </div>
     </motion.div>
 );
 
-// Step 4: Condition with Presets
-const Step4Condition: React.FC<any> = ({ formData, updateField, selectedPresetId, setSelectedPresetId }) => (
+// Step 4: Condition with CarBodyDiagram
+const Step4Condition: React.FC<any> = ({ formData, updateField }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
         className="space-y-6"
     >
-        <ConditionPresets
-            onSelect={(preset) => {
-                updateField('condition', preset.condition);
-                updateField('body_condition', preset.bodyCondition);
-                setSelectedPresetId(preset.id);
-            }}
-            selectedId={selectedPresetId}
+        <CarBodyDiagram
+            value={formData.body_condition ? JSON.parse(formData.body_condition) : {}}
+            onChange={(condition) => updateField('body_condition', JSON.stringify(condition))}
         />
+
+        <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    رقم اللوحة
+                </label>
+                <input
+                    type="text"
+                    value={formData.license_plate}
+                    onChange={(e) => updateField('license_plate', e.target.value)}
+                    placeholder="ABC-1234"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <Hash className="w-4 h-4" />
+                    رقم الهيكل (VIN)
+                </label>
+                <input
+                    type="text"
+                    value={formData.vin_number}
+                    onChange={(e) => updateField('vin_number', e.target.value)}
+                    placeholder="17 حرف/رقم"
+                    maxLength={17}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+        </div>
+
+        <NumberSelector
+            label="عدد المالكين السابقين"
+            value={formData.previous_owners}
+            min={0}
+            max={10}
+            onChange={(v) => updateField('previous_owners', v)}
+            icon={<User className="w-4 h-4" />}
+        />
+
+        <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                الضمان
+            </label>
+            <input
+                type="text"
+                value={formData.warranty}
+                onChange={(e) => updateField('warranty', e.target.value)}
+                placeholder="مثال: ضمان الوكالة لمدة سنة"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+            />
+        </div>
 
         <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -737,6 +865,78 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                     placeholder="0"
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
                     required
+                />
+                <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={formData.negotiable}
+                        onChange={(e) => updateField('negotiable', e.target.checked)}
+                        className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                        ✓ قابل للتفاوض
+                    </span>
+                </label>
+            </div>
+
+            {formData.listing_type === 'rent' && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3">
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                        <RefreshCw className="w-5 h-5" />
+                        أسعار الإيجار
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                                يومي (ل.س)
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.daily_rate}
+                                onChange={(e) => updateField('daily_rate', e.target.value)}
+                                placeholder="0"
+                                className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                                أسبوعي (ل.س)
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.weekly_rate}
+                                onChange={(e) => updateField('weekly_rate', e.target.value)}
+                                placeholder="0"
+                                className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                                شهري (ل.س)
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.monthly_rate}
+                                onChange={(e) => updateField('monthly_rate', e.target.value)}
+                                placeholder="0"
+                                className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    واتساب (اختياري)
+                </label>
+                <input
+                    type="text"
+                    value={formData.whatsapp}
+                    onChange={(e) => updateField('whatsapp', e.target.value)}
+                    placeholder="+963 XXX XXX XXX"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
                 />
             </div>
         </motion.div>
