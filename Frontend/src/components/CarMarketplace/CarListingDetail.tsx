@@ -78,8 +78,8 @@ const safePrice = (price: number | undefined) => {
     }
 };
 
-const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null }> = ({ icon: Icon, label, value }) => {
-    if (value === undefined || value === null || value === '') return null;
+const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null | any }> = ({ icon: Icon, label, value }) => {
+    if (value === undefined || value === null || value === '' || typeof value === 'object') return null;
     return (
         <div className="flex items-center gap-3">
             <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
@@ -92,6 +92,15 @@ const SpecItem: React.FC<{ icon: any; label: string; value: string | number | un
         </div>
     );
 };
+// ...
+// Inside the component render where provider card is:
+{
+    (provider.member_since || provider.created_at) && (
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+            عضو منذ {new Date(provider.member_since || provider.created_at).getFullYear()}
+        </p>
+    )
+}
 
 const CarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -499,9 +508,9 @@ const CarListingDetail: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {provider.member_since && (
+                                        {(provider.member_since || provider.created_at) && (
                                             <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                عضو منذ {new Date(provider.member_since).getFullYear()}
+                                                عضو منذ {new Date(provider.member_since || provider.created_at).getFullYear()}
                                             </p>
                                         )}
                                     </div>
