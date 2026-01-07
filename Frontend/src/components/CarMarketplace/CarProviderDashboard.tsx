@@ -3,10 +3,11 @@ import { Car, Eye, Heart, TrendingUp, Edit, Trash2, ToggleLeft, ToggleRight, Plu
 import Icon from '../Icon';
 import { CarProviderService } from '../../services/carprovider.service';
 import { CarListingWizard } from './CarListingWizard';
+import { View } from '../../types';
 
 interface CarProviderDashboardProps {
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
-    onNavigate: (view: string) => void;
+    onNavigate: (view: View, params?: any) => void;
 }
 
 export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
@@ -105,8 +106,8 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`px-6 py-3 rounded-xl transition-all flex items-center gap-2 ${activeTab === tab.id
-                                        ? 'bg-primary text-white'
-                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                                     }`}
                             >
                                 <tab.icon className="w-5 h-5" />
@@ -193,8 +194,8 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = ({
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${listing.is_hidden
-                                                        ? 'bg-red-100 text-red-700'
-                                                        : 'bg-green-100 text-green-700'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : 'bg-green-100 text-green-700'
                                                     }`}>
                                                     {listing.is_hidden ? 'مخفي' : 'نشط'}
                                                 </span>
