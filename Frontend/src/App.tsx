@@ -787,7 +787,7 @@ const App: React.FC = () => {
                             <Route path="/contact" element={<ContactScreen onBack={() => handleNavigate('welcome')} settings={settings} showToast={showToast} />} />
 
                             {/* Car Provider Dashboard */}
-                            <Route path="/car-provider-dashboard" element={
+                            <Route path="/car-provider-dashboard/*" element={
                                 isCarProvider ? (
                                     <Suspense fallback={<PageLoader />}>
                                         <CarProviderDashboard
@@ -795,13 +795,30 @@ const App: React.FC = () => {
                                             onNavigate={handleNavigate}
                                             carProvider={loggedInCarProvider}
                                             userPhone={userPhone}
+                                            allOrders={allOrders}
+                                            settings={settings}
+                                            addNotificationForUser={addNotificationForUser}
+                                            onStartNewOrder={handleStartNewOrder}
+                                            updateAllOrders={updateAllOrders}
+                                            storeCategories={storeCategories}
+                                            onUpdateCustomer={onUpdateCustomer}
+                                            allBrands={allBrands}
+                                            onUpdateCarProvider={(data) => {
+                                                if (loggedInCarProvider) {
+                                                    setLoggedInCarProvider({ ...loggedInCarProvider, ...data });
+                                                }
+                                            }}
+                                            isSidebarOpen={isSidebarOpen}
+                                            setIsSidebarOpen={setIsSidebarOpen}
+                                            onLogout={handleLogout}
+                                            onBack={() => handleNavigate('welcome')}
+                                            currentView={currentView}
+                                            unreadCount={unreadCount}
+                                            isLoading={isLoading}
                                         />
                                     </Suspense>
                                 ) : (
-                                    (() => {
-                                        console.log('Redirecting from /car-provider-dashboard because isCarProvider is false');
-                                        return <Navigate to="/" replace />;
-                                    })()
+                                    <Navigate to="/" replace />
                                 )
                             } />
                             {/* Car Marketplace Routes */}

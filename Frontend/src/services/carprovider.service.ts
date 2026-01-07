@@ -1,4 +1,5 @@
 import { api } from '../lib/api';
+import { CarProvider } from '../types';
 
 export interface CarListing {
     id: number;
@@ -78,7 +79,12 @@ export class CarProviderService {
         return response.data;
     }
 
-    static async getListingBySlug(slug: string) {
+    static async updateProfile(data: any): Promise<CarProvider> {
+        const response = await api.put('/car-providers/profile', data);
+        return response.data.provider;
+    }
+
+    static async getListingBySlug(slug: string): Promise<CarListing> {
         const response = await api.get(`/car-marketplace/${slug}`);
         return response.data.listing;
     }
@@ -101,7 +107,6 @@ export class CarProviderService {
     static async getBrands() {
         try {
             const response = await api.get('/vehicle/data');
-            // Backend returns: { brands: [], categories: [], models: [], ... }
             return {
                 success: true,
                 brands: response.data.brands || [],
@@ -109,7 +114,6 @@ export class CarProviderService {
             };
         } catch (error) {
             console.error('Failed to fetch brands:', error);
-            // Fallback to empty if fails
             return {
                 success: true,
                 brands: [],
@@ -200,6 +204,7 @@ export class CarProviderService {
         });
         return response.data;
     }
+
     // Reporting
     static async reportListing(id: number, data: { reason: string; details: string }) {
         const response = await api.post(`/car-marketplace/${id}/report`, data);
