@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Car, MapPin, Calendar, Gauge, Fuel, Settings, Phone,
-    Mail, Heart, Share2, ChevronLeft, ChevronRight, X,
-    CheckCircle, Star, Eye, MessageCircle, ExternalLink, Shield
+    Heart, Share2, ChevronRight, CheckCircle, Star, Eye, MessageCircle,
+    Shield
 } from 'lucide-react';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
+import CarGallery from './ListingParts/CarGallery';
+import ProviderSidebar from './ListingParts/ProviderSidebar';
+import SimilarListings from './ListingParts/SimilarListings';
 
 // Helper for translations
 const t = {
@@ -92,9 +95,6 @@ const SpecItem: React.FC<{ icon: any; label: string; value: string | number | un
         </div>
     );
 };
-// ...
-// Inside the component render where provider card is:
-
 
 const CarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
