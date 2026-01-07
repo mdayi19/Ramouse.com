@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CarProviderService, CarListing, MarketplaceFilters } from '../../services/carprovider.service';
 import { Car, Filter, Grid, List, Search, Heart, Phone, MessageCircle, Eye } from 'lucide-react';
 import Icon from '../Icon';
@@ -120,8 +121,8 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`px-4 py-3 rounded-xl transition-colors ${viewMode === 'grid'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                ? 'bg-primary text-white'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                 }`}
                         >
                             <Grid className="w-5 h-5" />
@@ -129,8 +130,8 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                         <button
                             onClick={() => setViewMode('list')}
                             className={`px-4 py-3 rounded-xl transition-colors ${viewMode === 'list'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                ? 'bg-primary text-white'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                 }`}
                         >
                             <List className="w-5 h-5" />
@@ -279,8 +280,8 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                         key={page}
                                         onClick={() => handleFilterChange('page', page)}
                                         className={`px-4 py-2 rounded-lg ${page === pagination.current_page
-                                                ? 'bg-primary text-white'
-                                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                            ? 'bg-primary text-white'
+                                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                             }`}
                                     >
                                         {page}
@@ -299,16 +300,23 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 const CarListingCard: React.FC<{
     listing: CarListing;
     viewMode: 'grid' | 'list';
-    onView: () => void;
     showToast: (msg: string, type: any) => void;
-}> = ({ listing, viewMode, onView, showToast }) => {
+}> = ({ listing, viewMode, showToast }) => {
+    const navigate = useNavigate();
+
+    // ... helper logic ...
+
+    const handleView = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent bubbling if nested
+        navigate(`/car-listings/${listing.slug}`);
+    };
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(price);
     };
 
     return (
         <div
-            onClick={onView}
+            onClick={handleView}
             className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden ${viewMode === 'list' ? 'flex' : ''
                 }`}
         >
