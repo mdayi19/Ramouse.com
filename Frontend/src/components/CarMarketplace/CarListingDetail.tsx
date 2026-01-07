@@ -135,9 +135,27 @@ const CarListingDetail: React.FC = () => {
         );
     }
 
-    const images = listing.images && listing.images.length > 0
-        ? listing.images
-        : ['/placeholder-car.jpg'];
+    const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null }> = ({ icon: Icon, label, value }) => {
+        if (!value) return null;
+        return (
+            <div className="flex items-center gap-3">
+                <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                    <Icon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                </div>
+                <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">{label}</p>
+                    <p className="font-medium text-slate-900 dark:text-white capitalize">{value}</p>
+                </div>
+            </div>
+        );
+    };
+
+    // ... inside CarListingDetail component ...
+    const images = (listing.photos && listing.photos.length > 0)
+        ? listing.photos
+        : (listing.images && listing.images.length > 0)
+            ? listing.images
+            : ['/placeholder-car.jpg'];
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -230,6 +248,21 @@ const CarListingDetail: React.FC = () => {
                             )}
                         </div>
 
+                        {/* Video Section */}
+                        {listing.video_url && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Video Tour</h2>
+                                <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                    <iframe
+                                        src={listing.video_url.replace('watch?v=', 'embed/')}
+                                        title="Car Video"
+                                        className="w-full h-full"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Title & Price */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                             <div className="flex items-start justify-between mb-4">
@@ -283,81 +316,66 @@ const CarListingDetail: React.FC = () => {
                                 )}
                             </div>
 
-                            {listing.condition && (
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                                    <CheckCircle className="w-5 h-5 text-green-500" />
-                                    <span className="text-gray-900 dark:text-white font-medium capitalize">
-                                        {listing.condition} Condition
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Specifications */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Specifications</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                        <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Year</p>
-                                        <p className="font-semibold text-gray-900 dark:text-white">{listing.year}</p>
-                                    </div>
-                                </div>
-
-                                {listing.mileage && (
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                            <Gauge className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Mileage</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white">
-                                                {listing.mileage.toLocaleString()} km
-                                            </p>
-                                        </div>
+                            <div className="flex flex-wrap gap-2">
+                                {listing.condition && (
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                        <span className="text-gray-900 dark:text-white font-medium capitalize">
+                                            {listing.condition} Condition
+                                        </span>
                                     </div>
                                 )}
-
-                                {listing.brand && (
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                                            {listing.brand.logo ? (
-                                                <img
-                                                    src={listing.brand.logo}
-                                                    alt={listing.brand.name}
-                                                    className="w-8 h-8 object-contain mix-blend-multiply dark:mix-blend-normal"
-                                                />
-                                            ) : (
-                                                <Car className="w-6 h-6 text-green-600 dark:text-green-400" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Brand & Model</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white">
-                                                {listing.brand.name_ar || listing.brand.name} {listing.model}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {listing.category && (
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                                            <Settings className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Category</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white">
-                                                {listing.category.name_ar || listing.category.name}
-                                            </p>
-                                        </div>
+                                {listing.warranty && (
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                        <Star className="w-5 h-5 text-blue-500" />
+                                        <span className="text-blue-700 dark:text-blue-300 font-medium">
+                                            Warranty: {listing.warranty}
+                                        </span>
                                     </div>
                                 )}
                             </div>
                         </div>
+
+                        {/* Specifications Grid */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Specifications</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                {/* Basic Specs */}
+                                <SpecItem icon={Calendar} label="Year" value={listing.year} />
+                                <SpecItem icon={Gauge} label="Mileage" value={`${listing.mileage.toLocaleString()} km`} />
+                                <SpecItem icon={Settings} label="Transmission" value={listing.transmission} />
+                                <SpecItem icon={Fuel} label="Fuel Type" value={listing.fuel_type} />
+
+                                {/* Engine & Performance */}
+                                <SpecItem icon={Settings} label="Engine Size" value={listing.engine_size} />
+                                <SpecItem icon={Gauge} label="Horsepower" value={listing.horsepower ? `${listing.horsepower} HP` : undefined} />
+
+                                {/* Exterior/Interior */}
+                                <SpecItem icon={Car} label="Exterior Color" value={listing.exterior_color} />
+                                <SpecItem icon={Settings} label="Interior Color" value={listing.interior_color} />
+
+                                {/* Body & Dimensions */}
+                                <SpecItem icon={Car} label="Body Style" value={listing.category?.name_ar || listing.category?.name} />
+                                <SpecItem icon={CheckCircle} label="Body Condition" value={listing.body_condition} />
+                                <SpecItem icon={Settings} label="Doors" value={listing.doors_count} />
+                                <SpecItem icon={Settings} label="Seats" value={listing.seats_count} />
+                            </div>
+                        </div>
+
+                        {/* Features List */}
+                        {listing.features && listing.features.length > 0 && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Features</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {listing.features.map((feature, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                            <span>{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Description */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
@@ -389,21 +407,25 @@ const CarListingDetail: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <button
-                                        onClick={() => handleContact('phone')}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
-                                    >
-                                        <Phone className="w-5 h-5" />
-                                        Call Now
-                                    </button>
+                                    {(listing.contact_phone || listing.provider.phone) && (
+                                        <button
+                                            onClick={() => handleContact('phone')}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
+                                        >
+                                            <Phone className="w-5 h-5" />
+                                            Call Now
+                                        </button>
+                                    )}
 
-                                    <button
-                                        onClick={() => handleContact('whatsapp')}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium"
-                                    >
-                                        <MessageCircle className="w-5 h-5" />
-                                        WhatsApp
-                                    </button>
+                                    {(listing.contact_whatsapp || listing.provider.phone) && (
+                                        <button
+                                            onClick={() => handleContact('whatsapp')}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium"
+                                        >
+                                            <MessageCircle className="w-5 h-5" />
+                                            WhatsApp
+                                        </button>
+                                    )}
 
                                     {listing.seller_type === 'provider' && (
                                         <button

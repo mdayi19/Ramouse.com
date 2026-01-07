@@ -35,6 +35,18 @@ export interface CarListing {
     };
     model: string;
     created_at: string;
+    video_url?: string;
+    features?: string[];
+    exterior_color?: string;
+    interior_color?: string;
+    doors_count?: number;
+    seats_count?: number;
+    engine_size?: string;
+    horsepower?: number;
+    body_condition?: string;
+    warranty?: string;
+    contact_phone?: string;
+    contact_whatsapp?: string;
 }
 
 export interface MarketplaceFilters {
