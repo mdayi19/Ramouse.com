@@ -21,8 +21,19 @@ export interface CarListing {
     views_count: number;
     owner: any;
     provider?: any;
-    category: any;
-    brand: any;
+    category: {
+        id: number;
+        name: string;
+        name_ar?: string;
+        name_en?: string;
+    };
+    brand: {
+        id: number | string;
+        name: string;
+        name_ar?: string;
+        logo?: string;
+    };
+    model: string;
     created_at: string;
 }
 
