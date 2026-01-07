@@ -78,17 +78,19 @@ export class CarProviderService {
     static async getBrands() {
         try {
             const response = await api.get('/vehicle/data');
-            // Backend returns: { brands: [], categories: [], ... }
+            // Backend returns: { brands: [], categories: [], models: [], ... }
             return {
                 success: true,
-                brands: response.data.brands || []
+                brands: response.data.brands || [],
+                models: response.data.models || {}
             };
         } catch (error) {
             console.error('Failed to fetch brands:', error);
             // Fallback to empty if fails
             return {
                 success: true,
-                brands: []
+                brands: [],
+                models: {}
             };
         }
     }
