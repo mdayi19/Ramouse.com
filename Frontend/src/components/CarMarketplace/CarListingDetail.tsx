@@ -323,12 +323,22 @@ const CarListingDetail: React.FC = () => {
 
                                 {listing.brand && (
                                     <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                            <Car className="w-6 h-6 text-green-600 dark:text-green-400" />
+                                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                                            {listing.brand.logo ? (
+                                                <img
+                                                    src={listing.brand.logo}
+                                                    alt={listing.brand.name}
+                                                    className="w-8 h-8 object-contain mix-blend-multiply dark:mix-blend-normal"
+                                                />
+                                            ) : (
+                                                <Car className="w-6 h-6 text-green-600 dark:text-green-400" />
+                                            )}
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Brand</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white">{listing.brand.name}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Brand & Model</p>
+                                            <p className="font-semibold text-gray-900 dark:text-white">
+                                                {listing.brand.name_ar || listing.brand.name} {listing.model}
+                                            </p>
                                         </div>
                                     </div>
                                 )}
@@ -340,7 +350,9 @@ const CarListingDetail: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Category</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white">{listing.category.name_en}</p>
+                                            <p className="font-semibold text-gray-900 dark:text-white">
+                                                {listing.category.name_ar || listing.category.name}
+                                            </p>
                                         </div>
                                     </div>
                                 )}
