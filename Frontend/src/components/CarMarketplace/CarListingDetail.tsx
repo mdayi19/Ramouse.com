@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -143,18 +142,22 @@ const CarListingDetail: React.FC = () => {
         }
     };
 
-    const handleContact = async (type: 'phone' | 'email' | 'whatsapp') => {
+    const handleContact = (type: 'phone' | 'email' | 'whatsapp') => {
         if (!listing) return;
 
-        // Track contact event
-        await CarProviderService.trackAnalytics(listing.id, 'contact_click');
+        // Track the click
+        CarProviderService.trackAnalytics(listing.id, 'contact_click');
 
-        if (type === 'phone' && listing.provider?.phone) {
-            window.location.href = `tel:${listing.provider.phone} `;
-        } else if (type === 'email' && listing.provider?.email) {
-            window.location.href = `mailto:${listing.provider.email} `;
-        } else if (type === 'whatsapp' && listing.provider?.phone) {
-            window.open(`https://wa.me/${listing.provider.phone.replace(/[^0-9]/g, '')}`, '_blank');
+        const phone = listing.contact_phone || (listing.provider || listing.owner?.car_provider)?.phone;
+        const email = (listing.provider || listing.owner?.car_provider)?.email;
+        const whatsapp = listing.contact_whatsapp || phone;
+
+        if (type === 'phone' && phone) {
+            window.location.href = `tel:${phone}`;
+        } else if (type === 'email' && email) {
+            window.location.href = `mailto:${email}`;
+        } else if (type === 'whatsapp' && whatsapp) {
+            window.open(`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
         }
     };
 
@@ -176,18 +179,9 @@ const CarListingDetail: React.FC = () => {
         } else {
             // Fallback: copy to clipboard
             navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+            // Replace with toast ideally, but alert for now
+            alert('تم نسخ الرابط!');
         }
-    };
-
-    const nextImage = () => {
-        if (!listing?.images || listing.images.length === 0) return;
-        setSelectedImageIndex((prev) => (prev + 1) % listing.images!.length);
-    };
-
-    const prevImage = () => {
-        if (!listing?.images || listing.images.length === 0) return;
-        setSelectedImageIndex((prev) => (prev - 1 + listing.images!.length) % listing.images!.length);
     };
 
     if (loading) {
@@ -219,17 +213,17 @@ const CarListingDetail: React.FC = () => {
         );
     }
 
-
-
-    // ... inside CarListingDetail component ...
     const images = (listing.photos && listing.photos.length > 0)
         ? listing.photos
         : (listing.images && listing.images.length > 0)
             ? listing.images
             : ['/placeholder-car.jpg'];
 
+    const provider = listing.provider || listing.owner?.car_provider;
+    const hasWhatsapp = listing.contact_whatsapp || (provider?.phone);
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0">
             {/* Header */}
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -247,101 +241,25 @@ const CarListingDetail: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Image Gallery */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                            <div className="relative aspect-video bg-gray-100 dark:bg-gray-700">
-                                <img
-                                    src={images[selectedImageIndex]}
-                                    alt={listing.title}
-                                    className="w-full h-full object-cover cursor-pointer"
-                                    onClick={() => setShowGalleryModal(true)}
-                                />
 
-                                {/* Navigation Arrows */}
-                                {images.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={prevImage}
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-                                        >
-                                            <ChevronLeft className="w-6 h-6" />
-                                        </button>
-                                        <button
-                                            onClick={nextImage}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-                                        >
-                                            <ChevronRight className="w-6 h-6" />
-                                        </button>
-                                    </>
-                                )}
-
-                                {/* Badges */}
-                                <div className="absolute top-4 left-4 flex gap-2">
-                                    {listing.is_sponsored && (
-                                        <span className="px-3 py-1 bg-purple-500 text-white text-sm font-semibold rounded-full">
-                                            {t.ui.sponsored}
-                                        </span>
-                                    )}
-                                    {listing.is_featured && (
-                                        <span className="px-3 py-1 bg-blue-500 text-white text-sm font-semibold rounded-full">
-                                            {t.ui.featured}
-                                        </span>
-                                    )}
-                                    {listing.listing_type === 'rent' && (
-                                        <span className="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-full">
-                                            {t.ui.rent}
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Image Counter */}
-                                <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/50 text-white text-sm rounded-full">
-                                    {selectedImageIndex + 1} / {images.length}
-                                </div>
-                            </div>
-
-                            {/* Thumbnails */}
-                            {images.length > 1 && (
-                                <div className="p-4 flex gap-2 overflow-x-auto">
-                                    {images.map((img, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setSelectedImageIndex(idx)}
-                                            className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === selectedImageIndex
-                                                ? 'border-blue-500 ring-2 ring-blue-200'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
-                                                }`}
-                                        >
-                                            <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Video Section */}
-                        {listing.video_url && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.video}</h2>
-                                <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-                                    <iframe
-                                        src={listing.video_url.replace('watch?v=', 'embed/')}
-                                        title="Car Video"
-                                        className="w-full h-full"
-                                        allowFullScreen
-                                    />
-                                </div>
-                            </div>
-                        )}
+                        {/* New Gallery Component */}
+                        <CarGallery
+                            images={images}
+                            title={listing.title}
+                            isSponsored={listing.is_sponsored}
+                            isFeatured={listing.is_featured}
+                            isRent={listing.listing_type === 'rent'}
+                            t={t}
+                        />
 
                         {/* Title & Price */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex-1">
-                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                                         {listing.title}
                                     </h1>
-                                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                         {listing.location && (
                                             <span className="flex items-center gap-1">
                                                 <MapPin className="w-4 h-4" />
@@ -362,8 +280,8 @@ const CarListingDetail: React.FC = () => {
                                 <div className="flex gap-2 ml-4">
                                     <button
                                         onClick={handleFavoriteToggle}
-                                        className={`p-3 rounded-lg transition-colors ${isFavorited
-                                            ? 'bg-red-500 text-white'
+                                        className={`p-3 rounded-xl transition-all ${isFavorited
+                                            ? 'bg-red-50 text-red-500 dark:bg-red-900/20'
                                             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                             }`}
                                     >
@@ -371,7 +289,7 @@ const CarListingDetail: React.FC = () => {
                                     </button>
                                     <button
                                         onClick={handleShare}
-                                        className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                                        className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
                                     >
                                         <Share2 className="w-5 h-5" />
                                     </button>
@@ -379,7 +297,7 @@ const CarListingDetail: React.FC = () => {
                             </div>
 
                             <div className="flex items-baseline gap-2 mb-4">
-                                <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                                <span className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">
                                     {safePrice(listing.price)}
                                 </span>
                                 {listing.listing_type === 'rent' && (
@@ -407,25 +325,33 @@ const CarListingDetail: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Video Section */}
+                        {listing.video_url && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.video}</h2>
+                                <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                                    <iframe
+                                        src={listing.video_url.replace('watch?v=', 'embed/')}
+                                        title="Car Video"
+                                        className="w-full h-full"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Specifications Grid */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.specs_title}</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                {/* Basic Specs */}
                                 <SpecItem icon={Calendar} label={t.specs.year} value={listing.year} />
                                 <SpecItem icon={Gauge} label={t.specs.mileage} value={`${listing.mileage.toLocaleString()} ${t.ui.km}`} />
                                 <SpecItem icon={Settings} label={t.specs.transmission} value={listing.transmission} />
                                 <SpecItem icon={Fuel} label={t.specs.fuel_type} value={listing.fuel_type} />
-
-                                {/* Engine & Performance */}
                                 <SpecItem icon={Settings} label={t.specs.engine_size} value={listing.engine_size} />
                                 <SpecItem icon={Gauge} label={t.specs.horsepower} value={listing.horsepower ? `${listing.horsepower} ${t.ui.hp}` : undefined} />
-
-                                {/* Exterior/Interior */}
                                 <SpecItem icon={Car} label={t.specs.exterior_color} value={listing.exterior_color} />
                                 <SpecItem icon={Settings} label={t.specs.interior_color} value={listing.interior_color} />
-
-                                {/* Body & Dimensions */}
                                 <SpecItem icon={Car} label={t.specs.body_style} value={listing.category?.name_ar || listing.category?.name} />
                                 <SpecItem icon={CheckCircle} label={t.specs.body_condition} value={listing.body_condition} />
                                 <SpecItem icon={Settings} label={t.specs.doors_count} value={listing.doors_count} />
@@ -455,137 +381,50 @@ const CarListingDetail: React.FC = () => {
                                 {listing.description}
                             </p>
                         </div>
+
+                        {/* Similar Listings */}
+                        <SimilarListings
+                            currentListingId={listing.id}
+                            categoryId={listing.category?.id}
+                            brandId={listing.brand?.id}
+                            t={t}
+                        />
                     </div>
 
                     {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Provider Card */}
-                        {(() => {
-                            const provider = listing.provider || listing.owner?.car_provider;
-                            // Safe render even if no provider
-                            if (!provider) return null;
-
-                            return (
-                                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sticky top-4">
-                                    <div className="text-center mb-6">
-                                        <div className="relative inline-block">
-                                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-md">
-                                                {provider.logo_url ? (
-                                                    <img
-                                                        src={provider.logo_url}
-                                                        alt="Provider Logo"
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    provider.business_name?.charAt(0) || 'P'
-                                                )}
-                                            </div>
-                                            {provider.is_verified && (
-                                                <div className="absolute bottom-2 right-1/2 translate-x-10 bg-green-500 text-white p-1 rounded-full border-2 border-white dark:border-gray-800" title={t.ui.verified}>
-                                                    <CheckCircle className="w-4 h-4" />
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
-                                            {provider.business_name}
-                                        </h3>
-
-                                        {provider.city && (
-                                            <div className="flex items-center justify-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-2">
-                                                <MapPin className="w-3 h-3" />
-                                                <span>{provider.city}</span>
-                                            </div>
-                                        )}
-
-
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        {(listing.contact_phone || provider.phone) && (
-                                            <button
-                                                onClick={() => handleContact('phone')}
-                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
-                                            >
-                                                <Phone className="w-5 h-5" />
-                                                {t.ui.call}
-                                            </button>
-                                        )}
-
-                                        {(listing.contact_whatsapp || provider.phone) && (
-                                            <button
-                                                onClick={() => handleContact('whatsapp')}
-                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium"
-                                            >
-                                                <MessageCircle className="w-5 h-5" />
-                                                {t.ui.whatsapp}
-                                            </button>
-                                        )}
-
-                                        {listing.seller_type === 'provider' && (
-                                            <button
-                                                onClick={() => navigate(`/car-providers/${provider.id}`)}
-                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium border border-gray-200 dark:border-gray-600"
-                                            >
-                                                <ExternalLink className="w-5 h-5" />
-                                                {t.ui.view_profile}
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                        <button className="w-full text-xs text-gray-500 dark:text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1">
-                                            <Shield className="w-3 h-3" />
-                                            {t.ui.report}
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })()}
+                    <div className="hidden lg:block space-y-6">
+                        <ProviderSidebar
+                            provider={provider}
+                            listing={listing}
+                            t={t}
+                            onContact={handleContact}
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Gallery Modal */}
-            {showGalleryModal && (
-                <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+            {/* Mobile Sticky Contact Bar */}
+            <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-40">
+                <div className="flex gap-3">
                     <button
-                        onClick={() => setShowGalleryModal(false)}
-                        className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                        onClick={() => handleContact('phone')}
+                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3.5 rounded-xl font-bold transition-all shadow-sm"
                     >
-                        <X className="w-8 h-8" />
+                        <Phone className="w-5 h-5" />
+                        {t.ui.call}
                     </button>
-
-                    <div className="relative max-w-6xl w-full">
-                        <img
-                            src={images[selectedImageIndex]}
-                            alt={listing.title}
-                            className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-                        />
-
-                        {images.length > 1 && (
-                            <>
-                                <button
-                                    onClick={prevImage}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-                                >
-                                    <ChevronLeft className="w-8 h-8" />
-                                </button>
-                                <button
-                                    onClick={nextImage}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-                                >
-                                    <ChevronRight className="w-8 h-8" />
-                                </button>
-                            </>
-                        )}
-
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 text-white rounded-full">
-                            {selectedImageIndex + 1} / {images.length}
-                        </div>
-                    </div>
+                    {hasWhatsapp && (
+                        <button
+                            onClick={() => handleContact('whatsapp')}
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-sm"
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            {t.ui.whatsapp}
+                        </button>
+                    )}
                 </div>
-            )}
+            </div>
+
         </div>
     );
 };
