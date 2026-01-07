@@ -132,7 +132,7 @@ const App: React.FC = () => {
         isDarkMode, setIsDarkMode, currentStep, currentView, formData, orderNumber, isAuthenticated, isAdmin,
         isProvider, isTechnician, isTowTruck, loggedInProvider, loggedInTechnician, loggedInTowTruck, loggedInCustomer,
         isCarProvider, loggedInCarProvider, userPhone,
-        setLoggedInProvider, setLoggedInTechnician, setLoggedInTowTruck, setLoggedInCustomer,
+        setLoggedInProvider, setLoggedInTechnician, setLoggedInTowTruck, setLoggedInCustomer, setLoggedInCarProvider,
         showLogin, notifications, setNotifications, isSubmitting, settings, announcements, toastMessages, setToastMessages,
         isLoading, navigationParams, setNavigationParams, isSidebarOpen, setIsSidebarOpen, isPublicMenuOpen, setIsPublicMenuOpen,
         carCategories, setCarCategories, allBrands, setAllBrands, brandModels, setBrandModels, partTypes, setPartTypes,
@@ -209,6 +209,7 @@ const App: React.FC = () => {
                     if (isTowTruck) setLoggedInTowTruck(user);
                     else if (isProvider) setLoggedInProvider(user);
                     else if (isTechnician) setLoggedInTechnician(user);
+                    else if (isCarProvider) setLoggedInCarProvider(user);
                     else setLoggedInCustomer(user);
                 })
                 .catch(err => {

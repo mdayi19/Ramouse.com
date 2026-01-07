@@ -89,6 +89,10 @@ api.interceptors.response.use(
             console.log('🔒 401 Unauthorized - clearing auth');
             localStorage.removeItem('authToken');
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('userPhone');
+            localStorage.removeItem('isAdmin');
             if (window.location.pathname !== '/') {
                 console.log('🔀 Redirecting to / due to 401');
                 window.location.href = '/';
