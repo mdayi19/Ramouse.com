@@ -7,7 +7,7 @@ export const uploadFile = async (file: File) => {
     formData.append('file', file);
 
     const token = localStorage.getItem('authToken');
-    const response = await axios.post(`${API_URL}/api/upload`, formData, {
+    const response = await axios.post(`${API_URL}/upload`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
             ...(token && { 'Authorization': `Bearer ${token}` })
@@ -23,7 +23,7 @@ export const uploadMultipleFiles = async (files: File[]) => {
     });
 
     const token = localStorage.getItem('authToken');
-    const response = await axios.post(`${API_URL}/api/upload/multiple`, formData, {
+    const response = await axios.post(`${API_URL}/upload/multiple`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
             ...(token && { 'Authorization': `Bearer ${token}` })
@@ -33,7 +33,7 @@ export const uploadMultipleFiles = async (files: File[]) => {
 };
 
 export const deleteFile = async (path: string) => {
-    const response = await axios.delete(`${API_URL}/api/upload`, {
+    const response = await axios.delete(`${API_URL}/upload`, {
         data: { path }
     });
     return response.data;
