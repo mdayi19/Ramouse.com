@@ -33,7 +33,7 @@ const CarCategoriesView: React.FC<Props> = ({ showToast }) => {
             setLoading(true);
             const response = await fetch('/api/admin/car-categories', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
             const data = await response.json();
@@ -62,7 +62,7 @@ const CarCategoriesView: React.FC<Props> = ({ showToast }) => {
             await fetch(url, {
                 method,
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(formData)
@@ -97,7 +97,7 @@ const CarCategoriesView: React.FC<Props> = ({ showToast }) => {
             await fetch(`/api/admin/car-categories/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
             showToast('Category deleted successfully', 'success');
