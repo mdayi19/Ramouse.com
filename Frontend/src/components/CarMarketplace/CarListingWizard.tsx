@@ -136,6 +136,8 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
     const handleSubmit = async () => {
         try {
+            console.log('🚀 Starting submission...', formData);
+
             // Upload photos
             let photoUrls: string[] = editingListing?.photos || [];
             if (formData.photos.length > 0) {
@@ -143,6 +145,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 const uploadRes = await import('../../services/upload.service').then(m => m.uploadMultipleFiles(formData.photos));
                 const newUrls = uploadRes.urls || uploadRes.paths || [];
                 photoUrls = [...photoUrls, ...newUrls];
+                console.log('📸 Photos uploaded:', photoUrls);
             }
 
             // Prepare payload
@@ -167,17 +170,25 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 (payload as any).brand_id = Number(formData.brand_id);
             }
 
+            console.log('📦 Payload prepared:', payload);
+
             if (editingListing) {
                 // Update expects same format as create - JSON object
-                await CarProviderService.updateListing(editingListing.id, payload as any);
+                const response = await CarProviderService.updateListing(editingListing.id, payload as any);
+                console.log('✅ Update response:', response);
                 showToast('تم تحديث السيارة بنجاح!', 'success');
             } else {
-                await CarProviderService.createListing(payload);
+                const response = await CarProviderService.createListing(payload);
+                console.log('✅ Create response:', response);
                 showToast('تم نشر السيارة بنجاح!', 'success');
             }
+
+            // Wait a bit for user to see success toast
+            await new Promise(resolve => setTimeout(resolve, 500));
             onComplete();
         } catch (error: any) {
-            console.error('Listing submission failed:', error);
+            console.error('❌ Listing submission failed:', error);
+            console.error('Error response:', error.response?.data);
             showToast(error.response?.data?.message || 'فشل نشر السيارة', 'error');
         }
     };
