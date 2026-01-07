@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     MapPin, Phone, Mail, Star, Car, CheckCircle, Award,
-    Clock, Eye, Heart, ChevronLeft, MessageCircle, Shield
+    Clock, Eye, Heart, ChevronLeft, ChevronRight, MessageCircle, Shield
 } from 'lucide-react';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
@@ -255,8 +255,8 @@ const CarProviderProfile: React.FC = () => {
                             <button
                                 onClick={() => setActiveTab('listings')}
                                 className={`py-4 px-4 border-b-2 font-medium transition-colors ${activeTab === 'listings'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
                                 Listings ({listings.length})
@@ -264,8 +264,8 @@ const CarProviderProfile: React.FC = () => {
                             <button
                                 onClick={() => setActiveTab('about')}
                                 className={`py-4 px-4 border-b-2 font-medium transition-colors ${activeTab === 'about'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
                                 About
@@ -291,7 +291,11 @@ const CarProviderProfile: React.FC = () => {
                                         >
                                             <div className="relative aspect-video bg-gray-100 dark:bg-gray-700">
                                                 <img
-                                                    src={listing.photos?.[0] || listing.images?.[0] || '/placeholder-car.jpg'}
+                                                    src={(listing.photos && listing.photos.length > 0)
+                                                        ? listing.photos[0]
+                                                        : (listing.images && listing.images.length > 0)
+                                                            ? listing.images[0]
+                                                            : '/placeholder-car.jpg'}
                                                     alt={listing.title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
