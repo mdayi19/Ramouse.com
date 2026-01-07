@@ -265,7 +265,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                         key={listing.id}
                                         listing={listing}
                                         viewMode={viewMode}
-                                        onView={() => window.location.href = `/car-marketplace/${listing.slug}`}
                                         showToast={showToast}
                                     />
                                 ))}
