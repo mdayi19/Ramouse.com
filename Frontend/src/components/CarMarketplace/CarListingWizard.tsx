@@ -201,7 +201,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 year: Number(formData.year),
                 mileage: Number(formData.mileage),
                 car_listing_category_id: formData.category_id ? Number(formData.category_id) : null,
-                brand_id: formData.brand_id ? Number(formData.brand_id) : null,
+                brand_id: formData.brand_id || null, // Keep as string - Brand model uses string ID
                 doors_count: Number(formData.doors),
                 seats_count: Number(formData.seats),
                 exterior_color: formData.color,
