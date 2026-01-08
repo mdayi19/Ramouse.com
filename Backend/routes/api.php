@@ -485,7 +485,7 @@ use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\CarAnalyticsController;
 
 // Public Car Marketplace
-Route::prefix('car-marketplace')->group(function () {
+Route::prefix('car-listings')->group(function () {
     Route::get('/', [CarListingController::class, 'index']); // Browse sale listings
     Route::get('/{slug}', [CarListingController::class, 'show']); // Listing detail
     Route::post('/search', [CarListingController::class, 'search']); // FULLTEXT search
