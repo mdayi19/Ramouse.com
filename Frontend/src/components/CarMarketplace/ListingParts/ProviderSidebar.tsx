@@ -33,9 +33,9 @@ const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
             <div className="text-center mb-6">
                 <div className="relative inline-block">
                     <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-md ring-4 ring-white dark:ring-gray-800">
-                        {provider.logo_url ? (
+                        {provider.logo_url || provider.profile_photo || provider.user?.profile_photo_url ? (
                             <img
-                                src={provider.logo_url}
+                                src={provider.logo_url || provider.profile_photo || provider.user?.profile_photo_url}
                                 alt="Provider Logo"
                                 className="w-full h-full object-cover"
                             />

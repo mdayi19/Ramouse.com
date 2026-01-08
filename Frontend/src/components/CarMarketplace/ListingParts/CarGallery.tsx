@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, ZoomIn, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../lib/utils';
+import { getImageUrl } from '../../../utils/helpers';
 
 interface CarGalleryProps {
     images: string[];
@@ -9,6 +10,7 @@ interface CarGalleryProps {
     isSponsored?: boolean;
     isFeatured?: boolean;
     isRent?: boolean;
+    videoUrl?: string;
     t: any;
 }
 
@@ -18,10 +20,12 @@ const CarGallery: React.FC<CarGalleryProps> = ({
     isSponsored,
     isFeatured,
     isRent,
+    videoUrl,
     t
 }) => {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [showGalleryModal, setShowGalleryModal] = useState(false);
+    const [showVideoModal, setShowVideoModal] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -45,100 +49,100 @@ const CarGallery: React.FC<CarGalleryProps> = ({
         if (e.key === 'Escape') {
             setShowGalleryModal(false);
             setIsZoomed(false);
+            setShowVideoModal(false);
         }
     };
 
     return (
         <>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden"
-            >
-                <div className="relative aspect-video bg-slate-100 dark:bg-slate-700 group overflow-hidden">
-                    {/* Main Image */}
-                    <motion.img
-                        src={images[selectedImageIndex]}
-                        alt={title}
-                        className={cn(
-                            "w-full h-full object-cover cursor-pointer transition-transform duration-300",
-                            "hover:scale-105"
-                        )}
-                        onClick={() => setShowGalleryModal(true)}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        onLoad={() => setImageLoaded(true)}
-                    />
+            <div className="space-y-4">
+                {/* Main Image Container */}
+                <div
+                    className="relative aspect-[4/3] sm:aspect-[16/9] bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg group"
+                    onClick={() => setShowGalleryModal(true)}
+                >
+                    <AnimatePresence mode='wait'>
+                        <motion.img
+                            key={images[selectedImageIndex]}
+                            src={getImageUrl(images[selectedImageIndex])}
+                            alt={`${title} - Image ${selectedImageIndex + 1}`}
+                            initial={{ opacity: 0, scale: 1.05 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-700"
+                            onLoad={() => setImageLoaded(true)}
+                        />
+                    </AnimatePresence>
 
-                    {/* Loading shimmer */}
-                    {!imageLoaded && (
-                        <div className="absolute inset-0 animate-shimmer-loading bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700" />
-                    )}
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+
+                    {/* Badges */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2">
+                        {isSponsored && (
+                            <span className="px-3 py-1 bg-yellow-400 text-yellow-900 rounded-lg text-xs font-bold shadow-md animate-fade-in-up">
+                                {t.ui.sponsored}
+                            </span>
+                        )}
+                        {isFeatured && (
+                            <span className="px-3 py-1 bg-purple-500 text-white rounded-lg text-xs font-bold shadow-md animate-fade-in-up">
+                                {t.ui.featured}
+                            </span>
+                        )}
+                        {isRent && (
+                            <span className="px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-bold shadow-md animate-fade-in-up">
+                                {t.ui.rent}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Navigation Arrows */}
                     {images.length > 1 && (
                         <>
                             <button
                                 onClick={prevImage}
-                                className={cn(
-                                    "absolute left-4 top-1/2 -translate-y-1/2 p-2.5",
-                                    "glass-effect text-white",
-                                    "rounded-full transition-all",
-                                    "opacity-0 group-hover:opacity-100",
-                                    "hover:scale-110 active:scale-95",
-                                    "md:opacity-0 touch-target"
-                                )}
-                                aria-label="Previous image"
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
                             >
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
                             <button
                                 onClick={nextImage}
-                                className={cn(
-                                    "absolute right-4 top-1/2 -translate-y-1/2 p-2.5",
-                                    "glass-effect text-white",
-                                    "rounded-full transition-all",
-                                    "opacity-0 group-hover:opacity-100",
-                                    "hover:scale-110 active:scale-95",
-                                    "md:opacity-0 touch-target"
-                                )}
-                                aria-label="Next image"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
                             >
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </>
                     )}
 
-                    {/* Badges */}
-                    <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
-                        {isSponsored && (
-                            <span className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg animate-fade-in">
-                                {t.ui.sponsored}
-                            </span>
-                        )}
-                        {isFeatured && (
-                            <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold rounded-full shadow-lg animate-fade-in">
-                                {t.ui.featured}
-                            </span>
-                        )}
-                        {isRent && (
-                            <span className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full shadow-lg animate-fade-in">
-                                {t.ui.rent}
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Image Counter & Zoom Button */}
-                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                    {/* Video Button */}
+                    {videoUrl && (
                         <button
-                            onClick={() => setShowGalleryModal(true)}
-                            className="glass-effect p-2 rounded-full text-white hover:scale-110 transition-transform touch-target"
-                            aria-label="View fullscreen"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowVideoModal(true);
+                            }}
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-red-600 hover:text-white transition-all duration-300 group-hover:scale-110 z-20"
                         >
-                            <Maximize2 className="w-4 h-4" />
+                            <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-current border-b-[10px] border-b-transparent ml-1" />
                         </button>
-                        <div className="px-3 py-1.5 glass-effect text-white text-sm rounded-full font-medium">
+                    )}
+
+                    {/* Controls */}
+                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowGalleryModal(true);
+                                }}
+                                className="p-2 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all hover:scale-105"
+                            >
+                                <Maximize2 className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-sm font-medium">
                             {selectedImageIndex + 1} / {images.length}
                         </div>
                     </div>
@@ -146,34 +150,64 @@ const CarGallery: React.FC<CarGalleryProps> = ({
 
                 {/* Thumbnails */}
                 {images.length > 1 && (
-                    <div className="p-4 flex gap-2 sm:gap-3 overflow-x-auto hide-scrollbar scroll-smooth-mobile">
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
                         {images.map((img, idx) => (
-                            <motion.button
+                            <button
                                 key={idx}
                                 onClick={() => {
                                     setSelectedImageIndex(idx);
                                     setImageLoaded(false);
                                 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
                                 className={cn(
-                                    "flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all",
-                                    idx === selectedImageIndex
-                                        ? 'border-primary ring-2 ring-primary/20 shadow-md'
-                                        : 'border-slate-300 dark:border-slate-600 hover:border-primary/50'
+                                    "relative flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden transition-all duration-300 snap-start border-2",
+                                    selectedImageIndex === idx
+                                        ? "border-blue-500 scale-95"
+                                        : "border-transparent opacity-70 hover:opacity-100"
                                 )}
                             >
                                 <img
-                                    src={img}
+                                    src={getImageUrl(img)}
                                     alt={`Thumbnail ${idx + 1}`}
                                     className="w-full h-full object-cover"
-                                    loading="lazy"
                                 />
-                            </motion.button>
+                            </button>
                         ))}
                     </div>
                 )}
-            </motion.div>
+            </div>
+
+            {/* Video Modal */}
+            <AnimatePresence>
+                {showVideoModal && videoUrl && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
+                        onClick={() => setShowVideoModal(false)}
+                    >
+                        <button
+                            onClick={() => setShowVideoModal(false)}
+                            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                        >
+                            <X className="w-8 h-8" />
+                        </button>
+                        <div
+                            className="w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <iframe
+                                src={videoUrl.includes('youtube') || videoUrl.includes('youtu.be')
+                                    ? videoUrl.replace('watch?v=', 'embed/').split('&')[0]
+                                    : videoUrl}
+                                className="w-full h-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Enhanced Gallery Modal */}
             <AnimatePresence>
@@ -197,73 +231,49 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                             <X className="w-6 h-6 sm:w-8 sm:h-8" />
                         </button>
 
-                        {/* Zoom Toggle */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsZoomed(!isZoomed);
-                            }}
-                            className="absolute top-4 left-4 p-3 glass-effect text-white hover:bg-white/20 rounded-xl transition-all z-10 touch-target"
-                            aria-label={isZoomed ? "Zoom out" : "Zoom in"}
-                        >
-                            <ZoomIn className="w-6 h-6 sm:w-8 sm:h-8" />
-                        </button>
-
                         <div
-                            className="relative max-w-7xl w-full h-full flex items-center justify-center"
+                            className="relative w-full h-full flex items-center justify-center"
                             onClick={(e) => e.stopPropagation()}
                         >
+                            {/* Navigation Buttons */}
+                            <button
+                                onClick={prevImage}
+                                className="absolute left-0 sm:left-4 p-3 glass-effect text-white hover:bg-white/20 rounded-full transition-all z-10 hover:scale-110 active:scale-95"
+                                aria-label="Previous image"
+                            >
+                                <ChevronLeft className="w-8 h-8" />
+                            </button>
+
+                            <button
+                                onClick={nextImage}
+                                className="absolute right-0 sm:right-4 p-3 glass-effect text-white hover:bg-white/20 rounded-full transition-all z-10 hover:scale-110 active:scale-95"
+                                aria-label="Next image"
+                            >
+                                <ChevronRight className="w-8 h-8" />
+                            </button>
+
+                            {/* Main Modal Image */}
                             <motion.img
-                                key={selectedImageIndex}
-                                src={images[selectedImageIndex]}
+                                key={images[selectedImageIndex]}
+                                src={getImageUrl(images[selectedImageIndex])}
                                 alt={title}
                                 className={cn(
-                                    "object-contain rounded-lg shadow-2xl transition-all duration-300",
-                                    isZoomed ? "max-w-none max-h-none w-auto h-auto cursor-zoom-out" : "max-w-full max-h-[85vh] cursor-zoom-in"
+                                    "max-w-full max-h-full object-contain transition-transform duration-200",
+                                    isZoomed ? "scale-150 cursor-zoom-out" : "scale-100 cursor-zoom-in"
                                 )}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
                                 onClick={() => setIsZoomed(!isZoomed)}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: isZoomed ? 1.5 : 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 drag={isZoomed}
-                                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                                dragElastic={0.1}
+                                dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
                             />
 
-                            {/* Navigation Arrows */}
-                            {images.length > 1 && !isZoomed && (
-                                <>
-                                    <motion.button
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        onClick={prevImage}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass-effect hover:bg-white/20 rounded-full text-white transition-all touch-target"
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                    >
-                                        <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-                                    </motion.button>
-                                    <motion.button
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        onClick={nextImage}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass-effect hover:bg-white/20 rounded-full text-white transition-all touch-target"
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                    >
-                                        <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-                                    </motion.button>
-                                </>
-                            )}
-
                             {/* Image Counter */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 glass-effect text-white rounded-full font-medium"
-                            >
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-effect px-4 py-2 rounded-full text-white font-medium">
                                 {selectedImageIndex + 1} / {images.length}
-                            </motion.div>
+                            </div>
                         </div>
                     </motion.div>
                 )}

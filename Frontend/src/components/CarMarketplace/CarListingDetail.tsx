@@ -188,7 +188,9 @@ const CarListingDetail: React.FC = () => {
         } else if (type === 'email' && email) {
             window.location.href = `mailto:${email}`;
         } else if (type === 'whatsapp' && whatsapp) {
-            window.open(`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+            const message = `هذه الرسالة محولة من موقع ramouse.com أحتاج تفاصيل أكثر بخصوص هذا الإعلان ${window.location.href}`;
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${encodedMessage}`, '_blank');
         }
     };
 
@@ -289,6 +291,7 @@ const CarListingDetail: React.FC = () => {
                             isSponsored={listing.is_sponsored}
                             isFeatured={listing.is_featured}
                             isRent={listing.listing_type === 'rent'}
+                            videoUrl={listing.video_url || undefined}
                             t={t}
                         />
 
@@ -330,8 +333,38 @@ const CarListingDetail: React.FC = () => {
                                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
                                         {listing.title}
                                     </h1>
+
+                                    {/* Brand and Model Badges */}
+                                    {(listing.brand || listing.model) && (
+                                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                                            {listing.brand && (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold text-sm shadow-md">
+                                                    <Car className="w-4 h-4" />
+                                                    {typeof listing.brand === 'object' ? listing.brand.name_ar || listing.brand.name : listing.brand}
+                                                </span>
+                                            )}
+                                            {listing.model && (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold text-sm shadow-md">
+                                                    {listing.model}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                        {listing.location && (
+                                        {/* City and Address */}
+                                        {(listing.city || listing.address) && (
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4 text-red-500 flex-shrink-0" />
+                                                <span className="font-medium">
+                                                    {listing.city}
+                                                    {listing.city && listing.address && ' • '}
+                                                    {listing.address && <span className="text-gray-500 dark:text-gray-500">{listing.address}</span>}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Original location field as fallback */}
+                                        {!listing.city && listing.location && (
                                             <span className="flex items-center gap-1.5">
                                                 <MapPin className="w-4 h-4 flex-shrink-0" />
                                                 <span className="truncate">{listing.location}</span>
@@ -373,66 +406,7 @@ const CarListingDetail: React.FC = () => {
 
                             {/* Enhanced Price Card */}
                             <PriceCard listing={listing} />
-                            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 sm:p-6 mb-6 border border-blue-100 dark:border-blue-800/30">
-                                <div className="flex items-end justify-between gap-4 flex-wrap">
-                                    <div className="flex-1">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">السعر</p>
-                                        <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                                            <span className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                                                {safePrice(listing.price)}
-                                            </span>
-                                            {listing.listing_type === 'rent' && (
-                                                <span className="text-gray-600 dark:text-gray-400 text-base sm:text-lg font-medium">/ يوم</span>
-                                            )}
-                                        </div>
-                                        {listing.is_negotiable && (
-                                            <motion.span
-                                                initial={{ scale: 0, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                transition={{ delay: 0.3 }}
-                                                className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-bold shadow-sm"
-                                            >
-                                                ✓ {t.ui.negotiable}
-                                            </motion.span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Rental Rates for Rent Listings */}
-                            {listing.listing_type === 'rent' && (listing.daily_rate || listing.weekly_rate || listing.monthly_rate) && (
-                                <div className="mb-6 p-5 sm:p-6 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-2xl border border-cyan-100 dark:border-cyan-800/30">
-                                    <h3 className="text-base font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                                        🔑 {t.ui.rental_rates}
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        {listing.daily_rate && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl text-center shadow-sm">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t.ui.daily_rate}</p>
-                                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                    {new Intl.NumberFormat('ar-SY').format(listing.daily_rate)}
-                                                </p>
-                                            </div>
-                                        )}
-                                        {listing.weekly_rate && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl text-center shadow-sm">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t.ui.weekly_rate}</p>
-                                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                    {new Intl.NumberFormat('ar-SY').format(listing.weekly_rate)}
-                                                </p>
-                                            </div>
-                                        )}
-                                        {listing.monthly_rate && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl text-center shadow-sm">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t.ui.monthly_rate}</p>
-                                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                    {new Intl.NumberFormat('ar-SY').format(listing.monthly_rate)}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Condition & Warranty Badges */}
                             <div className="flex flex-wrap gap-3">
@@ -512,6 +486,17 @@ const CarListingDetail: React.FC = () => {
 
                         {/* Enhanced Features Showcase */}
                         <FeaturesShowcase listing={listing} />
+
+                        {/* Provider Info on Mobile - Integrated into main content */}
+                        <div className="lg:hidden mt-8 mb-8">
+                            <ProviderSidebar
+                                provider={provider}
+                                listing={listing}
+                                t={t}
+                                onContact={handleContact}
+                                onReport={() => setShowReportModal(true)}
+                            />
+                        </div>
 
                         {/* Description */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
