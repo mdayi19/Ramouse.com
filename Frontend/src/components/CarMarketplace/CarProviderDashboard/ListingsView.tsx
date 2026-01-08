@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Car, Edit, Trash2, ToggleLeft, ToggleRight, Plus, Search, Filter, X } from 'lucide-react';
+import { Car, Edit, Trash2, ToggleLeft, ToggleRight, Plus, Search, Filter, X, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../Icon';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarListingWizard } from '../CarListingWizard';
+import { AnalyticsCard } from './AnalyticsCard';
+import ProviderDashboardService from '../../../services/providerDashboard.service';
 
 interface ListingsViewProps {
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
@@ -19,6 +21,10 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
     // Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'hidden'>('all');
+
+    // Analytics States
+    const [expandedAnalytics, setExpandedAnalytics] = useState<Set<number>>(new Set());
+    const [analyticsData, setAnalyticsData] = useState<Record<number, any>>({});
 
     useEffect(() => {
         loadListings();
@@ -85,6 +91,26 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
         });
     }, [listings, searchTerm, statusFilter]);
 
+    const toggleAnalytics = async (listingId: number) => {
+        const newExpanded = new Set(expandedAnalytics);
+
+        if (newExpanded.has(listingId)) {
+            newExpanded.delete(listingId);
+        } else {
+            newExpanded.add(listingId);
+            // Load analytics if not already loaded
+            if (!analyticsData[listingId]) {
+                try {
+                    const data = await ProviderDashboardService.getListingAnalytics(listingId);
+                    setAnalyticsData(prev => ({ ...prev, [listingId]: data }));
+                } catch (error) {
+                    showToast('فشل تحميل الإحصائيات', 'error');
+                }
+            }
+        }
+        setExpandedAnalytics(newExpanded);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -143,8 +169,8 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                             key={filter}
                             onClick={() => setStatusFilter(filter)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === filter
-                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                         >
                             {filter === 'all' ? 'الكل' : filter === 'active' ? 'نشط' : 'مخفي'}
@@ -186,79 +212,124 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                         <th className="px-6 py-4 text-right text-sm font-bold text-slate-900 dark:text-white">المشاهدات</th>
                                         <th className="px-6 py-4 text-right text-sm font-bold text-slate-900 dark:text-white">الحالة</th>
                                         <th className="px-6 py-4 text-right text-sm font-bold text-slate-900 dark:text-white">الإجراءات</th>
+                                        <th className="px-6 py-4"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                     <AnimatePresence>
                                         {filteredListings.map((listing, index) => (
-                                            <motion.tr
-                                                key={listing.id}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: 20 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className="group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-16 h-12 rounded-lg overflow-hidden bg-slate-100 relative">
-                                                            <img
-                                                                src={listing.photos?.[0] || '/placeholder-car.jpg'}
-                                                                alt={listing.title}
-                                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                                                            />
+                                            <React.Fragment key={listing.id}>
+                                                <motion.tr
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: 20 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    className="group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                                >
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-16 h-12 rounded-lg overflow-hidden bg-slate-100 relative">
+                                                                <img
+                                                                    src={listing.photos?.[0] || '/placeholder-car.jpg'}
+                                                                    alt={listing.title}
+                                                                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <div className="font-bold text-slate-900 dark:text-white line-clamp-1">{listing.title}</div>
+                                                                <div className="text-xs text-slate-500 mt-0.5">{listing.year} • {listing.mileage?.toLocaleString()} كم</div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <div className="font-bold text-slate-900 dark:text-white line-clamp-1">{listing.title}</div>
-                                                            <div className="text-xs text-slate-500 mt-0.5">{listing.year} • {listing.mileage?.toLocaleString()} كم</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-slate-900 dark:text-white font-bold">
+                                                        {Number(listing.price).toLocaleString()} <span className="text-xs font-normal text-slate-500">ل.س</span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                                                        <div className="flex items-center gap-1">
+                                                            <Icon name="Eye" className="w-4 h-4" />
+                                                            {listing.views_count}
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-slate-900 dark:text-white font-bold">
-                                                    {Number(listing.price).toLocaleString()} <span className="text-xs font-normal text-slate-500">ل.س</span>
-                                                </td>
-                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <Icon name="Eye" className="w-4 h-4" />
-                                                        {listing.views_count}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${listing.is_hidden
-                                                        ? 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
-                                                        : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                        }`}>
-                                                        {listing.is_hidden ? 'مخفي' : 'نشط'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${listing.is_hidden
+                                                            ? 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
+                                                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                            }`}>
+                                                            {listing.is_hidden ? 'مخفي' : 'نشط'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleToggleVisibility(listing.id); }}
+                                                                className={`p-2 rounded-lg transition-colors ${listing.is_hidden
+                                                                    ? 'text-slate-400 hover:text-green-600 hover:bg-green-50'
+                                                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                                                                title={listing.is_hidden ? 'إظهار' : 'إخفاء'}
+                                                            >
+                                                                {listing.is_hidden ? <ToggleLeft className="w-5 h-5" /> : <ToggleRight className="w-5 h-5" />}
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleEditListing(listing); }}
+                                                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                                title="تعديل"
+                                                            >
+                                                                <Edit className="w-5 h-5" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteListing(listing.id); }}
+                                                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                                title="حذف"
+                                                            >
+                                                                <Trash2 className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); handleToggleVisibility(listing.id); }}
-                                                            className={`p-2 rounded-lg transition-colors ${listing.is_hidden
-                                                                ? 'text-slate-400 hover:text-green-600 hover:bg-green-50'
-                                                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
-                                                            title={listing.is_hidden ? 'إظهار' : 'إخفاء'}
+                                                            onClick={() => toggleAnalytics(listing.id)}
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
+                                                            title="عرض الإحصائيات"
                                                         >
-                                                            {listing.is_hidden ? <ToggleLeft className="w-5 h-5" /> : <ToggleRight className="w-5 h-5" />}
+                                                            <BarChart3 className="w-4 h-4" />
+                                                            {expandedAnalytics.has(listing.id) ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                                         </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleEditListing(listing); }}
-                                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                            title="تعديل"
+                                                    </td>
+                                                </motion.tr>
+                                                {/* Analytics Row */}
+                                                <AnimatePresence>
+                                                    {expandedAnalytics.has(listing.id) && (
+                                                        <motion.tr
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            exit={{ opacity: 0, height: 0 }}
+                                                            className="bg-slate-50/50 dark:bg-slate-900/50"
                                                         >
-                                                            <Edit className="w-5 h-5" />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleDeleteListing(listing.id); }}
-                                                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                            title="حذف"
-                                                        >
-                                                            <Trash2 className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </motion.tr>
+                                                            <td colSpan={6} className="px-6 py-6">
+                                                                {analyticsData[listing.id] ? (
+                                                                    <AnalyticsCard
+                                                                        analytics={{
+                                                                            listingId: listing.id,
+                                                                            views: analyticsData[listing.id].total_views || 0,
+                                                                            favorites: analyticsData[listing.id].favorites_count || 0,
+                                                                            contacts: (analyticsData[listing.id].event_counts?.contact_phone || 0) + (analyticsData[listing.id].event_counts?.contact_whatsapp || 0),
+                                                                            shares: analyticsData[listing.id].event_counts?.share || 0,
+                                                                            viewsTrend: 0,
+                                                                            conversionRate: analyticsData[listing.id].total_views > 0
+                                                                                ? (((analyticsData[listing.id].event_counts?.contact_phone || 0) + (analyticsData[listing.id].event_counts?.contact_whatsapp || 0)) / analyticsData[listing.id].total_views) * 100
+                                                                                : 0
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="flex items-center justify-center py-4">
+                                                                        <Icon name="Loader" className="w-6 h-6 animate-spin text-primary" />
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </motion.tr>
+                                                    )}
+                                                </AnimatePresence>
+                                            </React.Fragment>
                                         ))}
                                     </AnimatePresence>
                                 </tbody>
@@ -309,8 +380,8 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                             <button
                                                 onClick={() => handleToggleVisibility(listing.id)}
                                                 className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${listing.is_hidden
-                                                        ? 'bg-green-50 text-green-600 hover:bg-green-100'
-                                                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                                    ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                                                     }`}
                                             >
                                                 {listing.is_hidden ? <ToggleLeft className="w-4 h-4" /> : <ToggleRight className="w-4 h-4" />}
