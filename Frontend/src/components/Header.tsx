@@ -176,10 +176,6 @@ const Header: React.FC<HeaderProps> = ({
                                 <NavLink label="المتجر" icon="ShoppingBag" onClick={() => onNavigate('store')} />
                                 <NavLink label="المدونة" onClick={() => onNavigate('blog')} />
 
-                                {/* Car Marketplace Links */}
-                                <NavLink label="سوق السيارات" icon="Car" onClick={() => onNavigate('car-listings')} />
-                                <NavLink label="استئجار سيارة" icon="MapPin" onClick={() => onNavigate('rent-car')} />
-
                                 {isAuthenticated && (
                                     <>
                                         <NavLink label="لوحة التحكم" icon="LayoutDashboard" onClick={getDashboardAction()} />
