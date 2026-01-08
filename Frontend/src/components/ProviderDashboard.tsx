@@ -307,6 +307,8 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
         { id: 'myBids', label: 'عروضي المقدمة', icon: 'FileText', onClick: () => handleSidebarNavClick('myBids'), isActive: activeView === 'myBids' },
         { id: 'accepted', label: 'الطلبات المقبولة', icon: 'CheckCircle', onClick: () => handleSidebarNavClick('accepted'), isActive: activeView === 'accepted' },
         { id: 'wallet', label: 'المحفظة المالية', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
+        { id: 'car-listings', label: 'سوق السيارات', icon: 'Car', onClick: () => onNavigate('car-listings'), isActive: false },
+        { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin', onClick: () => onNavigate('rent-car'), isActive: false },
         { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap', onClick: () => handleSidebarNavClick('flashProducts'), isActive: activeView === 'flashProducts' },
         { id: 'internationalLicense', label: 'الرخصة الدولية', icon: 'Globe', onClick: () => handleSidebarNavClick('internationalLicense'), isActive: activeView === 'internationalLicense' },
         { id: 'store', label: 'المتجر', icon: 'Store', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },

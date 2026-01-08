@@ -16,6 +16,8 @@ interface PublicMobileMenuProps {
 const PublicMobileMenu: React.FC<PublicMobileMenuProps> = ({ isOpen, onClose, onNavigate, onLoginClick, isAuthenticated, onGoToDashboard, onLogout }) => {
     const navItems: { label: string; view: View; icon: React.ComponentProps<typeof Icon>['name'] }[] = [
         { label: 'الرئيسية', view: 'welcome', icon: 'House' },
+        { label: 'سوق السيارات', view: 'car-listings', icon: 'Car' },
+        { label: 'استئجار سيارة', view: 'rent-car', icon: 'MapPin' },
         { label: 'المتجر', view: 'store', icon: 'ShoppingBag' },
         { label: 'دليل الفنيين', view: 'technicianDirectory', icon: 'Wrench' },
         { label: 'دليل السطحات', view: 'towTruckDirectory', icon: 'Truck' },

@@ -89,6 +89,8 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
 
         // Customer Features
         { id: 'orders', label: 'طلباتي (قطع غيار)', icon: 'ClipboardList', onClick: () => handleSidebarNavClick('orders'), isActive: activeView === 'orders' },
+        { id: 'car-listings', label: 'سوق السيارات', icon: 'Car', onClick: () => onNavigate('car-listings'), isActive: false },
+        { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin', onClick: () => onNavigate('rent-car'), isActive: false },
         { id: 'store', label: 'المتجر', icon: 'ShoppingBag', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },
         { id: 'wallet', label: 'المحفظة', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
         { id: 'auctions', label: 'المزادات', icon: 'Gavel', onClick: () => handleSidebarNavClick('auctions'), isActive: activeView === 'auctions' },

@@ -761,7 +761,7 @@ export interface AdminFlashProduct {
   reviews?: StoreProductReview[];
 }
 
-export type View = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store' | 'internationalLicense' | 'carProviderDashboard' | 'carProviderRegistration';
+export type View = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store' | 'internationalLicense' | 'carProviderDashboard' | 'carProviderRegistration' | 'car-listings' | 'rent-car';
 
 export interface CarModel {
   id: string;

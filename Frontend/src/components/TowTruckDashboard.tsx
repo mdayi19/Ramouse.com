@@ -90,6 +90,8 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
         { id: 'profile', label: 'ملفي الشخصي', icon: 'User', onClick: () => handleSidebarNavClick('profile'), isActive: activeView === 'profile' },
         { id: 'reviews', label: 'التقييمات', icon: 'Star', onClick: () => handleSidebarNavClick('reviews'), isActive: activeView === 'reviews' },
         { id: 'wallet', label: 'المحفظة', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
+        { id: 'car-listings', label: 'سوق السيارات', icon: 'Car', onClick: () => onNavigate('car-listings'), isActive: false },
+        { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin', onClick: () => onNavigate('rent-car'), isActive: false },
         { id: 'store', label: 'المتجر', icon: 'Store', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },
         { id: 'orders', label: 'طلباتي للقطع', icon: 'ClipboardList', onClick: () => handleSidebarNavClick('orders'), isActive: activeView === 'orders' },
         { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap', onClick: () => handleSidebarNavClick('flashProducts'), isActive: activeView === 'flashProducts' },
