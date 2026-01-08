@@ -869,6 +869,37 @@ const Step5Media: React.FC<any> = ({ formData, updateField }) => (
         exit={{ opacity: 0, x: -20 }}
         className="space-y-6"
     >
+        {/* Title */}
+        <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                عنوان الإعلان <span className="text-red-500">*</span>
+            </label>
+            <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => updateField('title', e.target.value)}
+                placeholder="مثال: تويوتا كامري 2020 فل كامل"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                required
+            />
+        </div>
+
+        {/* Description */}
+        <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                الوصف (اختياري)
+            </label>
+            <textarea
+                value={formData.description}
+                onChange={(e) => updateField('description', e.target.value)}
+                placeholder="أضف وصف تفصيلي للسيارة..."
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+            />
+        </div>
+
         <PhotoUploader
             photos={formData.photos}
             onPhotosChange={(photos) => updateField('photos', photos)}
@@ -889,6 +920,7 @@ const Step5Media: React.FC<any> = ({ formData, updateField }) => (
         </div>
     </motion.div>
 );
+
 
 // Step 6: Review
 const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField }) => {
