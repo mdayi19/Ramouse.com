@@ -291,73 +291,98 @@ const CarListingDetail: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
-                {/* 2. Page Header (Title & Meta) */}
+                {/* 1. Gallery First (Full Width or Grid Top) */}
                 <div className="mb-8">
-                    <div className="flex flex-wrap items-center gap-3 mb-3">
-                        {listing.is_sponsored && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
-                                <Star className="w-3 h-3 fill-current" />
-                                {t.ui.sponsored}
-                            </span>
-                        )}
-                        {listing.is_featured && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-full text-xs font-bold">
-                                💎 {t.ui.featured}
-                            </span>
-                        )}
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${listing.listing_type === 'rent'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            }`}>
-                            {listing.listing_type === 'rent' ? t.ui.rent : t.ui.sale}
-                        </span>
-                    </div>
-
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
-                        {listing.title}
-                    </h1>
-
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                        {/* Location */}
-                        {(listing.city || listing.address || listing.location) && (
-                            <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 text-gray-400" />
-                                <span>
-                                    {listing.city}
-                                    {listing.city && listing.address && '، '}
-                                    {listing.address}
-                                    {!listing.city && listing.location}
-                                </span>
-                            </div>
-                        )}
-                        <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
-                        <span className="flex items-center gap-1.5">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {safeDate(listing.created_at)}
-                        </span>
-                        <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
-                        <span className="flex items-center gap-1.5">
-                            <Eye className="w-4 h-4 text-gray-400" />
-                            {listing.views_count || 0} {t.ui.view_count}
-                        </span>
-                    </div>
+                    <CarGallery
+                        images={images}
+                        title={listing.title}
+                        isSponsored={listing.is_sponsored}
+                        isFeatured={listing.is_featured}
+                        isRent={listing.listing_type === 'rent'}
+                        videoUrl={listing.video_url || undefined}
+                        t={t}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-                    {/* 3. Main Content Column (8 cols) */}
+
+                    {/* Main Content Column (8 cols) */}
                     <div className="lg:col-span-8 space-y-8">
-                        {/* Gallery */}
-                        <CarGallery
-                            images={images}
-                            title={listing.title}
-                            isSponsored={false} // Already shown in header
-                            isFeatured={false}
-                            isRent={false}
-                            videoUrl={listing.video_url || undefined}
-                            t={t}
-                        />
+
+                        {/* 2. Title Section (Now inside grid flow or just below gallery) */}
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {listing.is_sponsored && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
+                                        <Star className="w-3 h-3 fill-current" />
+                                        {t.ui.sponsored}
+                                    </span>
+                                )}
+                                {listing.is_featured && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-full text-xs font-bold">
+                                        💎 {t.ui.featured}
+                                    </span>
+                                )}
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${listing.listing_type === 'rent'
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                    }`}>
+                                    {listing.listing_type === 'rent' ? t.ui.rent : t.ui.sale}
+                                </span>
+                            </div>
+
+                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight">
+                                {listing.title}
+                            </h1>
+
+                            {/* Brand & Model Badges */}
+                            {(listing.brand || listing.model) && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {listing.brand && (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-lg font-bold text-sm border border-blue-100 dark:border-blue-800">
+                                            <Car className="w-4 h-4" />
+                                            {typeof listing.brand === 'object' ? listing.brand.name_ar || listing.brand.name : listing.brand}
+                                        </span>
+                                    )}
+                                    {listing.model && (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 rounded-lg font-bold text-sm border border-purple-100 dark:border-purple-800">
+                                            {listing.model}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                {(listing.city || listing.address || listing.location) && (
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        <span>
+                                            {listing.city}
+                                            {listing.city && listing.address && '، '}
+                                            {listing.address}
+                                            {!listing.city && listing.location}
+                                        </span>
+                                    </div>
+                                )}
+                                <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
+                                <span className="flex items-center gap-1.5">
+                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                    {safeDate(listing.created_at)}
+                                </span>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
+                                <span className="flex items-center gap-1.5">
+                                    <Eye className="w-4 h-4 text-gray-400" />
+                                    {listing.views_count || 0} {t.ui.view_count}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* 3. Price (Mobile Only) - "price after title" */}
+                        <div className="lg:hidden">
+                            <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
+                        </div>
 
                         {/* Quick Specs */}
                         <QuickSpecsBar listing={listing} />
@@ -376,7 +401,7 @@ const CarListingDetail: React.FC = () => {
                         {/* Detailed Specs Tabs */}
                         <SpecificationsTabs listing={listing} />
 
-                        {/* Video - if exists */}
+                        {/* Video - Removed redundant title */}
                         {listing.video_url && (
                             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm overflow-hidden">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -396,13 +421,14 @@ const CarListingDetail: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Body Diagram */}
+                        {/* Body Diagram - Read Only mode */}
                         {listing.body_condition && typeof listing.body_condition === 'object' && (
                             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
                                 <CarBodyDiagram
                                     value={listing.body_condition}
                                     onChange={() => { }}
+                                    readOnly={true}
                                 />
                             </div>
                         )}
@@ -438,8 +464,11 @@ const CarListingDetail: React.FC = () => {
                     {/* 4. Sticky Sidebar Column (4 cols) */}
                     <div className="lg:col-span-4">
                         <div className="sticky top-24 space-y-6">
-                            {/* Price Card */}
-                            <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
+
+                            {/* Price Card (Desktop Only) */}
+                            <div className="hidden lg:block">
+                                <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
+                            </div>
 
                             {/* Main CTAs */}
                             <div className="flex flex-col gap-3">

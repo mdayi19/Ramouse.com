@@ -78,6 +78,14 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                     {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
 
+                    {/* RAMOUSE.COM Watermark */}
+                    <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
+                        <span className="text-white/80 font-black text-lg sm:text-2xl tracking-widest drop-shadow-md select-none font-sans"
+                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                            RAMOUSE.COM
+                        </span>
+                    </div>
+
                     {/* Badges */}
                     <div className="absolute top-4 right-4 flex flex-col gap-2">
                         {isSponsored && (
@@ -252,23 +260,31 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                                 <ChevronRight className="w-8 h-8" />
                             </button>
 
-                            {/* Main Modal Image */}
-                            <motion.img
-                                key={images[selectedImageIndex]}
-                                src={getImageUrl(images[selectedImageIndex])}
-                                alt={title}
-                                className={cn(
-                                    "max-w-full max-h-full object-contain transition-transform duration-200",
-                                    isZoomed ? "scale-150 cursor-zoom-out" : "scale-100 cursor-zoom-in"
-                                )}
-                                onClick={() => setIsZoomed(!isZoomed)}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: isZoomed ? 1.5 : 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                drag={isZoomed}
-                                dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
-                            />
+                            <div
+                                className="relative max-w-7xl max-h-[90vh] mx-auto"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <motion.img
+                                    key={images[selectedImageIndex]}
+                                    src={getImageUrl(images[selectedImageIndex])}
+                                    alt={`${title} - Fullscreen ${selectedImageIndex + 1}`}
+                                    className="max-h-[85vh] w-auto mx-auto rounded-lg shadow-2xl"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    drag={isZoomed ? "x" : false} // Allow dragging only when zoomed? Or pan
+                                    dragConstraints={{ left: -200, right: 200, top: -200, bottom: 200 }}
+                                    style={{ cursor: isZoomed ? 'grab' : 'default' }}
+                                />
+
+                                {/* Modal Watermark */}
+                                <div className="absolute bottom-6 left-6 z-50 pointer-events-none">
+                                    <span className="text-white/60 font-black text-3xl tracking-widest drop-shadow-lg select-none font-sans backdrop-blur-sm px-2 rounded">
+                                        RAMOUSE.COM
+                                    </span>
+                                </div>
+                            </div>
+
+
 
                             {/* Image Counter */}
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-effect px-4 py-2 rounded-full text-white font-medium">
