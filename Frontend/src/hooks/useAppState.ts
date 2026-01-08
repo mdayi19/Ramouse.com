@@ -127,6 +127,8 @@ export const useAppState = () => {
     if (path === '/privacy') return 'privacyPolicy';
     if (path === '/terms') return 'termsOfUse';
     if (path === '/contact') return 'contact';
+    if (path.startsWith('/car-listings')) return 'car-listings';
+    if (path.startsWith('/rent-car')) return 'rent-car';
     return 'welcome';
   }, [location.pathname]);
 
@@ -163,6 +165,8 @@ export const useAppState = () => {
       case 'privacyPolicy': path = '/privacy'; break;
       case 'termsOfUse': path = '/terms'; break;
       case 'contact': path = '/contact'; break;
+      case 'car-listings': path = '/car-listings'; break;
+      case 'rent-car': path = '/rent-car'; break;
       default: path = '/';
     }
     navigate(path, { state: params });
