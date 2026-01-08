@@ -157,12 +157,22 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                         })}
 
                         {/* Context Parts (Wheels, Glass, Lights - Underneath) */}
-                        {Object.entries(carPaths).filter(([_, p]) => !('id' in p)).map(([key, part]) => {
+                        {Object.entries(carPaths).map(([key, part]) => {
+                            // Skip interactive parts (they have an ID)
+                            if ('id' in part) return null;
+
                             if ('d' in part) {
-                                return <path key={key} d={part.d} fill={part.fill!} fillOpacity={part.opacity} />
-                            } else if ('rx' in part) {
-                                return <ellipse key={key} cx={part.x} cy={part.y} rx={part.rx} ry={part.ry} fill={part.fill!} />
+                                // Must be ContextPathPart
+                                const pathPart = part as ContextPathPart;
+                                return <path key={key} d={pathPart.d} fill={pathPart.fill} fillOpacity={pathPart.opacity} />
                             }
+
+                            if ('rx' in part) {
+                                // Must be ContextEllipsePart
+                                const ellipsePart = part as ContextEllipsePart;
+                                return <ellipse key={key} cx={ellipsePart.x} cy={ellipsePart.y} rx={ellipsePart.rx} ry={ellipsePart.ry} fill={ellipsePart.fill} />
+                            }
+
                             return null;
                         })}
 
