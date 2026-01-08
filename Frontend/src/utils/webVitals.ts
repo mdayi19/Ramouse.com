@@ -12,18 +12,18 @@ interface WebVitalsMetric {
 /**
  * Report Core Web Vitals to analytics
  * Tracks LCP, FID, CLS for SEO optimization
+ * Note: Requires web-vitals package to be installed
  */
 export const reportWebVitals = (onPerfEntry?: (metric: WebVitalsMetric) => void) => {
     if (onPerfEntry && typeof window !== 'undefined') {
-        import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-            getCLS(onPerfEntry as any);
-            getFID(onPerfEntry as any);
-            getFCP(onPerfEntry as any);
-            getLCP(onPerfEntry as any);
-            getTTFB(onPerfEntry as any);
-        }).catch(() => {
-            // web-vitals not installed, skip
-        });
+        // Web vitals tracking can be added when web-vitals package is installed
+        // import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+        //     getCLS(onPerfEntry as any);
+        //     getFID(onPerfEntry as any);
+        //     getFCP(onPerfEntry as any);
+        //     getLCP(onPerfEntry as any);
+        //     getTTFB(onPerfEntry as any);
+        // });
     }
 };
 

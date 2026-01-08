@@ -79,6 +79,26 @@ const updateMetaTag = (name: string, content: string, attributeName: 'name' | 'p
 };
 
 export const generateStructuredData = (listing: any) => {
+    const offers: any = {
+        '@type': 'Offer',
+        'price': listing.price || listing.daily_rate,
+        'priceCurrency': 'SYP',
+        'availability': 'https://schema.org/InStock',
+        'seller': {
+            '@type': listing.listing_type === 'rent' ? 'Organization' : 'Person',
+            'name': listing.provider?.name || listing.owner?.name
+        }
+    };
+
+    if (listing.listing_type === 'rent') {
+        offers.priceSpecification = {
+            '@type': 'UnitPriceSpecification',
+            'price': listing.daily_rate,
+            'priceCurrency': 'SYP',
+            'unitCode': 'DAY'
+        };
+    }
+
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'Car',
@@ -96,26 +116,8 @@ export const generateStructuredData = (listing: any) => {
             'value': listing.mileage,
             'unitCode': 'KMT'
         },
-        'offers': {
-            '@type': 'Offer',
-            'price': listing.price || listing.daily_rate,
-            'priceCurrency': 'SYP',
-            'availability': 'https://schema.org/InStock',
-            'seller': {
-                '@type': listing.listing_type === 'rent' ? 'Organization' : 'Person',
-                'name': listing.provider?.name || listing.owner?.name
-            }
-        }
+        'offers': offers
     };
-
-    if (listing.listing_type === 'rent') {
-        structuredData.offers['priceSpecification'] = {
-            '@type': 'UnitPriceSpecification',
-            'price': listing.daily_rate,
-            'priceCurrency': 'SYP',
-            'unitCode': 'DAY'
-        };
-    }
 
     return structuredData;
 };
