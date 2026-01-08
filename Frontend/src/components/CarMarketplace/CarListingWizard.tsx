@@ -766,6 +766,42 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
         exit={{ opacity: 0, x: -20 }}
         className="space-y-6"
     >
+        {/* Year and Mileage */}
+        <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    سنة الصنع <span className="text-red-500">*</span>
+                </label>
+                <input
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => updateField('year', Number(e.target.value))}
+                    placeholder="2020"
+                    min="1990"
+                    max={new Date().getFullYear() + 1}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    required
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <Gauge className="w-4 h-4" />
+                    الكيلومترات <span className="text-red-500">*</span>
+                </label>
+                <input
+                    type="number"
+                    value={formData.mileage}
+                    onChange={(e) => updateField('mileage', e.target.value)}
+                    placeholder="50000"
+                    min="0"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    required
+                />
+            </div>
+        </div>
+
         <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 ناقل الحركة *
