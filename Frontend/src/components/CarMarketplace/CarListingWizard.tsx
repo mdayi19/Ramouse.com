@@ -862,64 +862,179 @@ const Step4Condition: React.FC<any> = ({ formData, updateField }) => (
 );
 
 // Step 5: Media with PhotoUploader
-const Step5Media: React.FC<any> = ({ formData, updateField }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6"
-    >
-        {/* Title */}
-        <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                عنوان الإعلان <span className="text-red-500">*</span>
-            </label>
-            <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => updateField('title', e.target.value)}
-                placeholder="مثال: تويوتا كامري 2020 فل كامل"
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                required
-            />
-        </div>
+const Step5Media: React.FC<any> = ({ formData, updateField }) => {
+    // Auto-generate title from car details
+    const generateTitle = () => {
+        const parts = [];
 
-        {/* Description */}
-        <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                الوصف (اختياري)
-            </label>
-            <textarea
-                value={formData.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="أضف وصف تفصيلي للسيارة..."
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-            />
-        </div>
+        // Get brand name (we need to find it from brands array, but we'll use a simpler approach)
+        if (formData.brand_id) parts.push('سيارة');
+        if (formData.model) parts.push(formData.model);
+        if (formData.year) parts.push(formData.year);
 
-        <PhotoUploader
-            photos={formData.photos}
-            onPhotosChange={(photos) => updateField('photos', photos)}
-            maxPhotos={15}
-        />
+        // Add condition
+        if (formData.condition === 'new') parts.push('جديدة');
+        else if (formData.condition === 'used') parts.push('مستعملة');
 
-        <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                رابط فيديو (اختياري)
-            </label>
-            <input
-                type="url"
-                value={formData.video_url}
-                onChange={(e) => updateField('video_url', e.target.value)}
-                placeholder="https://youtube.com/..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+        // Add listing type
+        if (formData.listing_type === 'rent') parts.push('للإيجار');
+        else parts.push('للبيع');
+
+        return parts.join(' ');
+    };
+
+    // Auto-generate description from car specs
+    const generateDescription = () => {
+        const lines = [];
+
+        lines.push('🚗 معلومات السيارة:');
+        if (formData.model && formData.year) {
+            lines.push(`• الموديل: ${formData.model} - ${formData.year}`);
+        }
+
+        if (formData.mileage) {
+            lines.push(`• الكيلومترات: ${formData.mileage} كم`);
+        }
+
+        if (formData.transmission === 'automatic') {
+            lines.push('• القير: أوتوماتيك');
+        } else if (formData.transmission === 'manual') {
+            lines.push('• القير: عادي');
+        }
+
+        if (formData.fuel_type === 'gasoline') {
+            lines.push('• نوع الوقود: بنزين');
+        } else if (formData.fuel_type === 'diesel') {
+            lines.push('• نوع الوقود: ديزل');
+        } else if (formData.fuel_type === 'electric') {
+            lines.push('• نوع الوقود: كهربائي');
+        } else if (formData.fuel_type === 'hybrid') {
+            lines.push('• نوع الوقود: هايبرد');
+        }
+
+        if (formData.color) {
+            lines.push(`• اللون الخارجي: ${formData.color}`);
+        }
+
+        if (formData.interior_color) {
+            lines.push(`• اللون الداخلي: ${formData.interior_color}`);
+        }
+
+        if (formData.horsepower) {
+            lines.push(`• قوة المحرك: ${formData.horsepower} حصان`);
+        }
+
+        if (formData.engine_size) {
+            lines.push(`• حجم المحرك: ${formData.engine_size} لتر`);
+        }
+
+        lines.push('');
+        lines.push('📍 الموقع:');
+        if (formData.city) {
+            lines.push(`• المدينة: ${formData.city}`);
+        }
+
+        if (formData.features && formData.features.length > 0) {
+            lines.push('');
+            lines.push('✨ المميزات:');
+            formData.features.forEach((feature: string) => {
+                lines.push(`• ${feature}`);
+            });
+        }
+
+        return lines.join('\n');
+    };
+
+    // Auto-populate on mount if empty
+    React.useEffect(() => {
+        if (!formData.title && formData.model) {
+            updateField('title', generateTitle());
+        }
+        if (!formData.description && formData.model) {
+            updateField('description', generateDescription());
+        }
+    }, []);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+        >
+            {/* Title */}
+            <div>
+                <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        عنوان الإعلان <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                        type="button"
+                        onClick={() => updateField('title', generateTitle())}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                        <RefreshCw className="w-3 h-3" />
+                        توليد تلقائي
+                    </button>
+                </div>
+                <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => updateField('title', e.target.value)}
+                    placeholder="مثال: تويوتا كامري 2020 فل كامل"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    required
+                />
+            </div>
+
+            {/* Description */}
+            <div>
+                <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        الوصف (اختياري)
+                    </label>
+                    <button
+                        type="button"
+                        onClick={() => updateField('description', generateDescription())}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                        <RefreshCw className="w-3 h-3" />
+                        توليد تلقائي
+                    </button>
+                </div>
+                <textarea
+                    value={formData.description}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    placeholder="أضف وصف تفصيلي للسيارة..."
+                    rows={8}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+
+            <PhotoUploader
+                photos={formData.photos}
+                onPhotosChange={(photos) => updateField('photos', photos)}
+                maxPhotos={15}
             />
-        </div>
-    </motion.div>
-);
+
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    رابط فيديو (اختياري)
+                </label>
+                <input
+                    type="url"
+                    value={formData.video_url}
+                    onChange={(e) => updateField('video_url', e.target.value)}
+                    placeholder="https://youtube.com/..."
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                />
+            </div>
+        </motion.div>
+    );
+};
+
 
 
 // Step 6: Review
