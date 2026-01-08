@@ -285,90 +285,136 @@ const CarListingDetail: React.FC = () => {
                             t={t}
                         />
 
-                        {/* Title & Price */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
-                                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        {/* Premium Title & Price Card */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8"
+                        >
+                            {/* Premium Badges Row */}
+                            <div className="flex flex-wrap items-center gap-2 mb-4">
+                                {listing.is_sponsored && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full text-xs font-bold shadow-md">
+                                        <Star className="w-3.5 h-3.5 fill-current" />
+                                        {t.ui.sponsored}
+                                    </span>
+                                )}
+                                {listing.is_featured && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-xs font-bold shadow-md">
+                                        💎 {t.ui.featured}
+                                    </span>
+                                )}
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${listing.listing_type === 'rent'
+                                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                                    : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                    }`}>
+                                    {listing.listing_type === 'rent' ? '🔑' : '💰'}
+                                    {listing.listing_type === 'rent' ? t.ui.rent : t.ui.sale}
+                                </span>
+                            </div>
+
+                            {/* Title & Actions */}
+                            <div className="flex items-start justify-between gap-4 mb-6">
+                                <div className="flex-1 min-w-0">
+                                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
                                         {listing.title}
                                     </h1>
-                                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
                                         {listing.location && (
-                                            <span className="flex items-center gap-1">
-                                                <MapPin className="w-4 h-4" />
-                                                {listing.location}
+                                            <span className="flex items-center gap-1.5">
+                                                <MapPin className="w-4 h-4 flex-shrink-0" />
+                                                <span className="truncate">{listing.location}</span>
                                             </span>
                                         )}
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1.5 whitespace-nowrap">
                                             <Eye className="w-4 h-4" />
                                             {listing.views_count || 0} {t.ui.view_count}
                                         </span>
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1.5 whitespace-nowrap">
                                             <Calendar className="w-4 h-4" />
                                             {safeDate(listing.created_at)}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2 ml-4">
-                                    <button
+                                <div className="flex gap-2 flex-shrink-0">
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={{ scale: 1.05 }}
                                         onClick={handleFavoriteToggle}
-                                        className={`p-3 rounded-xl transition-all ${isFavorited
-                                            ? 'bg-red-50 text-red-500 dark:bg-red-900/20'
-                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all shadow-md hover:shadow-lg ${isFavorited
+                                            ? 'bg-gradient-to-br from-red-50 to-pink-50 text-red-500 dark:from-red-900/30 dark:to-pink-900/30'
+                                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                                             }`}
                                     >
-                                        <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
-                                    </button>
-                                    <button
+                                        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isFavorited ? 'fill-current' : ''}`} />
+                                    </motion.button>
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={{ scale: 1.05 }}
                                         onClick={handleShare}
-                                        className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
+                                        className="p-3 sm:p-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-xl sm:rounded-2xl transition-all shadow-md hover:shadow-lg"
                                     >
-                                        <Share2 className="w-5 h-5" />
-                                    </button>
+                                        <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                                    </motion.button>
                                 </div>
                             </div>
 
-                            <div className="flex items-baseline gap-2 mb-4">
-                                <span className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">
-                                    {safePrice(listing.price)}
-                                </span>
-                                {listing.listing_type === 'rent' && (
-                                    <span className="text-gray-600 dark:text-gray-400">/ يوم
-                                    </span>
-                                )}
-                                {listing.is_negotiable && (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
-                                        ✓ {t.ui.negotiable}
-                                    </span>
-                                )}
+                            {/* Premium Price Display */}
+                            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 sm:p-6 mb-6 border border-blue-100 dark:border-blue-800/30">
+                                <div className="flex items-end justify-between gap-4 flex-wrap">
+                                    <div className="flex-1">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">السعر</p>
+                                        <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                                            <span className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                                                {safePrice(listing.price)}
+                                            </span>
+                                            {listing.listing_type === 'rent' && (
+                                                <span className="text-gray-600 dark:text-gray-400 text-base sm:text-lg font-medium">/ يوم</span>
+                                            )}
+                                        </div>
+                                        {listing.is_negotiable && (
+                                            <motion.span
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                transition={{ delay: 0.3 }}
+                                                className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-bold shadow-sm"
+                                            >
+                                                ✓ {t.ui.negotiable}
+                                            </motion.span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Rental Rates for Rent Listings */}
                             {listing.listing_type === 'rent' && (listing.daily_rate || listing.weekly_rate || listing.monthly_rate) && (
-                                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                                    <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">{t.ui.rental_rates}</h3>
-                                    <div className="grid grid-cols-3 gap-3">
+                                <div className="mb-6 p-5 sm:p-6 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-2xl border border-cyan-100 dark:border-cyan-800/30">
+                                    <h3 className="text-base font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                                        🔑 {t.ui.rental_rates}
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         {listing.daily_rate && (
-                                            <div className="text-center">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">{t.ui.daily_rate}</p>
-                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl text-center shadow-sm">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t.ui.daily_rate}</p>
+                                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                                     {new Intl.NumberFormat('ar-SY').format(listing.daily_rate)}
                                                 </p>
                                             </div>
                                         )}
                                         {listing.weekly_rate && (
-                                            <div className="text-center">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">{t.ui.weekly_rate}</p>
-                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl text-center shadow-sm">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t.ui.weekly_rate}</p>
+                                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                                     {new Intl.NumberFormat('ar-SY').format(listing.weekly_rate)}
                                                 </p>
                                             </div>
                                         )}
                                         {listing.monthly_rate && (
-                                            <div className="text-center">
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">{t.ui.monthly_rate}</p>
-                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl text-center shadow-sm">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t.ui.monthly_rate}</p>
+                                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                                     {new Intl.NumberFormat('ar-SY').format(listing.monthly_rate)}
                                                 </p>
                                             </div>
@@ -377,25 +423,26 @@ const CarListingDetail: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="flex flex-wrap gap-2">
+                            {/* Condition & Warranty Badges */}
+                            <div className="flex flex-wrap gap-3">
                                 {listing.condition && (
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800/30 shadow-sm">
                                         <CheckCircle className="w-5 h-5 text-green-500" />
-                                        <span className="text-gray-900 dark:text-white font-medium capitalize">
+                                        <span className="text-gray-900 dark:text-white font-bold capitalize text-sm">
                                             {translateValue(listing.condition)}
                                         </span>
                                     </div>
                                 )}
                                 {listing.warranty && (
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                        <Star className="w-5 h-5 text-blue-500" />
-                                        <span className="text-blue-700 dark:text-blue-300 font-medium">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800/30 shadow-sm">
+                                        <Star className="w-5 h-5 text-blue-500 fill-current" />
+                                        <span className="text-gray-900 dark:text-white font-bold text-sm">
                                             {t.specs.warranty}: {listing.warranty}
                                         </span>
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Video Section */}
                         {listing.video_url && (
@@ -521,11 +568,11 @@ const CarListingDetail: React.FC = () => {
                             onReport={() => setShowReportModal(true)}
                         />
                     </motion.div>
-                </div>
-            </div>
+                </div >
+            </div >
 
             {/* Mobile Sticky Contact Bar */}
-            <motion.div
+            < motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
                 transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
@@ -549,7 +596,7 @@ const CarListingDetail: React.FC = () => {
                         </button>
                     )}
                 </div>
-            </motion.div>
+            </motion.div >
 
             <ReportListingModal
                 isOpen={showReportModal}
@@ -558,7 +605,7 @@ const CarListingDetail: React.FC = () => {
                 t={t}
             />
 
-        </motion.div>
+        </motion.div >
     );
 };
 
