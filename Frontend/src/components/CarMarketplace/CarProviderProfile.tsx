@@ -93,7 +93,7 @@ const CarProviderProfile: React.FC = () => {
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Provider Not Found</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'This provider may not exist.'}</p>
                     <button
-                        onClick={() => navigate('/car-marketplace')}
+                        onClick={() => navigate('/car-listings')}
                         className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                         Back to Marketplace

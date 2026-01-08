@@ -825,7 +825,7 @@ const App: React.FC = () => {
                                 )
                             } />
                             {/* Car Marketplace Routes */}
-                            <Route path="/car-marketplace" element={
+                            <Route path="/car-listings" element={
                                 <CarMarketplacePage
                                     listingType="sale"
                                     showToast={showToast}

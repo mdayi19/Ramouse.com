@@ -177,7 +177,7 @@ const Header: React.FC<HeaderProps> = ({
                                 <NavLink label="المدونة" onClick={() => onNavigate('blog')} />
 
                                 {/* Car Marketplace Links */}
-                                <NavLink label="سوق السيارات" icon="Car" onClick={() => onNavigate('car-marketplace')} />
+                                <NavLink label="سوق السيارات" icon="Car" onClick={() => onNavigate('car-listings')} />
                                 <NavLink label="استئجار سيارة" icon="MapPin" onClick={() => onNavigate('rent-car')} />
 
                                 {isAuthenticated && (

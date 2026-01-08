@@ -80,7 +80,7 @@ export const ComparisonBar: React.FC = () => {
                     </div>
 
                     <button
-                        onClick={() => navigate('/car-marketplace/compare')}
+                        onClick={() => navigate('/car-listings/compare')}
                         disabled={items.length < 2}
                         className="w-full py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >

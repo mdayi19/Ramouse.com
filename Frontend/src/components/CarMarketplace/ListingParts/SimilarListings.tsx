@@ -32,7 +32,7 @@ const SimilarListings: React.FC<SimilarListingsProps> = ({
 
                 // You might need to add a specialized endpoint or just interpret this filtering on the main endpoint
                 // For now, assuming standard listing endpoint supports filtering
-                const response = await api.get(`/car-marketplace?${params.toString()}`);
+                const response = await api.get(`/car-listings?${params.toString()}`);
 
                 // Filter out current listing and take top 4
                 const similar = (response.data.data || [])
@@ -86,7 +86,7 @@ const SimilarListings: React.FC<SimilarListingsProps> = ({
                         <div
                             key={item.id}
                             onClick={() => {
-                                navigate(`/car-marketplace/${item.slug}`);
+                                navigate(`/car-listings/${item.slug}`);
                                 window.scrollTo(0, 0);
                             }}
                             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-100 dark:border-gray-700 group"

@@ -86,7 +86,7 @@ export interface MarketplaceFilters {
 
 export class CarProviderService {
     static async getMarketplace(filters: MarketplaceFilters = {}) {
-        const response = await api.get('/car-marketplace', { params: filters });
+        const response = await api.get('/car-listings', { params: filters });
         return response.data;
     }
 
@@ -125,17 +125,17 @@ export class CarProviderService {
     }
 
     static async getListingBySlug(slug: string): Promise<CarListing> {
-        const response = await api.get(`/car-marketplace/${slug}`);
+        const response = await api.get(`/car-listings/${slug}`);
         return response.data.listing;
     }
 
     static async getListing(slug: string) {
-        const response = await api.get(`/car-marketplace/${slug}`);
+        const response = await api.get(`/car-listings/${slug}`);
         return response.data;
     }
 
     static async searchListings(query: string) {
-        const response = await api.post('/car-marketplace/search', { q: query });
+        const response = await api.post('/car-listings/search', { q: query });
         return response.data;
     }
 
@@ -287,7 +287,7 @@ export class CarProviderService {
 
     // Reporting
     static async reportListing(id: number, data: { reason: string; details: string }) {
-        const response = await api.post(`/car-marketplace/${id}/report`, data);
+        const response = await api.post(`/car-listings/${id}/report`, data);
         return response.data;
     }
 }

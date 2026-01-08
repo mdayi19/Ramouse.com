@@ -223,7 +223,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.1 }}
                                         className="flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors border border-slate-100 dark:border-slate-700/50 group cursor-pointer"
-                                        onClick={() => navigate(`/car-marketplace/listing/${listing.slug || listing.id}`)}
+                                        onClick={() => navigate(`/car-listings/listing/${listing.slug || listing.id}`)}
                                     >
                                         <div className="h-16 w-24 flex-shrink-0 bg-slate-200 dark:bg-slate-700 rounded-lg overflow-hidden relative">
                                             <img
