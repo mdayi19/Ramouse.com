@@ -12,6 +12,7 @@ import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
 import SimilarListings from './ListingParts/SimilarListings';
 import ReportListingModal from './ListingParts/ReportListingModal';
+import { CarBodyDiagram } from './CarBodyDiagram';
 
 // Helper for translations
 const t = {
@@ -443,6 +444,25 @@ const CarListingDetail: React.FC = () => {
                                 )}
                             </div>
                         </motion.div>
+
+                        {/* Car Body Diagram */}
+                        {listing.body_condition && typeof listing.body_condition === 'object' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200 dark:border-slate-700"
+                            >
+                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                                    <Car className="w-6 h-6 text-primary" />
+                                    حالة الهيكل
+                                </h2>
+                                <CarBodyDiagram
+                                    value={listing.body_condition}
+                                    onChange={() => { }}
+                                />
+                            </motion.div>
+                        )}
 
                         {/* Video Section */}
                         {listing.video_url && (
