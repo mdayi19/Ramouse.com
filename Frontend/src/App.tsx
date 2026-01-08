@@ -54,6 +54,8 @@ const StoreView = lazy(() => import('./components/Store/StoreView').then(module 
 const AuctionListPage = lazy(() => import('./components/CarAuction/AuctionListPage'));
 const LiveAuctionRoom = lazy(() => import('./components/CarAuction/LiveAuctionRoom'));
 const CarMarketplacePage = lazy(() => import('./components/CarMarketplace/CarMarketplacePage').then(module => ({ default: module.CarMarketplacePage })));
+const RentCarPage = lazy(() => import('./components/CarMarketplace/RentCarPage').then(module => ({ default: module.RentCarPage })));
+const RentCarListingDetail = lazy(() => import('./components/CarMarketplace/RentCarListingDetail'));
 const CarListingDetail = lazy(() => import('./components/CarMarketplace/CarListingDetail'));
 const CarProviderProfile = lazy(() => import('./components/CarMarketplace/CarProviderProfile'));
 const CarProviderRegistration = lazy(() => import('./components/CarMarketplace/CarProviderRegistration'));
@@ -832,14 +834,14 @@ const App: React.FC = () => {
                                 />
                             } />
                             <Route path="/rent-car" element={
-                                <CarMarketplacePage
-                                    listingType="rent"
+                                <RentCarPage
                                     showToast={showToast}
                                     isAuthenticated={isAuthenticated}
                                     onLoginClick={handleLoginClick}
                                 />
                             } />
 
+                            <Route path="/rent-car/:slug" element={<RentCarListingDetail />} />
                             {/* Car Listing Detail */}
                             <Route path="/car-listings/:slug" element={<CarListingDetail />} />
 

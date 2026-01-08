@@ -80,6 +80,8 @@ export interface MarketplaceFilters {
     sort_dir?: 'asc' | 'desc';
     per_page?: number;
     page?: number;
+    features?: string[];
+    rental_terms?: string[];
 }
 
 export class CarProviderService {
