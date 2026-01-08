@@ -345,8 +345,8 @@ const RentCarListingDetail: React.FC = () => {
                             {/* Contact Actions */}
                             <div className="space-y-3">
                                 <button
-                                    onClick={handlePhoneCall}
-                                    className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-600/20"
+                                    onClick={handleWhatsAppContact}
+                                    className="flex-1 bg-green-600 text-white py-4 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 font-bold shadow-lg shadow-green-600/20"
                                 >
                                     <Phone className="w-5 h-5" />
                                     اتصال
