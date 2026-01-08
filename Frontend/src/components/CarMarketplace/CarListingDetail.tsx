@@ -402,24 +402,6 @@ const CarListingDetail: React.FC = () => {
                         <SpecificationsTabs listing={listing} />
 
                         {/* Video - Removed redundant title */}
-                        {listing.video_url && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm overflow-hidden">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                    <div className="w-2 h-6 bg-red-500 rounded-full"></div>
-                                    {t.ui.video}
-                                </h2>
-                                <div className="aspect-video rounded-xl overflow-hidden bg-black shadow-lg">
-                                    <iframe
-                                        src={listing.video_url.includes('youtube') || listing.video_url.includes('youtu.be')
-                                            ? listing.video_url.replace('watch?v=', 'embed/').split('&')[0]
-                                            : listing.video_url}
-                                        title="Car Video"
-                                        className="w-full h-full"
-                                        allowFullScreen
-                                    />
-                                </div>
-                            </div>
-                        )}
 
                         {/* Body Diagram - Read Only mode */}
                         {listing.body_condition && typeof listing.body_condition === 'object' && (

@@ -36,9 +36,7 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
         >
             <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-2 font-medium">
-                        السعر
-                    </p>
+                    {/* Price Label Removed */}
                     <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
                         <motion.span
                             initial={{ scale: 0.8 }}
