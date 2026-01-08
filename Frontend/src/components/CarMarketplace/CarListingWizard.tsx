@@ -33,7 +33,8 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     editingListing
 }) => {
     const [currentStep, setCurrentStep] = useState(1);
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]); // Car listing categories (sedan, SUV, etc.)
+    const [carCategories, setCarCategories] = useState<any[]>([]); // Car origin categories (German, Japanese, etc.)
     const [brands, setBrands] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(true);
     const [formData, setFormData] = useState({
@@ -41,7 +42,8 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         listing_type: 'sale' as 'sale' | 'rent',
         price: '',
         rent_period: 'daily' as 'daily' | 'weekly' | 'monthly',
-        category_id: '',
+        category_id: '', // Car listing category (sedan, SUV, etc.)
+        car_category_id: '', // Car origin category (German, Japanese, etc.)
         brand_id: '',
         country_id: '',
         model: '',
@@ -116,6 +118,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 price: editingListing.price?.toString() || '',
                 rent_period: editingListing.rent_period || 'daily',
                 category_id: editingListing.car_listing_category_id?.toString() || '',
+                car_category_id: editingListing.car_category_id || '', // Load category if exists
                 brand_id: editingListing.brand_id?.toString() || '',
                 country_id: editingListing.country_id || '',
                 model: editingListing.model || '',
@@ -158,12 +161,18 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     const loadCategoriesAndBrands = async () => {
         setLoadingData(true);
         try {
-            const [categoriesRes, brandsRes] = await Promise.all([
+            const [categoriesRes, brandsRes, vehicleDataRes] = await Promise.all([
                 CarProviderService.getCategories(),
-                CarProviderService.getBrands()
+                CarProviderService.getBrands(),
+                import('../../lib/api').then(m => m.api.get('/vehicle/data'))
             ]);
             setCategories(categoriesRes.categories || []);
             setBrands(brandsRes.brands || []);
+
+            // Load car categories from vehicle data
+            if (vehicleDataRes?.data?.categories) {
+                setCarCategories(vehicleDataRes.data.categories);
+            }
         } catch (error) {
             console.error('Failed to load categories/brands:', error);
             showToast('فشل تحميل البيانات', 'error');
@@ -255,6 +264,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 mileage: Number(formData.mileage),
                 car_listing_category_id: formData.category_id ? Number(formData.category_id) : null,
                 brand_id: formData.brand_id || null, // Keep as string - Brand model uses string ID
+                car_category_id: formData.car_category_id || null, // Car origin category
                 country_id: formData.country_id || null,
                 doors_count: Number(formData.doors),
                 seats_count: Number(formData.seats),
@@ -396,7 +406,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                             <Step2CountryBrandModel
                                 formData={formData}
                                 updateField={updateField}
-                                categories={categories}
+                                carCategories={carCategories}
                                 brands={brands}
                             />
                         )}

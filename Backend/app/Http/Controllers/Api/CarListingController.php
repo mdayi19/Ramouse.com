@@ -193,6 +193,7 @@ class CarListingController extends Controller
             'description' => 'nullable|string',
             'city' => 'required|string|max:50',
             'address' => 'nullable|string|max:500',
+            'car_category_id' => 'nullable|string|max:10',
             'country_id' => 'nullable|exists:countries,id',
             'photos' => 'required|array|min:1|max:20',
             'photos.*' => 'string', // URLs

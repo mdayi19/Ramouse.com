@@ -17,6 +17,7 @@ class CarListing extends Model
         'seller_type',
         'listing_type',
         'car_listing_category_id',
+        'car_category_id',
         'title',
         'slug',
         'brand_id',
