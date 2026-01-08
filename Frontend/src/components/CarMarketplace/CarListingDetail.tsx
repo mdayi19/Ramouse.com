@@ -6,12 +6,18 @@ import {
     Globe, Hash, User,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '../../lib/utils';
+import { getImageUrl } from '../../utils/helpers';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
 import SimilarListings from './ListingParts/SimilarListings';
 import ReportListingModal from './ListingParts/ReportListingModal';
+import QuickSpecsBar from './ListingParts/QuickSpecsBar';
+import PriceCard from './ListingParts/PriceCard';
+import SpecificationsTabs from './ListingParts/SpecificationsTabs';
+import FeaturesShowcase from './ListingParts/FeaturesShowcase';
 import { CarBodyDiagram } from './CarBodyDiagram';
 
 // Helper for translations
@@ -286,6 +292,9 @@ const CarListingDetail: React.FC = () => {
                             t={t}
                         />
 
+                        {/* Quick Specs Bar */}
+                        <QuickSpecsBar listing={listing} />
+
                         {/* Premium Title & Price Card */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -362,7 +371,8 @@ const CarListingDetail: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Premium Price Display */}
+                            {/* Enhanced Price Card */}
+                            <PriceCard listing={listing} />
                             <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 sm:p-6 mb-6 border border-blue-100 dark:border-blue-800/30">
                                 <div className="flex items-end justify-between gap-4 flex-wrap">
                                     <div className="flex-1">
@@ -479,49 +489,8 @@ const CarListingDetail: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Specifications Grid */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.vehicle_info}</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                <SpecItem icon={Calendar} label={t.specs.year} value={listing.year} />
-                                <SpecItem icon={Gauge} label={t.specs.mileage} value={`${listing.mileage.toLocaleString()} ${t.ui.km}`} />
-                                <SpecItem icon={Settings} label={t.specs.transmission} value={listing.transmission} />
-                                <SpecItem icon={Fuel} label={t.specs.fuel_type} value={listing.fuel_type} />
-                                <SpecItem icon={Settings} label={t.specs.engine_size} value={listing.engine_size} />
-                                <SpecItem icon={Gauge} label={t.specs.horsepower} value={listing.horsepower ? `${listing.horsepower} ${t.ui.hp}` : undefined} />
-                                <SpecItem icon={Car} label={t.specs.exterior_color} value={listing.exterior_color} />
-                                <SpecItem icon={Settings} label={t.specs.interior_color} value={listing.interior_color} />
-                                <SpecItem icon={Car} label={t.specs.body_style} value={listing.category?.name_ar || listing.category?.name} />
-                                <SpecItem icon={Settings} label={t.specs.doors_count} value={listing.doors_count} />
-                                <SpecItem icon={Settings} label={t.specs.seats_count} value={listing.seats_count} />
-                            </div>
-                        </div>
-
-                        {/* Additional Information */}
-                        {(listing.car_category_id || listing.address || listing.license_plate || listing.chassis_number || listing.previous_owners || listing.body_condition) && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.additional_info}</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                    {listing.car_category_id && (
-                                        <SpecItem icon={Globe} label={t.specs.car_category} value={listing.car_category_id} />
-                                    )}
-                                    {listing.address && (
-                                        <SpecItem icon={MapPin} label={t.specs.address} value={listing.address} />
-                                    )}
-                                    {listing.license_plate && (
-                                        <SpecItem icon={Hash} label={t.specs.license_plate} value={listing.license_plate} />
-                                    )}
-                                    {listing.chassis_number && (
-                                        <SpecItem icon={Hash} label={t.specs.vin_number} value={listing.chassis_number} />
-                                    )}
-                                    {listing.previous_owners !== undefined && listing.previous_owners !== null && (
-                                        <SpecItem icon={User} label={t.specs.previous_owners} value={`${listing.previous_owners} ${t.ui.owner}`} />
-                                    )}
-                                    <SpecItem icon={CheckCircle} label={t.specs.body_condition} value={listing.body_condition} />
-                                    <SpecItem icon={Star} label={t.specs.warranty} value={listing.warranty} />
-                                </div>
-                            </div>
-                        )}
+                        {/* Enhanced Specifications Tabs */}
+                        <SpecificationsTabs listing={listing} />
 
                         {/* Rental Terms for Rent Listings */}
                         {listing.listing_type === 'rent' && listing.rental_terms && (
@@ -541,20 +510,8 @@ const CarListingDetail: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Features List */}
-                        {listing.features && Array.isArray(listing.features) && listing.features.length > 0 && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.features_title}</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {listing.features.map((feature: string, idx: number) => (
-                                        <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                            <CheckCircle className="w-4 h-4 text-green-500" />
-                                            <span>{feature}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* Enhanced Features Showcase */}
+                        <FeaturesShowcase listing={listing} />
 
                         {/* Description */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
