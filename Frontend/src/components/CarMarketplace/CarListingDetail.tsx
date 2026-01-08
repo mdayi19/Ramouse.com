@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     Car, MapPin, Calendar, Gauge, Fuel, Settings, Phone,
     Heart, Share2, ChevronRight, CheckCircle, Star, Eye, MessageCircle,
-    Globe, Hash, User,
+    Globe, Hash, User, Shield,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -261,200 +261,133 @@ const CarListingDetail: React.FC = () => {
             animate={{ opacity: 1 }}
             className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0"
         >
-            {/* Header */}
+            {/* 1. Header Navigation & Breadcrumbs */}
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors gap-2"
                     >
-                        <ChevronRight className="w-5 h-5 ml-1" />
-                        عودة
+                        <ChevronRight className="w-5 h-5" />
+                        <span className="font-medium">عودة</span>
                     </button>
+
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleShare}
+                            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                            title="مشاركة"
+                        >
+                            <Share2 className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={handleFavoriteToggle}
+                            className={`p-2 transition-colors ${isFavorited ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                            title="حفظ"
+                        >
+                            <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="lg:col-span-2 space-y-6"
-                    >
 
-                        {/* New Gallery Component */}
+                {/* 2. Page Header (Title & Meta) */}
+                <div className="mb-8">
+                    <div className="flex flex-wrap items-center gap-3 mb-3">
+                        {listing.is_sponsored && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
+                                <Star className="w-3 h-3 fill-current" />
+                                {t.ui.sponsored}
+                            </span>
+                        )}
+                        {listing.is_featured && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-full text-xs font-bold">
+                                💎 {t.ui.featured}
+                            </span>
+                        )}
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${listing.listing_type === 'rent'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            }`}>
+                            {listing.listing_type === 'rent' ? t.ui.rent : t.ui.sale}
+                        </span>
+                    </div>
+
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
+                        {listing.title}
+                    </h1>
+
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        {/* Location */}
+                        {(listing.city || listing.address || listing.location) && (
+                            <div className="flex items-center gap-1.5">
+                                <MapPin className="w-4 h-4 text-gray-400" />
+                                <span>
+                                    {listing.city}
+                                    {listing.city && listing.address && '، '}
+                                    {listing.address}
+                                    {!listing.city && listing.location}
+                                </span>
+                            </div>
+                        )}
+                        <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
+                        <span className="flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            {safeDate(listing.created_at)}
+                        </span>
+                        <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
+                        <span className="flex items-center gap-1.5">
+                            <Eye className="w-4 h-4 text-gray-400" />
+                            {listing.views_count || 0} {t.ui.view_count}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                    {/* 3. Main Content Column (8 cols) */}
+                    <div className="lg:col-span-8 space-y-8">
+                        {/* Gallery */}
                         <CarGallery
                             images={images}
                             title={listing.title}
-                            isSponsored={listing.is_sponsored}
-                            isFeatured={listing.is_featured}
-                            isRent={listing.listing_type === 'rent'}
+                            isSponsored={false} // Already shown in header
+                            isFeatured={false}
+                            isRent={false}
                             videoUrl={listing.video_url || undefined}
                             t={t}
                         />
 
-                        {/* Quick Specs Bar */}
+                        {/* Quick Specs */}
                         <QuickSpecsBar listing={listing} />
 
-                        {/* Premium Title & Price Card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8"
-                        >
-                            {/* Premium Badges Row */}
-                            <div className="flex flex-wrap items-center gap-2 mb-4">
-                                {listing.is_sponsored && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full text-xs font-bold shadow-md">
-                                        <Star className="w-3.5 h-3.5 fill-current" />
-                                        {t.ui.sponsored}
-                                    </span>
-                                )}
-                                {listing.is_featured && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-xs font-bold shadow-md">
-                                        💎 {t.ui.featured}
-                                    </span>
-                                )}
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${listing.listing_type === 'rent'
-                                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                                    : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                    }`}>
-                                    {listing.listing_type === 'rent' ? '🔑' : '💰'}
-                                    {listing.listing_type === 'rent' ? t.ui.rent : t.ui.sale}
-                                </span>
-                            </div>
+                        {/* Description */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.description_title}</h2>
+                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
+                                {listing.description}
+                            </p>
+                        </div>
 
-                            {/* Title & Actions */}
-                            <div className="flex items-start justify-between gap-4 mb-6">
-                                <div className="flex-1 min-w-0">
-                                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
-                                        {listing.title}
-                                    </h1>
+                        {/* Features */}
+                        <FeaturesShowcase listing={listing} />
 
-                                    {/* Brand and Model Badges */}
-                                    {(listing.brand || listing.model) && (
-                                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                                            {listing.brand && (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold text-sm shadow-md">
-                                                    <Car className="w-4 h-4" />
-                                                    {typeof listing.brand === 'object' ? listing.brand.name_ar || listing.brand.name : listing.brand}
-                                                </span>
-                                            )}
-                                            {listing.model && (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold text-sm shadow-md">
-                                                    {listing.model}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+                        {/* Detailed Specs Tabs */}
+                        <SpecificationsTabs listing={listing} />
 
-                                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                        {/* City and Address */}
-                                        {(listing.city || listing.address) && (
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-4 h-4 text-red-500 flex-shrink-0" />
-                                                <span className="font-medium">
-                                                    {listing.city}
-                                                    {listing.city && listing.address && ' • '}
-                                                    {listing.address && <span className="text-gray-500 dark:text-gray-500">{listing.address}</span>}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {/* Original location field as fallback */}
-                                        {!listing.city && listing.location && (
-                                            <span className="flex items-center gap-1.5">
-                                                <MapPin className="w-4 h-4 flex-shrink-0" />
-                                                <span className="truncate">{listing.location}</span>
-                                            </span>
-                                        )}
-                                        <span className="flex items-center gap-1.5 whitespace-nowrap">
-                                            <Eye className="w-4 h-4" />
-                                            {listing.views_count || 0} {t.ui.view_count}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 whitespace-nowrap">
-                                            <Calendar className="w-4 h-4" />
-                                            {safeDate(listing.created_at)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2 flex-shrink-0">
-                                    <motion.button
-                                        whileTap={{ scale: 0.95 }}
-                                        whileHover={{ scale: 1.05 }}
-                                        onClick={handleFavoriteToggle}
-                                        className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all shadow-md hover:shadow-lg ${isFavorited
-                                            ? 'bg-gradient-to-br from-red-50 to-pink-50 text-red-500 dark:from-red-900/30 dark:to-pink-900/30'
-                                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
-                                            }`}
-                                    >
-                                        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isFavorited ? 'fill-current' : ''}`} />
-                                    </motion.button>
-                                    <motion.button
-                                        whileTap={{ scale: 0.95 }}
-                                        whileHover={{ scale: 1.05 }}
-                                        onClick={handleShare}
-                                        className="p-3 sm:p-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-xl sm:rounded-2xl transition-all shadow-md hover:shadow-lg"
-                                    >
-                                        <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                                    </motion.button>
-                                </div>
-                            </div>
-
-                            {/* Enhanced Price Card */}
-                            <PriceCard listing={listing} />
-
-
-                            {/* Condition & Warranty Badges */}
-                            <div className="flex flex-wrap gap-3">
-                                {listing.condition && (
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800/30 shadow-sm">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
-                                        <span className="text-gray-900 dark:text-white font-bold capitalize text-sm">
-                                            {translateValue(listing.condition)}
-                                        </span>
-                                    </div>
-                                )}
-                                {listing.warranty && (
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800/30 shadow-sm">
-                                        <Star className="w-5 h-5 text-blue-500 fill-current" />
-                                        <span className="text-gray-900 dark:text-white font-bold text-sm">
-                                            {t.specs.warranty}: {listing.warranty}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* Car Body Diagram */}
-                        {listing.body_condition && typeof listing.body_condition === 'object' && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200 dark:border-slate-700"
-                            >
-                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-                                    <Car className="w-6 h-6 text-primary" />
-                                    حالة الهيكل
-                                </h2>
-                                <CarBodyDiagram
-                                    value={listing.body_condition}
-                                    onChange={() => { }}
-                                />
-                            </motion.div>
-                        )}
-
-                        {/* Video Section */}
+                        {/* Video - if exists */}
                         {listing.video_url && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.video}</h2>
-                                <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm overflow-hidden">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <div className="w-2 h-6 bg-red-500 rounded-full"></div>
+                                    {t.ui.video}
+                                </h2>
+                                <div className="aspect-video rounded-xl overflow-hidden bg-black shadow-lg">
                                     <iframe
-                                        src={listing.video_url.replace('watch?v=', 'embed/')}
+                                        src={listing.video_url.includes('youtube') || listing.video_url.includes('youtu.be')
+                                            ? listing.video_url.replace('watch?v=', 'embed/').split('&')[0]
+                                            : listing.video_url}
                                         title="Car Video"
                                         className="w-full h-full"
                                         allowFullScreen
@@ -463,32 +396,83 @@ const CarListingDetail: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Enhanced Specifications Tabs */}
-                        <SpecificationsTabs listing={listing} />
+                        {/* Body Diagram */}
+                        {listing.body_condition && typeof listing.body_condition === 'object' && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
+                                <CarBodyDiagram
+                                    value={listing.body_condition}
+                                    onChange={() => { }}
+                                />
+                            </div>
+                        )}
 
-                        {/* Rental Terms for Rent Listings */}
+                        {/* Rental Terms */}
                         {listing.listing_type === 'rent' && listing.rental_terms && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.rental_terms}</h2>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {Array.isArray(listing.rental_terms) && listing.rental_terms.map((term: string, idx: number) => (
-                                        <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                            <CheckCircle className="w-4 h-4 text-blue-500" />
-                                            <span>{term}</span>
+                                        <div key={idx} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                            <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                                                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                            </div>
+                                            <span className="font-medium">{term}</span>
                                         </div>
                                     ))}
-                                    {typeof listing.rental_terms === 'object' && !Array.isArray(listing.rental_terms) && (
-                                        <p className="text-gray-700 dark:text-gray-300">{JSON.stringify(listing.rental_terms)}</p>
-                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {/* Enhanced Features Showcase */}
-                        <FeaturesShowcase listing={listing} />
+                        {/* Similar Listings */}
+                        <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                            <SimilarListings
+                                currentListingId={listing.id}
+                                categoryId={listing.category?.id}
+                                brandId={listing.brand?.id}
+                                t={t}
+                            />
+                        </div>
+                    </div>
 
-                        {/* Provider Info on Mobile - Integrated into main content */}
-                        <div className="lg:hidden mt-8 mb-8">
+                    {/* 4. Sticky Sidebar Column (4 cols) */}
+                    <div className="lg:col-span-4">
+                        <div className="sticky top-24 space-y-6">
+                            {/* Price Card */}
+                            <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
+
+                            {/* Main CTAs */}
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => handleContact('phone')}
+                                    className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                >
+                                    <Phone className="w-5 h-5" />
+                                    {t.ui.call}
+                                </button>
+                                {hasWhatsapp && (
+                                    <button
+                                        onClick={() => handleContact('whatsapp')}
+                                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <MessageCircle className="w-5 h-5" />
+                                        {t.ui.whatsapp}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Trust / Safety Box */}
+                            <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
+                                <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                                <div>
+                                    <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">تسوق بأمان</h4>
+                                    <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                        لا تقم بتحويل الأموال قبل معاينة السيارة. افحص السيارة جيداً قبل الشراء.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Provider Info */}
                             <ProviderSidebar
                                 provider={provider}
                                 listing={listing}
@@ -496,54 +480,30 @@ const CarListingDetail: React.FC = () => {
                                 onContact={handleContact}
                                 onReport={() => setShowReportModal(true)}
                             />
+
+                            <div className="text-center">
+                                <button
+                                    onClick={() => setShowReportModal(true)}
+                                    className="text-sm text-gray-400 hover:text-red-500 underline decoration-dotted transition-colors"
+                                >
+                                    {t.ui.report}
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        {/* Description */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.description_title}</h2>
-                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
-                                {listing.description}
-                            </p>
-                        </div>
-
-                        {/* Similar Listings */}
-                        <SimilarListings
-                            currentListingId={listing.id}
-                            categoryId={listing.category?.id}
-                            brandId={listing.brand?.id}
-                            t={t}
-                        />
-                    </motion.div>
-
-                    {/* Sidebar */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="hidden lg:block space-y-6"
-                    >
-                        <ProviderSidebar
-                            provider={provider}
-                            listing={listing}
-                            t={t}
-                            onContact={handleContact}
-                            onReport={() => setShowReportModal(true)}
-                        />
-                    </motion.div>
-                </div >
-            </div >
-
-            {/* Mobile Sticky Contact Bar */}
-            < motion.div
+            {/* Mobile Sticky Bar - Only visible on small screens */}
+            <motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
-                transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-                className="lg:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-40"
+                className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40"
             >
                 <div className="flex gap-3">
                     <button
                         onClick={() => handleContact('phone')}
-                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3.5 rounded-xl font-bold transition-all shadow-sm"
+                        className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3.5 rounded-xl font-bold"
                     >
                         <Phone className="w-5 h-5" />
                         {t.ui.call}
@@ -551,14 +511,14 @@ const CarListingDetail: React.FC = () => {
                     {hasWhatsapp && (
                         <button
                             onClick={() => handleContact('whatsapp')}
-                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-sm"
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3.5 rounded-xl font-bold"
                         >
                             <MessageCircle className="w-5 h-5" />
                             {t.ui.whatsapp}
                         </button>
                     )}
                 </div>
-            </motion.div >
+            </motion.div>
 
             <ReportListingModal
                 isOpen={showReportModal}
@@ -567,7 +527,7 @@ const CarListingDetail: React.FC = () => {
                 t={t}
             />
 
-        </motion.div >
+        </motion.div>
     );
 };
 
