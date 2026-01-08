@@ -352,7 +352,7 @@ const RentCarListingDetail: React.FC = () => {
                                     اتصال
                                 </button>
                                 <button
-                                    onClick={handleWhatsApp}
+                                    onClick={handleWhatsAppContact}
                                     className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
                                 >
                                     <MessageSquare className="w-5 h-5" />
