@@ -4,7 +4,7 @@ import {
     ChevronLeft, ChevronRight, Check, Car, ShoppingCart, RefreshCw,
     Tag, Settings, Wrench, Camera, CheckCircle, DollarSign,
     Calendar, Gauge, Zap, Fuel, Droplets, Star, DoorOpen, Users, Rocket,
-    Hammer, FileText, Hash, User, Shield, MessageCircle
+    Hammer, FileText, Hash, User, Shield, MessageCircle, Sparkles
 } from 'lucide-react';
 import Icon from '../Icon';
 import { CarProviderService } from '../../services/carprovider.service';
@@ -15,7 +15,8 @@ import { ColorPicker } from './ColorPicker';
 import { CarBodyDiagram } from './CarBodyDiagram';
 import Step1ContactLocation from './CarListingWizard/Step1ContactLocation';
 import Step2CountryBrandModel from './CarListingWizard/Step2CountryBrandModel';
-import Step6RentalConditions from './CarListingWizard/Step6RentalConditions';
+import Step6RentalConditions from './CarListingWizard/Step6RentalConditions'; // Actually Step 7 now
+import StepFeatures from './CarListingWizard/StepFeatures';
 
 interface CarListingWizardProps {
     onComplete: () => void;
@@ -84,13 +85,15 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     const [stepErrors, setStepErrors] = useState<{ [key: number]: string[] }>({});
 
     // Dynamic step count based on listing type
-    const totalSteps = formData.listing_type === 'rent' ? 7 : 6;
+    // Added 1 step for Features
+    const totalSteps = formData.listing_type === 'rent' ? 8 : 7;
 
     // Dynamic step titles based on listing type
     const stepTitles = formData.listing_type === 'rent' ? [
         'معلومات الاتصال',
         'المنشأ والماركة',
         'المواصفات الفنية',
+        'المميزات الإضافية',
         'الحالة والتاريخ',
         'الصور والفيديو',
         'شروط الإيجار',
@@ -99,12 +102,13 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         'معلومات الاتصال',
         'المنشأ والماركة',
         'المواصفات الفنية',
+        'المميزات الإضافية',
         'الحالة والتاريخ',
         'الصور والفيديو',
         'المراجعة والنشر'
     ];
 
-    const stepIcons = [Car, Tag, Settings, Wrench, Camera, CheckCircle];
+    const stepIcons = [Car, Tag, Settings, Sparkles, Wrench, Camera, CheckCircle];
 
     // Load categories and brands on mount
     useEffect(() => {
@@ -219,18 +223,22 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 if (!formData.mileage || Number(formData.mileage) < 0) errors.push('الكيلومترات غير صحيحة');
                 break;
 
-            case 4: // Condition
-                // All fields in Step 4 are optional
+            case 4: // Features (Optional)
+                // No validation required for now
                 break;
 
-            case 5: // Media & Details
+            case 5: // Condition (Formerly Step 4)
+                // All fields in Step 5 are optional
+                break;
+
+            case 6: // Media & Details (Formerly Step 5)
                 if (!formData.title.trim()) errors.push('عنوان الإعلان مطلوب');
                 if (formData.photos.length === 0 && (!editingListing || !editingListing.photos?.length)) {
                     errors.push('يجب إضافة صورة واحدة على الأقل');
                 }
                 break;
 
-            case 6: // Rental Conditions (if rent) or Review
+            case 7: // Rental Conditions (if rent) or Review (if sale)
                 if (formData.listing_type === 'rent') {
                     // Rental step - at least one rate required
                     if (!formData.daily_rate && !formData.weekly_rate && !formData.monthly_rate) {
@@ -242,7 +250,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 }
                 break;
 
-            case 7: // Review (for rent only)
+            case 8: // Review (for rent only)
                 if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
                 break;
         }
@@ -378,7 +386,9 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 rental_terms_checkboxes: undefined,
                 km_limit: undefined,
                 custom_rental_terms: undefined,
-                vin_number: undefined
+                vin_number: undefined,
+                // Pass features as is
+                features: formData.features
             };
 
             console.log('📦 Payload prepared:', payload);
@@ -491,18 +501,21 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                             <Step3Specs formData={formData} updateField={updateField} />
                         )}
                         {currentStep === 4 && (
+                            <StepFeatures formData={formData} updateField={updateField} />
+                        )}
+                        {currentStep === 5 && (
                             <Step4Condition
                                 formData={formData}
                                 updateField={updateField}
                             />
                         )}
-                        {currentStep === 5 && (
+                        {currentStep === 6 && (
                             <Step5Media formData={formData} updateField={updateField} />
                         )}
-                        {currentStep === 6 && formData.listing_type === 'rent' && (
+                        {currentStep === 7 && formData.listing_type === 'rent' && (
                             <Step6RentalConditions formData={formData} updateField={updateField} />
                         )}
-                        {((currentStep === 6 && formData.listing_type === 'sale') || (currentStep === 7 && formData.listing_type === 'rent')) && (
+                        {((currentStep === 7 && formData.listing_type === 'sale') || (currentStep === 8 && formData.listing_type === 'rent')) && (
                             <Step6Review formData={formData} brands={brands} categories={categories} updateField={updateField} />
                         )}
                     </AnimatePresence>

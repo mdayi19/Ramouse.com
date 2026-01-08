@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarProviderService, CarListing, MarketplaceFilters as FilterType } from '../../services/carprovider.service';
 import { Car, Grid, List, Search, SlidersHorizontal, ArrowLeft, ArrowRight, X } from 'lucide-react';
@@ -24,12 +24,28 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     // State
     const [listings, setListings] = useState<CarListing[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [filters, setFilters] = useState<FilterType>({ listing_type: listingType });
+    const [filters, setFilters] = useState<FilterType>({ listing_type: listingType, page: 1 });
     const [categories, setCategories] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+    // Infinite Scroll Ref
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastListingElementRef = useCallback((node: HTMLDivElement) => {
+        if (loading || loadingMore) return;
+        if (observer.current) observer.current.disconnect();
+
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && pagination.current_page < pagination.last_page) {
+                setFilters(prev => ({ ...prev, page: (prev.page || 1) + 1 }));
+            }
+        });
+
+        if (node) observer.current.observe(node);
+    }, [loading, loadingMore, pagination.current_page, pagination.last_page]);
 
     // Initial Load
     useEffect(() => {
@@ -38,10 +54,13 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 
     // Load listings when filters change
     useEffect(() => {
-        loadListings();
-        // Scroll to top on filter change
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, [filters, pagination.current_page]);
+        const isPageOne = filters.page === 1;
+        loadListings(isPageOne);
+
+        if (isPageOne) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [filters]);
 
     const loadCategories = async () => {
         try {
@@ -52,67 +71,72 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         }
     };
 
-    const loadListings = async () => {
-        setLoading(true);
+    const loadListings = async (isReset: boolean) => {
+        if (isReset) {
+            setLoading(true);
+        } else {
+            setLoadingMore(true);
+        }
+
         try {
-            // Merge search query into filters if needed, or handle separately
-            const currentFilters = { ...filters };
-            if (searchQuery) {
-                // If API supports search param in filter object
-                // or we use a separate search endpoint. 
-                // The original code used a separate 'searchListings' method for search.
-                // We should ideally unify this. For now, let's keep the logic consistent.
+            let response;
+            if (searchQuery.trim()) {
+                response = await CarProviderService.searchListings(searchQuery);
+                const results = response.results || {};
+
+                // Search API might behave differently regarding pagination, assume basic structure for now
+                if (isReset) {
+                    setListings(results.data || []);
+                } else {
+                    setListings(prev => [...prev, ...(results.data || [])]);
+                }
+
+                setPagination({
+                    current_page: 1,
+                    last_page: 1,
+                    total: (results.data || []).length
+                });
+            } else {
+                response = listingType === 'rent'
+                    ? await CarProviderService.getRentCars(filters)
+                    : await CarProviderService.getMarketplace(filters);
+
+                const data = response.listings?.data || [];
+                const meta = response.listings;
+
+                if (isReset) {
+                    setListings(data);
+                } else {
+                    setListings(prev => [...prev, ...data]);
+                }
+
+                setPagination({
+                    current_page: meta?.current_page || 1,
+                    last_page: meta?.last_page || 1,
+                    total: meta?.total || 0
+                });
             }
 
-            const response = listingType === 'rent'
-                ? await CarProviderService.getRentCars(filters)
-                : await CarProviderService.getMarketplace(filters);
-
-            setListings(response.listings?.data || []);
-            setPagination({
-                current_page: response.listings?.current_page || 1,
-                last_page: response.listings?.last_page || 1,
-                total: response.listings?.total || 0
-            });
         } catch (error) {
             console.error('Failed to load listings:', error);
             showToast('فشل تحميل السيارات', 'error');
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) {
-            // Reset to normal load if empty
-            if (loading) return;
-            loadListings();
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const response = await CarProviderService.searchListings(searchQuery);
-            setListings(response.results?.data || []);
-            // Update pagination if search returns structure, otherwise reset
-            setPagination({
-                current_page: 1,
-                last_page: 1,
-                total: response.results?.total || (response.results?.data || []).length
-            });
-        } catch (error) {
-            showToast('فشل البحث', 'error');
-        } finally {
-            setLoading(false);
-        }
+    const handleSearch = () => {
+        // Reset to page 1 for new search
+        setFilters(prev => ({ ...prev, page: 1 }));
     };
 
     const handleFilterChange = (key: string, value: any) => {
-        setFilters(prev => ({ ...prev, [key]: value, page: 1 })); // Reset page on filter change
+        setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
     };
 
     const handleResetFilters = () => {
-        setFilters({ listing_type: listingType });
+        setFilters({ listing_type: listingType, page: 1 });
         setSearchQuery('');
     };
 
@@ -120,7 +144,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
             {/* 1. Hero / Header Section */}
             <div className="relative bg-[#0f172a] text-white py-16 overflow-hidden">
-                {/* Abstract Background Globs */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
@@ -147,7 +170,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                             }
                         </motion.h1>
 
-                        {/* Search Bar */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -199,7 +221,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                             </h2>
 
                             <div className="flex items-center gap-3">
-                                {/* Mobile Filter Toggle */}
                                 <button
                                     onClick={() => setShowMobileFilters(true)}
                                     className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm text-slate-700 dark:text-slate-200"
@@ -208,7 +229,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     <span>تصفية</span>
                                 </button>
 
-                                {/* View Toggle */}
                                 <div className="bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm flex items-center">
                                     <button
                                         onClick={() => setViewMode('grid')}
@@ -232,7 +252,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 
                         {/* Content Grid */}
                         <div className="min-h-[400px]">
-                            {loading ? (
+                            {loading && !loadingMore ? (
                                 <div className={viewMode === 'grid'
                                     ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
                                     : 'space-y-4'
@@ -268,62 +288,39 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
                                     : 'space-y-4'
                                 }>
-                                    <AnimatePresence mode='popLayout'>
-                                        {listings.map((listing) => (
-                                            <CarListingCard
-                                                key={listing.id}
-                                                listing={listing}
-                                                viewMode={viewMode}
-                                                showToast={showToast}
-                                            />
-                                        ))}
-                                    </AnimatePresence>
+                                    {listings.map((listing, index) => {
+                                        if (index === listings.length - 1) {
+                                            return (
+                                                <div ref={lastListingElementRef} key={listing.id}>
+                                                    <CarListingCard
+                                                        listing={listing}
+                                                        viewMode={viewMode}
+                                                        showToast={showToast}
+                                                    />
+                                                </div>
+                                            );
+                                        } else {
+                                            return (
+                                                <CarListingCard
+                                                    key={listing.id}
+                                                    listing={listing}
+                                                    viewMode={viewMode}
+                                                    showToast={showToast}
+                                                />
+                                            );
+                                        }
+                                    })}
+
+                                    {loadingMore && [1, 2, 3].map((i) => (
+                                        <ListingSkeleton key={`more-${i}`} viewMode={viewMode} />
+                                    ))}
                                 </div>
                             )}
 
-                            {/* Pagination */}
-                            {!loading && pagination.last_page > 1 && (
-                                <div className="flex justify-center items-center gap-2 mt-12">
-                                    <button
-                                        onClick={() => handleFilterChange('page', Math.max(1, pagination.current_page - 1))}
-                                        disabled={pagination.current_page === 1}
-                                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                                    >
-                                        <ArrowRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                                    </button>
-
-                                    <div className="flex items-center gap-1">
-                                        {Array.from({ length: Math.min(5, pagination.last_page) }, (_, i) => {
-                                            // Smart logic to show window around current page could go here
-                                            // For now simple 1..5 or 1..last_page
-                                            let p = i + 1;
-                                            if (pagination.last_page > 5 && pagination.current_page > 3) {
-                                                p = pagination.current_page - 2 + i;
-                                                if (p > pagination.last_page) return null;
-                                            }
-
-                                            return (
-                                                <button
-                                                    key={p}
-                                                    onClick={() => handleFilterChange('page', p)}
-                                                    className={`w-10 h-10 rounded-lg font-bold text-sm transition-all ${p === pagination.current_page
-                                                            ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                                                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-                                                        }`}
-                                                >
-                                                    {p}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    <button
-                                        onClick={() => handleFilterChange('page', Math.min(pagination.last_page, pagination.current_page + 1))}
-                                        disabled={pagination.current_page === pagination.last_page}
-                                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                                    >
-                                        <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                                    </button>
+                            {/* End of results indicator */}
+                            {!loading && !loadingMore && pagination.current_page >= pagination.last_page && listings.length > 0 && (
+                                <div className="text-center py-8 text-slate-400 text-sm">
+                                    وصلت لنهاية النتائج
                                 </div>
                             )}
                         </div>
