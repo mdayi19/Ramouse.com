@@ -168,11 +168,11 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
                                     type="button"
                                     onClick={() => handleCategorySelect(category)}
                                     disabled={!!(selectedCategory && selectedCategory.id !== category.id)}
-                                    className={`p-4 rounded-xl font-bold text-sm transition-all ${selectedCategory?.id === category.id
-                                            ? 'bg-primary text-white shadow-lg scale-105'
-                                            : selectedCategory
-                                                ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                    className={`p-4 sm:p-4 rounded-xl font-bold text-sm sm:text-base transition-all min-h-[80px] sm:min-h-auto ${selectedCategory?.id === category.id
+                                        ? 'bg-primary text-white shadow-lg scale-105'
+                                        : selectedCategory
+                                            ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
+                                            : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10 active:scale-95'
                                         }`}
                                 >
                                     <div className="text-2xl mb-1">{category.flag}</div>
@@ -220,18 +220,18 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
                                 لا توجد ماركات متاحة لهذه الفئة
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                                 {filteredBrands.map((brand: any) => (
                                     <button
                                         key={brand.id}
                                         type="button"
                                         onClick={() => handleBrandSelect(brand.id)}
                                         disabled={!!(formData.brand_id && formData.brand_id !== brand.id)}
-                                        className={`p-4 rounded-xl font-bold text-sm transition-all ${formData.brand_id === brand.id
-                                                ? 'bg-primary text-white shadow-lg scale-105'
-                                                : formData.brand_id
-                                                    ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                        className={`p-3 sm:p-4 rounded-xl font-bold text-xs sm:text-sm transition-all min-h-[100px] sm:min-h-auto ${formData.brand_id === brand.id
+                                            ? 'bg-primary text-white shadow-lg scale-105'
+                                            : formData.brand_id
+                                                ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
+                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
                                             }`}
                                     >
                                         {brand.logo ? (
@@ -280,15 +280,15 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
 
                         {/* Model Grid */}
                         {availableModels.length > 0 && !showManualInput && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 mb-3">
                                 {availableModels.map((model: string) => (
                                     <button
                                         key={model}
                                         type="button"
                                         onClick={() => handleModelSelect(model)}
-                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${formData.model === model
-                                                ? 'bg-primary text-white shadow-lg scale-105'
-                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                        className={`p-3 sm:p-4 rounded-xl font-bold text-xs sm:text-sm transition-all min-h-[60px] sm:min-h-auto ${formData.model === model
+                                            ? 'bg-primary text-white shadow-lg scale-105'
+                                            : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
                                             }`}
                                     >
                                         {model}

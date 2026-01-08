@@ -431,28 +431,30 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-6">
-                    <h2 className="text-2xl font-bold flex items-center gap-3">
-                        <Car className="w-8 h-8" />
+                <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-4 sm:p-6">
+                    <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-3">
+                        <Car className="w-6 h-6 sm:w-8 sm:h-8" />
                         {editingListing ? 'تعديل السيارة' : 'إضافة سيارة جديدة'}
                     </h2>
-                    <p className="text-white/80 mt-2">
+                    <p className="text-white/80 mt-1 sm:mt-2 text-sm sm:text-base">
                         الخطوة {currentStep} من {totalSteps}: {stepTitles[currentStep - 1]}
                     </p>
 
                     {/* Progress Bar */}
-                    <div className="mt-4 bg-white/20 rounded-full h-2">
-                        <div
-                            className="bg-white rounded-full h-2 transition-all duration-300"
-                            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                    <div className="mt-3 sm:mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                            className="h-full bg-white rounded-full"
+                            transition={{ duration: 0.3 }}
                         />
                     </div>
 
@@ -538,38 +540,38 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
+                <div className="border-t border-slate-200 dark:border-slate-700 p-4 sm:p-6 flex items-center justify-between">
                     <button
                         onClick={onCancel}
-                        className="px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                        className="px-4 sm:px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors text-sm sm:text-base min-h-[48px]"
                     >
                         إلغاء
                     </button>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                         {currentStep > 1 && (
                             <button
                                 onClick={prevStep}
-                                className="px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                                className="px-4 sm:px-6 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2 text-sm sm:text-base font-bold min-h-[48px]"
                             >
-                                <ChevronRight className="w-5 h-5" />
+                                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                                 السابق
                             </button>
                         )}
                         {currentStep < totalSteps ? (
                             <button
                                 onClick={nextStep}
-                                className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
+                                className="px-4 sm:px-8 py-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl hover:shadow-lg transition-all flex items-center gap-2 text-sm sm:text-base font-bold min-h-[48px]"
                             >
                                 التالي
-                                <ChevronLeft className="w-5 h-5" />
+                                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                         ) : (
                             <button
                                 onClick={handleSubmit}
-                                className="px-8 py-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl hover:shadow-lg transition-all flex items-center gap-2 font-bold"
+                                className="px-4 sm:px-8 py-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl hover:shadow-lg transition-all flex items-center gap-2 text-sm sm:text-base font-bold min-h-[48px]"
                             >
-                                <Rocket className="w-5 h-5" />
+                                <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
                                 🚀 نشر الإعلان
                             </button>
                         )}
@@ -767,9 +769,9 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
         className="space-y-6"
     >
         {/* Year and Mileage */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                <label className="block text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     سنة الصنع <span className="text-red-500">*</span>
                 </label>
@@ -780,13 +782,13 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
                     placeholder="2020"
                     min="1990"
                     max={new Date().getFullYear() + 1}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    className="w-full px-4 py-3 sm:py-3 text-base rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
                     required
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                <label className="block text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                     <Gauge className="w-4 h-4" />
                     الكيلومترات <span className="text-red-500">*</span>
                 </label>
@@ -796,7 +798,7 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
                     onChange={(e) => updateField('mileage', e.target.value)}
                     placeholder="50000"
                     min="0"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                    className="w-full px-4 py-3 sm:py-3 text-base rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
                     required
                 />
             </div>
@@ -826,7 +828,7 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 نوع الوقود *
             </label>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <IconCard icon={Fuel} label="بنزين" selected={formData.fuel_type === 'gasoline'} onClick={() => updateField('fuel_type', 'gasoline')} />
                 <IconCard icon={Droplets} label="ديزل" selected={formData.fuel_type === 'diesel'} onClick={() => updateField('fuel_type', 'diesel')} />
                 <IconCard icon={Zap} label="كهرباء" selected={formData.fuel_type === 'electric'} onClick={() => updateField('fuel_type', 'electric')} />
