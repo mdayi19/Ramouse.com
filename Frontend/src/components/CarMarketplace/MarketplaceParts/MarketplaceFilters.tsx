@@ -6,6 +6,8 @@ import {
 import { MarketplaceFilters as FilterType } from '../../../services/carprovider.service';
 import { cn } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PriceRangeSlider } from './PriceRangeSlider';
+import { FilterPresets } from './FilterPresets';
 
 interface MarketplaceFiltersProps {
     filters: FilterType;
@@ -91,6 +93,16 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                 </button>
             </div>
 
+            {/* Filter Presets - Quick filters */}
+            <FilterPresets
+                onApplyPreset={(presetFilters) => {
+                    Object.entries(presetFilters).forEach(([key, value]) => {
+                        onFilterChange(key, value);
+                    });
+                }}
+                currentFilters={filters}
+            />
+
             {/* Category Filter */}
             {categories.length > 0 && (
                 <FilterSection id="category" title="الفئة">
@@ -129,30 +141,21 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                 </FilterSection>
             )}
 
-            {/* Price Range */}
+            {/* Price Range with Slider */}
             <FilterSection id="price" title="السعر (ل.س)">
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="text-xs text-slate-500 mb-1 block">من</label>
-                        <input
-                            type="number"
-                            placeholder="0"
-                            value={filters.min_price || ''}
-                            onChange={(e) => onFilterChange('min_price', e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs text-slate-500 mb-1 block">إلى</label>
-                        <input
-                            type="number"
-                            placeholder="أقصى"
-                            value={filters.max_price || ''}
-                            onChange={(e) => onFilterChange('max_price', e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                        />
-                    </div>
-                </div>
+                <PriceRangeSlider
+                    min={0}
+                    max={100000000}
+                    value={[
+                        Number(filters.min_price) || 0,
+                        Number(filters.max_price) || 100000000
+                    ]}
+                    onChange={([min, max]) => {
+                        onFilterChange('min_price', min);
+                        onFilterChange('max_price', max);
+                    }}
+                    step={1000000}
+                />
             </FilterSection>
 
             {/* Year Range */}

@@ -7,6 +7,7 @@ import {
 import { CarListing, CarProviderService } from '../../../services/carprovider.service';
 import { cn } from '../../../lib/utils';
 import { motion } from 'framer-motion';
+import { OptimizedImage } from './OptimizedImage';
 
 interface RentListingCardProps {
     listing: CarListing;
@@ -157,10 +158,10 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
             >
                 {/* Image Section */}
                 <div className="w-full sm:w-72 h-48 sm:h-full relative flex-shrink-0 overflow-hidden">
-                    <img
+                    <OptimizedImage
                         src={images[0]}
                         alt={listing.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        className="group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute top-2 left-2 flex gap-1">
                         {listing.is_sponsored && (
@@ -236,11 +237,12 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}
         >
             {/* Image Container */}
-            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
-                <img
+            <div className="relative overflow-hidden bg-slate-100 dark:bg-slate-900">
+                <OptimizedImage
                     src={images[activeImageIndex]}
                     alt={listing.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    aspectRatio="aspect-[16/10]"
+                    className="group-hover:scale-110 transition-transform duration-700"
                 />
                 {/* Top Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-20">

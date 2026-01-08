@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Heart, Share2, MapPin, Gauge, GitFork, Calendar,
-    Fuel, Car, Eye, CheckCircle
+    Fuel, Car, Eye, CheckCircle, GitCompare
 } from 'lucide-react';
 import { CarListing, CarProviderService } from '../../../services/carprovider.service';
 import { cn } from '../../../lib/utils';
 import { motion } from 'framer-motion';
+import { OptimizedImage } from './OptimizedImage';
+import { useComparison } from '../../../hooks/useComparison';
 
 interface CarListingCardProps {
     listing: CarListing;
@@ -16,9 +18,11 @@ interface CarListingCardProps {
 
 export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMode, showToast }) => {
     const navigate = useNavigate();
+    const { addItem, removeItem, isInComparison, items } = useComparison();
     const [isFavorited, setIsFavorited] = useState(false); // In real app, init from props/store
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
+    const inComparison = isInComparison(listing.id);
 
     // Get images ensuring at least one exists
     const images = (listing.photos && listing.photos.length > 0)
@@ -62,6 +66,21 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
         } else {
             navigator.clipboard.writeText(url);
             showToast?.('تم نسخ الرابط', 'success');
+        }
+    };
+
+    const handleCompare = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (inComparison) {
+            removeItem(listing.id);
+            showToast?.('تم الإزالة من المقارنة', 'info');
+        } else {
+            if (items.length >= 4) {
+                showToast?.('لا يمكن مقارنة أكثر من 4 سيارات', 'error');
+                return;
+            }
+            addItem(listing);
+            showToast?.('تم الإضافة للمقارنة', 'success');
         }
     };
 

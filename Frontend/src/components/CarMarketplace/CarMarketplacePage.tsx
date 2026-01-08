@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CarListingCard } from './MarketplaceParts/CarListingCard';
 import { MarketplaceFilters } from './MarketplaceParts/MarketplaceFilters';
 import { ListingSkeleton } from './MarketplaceParts/ListingSkeleton';
+import { ErrorState } from './MarketplaceParts/ErrorState';
 import Icon from '../Icon';
 
 interface CarMarketplacePageProps {
@@ -25,6 +26,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     const [listings, setListings] = useState<CarListing[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [filters, setFilters] = useState<FilterType>({ listing_type: listingType, page: 1 });
     const [categories, setCategories] = useState<any[]>([]);
@@ -74,6 +76,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     const loadListings = async (isReset: boolean) => {
         if (isReset) {
             setLoading(true);
+            setError(null);
         } else {
             setLoadingMore(true);
         }
@@ -117,9 +120,13 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                 });
             }
 
-        } catch (error) {
-            console.error('Failed to load listings:', error);
-            showToast('فشل تحميل السيارات', 'error');
+        } catch (err) {
+            console.error('Failed to load listings:', err);
+            const errorMessage = err instanceof Error ? err.message : 'فشل تحميل السيارات';
+            setError(errorMessage);
+            if (!isReset) {
+                showToast('فشل تحميل المزيد من السيارات', 'error');
+            }
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -252,7 +259,14 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 
                         {/* Content Grid */}
                         <div className="min-h-[400px]">
-                            {loading && !loadingMore ? (
+                            {error && !loading ? (
+                                <ErrorState
+                                    title="فشل تحميل السيارات"
+                                    message={error}
+                                    onRetry={() => loadListings(true)}
+                                    onGoHome={() => window.location.href = '/'}
+                                />
+                            ) : loading && !loadingMore ? (
                                 <div className={viewMode === 'grid'
                                     ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
                                     : 'space-y-4'

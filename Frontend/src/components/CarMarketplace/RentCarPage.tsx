@@ -6,6 +6,8 @@ import { CarListingCard } from './MarketplaceParts/CarListingCard';
 import { RentListingCard } from './MarketplaceParts/RentListingCard';
 import { RentFilters } from './MarketplaceParts/RentFilters';
 import { ListingSkeleton } from './MarketplaceParts/ListingSkeleton';
+import { ErrorState } from './MarketplaceParts/ErrorState';
+import Icon from '../Icon';
 
 interface RentCarPageProps {
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -22,6 +24,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     const [listings, setListings] = useState<CarListing[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     // Initialize with rent type
     const [filters, setFilters] = useState<FilterType>({ listing_type: 'rent', page: 1 });
@@ -72,6 +75,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     const loadListings = async (isReset: boolean) => {
         if (isReset) {
             setLoading(true);
+            setError(null);
         } else {
             setLoadingMore(true);
         }
@@ -119,9 +123,13 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                 });
             }
 
-        } catch (error) {
-            console.error('Failed to load listings:', error);
-            showToast('فشل تحميل سيارات الإيجار', 'error');
+        } catch (err) {
+            console.error('Failed to load listings:', err);
+            const errorMessage = err instanceof Error ? err.message : 'فشل تحميل سيارات الإيجار';
+            setError(errorMessage);
+            if (!isReset) {
+                showToast('فشل تحميل المزيد من السيارات', 'error');
+            }
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -269,7 +277,14 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
 
                         {/* Content Grid */}
                         <div className="min-h-[400px]">
-                            {loading && !loadingMore ? (
+                            {error && !loading ? (
+                                <ErrorState
+                                    title="فشل تحميل عروض الإيجار"
+                                    message={error}
+                                    onRetry={() => loadListings(true)}
+                                    onGoHome={() => window.location.href = '/'}
+                                />
+                            ) : loading && !loadingMore ? (
                                 <div className={viewMode === 'grid'
                                     ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
                                     : 'space-y-4'

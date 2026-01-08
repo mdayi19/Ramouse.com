@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils';
 import { getImageUrl } from '../../utils/helpers';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
+import { useAppState } from '../../hooks/useAppState';
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
 import SimilarListings from './ListingParts/SimilarListings';
@@ -19,6 +20,7 @@ import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
 import FeaturesShowcase from './ListingParts/FeaturesShowcase';
 import { CarBodyDiagram } from './CarBodyDiagram';
+import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
 
 // Helper for translations
 const t = {
@@ -123,6 +125,7 @@ const SpecItem: React.FC<{ icon: any; label: string; value: string | number | un
 const CarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
+    const { showToast, isAuthenticated } = useAppState();
 
     const [listing, setListing] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
@@ -173,22 +176,54 @@ const CarListingDetail: React.FC = () => {
         await CarProviderService.reportListing(listing.id, { reason, details });
     };
 
-    const handleContact = (type: 'phone' | 'email' | 'whatsapp') => {
-        if (!listing) return;
+    const handleContact = async (type: 'phone' | 'email' | 'whatsapp') => {
+        // Check authentication first
+        if (!isAuthenticated) {
+            showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
+            return;
+        }
 
-        // Track the click
-        CarProviderService.trackAnalytics(listing.id, 'contact_click');
+        if (!listing) return;
 
         const phone = listing.contact_phone || (listing.provider || listing.owner?.car_provider)?.phone;
         const email = (listing.provider || listing.owner?.car_provider)?.email;
         const whatsapp = listing.contact_whatsapp || phone;
 
-        if (type === 'phone' && phone) {
+        if (type === 'phone') {
+            if (!phone) {
+                showToast('رقم الهاتف غير متوفر', 'error');
+                return;
+            }
+            // Track phone contact
+            try {
+                await CarProviderService.trackAnalytics(listing.id, 'contact_phone');
+            } catch (error) {
+                console.error('Failed to track phone contact:', error);
+            }
             window.location.href = `tel:${phone}`;
-        } else if (type === 'email' && email) {
+        } else if (type === 'email') {
+            if (!email) {
+                showToast('البريد الإلكتروني غير متوفر', 'error');
+                return;
+            }
+            try {
+                await CarProviderService.trackAnalytics(listing.id, 'contact_email');
+            } catch (error) {
+                console.error('Failed to track email contact:', error);
+            }
             window.location.href = `mailto:${email}`;
-        } else if (type === 'whatsapp' && whatsapp) {
-            const message = `هذه الرسالة محولة من موقع ramouse.com أحتاج تفاصيل أكثر بخصوص هذا الإعلان ${window.location.href}`;
+        } else if (type === 'whatsapp') {
+            if (!whatsapp) {
+                showToast('رقم الواتساب غير متوفر', 'error');
+                return;
+            }
+            // Track WhatsApp contact
+            try {
+                await CarProviderService.trackAnalytics(listing.id, 'contact_whatsapp');
+            } catch (error) {
+                console.error('Failed to track WhatsApp contact:', error);
+            }
+            const message = `مرحباً، أنا مهتم بسيارتك ${listing.title}\nالسعر: ${safePrice(listing.price)}\nالرابط: ${window.location.href}`;
             const encodedMessage = encodeURIComponent(message);
             window.open(`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${encodedMessage}`, '_blank');
         }

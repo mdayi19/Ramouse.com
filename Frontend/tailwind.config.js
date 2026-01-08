@@ -44,6 +44,9 @@ export default {
                 cream: '#f3efe4', // Brand Accent
             },
             keyframes: {
+                'shimmer': {
+                    '100%': { transform: 'translateX(100%)' },
+                },
                 'toast-in': {
                     'from': { transform: 'translateY(-20px) translateX(100%)', opacity: '0' },
                     'to': { transform: 'translateY(0) translateX(0)', opacity: '1' },
@@ -78,6 +81,7 @@ export default {
                 }
             },
             animation: {
+                'shimmer': 'shimmer 2s infinite',
                 'toast-in': 'toast-in 0.3s ease-out forwards',
                 'modal-in': 'modal-in 0.2s ease-out forwards',
                 'modal-out': 'modal-out 0.2s ease-in forwards',

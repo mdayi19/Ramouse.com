@@ -529,6 +529,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Listing Analytics (Owner only)
         Route::get('/listings/{id}/analytics', [CarAnalyticsController::class, 'getListingAnalytics']);
+
+        // Bulk Actions
+        Route::post('/listings/bulk-hide', [CarProviderController::class, 'bulkHide']);
+        Route::post('/listings/bulk-show', [CarProviderController::class, 'bulkShow']);
+        Route::post('/listings/bulk-delete', [CarProviderController::class, 'bulkDelete']);
+
+        // Quick Edit & Duplication
+        Route::patch('/listings/{id}/quick-edit', [CarProviderController::class, 'quickEdit']);
+        Route::post('/listings/{id}/duplicate', [CarProviderController::class, 'duplicateListing']);
     });
 
     // Individual Customer Listings (max 3)

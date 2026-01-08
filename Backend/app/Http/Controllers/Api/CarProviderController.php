@@ -321,4 +321,141 @@ class CarProviderController extends Controller
             'listings' => $listings
         ]);
     }
+
+    /**
+     * Bulk hide listings
+     */
+    public function bulkHide(Request $request)
+    {
+        $validated = $request->validate([
+            'listing_ids' => 'required|array',
+            'listing_ids.*' => 'integer|exists:car_listings,id'
+        ]);
+
+        $user = auth('sanctum')->user();
+
+        // Verify ownership and update
+        $updated = CarListing::whereIn('id', $validated['listing_ids'])
+            ->where('owner_id', $user->id)
+            ->update(['is_available' => false]);
+
+        return response()->json([
+            'success' => true,
+            'hidden_count' => $updated,
+            'message' => "تم إخفاء {$updated} إعلانات بنجاح"
+        ]);
+    }
+
+    /**
+     * Bulk show listings
+     */
+    public function bulkShow(Request $request)
+    {
+        $validated = $request->validate([
+            'listing_ids' => 'required|array',
+            'listing_ids.*' => 'integer|exists:car_listings,id'
+        ]);
+
+        $user = auth('sanctum')->user();
+
+        $updated = CarListing::whereIn('id', $validated['listing_ids'])
+            ->where('owner_id', $user->id)
+            ->update(['is_available' => true]);
+
+        return response()->json([
+            'success' => true,
+            'shown_count' => $updated,
+            'message' => "تم إظهار {$updated} إعلانات بنجاح"
+        ]);
+    }
+
+    /**
+     * Bulk delete listings
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'listing_ids' => 'required|array',
+            'listing_ids.*' => 'integer|exists:car_listings,id'
+        ]);
+
+        $user = auth('sanctum')->user();
+
+        $deleted = CarListing::whereIn('id', $validated['listing_ids'])
+            ->where('owner_id', $user->id)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'deleted_count' => $deleted,
+            'message' => "تم حذف {$deleted} إعلانات بنجاح"
+        ]);
+    }
+
+    /**
+     * Quick edit listing (price, availability, etc.)
+     */
+    public function quickEdit(Request $request, $id)
+    {
+        $listing = CarListing::findOrFail($id);
+        $user = auth('sanctum')->user();
+
+        // Verify ownership
+        if ($listing->owner_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'field' => 'required|in:price,daily_rate,is_available,is_negotiable',
+            'value' => 'required'
+        ]);
+
+        $listing->update([
+            $validated['field'] => $validated['value']
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم التحديث بنجاح',
+            'listing' => $listing->fresh()
+        ]);
+    }
+
+    /**
+     * Duplicate listing
+     */
+    public function duplicateListing(Request $request, $id)
+    {
+        $listing = CarListing::with(['features'])->findOrFail($id);
+        $user = auth('sanctum')->user();
+
+        // Verify ownership
+        if ($listing->owner_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        // Create duplicate
+        $newListing = $listing->replicate();
+        $newListing->title = $listing->title . ' (نسخة)';
+        $newListing->is_sponsored = false;
+        $newListing->is_featured = false;
+        $newListing->views_count = 0;
+        $newListing->slug = null; // Will auto-generate new slug
+        $newListing->save();
+
+        // Note: Features duplication can be added if needed
+
+        return response()->json([
+            'success' => true,
+            'new_listing_id' => $newListing->id,
+            'message' => 'تم نسخ الإعلان بنجاح',
+            'listing' => $newListing->load(['category', 'brand'])
+        ]);
+    }
 }
