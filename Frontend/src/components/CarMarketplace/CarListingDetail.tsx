@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     Car, MapPin, Calendar, Gauge, Fuel, Settings, Phone,
     Heart, Share2, ChevronRight, CheckCircle, Star, Eye, MessageCircle,
+    Globe, Hash, User,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CarProviderService } from '../../services/carprovider.service';
@@ -28,6 +29,11 @@ const t = {
         doors_count: 'عدد الأبواب',
         seats_count: 'عدد المقاعد',
         warranty: 'الضمان',
+        license_plate: 'رقم اللوحة',
+        vin_number: 'رقم الهيكل',
+        previous_owners: 'عدد الملاك السابقين',
+        car_category: 'المنشأ',
+        address: 'العنوان',
     },
     values: {
         automatic: 'أوتوماتيك',
@@ -44,8 +50,17 @@ const t = {
         sponsored: 'مميزة',
         featured: 'مختارة',
         rent: 'للإيجار',
+        sale: 'للبيع',
+        negotiable: 'قابل للتفاوض',
         video: 'فيديو توضيحي',
         specs_title: 'المواصفات',
+        vehicle_info: 'معلومات السيارة',
+        additional_info: 'معلومات إضافية',
+        rental_rates: 'أسعار الإيجار',
+        daily_rate: 'يومي',
+        weekly_rate: 'أسبوعي',
+        monthly_rate: 'شهري',
+        rental_terms: 'شروط الإيجار',
         features_title: 'المميزات',
         description_title: 'الوصف',
         view_count: 'مشاهدة',
@@ -56,6 +71,7 @@ const t = {
         report: 'إبلاغ عن محتوى مخالف',
         verified: 'موثّق',
         hp: 'حصان',
+        owner: 'مالك',
     }
 };
 
@@ -318,9 +334,48 @@ const CarListingDetail: React.FC = () => {
                                     {safePrice(listing.price)}
                                 </span>
                                 {listing.listing_type === 'rent' && (
-                                    <span className="text-gray-600 dark:text-gray-400">/ يوم</span>
+                                    <span className="text-gray-600 dark:text-gray-400">/ يوم
+                                    </span>
+                                )}
+                                {listing.is_negotiable && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                        ✓ {t.ui.negotiable}
+                                    </span>
                                 )}
                             </div>
+
+                            {/* Rental Rates for Rent Listings */}
+                            {listing.listing_type === 'rent' && (listing.daily_rate || listing.weekly_rate || listing.monthly_rate) && (
+                                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                                    <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">{t.ui.rental_rates}</h3>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {listing.daily_rate && (
+                                            <div className="text-center">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">{t.ui.daily_rate}</p>
+                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                    {new Intl.NumberFormat('ar-SY').format(listing.daily_rate)}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {listing.weekly_rate && (
+                                            <div className="text-center">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">{t.ui.weekly_rate}</p>
+                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                    {new Intl.NumberFormat('ar-SY').format(listing.weekly_rate)}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {listing.monthly_rate && (
+                                            <div className="text-center">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">{t.ui.monthly_rate}</p>
+                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                    {new Intl.NumberFormat('ar-SY').format(listing.monthly_rate)}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex flex-wrap gap-2">
                                 {listing.condition && (
@@ -359,8 +414,8 @@ const CarListingDetail: React.FC = () => {
 
                         {/* Specifications Grid */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.specs_title}</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.vehicle_info}</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 <SpecItem icon={Calendar} label={t.specs.year} value={listing.year} />
                                 <SpecItem icon={Gauge} label={t.specs.mileage} value={`${listing.mileage.toLocaleString()} ${t.ui.km}`} />
                                 <SpecItem icon={Settings} label={t.specs.transmission} value={listing.transmission} />
@@ -370,11 +425,54 @@ const CarListingDetail: React.FC = () => {
                                 <SpecItem icon={Car} label={t.specs.exterior_color} value={listing.exterior_color} />
                                 <SpecItem icon={Settings} label={t.specs.interior_color} value={listing.interior_color} />
                                 <SpecItem icon={Car} label={t.specs.body_style} value={listing.category?.name_ar || listing.category?.name} />
-                                <SpecItem icon={CheckCircle} label={t.specs.body_condition} value={listing.body_condition} />
                                 <SpecItem icon={Settings} label={t.specs.doors_count} value={listing.doors_count} />
                                 <SpecItem icon={Settings} label={t.specs.seats_count} value={listing.seats_count} />
                             </div>
                         </div>
+
+                        {/* Additional Information */}
+                        {((listing as any).car_category_id || (listing as any).address || (listing as any).license_plate || (listing as any).chassis_number || (listing as any).previous_owners || listing.body_condition) && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.additional_info}</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                    {(listing as any).car_category_id && (
+                                        <SpecItem icon={Globe} label={t.specs.car_category} value={(listing as any).car_category_id} />
+                                    )}
+                                    {(listing as any).address && (
+                                        <SpecItem icon={MapPin} label={t.specs.address} value={(listing as any).address} />
+                                    )}
+                                    {(listing as any).license_plate && (
+                                        <SpecItem icon={Hash} label={t.specs.license_plate} value={(listing as any).license_plate} />
+                                    )}
+                                    {(listing as any).chassis_number && (
+                                        <SpecItem icon={Hash} label={t.specs.vin_number} value={(listing as any).chassis_number} />
+                                    )}
+                                    {(listing as any).previous_owners !== undefined && (listing as any).previous_owners !== null && (
+                                        <SpecItem icon={User} label={t.specs.previous_owners} value={`${(listing as any).previous_owners} ${t.ui.owner}`} />
+                                    )}
+                                    <SpecItem icon={CheckCircle} label={t.specs.body_condition} value={listing.body_condition} />
+                                    <SpecItem icon={Star} label={t.specs.warranty} value={listing.warranty} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Rental Terms for Rent Listings */}
+                        {listing.listing_type === 'rent' && (listing as any).rental_terms && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.rental_terms}</h2>
+                                <div className="space-y-2">
+                                    {Array.isArray((listing as any).rental_terms) && (listing as any).rental_terms.map((term: string, idx: number) => (
+                                        <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                            <CheckCircle className="w-4 h-4 text-blue-500" />
+                                            <span>{term}</span>
+                                        </div>
+                                    ))}
+                                    {typeof (listing as any).rental_terms === 'object' && !Array.isArray((listing as any).rental_terms) && (
+                                        <p className="text-gray-700 dark:text-gray-300">{JSON.stringify((listing as any).rental_terms)}</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Features List */}
                         {listing.features && Array.isArray(listing.features) && listing.features.length > 0 && (
