@@ -108,8 +108,48 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
         >
+            {/* Listing Type Selector - ALWAYS FIRST */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white dark:bg-slate-800 rounded-3xl p-5 border-2 border-slate-200 dark:border-slate-700"
+            >
+                <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">📋</span>
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                        نوع الإعلان <span className="text-red-500">*</span>
+                    </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={() => updateField('listing_type', 'sale')}
+                        className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.listing_type === 'sale'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                            }`}
+                    >
+                        <span className="text-3xl">💰</span>
+                        <span className="text-sm">للبيع</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => updateField('listing_type', 'rent')}
+                        className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.listing_type === 'rent'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                            }`}
+                    >
+                        <span className="text-3xl">🔄</span>
+                        <span className="text-sm">للإيجار</span>
+                    </button>
+                </div>
+            </motion.div>
+
             {/* Condition Selector - Only for Sale */}
-            {listingType === 'sale' && (
+            {formData.listing_type === 'sale' && (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -128,8 +168,8 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
                             type="button"
                             onClick={() => handleFieldChange('condition', 'new')}
                             className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.condition === 'new'
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
-                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                                 }`}
                         >
                             <span className="text-3xl">✨</span>
@@ -140,8 +180,8 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
                             type="button"
                             onClick={() => handleFieldChange('condition', 'used')}
                             className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.condition === 'used'
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
-                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                                 }`}
                         >
                             <span className="text-3xl">🚗</span>
@@ -163,10 +203,10 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
                 className={`bg-white dark:bg-slate-800 rounded-3xl p-5 border-2 ${formData.contact_phone
-                        ? 'border-green-400 bg-green-50/30 dark:bg-green-900/20'
-                        : errors.contact_phone
-                            ? 'border-red-400 bg-red-50/30'
-                            : 'border-slate-200 dark:border-slate-700'
+                    ? 'border-green-400 bg-green-50/30 dark:bg-green-900/20'
+                    : errors.contact_phone
+                        ? 'border-red-400 bg-red-50/30'
+                        : 'border-slate-200 dark:border-slate-700'
                     }`}
             >
                 <div className="flex items-center gap-3 mb-3">
@@ -258,8 +298,8 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
                             type="button"
                             onClick={() => handleCitySelect(city)}
                             className={`py-3 px-4 rounded-xl font-bold text-base transition-all ${formData.city === city
-                                    ? 'bg-primary text-white shadow-lg'
-                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                ? 'bg-primary text-white shadow-lg'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
                                 }`}
                         >
                             {city}
