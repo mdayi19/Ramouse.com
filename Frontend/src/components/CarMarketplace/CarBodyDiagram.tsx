@@ -23,7 +23,30 @@ const conditionConfig = {
 
 // Precise vector paths for a modern sedan (Top View)
 // Canvas: 300x520
-const carPaths = {
+
+interface InteractivePart {
+    id: string;
+    label: string;
+    d: string;
+}
+
+interface ContextPathPart {
+    d: string;
+    fill: string;
+    opacity?: number;
+}
+
+interface ContextEllipsePart {
+    x: number;
+    y: number;
+    rx: number;
+    ry: number;
+    fill: string;
+}
+
+type CarPart = InteractivePart | ContextPathPart | ContextEllipsePart;
+
+const carPaths: Record<string, CarPart> = {
     // Interactive Parts
     hood: { id: 'hood', label: 'الكبوت', d: 'M75,90 C75,90 150,85 225,90 L220,185 L80,185 Z' },
     front_bumper: { id: 'front_bumper', label: 'صدام أمامي', d: 'M70,85 Q150,60 230,85 L230,55 Q150,30 70,55 Z' },
@@ -127,17 +150,21 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                         {/* Shadows for wheels */}
                         {['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr'].map(key => {
                             const part = carPaths[key as keyof typeof carPaths];
-                            return <ellipse key={key} cx={part.x! + 5} cy={part.y! + 7.5} rx={part.rx} ry={part.ry} fill="black" opacity="0.2" filter="url(#part-glow)" />
+                            if ('rx' in part) {
+                                return <ellipse key={key} cx={part.x + 5} cy={part.y + 7.5} rx={part.rx} ry={part.ry} fill="black" opacity="0.2" filter="url(#part-glow)" />
+                            }
+                            return null;
                         })}
 
                         {/* Context Parts (Wheels, Glass, Lights - Underneath) */}
-                        {Object.entries(carPaths).filter(([_, p]) => !('id' in p)).map(([key, part]) => (
-                            part.d ? (
-                                <path key={key} d={part.d} fill={part.fill} fillOpacity={part.opacity} />
-                            ) : (
-                                <ellipse key={key} cx={part.x} cy={part.y} rx={part.rx} ry={part.ry} fill={part.fill} />
-                            )
-                        ))}
+                        {Object.entries(carPaths).filter(([_, p]) => !('id' in p)).map(([key, part]) => {
+                            if ('d' in part) {
+                                return <path key={key} d={part.d} fill={part.fill!} fillOpacity={part.opacity} />
+                            } else if ('rx' in part) {
+                                return <ellipse key={key} cx={part.x} cy={part.y} rx={part.rx} ry={part.ry} fill={part.fill!} />
+                            }
+                            return null;
+                        })}
 
                         {/* Interactive Body Parts */}
                         {Object.entries(carPaths).filter(([_, p]) => 'id' in p).map(([key, part]) => {
@@ -203,7 +230,10 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                             className="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl flex items-center gap-3"
                         >
                             <span className="font-bold text-sm">
-                                {carPaths[hoveredPart as keyof typeof carPaths].label || ''}
+                                {(() => {
+                                    const part = carPaths[hoveredPart];
+                                    return 'label' in part ? part.label : '';
+                                })()}
                             </span>
                             <div className="w-px h-4 bg-white/20 dark:bg-black/10" />
                             <span className="text-sm font-medium flex items-center gap-1.5">
