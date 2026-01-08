@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Check, X, AlertTriangle, Paintbrush, RefreshCw } from 'lucide-react';
+import { Check, X, AlertTriangle, Paintbrush, RefreshCw, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BodyCondition {
     [key: string]: 'pristine' | 'scratched' | 'dented' | 'painted' | 'replaced';
@@ -8,269 +9,126 @@ interface BodyCondition {
 interface CarBodyDiagramProps {
     value: BodyCondition;
     onChange: (condition: BodyCondition) => void;
+    readOnly?: boolean;
 }
 
-const conditionColors = {
-    pristine: '#10b981', // green
-    scratched: '#f59e0b', // amber
-    dented: '#ef4444', // red
-    painted: '#8b5cf6', // purple
-    replaced: '#3b82f6' // blue
-};
-
-const conditionLabels = {
-    pristine: 'ممتازة',
-    scratched: 'خدوش',
-    dented: 'مضروبة',
-    painted: 'مدهونة',
-    replaced: 'مستبدلة'
-};
-
-const conditionIcons = {
-    pristine: Check,
-    scratched: AlertTriangle,
-    dented: X,
-    painted: Paintbrush,
-    replaced: RefreshCw
+const conditionConfig = {
+    pristine: { label: 'سليم', color: '#10b981', gradient: 'from-emerald-400 to-emerald-600', icon: Check },
+    scratched: { label: 'خدوش', color: '#f59e0b', gradient: 'from-amber-400 to-amber-600', icon: AlertTriangle },
+    dented: { label: 'صدمة', color: '#ef4444', gradient: 'from-red-400 to-red-600', icon: X },
+    painted: { label: 'رش', color: '#8b5cf6', gradient: 'from-purple-400 to-purple-600', icon: Paintbrush },
+    replaced: { label: 'تغيير', color: '#3b82f6', gradient: 'from-blue-400 to-blue-600', icon: RefreshCw }
 };
 
 const bodyParts = [
-    { id: 'hood', label: 'الكبوت', x: 250, y: 100 },
-    { id: 'roof', label: 'السقف', x: 250, y: 250 },
-    { id: 'trunk', label: 'الصندوق', x: 250, y: 400 },
-    { id: 'front_bumper', label: 'صدام أمامي', x: 250, y: 30 },
-    { id: 'rear_bumper', label: 'صدام خلفي', x: 250, y: 470 },
-    { id: 'left_front_door', label: 'باب أمامي أيسر', x: 80, y: 200 },
-    { id: 'left_rear_door', label: 'باب خلفي أيسر', x: 80, y: 300 },
-    { id: 'right_front_door', label: 'باب أمامي أيمن', x: 420, y: 200 },
-    { id: 'right_rear_door', label: 'باب خلفي أيمن', x: 420, y: 300 },
-    { id: 'left_fender', label: 'رفرف أيسر', x: 80, y: 100 },
-    { id: 'right_fender', label: 'رفرف أيمن', x: 420, y: 100 },
+    { id: 'hood', label: 'الكبوت', x: 250, y: 100, type: 'rect', w: 240, h: 120, rx: 20 },
+    { id: 'roof', label: 'السقف', x: 250, y: 250, type: 'rect', w: 240, h: 170, rx: 15 },
+    { id: 'trunk', label: 'الشنطة', x: 250, y: 400, type: 'rect', w: 240, h: 110, rx: 20 },
+    { id: 'front_bumper', label: 'صدام أمامي', x: 250, y: 30, type: 'path', d: 'M 150 20 L 350 20 L 370 50 L 130 50 Z' },
+    { id: 'rear_bumper', label: 'صدام خلفي', x: 250, y: 470, type: 'path', d: 'M 130 450 L 370 450 L 350 480 L 150 480 Z' },
+    { id: 'left_front_door', label: 'باب أمامي أيسر', x: 80, y: 200, type: 'rect', w: 90, h: 90, rx: 10 },
+    { id: 'left_rear_door', label: 'باب خلفي أيسر', x: 80, y: 300, type: 'rect', w: 90, h: 90, rx: 10 },
+    { id: 'right_front_door', label: 'باب أمامي أيمن', x: 420, y: 200, type: 'rect', w: 90, h: 90, rx: 10 },
+    { id: 'right_rear_door', label: 'باب خلفي أيمن', x: 420, y: 300, type: 'rect', w: 90, h: 90, rx: 10 },
+    { id: 'left_fender', label: 'رفرف أيسر', x: 80, y: 100, type: 'rect', w: 90, h: 100, rx: 12 },
+    { id: 'right_fender', label: 'رفرف أيمن', x: 420, y: 100, type: 'rect', w: 90, h: 100, rx: 12 },
 ];
 
-export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange }) => {
-    const [selectedPart, setSelectedPart] = useState<string | null>(null);
+export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange, readOnly = false }) => {
+    const [hoveredPart, setHoveredPart] = useState<string | null>(null);
 
     const cycleCondition = (partId: string) => {
-        const conditions: Array<'pristine' | 'scratched' | 'dented' | 'painted' | 'replaced'> =
-            ['pristine', 'scratched', 'dented', 'painted', 'replaced'];
-
+        if (readOnly) return;
+        const keys = Object.keys(conditionConfig);
         const currentCondition = value[partId] || 'pristine';
-        const currentIndex = conditions.indexOf(currentCondition);
-        const nextIndex = (currentIndex + 1) % conditions.length;
+        const currentIndex = keys.indexOf(currentCondition);
+        const nextIndex = (currentIndex + 1) % keys.length;
 
         onChange({
             ...value,
-            [partId]: conditions[nextIndex]
+            [partId]: keys[nextIndex] as any
         });
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-6">
             {/* Legend */}
-            <div className="flex flex-wrap gap-2 justify-center">
-                {Object.entries(conditionLabels).map(([key, label]) => {
-                    const Icon = conditionIcons[key as keyof typeof conditionIcons];
+            <div className="flex flex-wrap justify-center gap-3">
+                {Object.entries(conditionConfig).map(([key, config]) => {
+                    const Icon = config.icon;
                     return (
                         <div
                             key={key}
-                            className="flex items-center gap-1 px-3 py-1 rounded-lg text-sm"
-                            style={{
-                                backgroundColor: conditionColors[key as keyof typeof conditionColors] + '20',
-                                color: conditionColors[key as keyof typeof conditionColors]
-                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm
+                                bg-gradient-to-r ${config.gradient} text-white`}
                         >
-                            <Icon className="w-4 h-4" />
-                            <span className="font-medium">{label}</span>
+                            <Icon className="w-3.5 h-3.5" />
+                            <span>{config.label}</span>
                         </div>
                     );
                 })}
             </div>
 
-            {/* Car Diagram */}
-            <div className="relative bg-slate-100 dark:bg-slate-700 rounded-2xl p-8 overflow-hidden">
+            {/* Diagram */}
+            <div className="relative bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-200 dark:border-slate-700 shadow-inner">
                 <svg
-                    viewBox="0 0 500 550"
-                    className="w-full max-w-lg mx-auto"
-                    style={{ maxHeight: '600px' }}
+                    viewBox="0 0 500 520"
+                    className="w-full max-w-lg mx-auto drop-shadow-xl"
+                    style={{ maxHeight: '500px' }}
                 >
-                    {/* Car Outline (Top-down view) */}
+                    <defs>
+                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
 
-                    {/* Front Bumper */}
-                    <path
-                        d="M 150 20 L 350 20 L 370 50 L 130 50 Z"
-                        fill={conditionColors[value['front_bumper'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['front_bumper'] || 'pristine']}
-                        strokeWidth="3"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('front_bumper')}
-                    />
+                    {bodyParts.map((part) => {
+                        const condition = value[part.id] || 'pristine';
+                        const config = conditionConfig[condition as keyof typeof conditionConfig];
+                        const isHovered = hoveredPart === part.id;
 
-                    {/* Hood */}
-                    <rect
-                        x="130"
-                        y="50"
-                        width="240"
-                        height="120"
-                        fill={conditionColors[value['hood'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['hood'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="10"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('hood')}
-                    />
+                        const commonProps = {
+                            fill: config.color,
+                            fillOpacity: condition === 'pristine' ? 0.3 : 0.6,
+                            stroke: config.color,
+                            strokeWidth: isHovered && !readOnly ? 4 : 2,
+                            className: `transition-all duration-300 ${!readOnly ? 'cursor-pointer' : ''}`,
+                            onClick: () => cycleCondition(part.id),
+                            onMouseEnter: () => setHoveredPart(part.id),
+                            onMouseLeave: () => setHoveredPart(null),
+                            filter: isHovered && !readOnly ? 'url(#glow)' : undefined
+                        };
 
-                    {/* Left Front Fender */}
-                    <rect
-                        x="40"
-                        y="60"
-                        width="90"
-                        height="100"
-                        fill={conditionColors[value['left_fender'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['left_fender'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="8"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('left_fender')}
-                    />
-
-                    {/* Right Front Fender */}
-                    <rect
-                        x="370"
-                        y="60"
-                        width="90"
-                        height="100"
-                        fill={conditionColors[value['right_fender'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['right_fender'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="8"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('right_fender')}
-                    />
-
-                    {/* Left Front Door */}
-                    <rect
-                        x="40"
-                        y="170"
-                        width="90"
-                        height="90"
-                        fill={conditionColors[value['left_front_door'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['left_front_door'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="5"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('left_front_door')}
-                    />
-
-                    {/* Right Front Door */}
-                    <rect
-                        x="370"
-                        y="170"
-                        width="90"
-                        height="90"
-                        fill={conditionColors[value['right_front_door'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['right_front_door'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="5"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('right_front_door')}
-                    />
-
-                    {/* Roof/Cabin */}
-                    <rect
-                        x="130"
-                        y="170"
-                        width="240"
-                        height="170"
-                        fill={conditionColors[value['roof'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['roof'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="10"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('roof')}
-                    />
-
-                    {/* Left Rear Door */}
-                    <rect
-                        x="40"
-                        y="270"
-                        width="90"
-                        height="90"
-                        fill={conditionColors[value['left_rear_door'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['left_rear_door'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="5"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('left_rear_door')}
-                    />
-
-                    {/* Right Rear Door */}
-                    <rect
-                        x="370"
-                        y="270"
-                        width="90"
-                        height="90"
-                        fill={conditionColors[value['right_rear_door'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['right_rear_door'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="5"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('right_rear_door')}
-                    />
-
-                    {/* Trunk */}
-                    <rect
-                        x="130"
-                        y="340"
-                        width="240"
-                        height="110"
-                        fill={conditionColors[value['trunk'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['trunk'] || 'pristine']}
-                        strokeWidth="3"
-                        rx="10"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('trunk')}
-                    />
-
-                    {/* Rear Bumper */}
-                    <path
-                        d="M 130 450 L 370 450 L 350 480 L 150 480 Z"
-                        fill={conditionColors[value['rear_bumper'] || 'pristine']}
-                        fillOpacity="0.3"
-                        stroke={conditionColors[value['rear_bumper'] || 'pristine']}
-                        strokeWidth="3"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => cycleCondition('rear_bumper')}
-                    />
-
-                    {/* Labels */}
-                    {bodyParts.map(part => {
-                        const Icon = conditionIcons[value[part.id] as keyof typeof conditionIcons || 'pristine'];
                         return (
                             <g key={part.id}>
+                                {part.type === 'rect' ? (
+                                    <rect
+                                        x={part.x - (part.w! / 2)} // Center the rect
+                                        y={part.y - (part.h! / 2)}
+                                        width={part.w}
+                                        height={part.h}
+                                        rx={part.rx}
+                                        {...commonProps}
+                                    />
+                                ) : (
+                                    <path
+                                        d={part.d}
+                                        {...commonProps}
+                                    />
+                                )}
+
+                                {/* Label Bubble */}
                                 <foreignObject
-                                    x={part.x - 30}
-                                    y={part.y - 10}
-                                    width="60"
-                                    height="20"
+                                    x={part.x - 40}
+                                    y={part.y - 12}
+                                    width="80"
+                                    height="24"
                                     className="pointer-events-none"
                                 >
-                                    <div className="flex items-center justify-center">
-                                        <div
-                                            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 shadow-lg"
-                                            style={{ color: conditionColors[value[part.id] || 'pristine'] }}
-                                        >
-                                            <Icon className="w-3 h-3" />
+                                    <div className={`flex justify-center transition-opacity duration-300 ${condition !== 'pristine' || isHovered ? 'opacity-100' : 'opacity-40'}`}>
+                                        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-600 text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                            {part.label}
                                         </div>
                                     </div>
                                 </foreignObject>
@@ -279,27 +137,34 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange 
                     })}
                 </svg>
 
-                {/* Instructions */}
-                <div className="mt-4 text-center">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                        اضغط على أي جزء من السيارة لتغيير حالته
-                    </p>
-                </div>
-            </div>
-
-            {/* Selected Part Info */}
-            {selectedPart && (
-                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-                    <div className="text-center">
-                        <p className="font-semibold text-slate-700 dark:text-slate-300">
-                            {bodyParts.find(p => p.id === selectedPart)?.label}:
-                            <span className="mr-2" style={{ color: conditionColors[value[selectedPart] || 'pristine'] }}>
-                                {conditionLabels[value[selectedPart] || 'pristine']}
-                            </span>
+                {!readOnly && (
+                    <div className="absolute bottom-4 left-0 right-0 text-center">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+                            <Info className="w-3.5 h-3.5" />
+                            اضغط على الجزء لتغيير حالته
                         </p>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+
+            {/* Selected Info */}
+            <AnimatePresence mode='wait'>
+                {hoveredPart && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="text-center"
+                    >
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white">
+                            {bodyParts.find(p => p.id === hoveredPart)?.label}:
+                            <span className={`text-${conditionConfig[value[hoveredPart] as keyof typeof conditionConfig || 'pristine'].color.replace('#', '')}-500`}>
+                                {conditionConfig[value[hoveredPart] as keyof typeof conditionConfig || 'pristine'].label}
+                            </span>
+                        </span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
