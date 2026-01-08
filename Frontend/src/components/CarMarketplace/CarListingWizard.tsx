@@ -81,6 +81,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         custom_rental_terms: '',
         phone_visible: true
     });
+    const [stepErrors, setStepErrors] = useState<{ [key: number]: string[] }>({});
 
     // Dynamic step count based on listing type
     const totalSteps = formData.listing_type === 'rent' ? 7 : 6;
@@ -193,14 +194,77 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
     const updateField = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        // Clear errors for current step when user makes changes
+        setStepErrors(prev => ({ ...prev, [currentStep]: [] }));
+    };
+
+    // Validate current step
+    const validateCurrentStep = (): boolean => {
+        const errors: string[] = [];
+
+        switch (currentStep) {
+            case 1: // Contact & Location
+                if (!formData.city.trim()) errors.push('المدينة مطلوبة');
+                if (!formData.contact_phone.trim()) errors.push('رقم الهاتف مطلوب');
+                break;
+
+            case 2: // Category, Brand, Model
+                if (!formData.car_category_id) errors.push('فئة السيارة مطلوبة');
+                if (!formData.brand_id) errors.push('الماركة مطلوبة');
+                if (!formData.model.trim()) errors.push('الموديل مطلوب');
+                break;
+
+            case 3: // Specs
+                if (!formData.year || formData.year < 1990) errors.push('سنة الصنع غير صحيحة');
+                if (!formData.mileage || Number(formData.mileage) < 0) errors.push('الكيلومترات غير صحيحة');
+                break;
+
+            case 4: // Condition
+                // All fields in Step 4 are optional
+                break;
+
+            case 5: // Media & Details
+                if (!formData.title.trim()) errors.push('عنوان الإعلان مطلوب');
+                if (formData.photos.length === 0 && (!editingListing || !editingListing.photos?.length)) {
+                    errors.push('يجب إضافة صورة واحدة على الأقل');
+                }
+                break;
+
+            case 6: // Rental Conditions (if rent) or Review
+                if (formData.listing_type === 'rent') {
+                    // Rental step - at least one rate required
+                    if (!formData.daily_rate && !formData.weekly_rate && !formData.monthly_rate) {
+                        errors.push('يجب إضافة سعر واحد على الأقل (يومي، أسبوعي، أو شهري)');
+                    }
+                } else {
+                    // Review step for sale - price required
+                    if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
+                }
+                break;
+
+            case 7: // Review (for rent only)
+                if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
+                break;
+        }
+
+        setStepErrors(prev => ({ ...prev, [currentStep]: errors }));
+        return errors.length === 0;
     };
 
     const nextStep = () => {
-        if (currentStep < totalSteps) setCurrentStep(prev => prev + 1);
+        if (validateCurrentStep()) {
+            if (currentStep < totalSteps) setCurrentStep(prev => prev + 1);
+        } else {
+            showToast('الرجاء ملء جميع الحقول المطلوبة', 'error');
+        }
     };
 
     const prevStep = () => {
-        if (currentStep > 1) setCurrentStep(prev => prev - 1);
+        if (currentStep > 1) {
+            setCurrentStep(prev => prev - 1);
+            // Clear errors when going back
+            setStepErrors(prev => ({ ...prev, [currentStep]: [] }));
+        }
     };
 
     // Frontend validation
@@ -438,6 +502,37 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                         )}
                         {((currentStep === 6 && formData.listing_type === 'sale') || (currentStep === 7 && formData.listing_type === 'rent')) && (
                             <Step6Review formData={formData} brands={brands} categories={categories} updateField={updateField} />
+                        )}
+                    </AnimatePresence>
+
+                    {/* Error Messages */}
+                    <AnimatePresence>
+                        {stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="mt-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-white text-xs font-bold">!</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-bold text-red-800 dark:text-red-300 mb-2">
+                                            يرجى إكمال الحقول المطلوبة:
+                                        </h4>
+                                        <ul className="space-y-1">
+                                            {stepErrors[currentStep].map((error, idx) => (
+                                                <li key={idx} className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+                                                    <span className="text-red-500">•</span>
+                                                    {error}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
