@@ -79,9 +79,9 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
 
                     {/* RAMOUSE.COM Watermark */}
-                    <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
-                        <span className="text-white/80 font-black text-lg sm:text-2xl tracking-widest drop-shadow-md select-none font-sans"
-                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                    <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none overflow-hidden">
+                        <span className="text-white/20 font-black text-4xl sm:text-6xl md:text-8xl tracking-widest -rotate-45 select-none font-sans whitespace-nowrap"
+                            style={{ textShadow: '0 0 10px rgba(255,255,255,0.1)' }}>
                             RAMOUSE.COM
                         </span>
                     </div>
@@ -277,8 +277,9 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                                 />
 
                                 {/* Modal Watermark */}
-                                <div className="absolute bottom-6 left-6 z-50 pointer-events-none">
-                                    <span className="text-white/60 font-black text-3xl tracking-widest drop-shadow-lg select-none font-sans backdrop-blur-sm px-2 rounded">
+                                <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none overflow-hidden">
+                                    <span className="text-white/20 font-black text-5xl sm:text-8xl md:text-9xl tracking-widest -rotate-45 select-none font-sans whitespace-nowrap"
+                                        style={{ textShadow: '0 0 10px rgba(255,255,255,0.1)' }}>
                                         RAMOUSE.COM
                                     </span>
                                 </div>
