@@ -191,6 +191,9 @@ class CarListingController extends Controller
             'warranty' => 'nullable|string',
             'features' => 'nullable|array',
             'description' => 'nullable|string',
+            'city' => 'required|string|max:50',
+            'address' => 'nullable|string|max:500',
+            'country_id' => 'nullable|exists:countries,id',
             'photos' => 'required|array|min:1|max:20',
             'photos.*' => 'string', // URLs
             'video_url' => 'nullable|url',

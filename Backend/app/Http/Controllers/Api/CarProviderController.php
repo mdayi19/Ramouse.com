@@ -35,6 +35,30 @@ class CarProviderController extends Controller
     }
 
     /**
+     * Get authenticated provider's phone numbers
+     */
+    public function getPhones(Request $request)
+    {
+        $user = auth('sanctum')->user();
+
+        $provider = CarProvider::with('phones')
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$provider) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider profile not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'phones' => $provider->phones
+        ]);
+    }
+
+    /**
      * Update provider profile
      */
     public function updateProfile(Request $request)

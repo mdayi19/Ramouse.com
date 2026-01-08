@@ -146,6 +146,36 @@ export class CarProviderService {
         }
     }
 
+    static async getCountries() {
+        try {
+            const response = await api.get('/vehicle/data');
+            const brands = response.data.brands || [];
+
+            // Extract unique countries from brands
+            const countries = brands
+                .map((brand: any) => ({
+                    id: brand.country,
+                    name: brand.country_ar || brand.country,
+                    code: brand.country
+                }))
+                .filter((country: any, index: number, self: any[]) =>
+                    index === self.findIndex((c) => c.id === country.id)
+                )
+                .filter((country: any) => country.id); // Filter out undefined countries
+
+            return {
+                success: true,
+                countries
+            };
+        } catch (error) {
+            console.error('Failed to fetch countries:', error);
+            return {
+                success: true,
+                countries: []
+            };
+        }
+    }
+
     static async trackEvent(listingId: number, eventType: string, metadata: any = {}) {
         await api.post('/analytics/track', {
             car_listing_id: listingId,
@@ -183,6 +213,16 @@ export class CarProviderService {
     static async getProviderAnalytics(days: number = 30) {
         const response = await api.get('/car-provider/analytics', { params: { days } });
         return response.data;
+    }
+
+    static async getProfile() {
+        const response = await api.get('/car-provider/profile');
+        return response.data.provider;
+    }
+
+    static async getPhones() {
+        const response = await api.get('/car-provider/phones');
+        return response.data.phones || [];
     }
 
     static async getMyListings() {

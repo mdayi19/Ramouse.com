@@ -13,6 +13,9 @@ import { PhotoUploader } from './PhotoUploader';
 import { NumberSelector } from './NumberSelector';
 import { ColorPicker } from './ColorPicker';
 import { CarBodyDiagram } from './CarBodyDiagram';
+import Step1ContactLocation from './CarListingWizard/Step1ContactLocation';
+import Step2CountryBrandModel from './CarListingWizard/Step2CountryBrandModel';
+import Step6RentalConditions from './CarListingWizard/Step6RentalConditions';
 
 interface CarListingWizardProps {
     onComplete: () => void;
@@ -40,6 +43,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         rent_period: 'daily' as 'daily' | 'weekly' | 'monthly',
         category_id: '',
         brand_id: '',
+        country_id: '',
         model: '',
         year: new Date().getFullYear(),
         mileage: '',
@@ -50,7 +54,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         doors: 4,
         seats: 5,
         horsepower: '',
-        engine_size: '',
+        engine_size: '2.0',
         condition: 'used' as 'new' | 'used' | 'certified_pre_owned',
         body_condition: '{}',
         license_plate: '',
@@ -62,20 +66,36 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         video_url: '',
         description: '',
         city: '',
+        address: '',
+        contact_phone: '',
+        contact_whatsapp: '',
         negotiable: true,
         daily_rate: '',
         weekly_rate: '',
         monthly_rate: '',
-        phone_visible: true,
-        whatsapp: ''
+        rental_terms_checkboxes: [] as string[],
+        km_limit: '',
+        custom_rental_terms: '',
+        phone_visible: true
     });
 
-    const totalSteps = 6;
-    const stepTitles = [
-        'المعلومات الأساسية',
-        'الفئة والموديل',
-        'المواصفات',
-        'الحالة والميزات',
+    // Dynamic step count based on listing type
+    const totalSteps = formData.listing_type === 'rent' ? 7 : 6;
+
+    // Dynamic step titles based on listing type
+    const stepTitles = formData.listing_type === 'rent' ? [
+        'معلومات الاتصال',
+        'المنشأ والماركة',
+        'المواصفات الفنية',
+        'الحالة والتاريخ',
+        'الصور والفيديو',
+        'شروط الإيجار',
+        'المراجعة والنشر'
+    ] : [
+        'معلومات الاتصال',
+        'المنشأ والماركة',
+        'المواصفات الفنية',
+        'الحالة والتاريخ',
         'الصور والفيديو',
         'المراجعة والنشر'
     ];
@@ -97,6 +117,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 rent_period: editingListing.rent_period || 'daily',
                 category_id: editingListing.car_listing_category_id?.toString() || '',
                 brand_id: editingListing.brand_id?.toString() || '',
+                country_id: editingListing.country_id || '',
                 model: editingListing.model || '',
                 year: editingListing.year || new Date().getFullYear(),
                 mileage: editingListing.mileage?.toString() || '',
@@ -107,7 +128,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 doors: editingListing.doors_count || 4,
                 seats: editingListing.seats_count || 5,
                 horsepower: editingListing.horsepower?.toString() || '',
-                engine_size: editingListing.engine_size || '',
+                engine_size: editingListing.engine_size || '2.0',
                 condition: editingListing.condition || 'used',
                 body_condition: editingListing.body_condition ? JSON.stringify(editingListing.body_condition) : '{}',
                 license_plate: editingListing.license_plate || '',
@@ -119,12 +140,17 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 video_url: editingListing.video_url || '',
                 description: editingListing.description || '',
                 city: editingListing.city || '',
+                address: editingListing.address || '',
+                contact_phone: editingListing.contact_phone || '',
+                contact_whatsapp: editingListing.contact_whatsapp || '',
                 negotiable: editingListing.is_negotiable ?? true,
                 daily_rate: editingListing.rental_terms?.daily_rate?.toString() || '',
                 weekly_rate: editingListing.rental_terms?.weekly_rate?.toString() || '',
                 monthly_rate: editingListing.rental_terms?.monthly_rate?.toString() || '',
-                phone_visible: !!editingListing.contact_phone,
-                whatsapp: editingListing.contact_whatsapp || ''
+                rental_terms_checkboxes: editingListing.rental_terms?.terms || [],
+                km_limit: editingListing.rental_terms?.km_limit?.toString() || '',
+                custom_rental_terms: editingListing.rental_terms?.custom_terms || '',
+                phone_visible: !!editingListing.contact_phone
             });
         }
     }, [editingListing]);
@@ -229,6 +255,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 mileage: Number(formData.mileage),
                 car_listing_category_id: formData.category_id ? Number(formData.category_id) : null,
                 brand_id: formData.brand_id || null, // Keep as string - Brand model uses string ID
+                country_id: formData.country_id || null,
                 doors_count: Number(formData.doors),
                 seats_count: Number(formData.seats),
                 exterior_color: formData.color,
@@ -239,14 +266,19 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 chassis_number: formData.vin_number || null,
                 previous_owners: formData.previous_owners || 0,
                 warranty: formData.warranty || null,
+                city: formData.city, // Required
+                address: formData.address || null,
                 is_negotiable: formData.negotiable,
                 rental_terms: formData.listing_type === 'rent' ? {
                     daily_rate: formData.daily_rate ? Number(formData.daily_rate) : null,
                     weekly_rate: formData.weekly_rate ? Number(formData.weekly_rate) : null,
-                    monthly_rate: formData.monthly_rate ? Number(formData.monthly_rate) : null
+                    monthly_rate: formData.monthly_rate ? Number(formData.monthly_rate) : null,
+                    terms: formData.rental_terms_checkboxes || [],
+                    km_limit: formData.km_limit ? Number(formData.km_limit) : null,
+                    custom_terms: formData.custom_rental_terms || null
                 } : null,
-                contact_phone: formData.phone_visible ? userPhone : null,
-                contact_whatsapp: formData.whatsapp || null,
+                contact_phone: formData.contact_phone || null,
+                contact_whatsapp: formData.contact_whatsapp || null,
                 // Convert body_condition from JSON string to object/array
                 body_condition: formData.body_condition ? JSON.parse(formData.body_condition) : {},
                 // Remove frontend-only fields
@@ -259,7 +291,9 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 daily_rate: undefined,
                 weekly_rate: undefined,
                 monthly_rate: undefined,
-                whatsapp: undefined,
+                rental_terms_checkboxes: undefined,
+                km_limit: undefined,
+                custom_rental_terms: undefined,
                 vin_number: undefined
             };
 
@@ -352,15 +386,18 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 <div className="flex-1 overflow-y-auto p-6">
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && (
-                            <Step1BasicInfo formData={formData} updateField={updateField} />
+                            <Step1ContactLocation
+                                formData={formData}
+                                updateField={updateField}
+                                listingType={formData.listing_type}
+                            />
                         )}
                         {currentStep === 2 && (
-                            <Step2CategoryBrand
+                            <Step2CountryBrandModel
                                 formData={formData}
                                 updateField={updateField}
                                 categories={categories}
                                 brands={brands}
-                                loading={loadingData}
                             />
                         )}
                         {currentStep === 3 && (
@@ -375,7 +412,10 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                         {currentStep === 5 && (
                             <Step5Media formData={formData} updateField={updateField} />
                         )}
-                        {currentStep === 6 && (
+                        {currentStep === 6 && formData.listing_type === 'rent' && (
+                            <Step6RentalConditions formData={formData} updateField={updateField} />
+                        )}
+                        {((currentStep === 6 && formData.listing_type === 'sale') || (currentStep === 7 && formData.listing_type === 'rent')) && (
                             <Step6Review formData={formData} brands={brands} categories={categories} updateField={updateField} />
                         )}
                     </AnimatePresence>
@@ -690,13 +730,29 @@ const Step3Specs: React.FC<any> = ({ formData, updateField }) => (
                     <Settings className="w-4 h-4" />
                     حجم المحرك
                 </label>
-                <input
-                    type="text"
-                    value={formData.engine_size}
+                <select
+                    value={formData.engine_size || '2.0'}
                     onChange={(e) => updateField('engine_size', e.target.value)}
-                    placeholder="2.0L"
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                />
+                >
+                    <option value="0.8">0.8L</option>
+                    <option value="1.0">1.0L</option>
+                    <option value="1.2">1.2L</option>
+                    <option value="1.4">1.4L</option>
+                    <option value="1.6">1.6L</option>
+                    <option value="1.8">1.8L</option>
+                    <option value="2.0">2.0L ⭐</option>
+                    <option value="2.2">2.2L</option>
+                    <option value="2.4">2.4L</option>
+                    <option value="2.5">2.5L</option>
+                    <option value="2.7">2.7L</option>
+                    <option value="3.0">3.0L</option>
+                    <option value="3.5">3.5L</option>
+                    <option value="4.0">4.0L</option>
+                    <option value="5.0">5.0L</option>
+                    <option value="6.0">6.0L</option>
+                    <option value="8.0">8.0L</option>
+                </select>
             </div>
         </div>
     </motion.div>

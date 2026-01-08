@@ -515,6 +515,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Car Provider Profile Management
     Route::prefix('car-provider')->group(function () {
         Route::get('/profile', [CarProviderController::class, 'getProfile']);
+        Route::get('/phones', [CarProviderController::class, 'getPhones']);
         Route::put('/profile', [CarProviderController::class, 'updateProfile']);
         Route::get('/stats', [CarProviderController::class, 'getStats']);
         Route::get('/analytics', [CarProviderController::class, 'getAnalytics']);
