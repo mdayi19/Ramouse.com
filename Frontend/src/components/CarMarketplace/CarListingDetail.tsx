@@ -431,24 +431,24 @@ const CarListingDetail: React.FC = () => {
                         </div>
 
                         {/* Additional Information */}
-                        {((listing as any).car_category_id || (listing as any).address || (listing as any).license_plate || (listing as any).chassis_number || (listing as any).previous_owners || listing.body_condition) && (
+                        {(listing.car_category_id || listing.address || listing.license_plate || listing.chassis_number || listing.previous_owners || listing.body_condition) && (
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.ui.additional_info}</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                    {(listing as any).car_category_id && (
-                                        <SpecItem icon={Globe} label={t.specs.car_category} value={(listing as any).car_category_id} />
+                                    {listing.car_category_id && (
+                                        <SpecItem icon={Globe} label={t.specs.car_category} value={listing.car_category_id} />
                                     )}
-                                    {(listing as any).address && (
-                                        <SpecItem icon={MapPin} label={t.specs.address} value={(listing as any).address} />
+                                    {listing.address && (
+                                        <SpecItem icon={MapPin} label={t.specs.address} value={listing.address} />
                                     )}
-                                    {(listing as any).license_plate && (
-                                        <SpecItem icon={Hash} label={t.specs.license_plate} value={(listing as any).license_plate} />
+                                    {listing.license_plate && (
+                                        <SpecItem icon={Hash} label={t.specs.license_plate} value={listing.license_plate} />
                                     )}
-                                    {(listing as any).chassis_number && (
-                                        <SpecItem icon={Hash} label={t.specs.vin_number} value={(listing as any).chassis_number} />
+                                    {listing.chassis_number && (
+                                        <SpecItem icon={Hash} label={t.specs.vin_number} value={listing.chassis_number} />
                                     )}
-                                    {(listing as any).previous_owners !== undefined && (listing as any).previous_owners !== null && (
-                                        <SpecItem icon={User} label={t.specs.previous_owners} value={`${(listing as any).previous_owners} ${t.ui.owner}`} />
+                                    {listing.previous_owners !== undefined && listing.previous_owners !== null && (
+                                        <SpecItem icon={User} label={t.specs.previous_owners} value={`${listing.previous_owners} ${t.ui.owner}`} />
                                     )}
                                     <SpecItem icon={CheckCircle} label={t.specs.body_condition} value={listing.body_condition} />
                                     <SpecItem icon={Star} label={t.specs.warranty} value={listing.warranty} />
@@ -457,18 +457,18 @@ const CarListingDetail: React.FC = () => {
                         )}
 
                         {/* Rental Terms for Rent Listings */}
-                        {listing.listing_type === 'rent' && (listing as any).rental_terms && (
+                        {listing.listing_type === 'rent' && listing.rental_terms && (
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.rental_terms}</h2>
                                 <div className="space-y-2">
-                                    {Array.isArray((listing as any).rental_terms) && (listing as any).rental_terms.map((term: string, idx: number) => (
+                                    {Array.isArray(listing.rental_terms) && listing.rental_terms.map((term: string, idx: number) => (
                                         <div key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                                             <CheckCircle className="w-4 h-4 text-blue-500" />
                                             <span>{term}</span>
                                         </div>
                                     ))}
-                                    {typeof (listing as any).rental_terms === 'object' && !Array.isArray((listing as any).rental_terms) && (
-                                        <p className="text-gray-700 dark:text-gray-300">{JSON.stringify((listing as any).rental_terms)}</p>
+                                    {typeof listing.rental_terms === 'object' && !Array.isArray(listing.rental_terms) && (
+                                        <p className="text-gray-700 dark:text-gray-300">{JSON.stringify(listing.rental_terms)}</p>
                                     )}
                                 </div>
                             </div>

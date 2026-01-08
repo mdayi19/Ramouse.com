@@ -7,6 +7,8 @@ export interface CarListing {
     title: string;
     description: string;
     location?: string;
+    address?: string;
+    city?: string;
     price: number;
     listing_type: 'sale' | 'rent';
     seller_type: 'individual' | 'provider';
@@ -19,6 +21,7 @@ export interface CarListing {
     images?: string[];
     is_sponsored: boolean;
     is_featured: boolean;
+    is_negotiable?: boolean;
     views_count: number;
     owner: any;
     provider?: any;
@@ -48,6 +51,17 @@ export interface CarListing {
     warranty?: string;
     contact_phone?: string;
     contact_whatsapp?: string;
+    // Rental-specific fields
+    daily_rate?: number;
+    weekly_rate?: number;
+    monthly_rate?: number;
+    rental_terms?: string[] | Record<string, boolean>;
+    custom_rental_terms?: string;
+    // Additional fields
+    car_category_id?: string;
+    license_plate?: string;
+    chassis_number?: string;
+    previous_owners?: number;
 }
 
 export interface MarketplaceFilters {
