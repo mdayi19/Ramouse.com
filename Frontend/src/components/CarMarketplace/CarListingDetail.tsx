@@ -180,6 +180,10 @@ const CarListingDetail: React.FC = () => {
         // Check authentication first
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
+            // Redirect to login with return URL
+            setTimeout(() => {
+                navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+            }, 1000);
             return;
         }
 
