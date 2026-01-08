@@ -73,4 +73,39 @@ class SocialShareController extends Controller
             'listing'
         ));
     }
+
+    /**
+     * Generate meta tags for car provider profiles
+     */
+    public function getProviderMeta($id)
+    {
+        $provider = \App\Models\CarProvider::with(['user', 'phones'])->findOrFail($id);
+
+        $title = $provider->company_name ?? $provider->user->name ?? 'مزود خدمة سيارات';
+        $description = $provider->bio ?? 'مزود معتمد لخدمات السيارات على منصة رماوس';
+        $image = $provider->profile_photo ?? asset('images/default-provider.jpg');
+        $url = url("/car-providers/{$id}");
+        $price = null;
+
+        return response()->view('social-meta', compact('title', 'description', 'image', 'url', 'price'))
+            ->with('listing', null);
+    }
+
+    /**
+     * Generate meta tags for store products
+     */
+    public function getProductMeta($id)
+    {
+        $product = \App\Models\Product::findOrFail($id);
+
+        $title = $product->name_ar ?? $product->name;
+        $description = substr($product->description_ar ?? $product->description ?? '', 0, 160);
+        $image = $product->image ?? asset('images/default-product.jpg');
+        $url = url("/store/products/{$id}");
+        $price = number_format($product->price, 0) . ' ل.س';
+
+        return response()->view('social-meta', compact('title', 'description', 'image', 'url', 'price'))
+            ->with('listing', null);
+    }
 }
+

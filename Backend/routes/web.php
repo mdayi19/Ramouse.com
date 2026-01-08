@@ -59,3 +59,13 @@ Route::get('/test-notifications/{userId}', function ($userId) {
         ])
     ]);
 });
+
+// ===== SOCIAL MEDIA PREVIEW ROUTES =====
+// Serve HTML with Open Graph meta tags for social media crawlers
+use App\Http\Controllers\Api\SocialShareController;
+
+Route::get('/car-listings/{slug}', [SocialShareController::class, 'getCarListingMeta']);
+Route::get('/rent-car/{slug}', [SocialShareController::class, 'getRentCarListingMeta']);
+Route::get('/car-providers/{id}', [SocialShareController::class, 'getProviderMeta']);
+Route::get('/store/products/{id}', [SocialShareController::class, 'getProductMeta']);
+
