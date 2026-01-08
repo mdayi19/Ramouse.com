@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Car, Tag, ChevronRight } from 'lucide-react';
-import { IconCard } from '../IconCard';
 import { Category } from '../../../types';
 
 interface Step2CategoryBrandModelProps {
@@ -9,18 +8,23 @@ interface Step2CategoryBrandModelProps {
     updateField: (field: string, value: any) => void;
     carCategories: Category[];
     brands: any[];
+    brandModels: { [key: string]: string[] };
 }
 
 const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
     formData,
     updateField,
     carCategories,
-    brands
+    brands,
+    brandModels
 }) => {
     const [filteredBrands, setFilteredBrands] = useState<any[]>([]);
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
     const [subStep, setSubStep] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+    const [showManualInput, setShowManualInput] = useState(false);
     const brandsSectionRef = useRef<HTMLDivElement>(null);
+    const modelsSectionRef = useRef<HTMLDivElement>(null);
     const modelInputRef = useRef<HTMLInputElement>(null);
 
     // Find selected category when component mounts or formData changes
@@ -37,7 +41,6 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
     // Filter brands by selected category
     useEffect(() => {
         if (selectedCategory && brands.length > 0) {
-            // Filter brands that are in the category's brands list
             const categoryBrandNames = selectedCategory.brands || [];
             const filtered = brands.filter((brand: any) =>
                 categoryBrandNames.includes(brand.name) ||
@@ -46,7 +49,6 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
             );
             setFilteredBrands(filtered);
 
-            // Auto-advance to sub-step 2 when category selected
             if (subStep === 1) {
                 setSubStep(2);
                 setTimeout(() => {
@@ -58,35 +60,54 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
         }
     }, [selectedCategory, brands]);
 
-    // Auto-advance to sub-step 3 when brand selected
+    // Load available models when brand is selected
     useEffect(() => {
-        if (formData.brand_id && subStep === 2) {
-            setSubStep(3);
-            setTimeout(() => {
-                modelInputRef.current?.focus();
-            }, 100);
+        if (formData.brand_id && brands.length > 0) {
+            const selectedBrand = brands.find((b: any) => b.id === formData.brand_id);
+            if (selectedBrand) {
+                // Try to find models by brand name or name_ar
+                const models = brandModels[selectedBrand.name] ||
+                    brandModels[selectedBrand.name_ar] ||
+                    [];
+                setAvailableModels(models);
+            }
+
+            if (subStep === 2) {
+                setSubStep(3);
+                setTimeout(() => {
+                    modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
         }
-    }, [formData.brand_id]);
+    }, [formData.brand_id, brands, brandModels]);
 
     const handleCategorySelect = (category: Category) => {
         setSelectedCategory(category);
         updateField('car_category_id', category.id);
-        // Reset brand and model when category changes
         updateField('brand_id', '');
         updateField('model', '');
-        updateField('category_id', ''); // Clear listing category
+        updateField('category_id', '');
+        setShowManualInput(false);
         setSubStep(2);
     };
 
     const handleBrandSelect = (brandId: string) => {
         updateField('brand_id', brandId);
-        // Reset model when brand changes
         updateField('model', '');
+        setShowManualInput(false);
         setSubStep(3);
     };
 
-    const handleModelChange = (model: string) => {
+    const handleModelSelect = (model: string) => {
         updateField('model', model);
+        setShowManualInput(false);
+    };
+
+    const handleManualInput = () => {
+        setShowManualInput(true);
+        setTimeout(() => {
+            modelInputRef.current?.focus();
+        }, 100);
     };
 
     return (
@@ -148,10 +169,10 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
                                     onClick={() => handleCategorySelect(category)}
                                     disabled={!!(selectedCategory && selectedCategory.id !== category.id)}
                                     className={`p-4 rounded-xl font-bold text-sm transition-all ${selectedCategory?.id === category.id
-                                        ? 'bg-primary text-white shadow-lg scale-105'
-                                        : selectedCategory
-                                            ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                                            : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                            ? 'bg-primary text-white shadow-lg scale-105'
+                                            : selectedCategory
+                                                ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
+                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
                                         }`}
                                 >
                                     <div className="text-2xl mb-1">{category.flag}</div>
@@ -205,12 +226,12 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
                                         key={brand.id}
                                         type="button"
                                         onClick={() => handleBrandSelect(brand.id)}
-                                        disabled={formData.brand_id && formData.brand_id !== brand.id}
+                                        disabled={!!(formData.brand_id && formData.brand_id !== brand.id)}
                                         className={`p-4 rounded-xl font-bold text-sm transition-all ${formData.brand_id === brand.id
-                                            ? 'bg-primary text-white shadow-lg scale-105'
-                                            : formData.brand_id
-                                                ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                                ? 'bg-primary text-white shadow-lg scale-105'
+                                                : formData.brand_id
+                                                    ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'
+                                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
                                             }`}
                                     >
                                         {brand.logo ? (
@@ -227,35 +248,92 @@ const Step2CategoryBrandModel: React.FC<Step2CategoryBrandModelProps> = ({
                 )}
             </AnimatePresence>
 
-            {/* Sub-step 3: Model Input */}
+            {/* Sub-step 3: Model Selection */}
             <AnimatePresence mode="wait">
                 {subStep >= 3 && formData.brand_id && (
                     <motion.div
                         key="model"
+                        ref={modelsSectionRef}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         className="bg-white dark:bg-slate-800 rounded-3xl p-5 border-2 border-slate-200 dark:border-slate-700"
                     >
-                        <div className="flex items-center gap-3 mb-3">
-                            <Car className="w-5 h-5 text-primary" />
+                        <div className="flex items-center gap-3 mb-4">
+                            <Tag className="w-5 h-5 text-primary" />
                             <h4 className="text-lg font-bold text-slate-800 dark:text-white">
                                 الموديل <span className="text-red-500">*</span>
                             </h4>
+                            {formData.model && !showManualInput && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        updateField('model', '');
+                                        setShowManualInput(false);
+                                    }}
+                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline mr-auto"
+                                >
+                                    تغيير
+                                </button>
+                            )}
                         </div>
 
-                        <input
-                            ref={modelInputRef}
-                            type="text"
-                            value={formData.model || ''}
-                            onChange={(e) => handleModelChange(e.target.value)}
-                            placeholder="مثال: كامري، كورولا، سوناتا..."
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-2 rounded-2xl text-lg focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary border-slate-200 dark:border-slate-600"
-                            required
-                        />
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                            💡 اكتب اسم الموديل يدوياً
-                        </p>
+                        {/* Model Grid */}
+                        {availableModels.length > 0 && !showManualInput && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
+                                {availableModels.map((model: string) => (
+                                    <button
+                                        key={model}
+                                        type="button"
+                                        onClick={() => handleModelSelect(model)}
+                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${formData.model === model
+                                                ? 'bg-primary text-white shadow-lg scale-105'
+                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-primary/10'
+                                            }`}
+                                    >
+                                        {model}
+                                    </button>
+                                ))}
+
+                                {/* "Not Listed" button */}
+                                <button
+                                    type="button"
+                                    onClick={handleManualInput}
+                                    className="p-3 rounded-xl font-bold text-sm transition-all bg-amber-50 dark:bg-amber-900/20 border-2 border-dashed border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:border-amber-500"
+                                >
+                                    <span className="text-2xl block mb-1">✏️</span>
+                                    غير موجود
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Manual Input (always show if no models OR if user clicked "not listed") */}
+                        {(availableModels.length === 0 || showManualInput) && (
+                            <div className="space-y-2">
+                                {availableModels.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowManualInput(false)}
+                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2"
+                                    >
+                                        ← العودة للخيارات
+                                    </button>
+                                )}
+
+                                <input
+                                    ref={modelInputRef}
+                                    type="text"
+                                    value={formData.model || ''}
+                                    onChange={(e) => updateField('model', e.target.value)}
+                                    placeholder="مثال: كامري، كورولا، سوناتا..."
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-2 rounded-2xl text-lg focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary border-slate-200 dark:border-slate-600"
+                                    required
+                                />
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    💡 اكتب اسم الموديل يدوياً
+                                </p>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

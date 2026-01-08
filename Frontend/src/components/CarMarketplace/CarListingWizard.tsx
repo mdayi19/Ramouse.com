@@ -36,6 +36,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     const [categories, setCategories] = useState<any[]>([]); // Car listing categories (sedan, SUV, etc.)
     const [carCategories, setCarCategories] = useState<any[]>([]); // Car origin categories (German, Japanese, etc.)
     const [brands, setBrands] = useState<any[]>([]);
+    const [brandModels, setBrandModels] = useState<{ [key: string]: string[] }>({});
     const [loadingData, setLoadingData] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
@@ -172,6 +173,15 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
             // Load car categories from vehicle data
             if (vehicleDataRes?.data?.categories) {
                 setCarCategories(vehicleDataRes.data.categories);
+            }
+
+            // Load brand models from vehicle data
+            if (vehicleDataRes?.data?.models) {
+                const transformedModels: { [key: string]: string[] } = {};
+                Object.keys(vehicleDataRes.data.models).forEach(brand => {
+                    transformedModels[brand] = vehicleDataRes.data.models[brand].map((m: any) => m.name || m);
+                });
+                setBrandModels(transformedModels);
             }
         } catch (error) {
             console.error('Failed to load categories/brands:', error);
@@ -408,6 +418,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                                 updateField={updateField}
                                 carCategories={carCategories}
                                 brands={brands}
+                                brandModels={brandModels}
                             />
                         )}
                         {currentStep === 3 && (
