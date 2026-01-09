@@ -215,6 +215,42 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                                         filter: isHovered ? 'drop-shadow(0 0 6px rgba(0,0,0,0.2))' : 'none'
                                     }}
                                 />
+                                {/* Part label text */}
+                                <text
+                                    x={
+                                        part.id === 'hood' ? 200 :
+                                            part.id === 'roof' ? 200 :
+                                                part.id === 'trunk' ? 200 :
+                                                    part.id === 'front_bumper' ? 200 :
+                                                        part.id === 'rear_bumper' ? 200 :
+                                                            part.id.startsWith('left') ? 52 :
+                                                                part.id.startsWith('right') ? 348 :
+                                                                    200
+                                    }
+                                    y={
+                                        part.id === 'hood' ? 95 :
+                                            part.id === 'roof' ? 237 :
+                                                part.id === 'trunk' ? 365 :
+                                                    part.id === 'front_bumper' ? 38 :
+                                                        part.id === 'rear_bumper' ? 462 :
+                                                            part.id === 'left_front_fender' ? 108 :
+                                                                part.id === 'left_front_door' ? 195 :
+                                                                    part.id === 'left_rear_door' ? 295 :
+                                                                        part.id === 'left_rear_fender' ? 378 :
+                                                                            part.id === 'right_front_fender' ? 108 :
+                                                                                part.id === 'right_front_door' ? 195 :
+                                                                                    part.id === 'right_rear_door' ? 295 :
+                                                                                        part.id === 'right_rear_fender' ? 378 :
+                                                                                            100
+                                    }
+                                    textAnchor="middle"
+                                    fontSize="9"
+                                    fontWeight="600"
+                                    className="fill-slate-700 dark:fill-slate-100 pointer-events-none select-none"
+                                    opacity={isPristine ? 0.6 : 0.9}
+                                >
+                                    {part.label}
+                                </text>
                             </g>
                         );
                     })}
