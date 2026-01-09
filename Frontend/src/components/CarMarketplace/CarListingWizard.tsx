@@ -295,12 +295,18 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     const validateForm = (): { valid: boolean; errors: string[] } => {
         const errors: string[] = [];
 
-        if (!formData.title.trim()) errors.push('عنوان الإعلان مطلوب');
-        if (!formData.brand_id) errors.push('الماركة مطلوبة');
         if (!formData.model.trim()) errors.push('الموديل مطلوب');
         if (!formData.year || formData.year < 1990) errors.push('سنة الصنع غير صحيحة');
         if (!formData.mileage || Number(formData.mileage) < 0) errors.push('الكيلومترات غير صحيحة');
-        if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
+
+        // Validate price only for sale, for rent check rates
+        if (formData.listing_type === 'sale') {
+            if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
+        } else {
+            if (!formData.daily_rate && !formData.weekly_rate && !formData.monthly_rate) {
+                errors.push('يجب إضافة سعر واحد على الأقل (يومي، أسبوعي، أو شهري)');
+            }
+        }
         if (!formData.city.trim()) errors.push('المدينة مطلوبة');
         if (formData.photos.length === 0 && (!editingListing || !editingListing.photos?.length)) {
             errors.push('يجب إضافة صورة واحدة على الأقل');
@@ -357,7 +363,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
             const payload = {
                 ...formData,
                 photos: finalPhotoUrls,
-                price: Number(formData.price),
+                price: formData.listing_type === 'rent' ? 0 : Number(formData.price),
                 year: Number(formData.year),
                 mileage: Number(formData.mileage),
                 car_listing_category_id: formData.category_id ? Number(formData.category_id) : null,
