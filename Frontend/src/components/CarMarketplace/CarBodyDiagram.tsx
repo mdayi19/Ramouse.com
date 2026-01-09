@@ -13,11 +13,11 @@ interface CarBodyDiagramProps {
 }
 
 const conditionConfig = {
-    pristine: { label: 'أوريجنال', color: '#e2e8f0', textColor: '#64748b' },
-    scratched: { label: 'خدوش', color: '#fbbf24', textColor: '#92400e' },
-    dented: { label: 'صدمة', color: '#f87171', textColor: '#991b1b' },
-    painted: { label: 'مدهون', color: '#fb923c', textColor: '#9a3412', pattern: 'stripes' },
-    replaced: { label: 'جديل', color: '#ef4444', textColor: '#7f1d1d' }
+    pristine: { label: 'أوريجنال', color: '#10b981', textColor: '#065f46' },
+    painted: { label: 'بخ موضعي', color: '#fb923c', textColor: '#9a3412', pattern: 'stripes' },
+    scratched: { label: 'مبخوخ', color: '#fbbf24', textColor: '#92400e' },
+    replaced: { label: 'مبدل', color: '#ef4444', textColor: '#7f1d1d' },
+    dented: { label: 'صدمة', color: '#94a3b8', textColor: '#475569' }
 };
 
 // Detailed car parts with realistic proportions
@@ -250,8 +250,8 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                         <div
                             key={key}
                             className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all ${isUsed
-                                    ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm'
-                                    : 'border-slate-200 dark:border-slate-700 opacity-50'
+                                ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm'
+                                : 'border-slate-200 dark:border-slate-700 opacity-50'
                                 }`}
                         >
                             <div
