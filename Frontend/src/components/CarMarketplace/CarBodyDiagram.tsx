@@ -20,79 +20,77 @@ const conditionConfig = {
     dented: { label: 'صدمة', color: '#94a3b8', textColor: '#475569' }
 };
 
-// Detailed car parts with realistic proportions
+// Realistic car parts with smooth curves and proper car-like proportions
 const carParts = {
-    // Top view - Center car
+    // Top view - Center car (more realistic sedan shape)
+    front_bumper: {
+        id: 'front_bumper',
+        label: 'صدام أمامي',
+        d: 'M155,18 Q200,12 245,18 C248,20 250,23 250,28 L248,48 Q200,52 152,48 L150,28 C150,23 152,20 155,18 Z'
+    },
     hood: {
         id: 'hood',
         label: 'غطاء المحرك',
-        d: 'M165,50 Q200,45 235,50 L240,135 L230,145 L170,145 L160,135 Z'
+        d: 'M152,52 Q200,56 248,52 L252,140 C252,145 250,148 246,150 L154,150 C150,148 148,145 148,140 Z'
     },
     roof: {
         id: 'roof',
         label: 'السقف',
-        d: 'M165,160 L235,160 L235,310 L165,310 Z'
+        d: 'M150,165 L250,165 C252,167 253,170 253,175 L253,305 C253,310 252,313 250,315 L150,315 C148,313 147,310 147,305 L147,175 C147,170 148,167 150,165 Z'
     },
     trunk: {
         id: 'trunk',
         label: 'الصندوق',
-        d: 'M160,325 L170,325 L230,325 L240,325 L235,410 Q200,415 165,410 Z'
+        d: 'M148,330 L252,330 L254,415 C254,420 252,423 248,425 L152,425 C148,423 146,420 146,415 Z'
     },
-
-    // Left side silhouette
-    left_front_fender: {
-        id: 'left_front_fender',
-        label: 'رفرف أمامي أيسر',
-        d: 'M25,90 L75,85 L80,105 L78,125 L40,130 L30,120 Z'
-    },
-    left_front_door: {
-        id: 'left_front_door',
-        label: 'باب أمامي أيسر',
-        d: 'M35,135 L78,135 L80,165 L80,210 L78,240 L45,245 L38,220 Z'
-    },
-    left_rear_door: {
-        id: 'left_rear_door',
-        label: 'باب خلفي أيسر',
-        d: 'M40,250 L78,250 L80,280 L80,325 L78,355 L50,360 L43,335 Z'
-    },
-    left_rear_fender: {
-        id: 'left_rear_fender',
-        label: 'رفرف خلفي أيسر',
-        d: 'M48,365 L78,365 L80,385 L75,405 L55,410 L50,390 Z'
-    },
-
-    // Right side silhouette
-    right_front_fender: {
-        id: 'right_front_fender',
-        label: 'رفرف أمامي أيمن',
-        d: 'M325,85 L375,90 L370,120 L360,130 L322,125 L320,105 Z'
-    },
-    right_front_door: {
-        id: 'right_front_door',
-        label: 'باب أمامي أيمن',
-        d: 'M322,135 L365,135 L362,220 L355,245 L322,240 L320,210 L320,165 Z'
-    },
-    right_rear_door: {
-        id: 'right_rear_door',
-        label: 'باب خلفي أيمن',
-        d: 'M322,250 L360,250 L357,335 L350,360 L322,355 L320,325 L320,280 Z'
-    },
-    right_rear_fender: {
-        id: 'right_rear_fender',
-        label: 'رفرف خلفي أيمن',
-        d: 'M322,365 L352,365 L350,390 L345,410 L325,405 L320,385 Z'
-    },
-
-    // Rear view
     rear_bumper: {
         id: 'rear_bumper',
         label: 'صدام خلفي',
-        d: 'M160,445 L240,445 L240,475 Q200,480 160,475 Z'
+        d: 'M152,430 Q200,434 248,430 L250,452 C250,457 248,460 245,462 Q200,468 155,462 C152,460 150,457 150,452 Z'
     },
-    front_bumper: {
-        id: 'front_bumper',
-        label: 'صدام أمامي',
-        d: 'M160,25 Q200,20 240,25 L240,45 L160,45 Z'
+
+    // Left side profile (more car-like with curves)
+    left_front_fender: {
+        id: 'left_front_fender',
+        label: 'رفرف أمامي',
+        d: 'M18,85 Q22,82 28,82 L78,80 C82,80 84,82 85,86 L85,128 C85,132 83,134 79,135 L30,138 C24,138 20,134 18,128 Z'
+    },
+    left_front_door: {
+        id: 'left_front_door',
+        label: 'باب أمامي',
+        d: 'M30,143 L82,140 C86,140 88,142 88,146 L88,238 C88,242 86,244 82,245 L38,248 C32,248 28,244 28,238 L28,148 C28,145 29,143 30,143 Z'
+    },
+    left_rear_door: {
+        id: 'left_rear_door',
+        label: 'باب خلفي',
+        d: 'M38,253 L82,250 C86,250 88,252 88,256 L88,348 C88,352 86,354 82,355 L45,358 C39,358 35,354 35,348 L35,258 C35,255 36,253 38,253 Z'
+    },
+    left_rear_fender: {
+        id: 'left_rear_fender',
+        label: 'رفرف خلفي',
+        d: 'M45,363 L82,360 C86,360 88,362 88,366 L88,403 C88,407 86,409 82,410 L52,413 C46,413 42,409 40,403 L40,368 C40,365 42,363 45,363 Z'
+    },
+
+    // Right side profile (mirror of left)
+    right_front_fender: {
+        id: 'right_front_fender',
+        label: 'رفرف أمامي',
+        d: 'M322,80 L372,82 Q378,82 382,85 L382,128 C382,134 378,138 370,138 L321,135 C317,134 315,132 315,128 L315,86 C315,82 318,80 322,80 Z'
+    },
+    right_front_door: {
+        id: 'right_front_door',
+        label: 'باب أمامي',
+        d: 'M318,140 L370,143 C371,143 372,145 372,148 L372,238 C372,244 368,248 362,248 L318,245 C314,244 312,242 312,238 L312,146 C312,142 314,140 318,140 Z'
+    },
+    right_rear_door: {
+        id: 'right_rear_door',
+        label: 'باب خلفي',
+        d: 'M318,250 L370,253 C371,253 372,255 372,258 L372,348 C372,354 368,358 355,358 L318,355 C314,354 312,352 312,348 L312,256 C312,252 314,250 318,250 Z'
+    },
+    right_rear_fender: {
+        id: 'right_rear_fender',
+        label: 'رفرف خلفي',
+        d: 'M318,360 L370,363 C372,363 372,365 372,368 L372,403 C372,409 368,413 348,413 L318,410 C314,409 312,407 312,403 L312,366 C312,362 314,360 318,360 Z'
     }
 };
 
