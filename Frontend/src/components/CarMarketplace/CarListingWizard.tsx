@@ -82,7 +82,11 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         rental_terms_checkboxes: [] as string[],
         km_limit: '',
         custom_rental_terms: '',
-        phone_visible: true
+        phone_visible: true,
+        // New rental fields
+        security_deposit: '',
+        min_license_age: '',
+        min_renter_age: ''
     });
     const [stepErrors, setStepErrors] = useState<{ [key: number]: string[] }>({});
 
@@ -168,6 +172,9 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 rental_terms_checkboxes: editingListing.rental_terms?.terms || [],
                 km_limit: editingListing.rental_terms?.km_limit?.toString() || '',
                 custom_rental_terms: editingListing.rental_terms?.custom_terms || '',
+                security_deposit: editingListing.rental_terms?.security_deposit?.toString() || '',
+                min_license_age: editingListing.rental_terms?.min_license_age?.toString() || '',
+                min_renter_age: editingListing.rental_terms?.min_renter_age?.toString() || '',
                 phone_visible: !!editingListing.contact_phone
             });
         }
@@ -376,7 +383,10 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                     monthly_rate: formData.monthly_rate ? Number(formData.monthly_rate) : null,
                     terms: formData.rental_terms_checkboxes || [],
                     km_limit: formData.km_limit ? Number(formData.km_limit) : null,
-                    custom_terms: formData.custom_rental_terms || null
+                    custom_terms: formData.custom_rental_terms || null,
+                    security_deposit: formData.security_deposit ? Number(formData.security_deposit) : null,
+                    min_license_age: formData.min_license_age ? Number(formData.min_license_age) : null,
+                    min_renter_age: formData.min_renter_age ? Number(formData.min_renter_age) : null
                 } : null,
                 contact_phone: formData.contact_phone || null,
                 contact_whatsapp: formData.contact_whatsapp || null,
@@ -395,6 +405,9 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 rental_terms_checkboxes: undefined,
                 km_limit: undefined,
                 custom_rental_terms: undefined,
+                security_deposit: undefined,
+                min_license_age: undefined,
+                min_renter_age: undefined,
                 vin_number: undefined,
                 // Pass features as is
                 features: formData.features
