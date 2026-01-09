@@ -166,7 +166,12 @@ const CarListingDetail: React.FC = () => {
         // Check authentication first
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول لحفظ الإعلانات', 'info');
-            setShowLogin(true);
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                // Fallback: redirect to login
+                setTimeout(() => navigate('/'), 1000);
+            }
             return;
         }
 
@@ -187,7 +192,12 @@ const CarListingDetail: React.FC = () => {
         // Check authentication first
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
-            setShowLogin(true);
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                // Fallback: redirect to login
+                setTimeout(() => navigate('/'), 1000);
+            }
             return;
         }
 

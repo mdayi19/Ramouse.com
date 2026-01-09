@@ -67,7 +67,11 @@ const RentCarListingDetail: React.FC = () => {
     const handleFavoriteToggle = async () => {
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للإضافة للمفضلة', 'info');
-            setShowLogin(true);
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                setTimeout(() => navigate('/'), 1000);
+            }
             return;
         }
         if (!listing) return;
@@ -84,7 +88,11 @@ const RentCarListingDetail: React.FC = () => {
     const handlePhoneCall = async () => {
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للاتصال بالبائع', 'info');
-            setShowLogin(true);
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                setTimeout(() => navigate('/'), 1000);
+            }
             return;
         }
         if (!listing?.contact_phone) {
@@ -108,7 +116,11 @@ const RentCarListingDetail: React.FC = () => {
     const handleWhatsAppContact = async () => {
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للتواصل عبر واتساب', 'info');
-            setShowLogin(true);
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                setTimeout(() => navigate('/'), 1000);
+            }
             return;
         }
 
