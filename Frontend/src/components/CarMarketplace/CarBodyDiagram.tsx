@@ -122,8 +122,64 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
         return config.color;
     };
 
+    const setAllParts = (condition: keyof typeof conditionConfig) => {
+        if (readOnly) return;
+        const allParts = Object.keys(carParts).reduce((acc, key) => {
+            acc[carParts[key as keyof typeof carParts].id] = condition;
+            return acc;
+        }, {} as BodyCondition);
+        onChange(allParts);
+    };
+
+    const resetAll = () => {
+        if (readOnly) return;
+        onChange({});
+    };
+
     return (
         <div className="space-y-4 select-none">
+            {/* Quick Actions */}
+            {!readOnly && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                    <button
+                        onClick={resetAll}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-300 dark:border-slate-600"
+                    >
+                        🔄 إعادة تعيين
+                    </button>
+                    <button
+                        onClick={() => setAllParts('pristine')}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors border border-emerald-300 dark:border-emerald-700"
+                    >
+                        ✓ كل أوريجنال
+                    </button>
+                    <button
+                        onClick={() => setAllParts('painted')}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors border border-orange-300 dark:border-orange-700"
+                    >
+                        🎨 كل بخ موضعي
+                    </button>
+                    <button
+                        onClick={() => setAllParts('scratched')}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-300 dark:border-yellow-700"
+                    >
+                        ⚠ كل مبخوخ
+                    </button>
+                    <button
+                        onClick={() => setAllParts('replaced')}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors border border-red-300 dark:border-red-700"
+                    >
+                        🔴 كل مبدل
+                    </button>
+                    <button
+                        onClick={() => setAllParts('dented')}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-300 dark:border-slate-600"
+                    >
+                        💥 كل صدمة
+                    </button>
+                </div>
+            )}
+
             {/* Title */}
             <h3 className="text-center text-base font-bold text-slate-700 dark:text-slate-200 mb-2">
                 مخطط الأضرار
