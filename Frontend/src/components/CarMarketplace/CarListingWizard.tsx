@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, Check, Car, ShoppingCart, RefreshCw,
@@ -17,6 +17,7 @@ import Step1ContactLocation from './CarListingWizard/Step1ContactLocation';
 import Step2CountryBrandModel from './CarListingWizard/Step2CountryBrandModel';
 import Step6RentalConditions from './CarListingWizard/Step6RentalConditions'; // Actually Step 7 now
 import StepFeatures from './CarListingWizard/StepFeatures';
+import { translateColor, translateTransmission, translateFuelType, translateCondition } from './translations';
 
 interface CarListingWizardProps {
     onComplete: () => void;
@@ -33,6 +34,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     userPhone,
     editingListing
 }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [categories, setCategories] = useState<any[]>([]); // Car listing categories (sedan, SUV, etc.)
     const [carCategories, setCarCategories] = useState<any[]>([]); // Car origin categories (German, Japanese, etc.)
@@ -114,6 +116,13 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     useEffect(() => {
         loadCategoriesAndBrands();
     }, []);
+
+    // Auto-scroll to top when step changes
+    useEffect(() => {
+        if (contentRef.current) {
+            contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [currentStep]);
 
     // Populate form when editing
     useEffect(() => {
@@ -251,7 +260,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 break;
 
             case 8: // Review (for rent only)
-                if (!formData.price || formData.price === '') errors.push('السعر مطلوب');
+                // For rent, no price validation needed - rental rates are validated in step 7
                 break;
         }
 
@@ -479,7 +488,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div ref={contentRef} className="flex-1 overflow-y-auto p-6 pb-24 sm:pb-6">
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && (
                             <Step1ContactLocation
@@ -1221,34 +1230,56 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                     <span className="font-bold">الكيلومترات:</span>
                     <span>{formData.mileage} كم</span>
                 </div>
+                <div className="flex items-center gap-3">
+                    <span className="font-bold">اللون:</span>
+                    <span>{translateColor(formData.color)}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="font-bold">ناقل الحركة:</span>
+                    <span>{translateTransmission(formData.transmission)}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="font-bold">نوع الوقود:</span>
+                    <span>{translateFuelType(formData.fuel_type)}</span>
+                </div>
+                {formData.listing_type === 'sale' && formData.condition && (
+                    <div className="flex items-center gap-3">
+                        <span className="font-bold">الحالة:</span>
+                        <span>{translateCondition(formData.condition)}</span>
+                    </div>
+                )}
             </div>
 
-            <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    السعر *
-                </label>
-                <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => updateField('price', e.target.value)}
-                    placeholder="0"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                    required
-                />
-                <label className="flex items-center gap-2 mt-3 cursor-pointer">
+            {/* Price field - only for sale listings */}
+            {formData.listing_type === 'sale' && (
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        السعر *
+                    </label>
                     <input
-                        type="checkbox"
-                        checked={formData.negotiable}
-                        onChange={(e) => updateField('negotiable', e.target.checked)}
-                        className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => updateField('price', e.target.value)}
+                        placeholder="0"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                        required
                     />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">
-                        ✓ قابل للتفاوض
-                    </span>
-                </label>
-            </div>
+                    <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={formData.negotiable}
+                            onChange={(e) => updateField('negotiable', e.target.checked)}
+                            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">
+                            ✓ قابل للتفاوض
+                        </span>
+                    </label>
+                </div>
+            )}
 
+            {/* Rental Rates - only for rent listings */}
             {formData.listing_type === 'rent' && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3">
                     <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
@@ -1295,20 +1326,6 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                     </div>
                 </div>
             )}
-
-            <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4" />
-                    واتساب (اختياري)
-                </label>
-                <input
-                    type="text"
-                    value={formData.whatsapp}
-                    onChange={(e) => updateField('whatsapp', e.target.value)}
-                    placeholder="+963 XXX XXX XXX"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                />
-            </div>
         </motion.div>
     );
 };

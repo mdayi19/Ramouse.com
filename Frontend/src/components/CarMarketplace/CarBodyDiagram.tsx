@@ -21,8 +21,8 @@ const conditionConfig = {
     replaced: { label: 'تغيير', color: '#3b82f6', gradient: 'from-blue-400 to-blue-600', icon: RefreshCw }
 };
 
-// Precise vector paths for a modern sedan (Top View)
-// Canvas: 300x520
+// More realistic car paths with proper curves and proportions
+// Canvas: 400x700 (better aspect ratio for modern sedan)
 
 interface InteractivePart {
     id: string;
@@ -34,6 +34,8 @@ interface ContextPathPart {
     d: string;
     fill: string;
     opacity?: number;
+    stroke?: string;
+    strokeWidth?: number;
 }
 
 interface ContextEllipsePart {
@@ -42,37 +44,187 @@ interface ContextEllipsePart {
     rx: number;
     ry: number;
     fill: string;
+    stroke?: string;
+    strokeWidth?: number;
 }
 
 type CarPart = InteractivePart | ContextPathPart | ContextEllipsePart;
 
 const carPaths: Record<string, CarPart> = {
-    // Interactive Parts
-    hood: { id: 'hood', label: 'الكبوت', d: 'M75,90 C75,90 150,85 225,90 L220,185 L80,185 Z' },
-    front_bumper: { id: 'front_bumper', label: 'صدام أمامي', d: 'M70,85 Q150,60 230,85 L230,55 Q150,30 70,55 Z' },
-    left_fender: { id: 'left_fender', label: 'رفرف أيسر', d: 'M55,90 L70,90 L75,185 L40,180 Q40,135 55,90 Z' },
-    right_fender: { id: 'right_fender', label: 'رفرف أيمن', d: 'M230,90 L245,90 Q260,135 260,180 L225,185 L225,90 Z' },
-    roof: { id: 'roof', label: 'السقف', d: 'M75,225 L225,225 L225,310 L75,310 Z' },
-    left_front_door: { id: 'left_front_door', label: 'باب أمامي أيسر', d: 'M38,185 L75,190 L75,270 L38,270 Z' },
-    right_front_door: { id: 'right_front_door', label: 'باب أمامي أيمن', d: 'M262,185 L225,190 L225,270 L262,270 Z' },
-    left_rear_door: { id: 'left_rear_door', label: 'باب خلفي أيسر', d: 'M38,275 L75,275 L75,350 L42,345 Z' },
-    right_rear_door: { id: 'right_rear_door', label: 'باب خلفي أيمن', d: 'M262,275 L225,275 L225,350 L258,345 Z' },
-    left_quarter: { id: 'left_quarter', label: 'رفرف خلفي أيسر', d: 'M42,350 L75,350 L70,445 L50,445 C40,400 42,350 42,350 Z' },
-    right_quarter: { id: 'right_quarter', label: 'رفرف خلفي أيمن', d: 'M258,350 L225,350 L230,445 L250,445 C260,400 258,350 258,350 Z' },
-    trunk: { id: 'trunk', label: 'الشنطة', d: 'M75,370 L225,370 L225,445 L75,445 Z' },
-    rear_bumper: { id: 'rear_bumper', label: 'صدام خلفي', d: 'M230,450 L70,450 L70,470 Q150,490 230,470 Z' },
+    // Interactive Parts - More realistic shapes with curves
+    front_bumper: {
+        id: 'front_bumper',
+        label: 'صدام أمامي',
+        d: 'M90,70 Q200,45 310,70 L310,95 Q305,100 300,102 L100,102 Q95,100 90,95 Z'
+    },
+    hood: {
+        id: 'hood',
+        label: 'الكبوت',
+        d: 'M95,105 L305,105 Q308,108 310,115 L310,230 Q308,235 305,238 L95,238 Q92,235 90,230 L90,115 Q92,108 95,105 Z'
+    },
+    left_fender: {
+        id: 'left_fender',
+        label: 'رفرف أمامي أيسر',
+        d: 'M68,100 L88,103 L88,240 L68,238 Q60,220 58,180 Q60,140 68,120 Z'
+    },
+    right_fender: {
+        id: 'right_fender',
+        label: 'رفرف أمامي أيمن',
+        d: 'M312,103 L332,100 Q340,120 342,180 Q340,220 332,238 L312,240 Z'
+    },
+    left_front_door: {
+        id: 'left_front_door',
+        label: 'باب أمامي أيسر',
+        d: 'M55,245 L88,245 L88,360 L55,360 Q52,330 52,302.5 Q52,275 55,245 Z'
+    },
+    right_front_door: {
+        id: 'right_front_door',
+        label: 'باب أمامي أيمن',
+        d: 'M312,245 L345,245 Q348,275 348,302.5 Q348,330 345,360 L312,360 Z'
+    },
+    left_rear_door: {
+        id: 'left_rear_door',
+        label: 'باب خلفي أيسر',
+        d: 'M55,365 L88,365 L88,480 L60,478 Q56,450 55,420 Z'
+    },
+    right_rear_door: {
+        id: 'right_rear_door',
+        label: 'باب خلفي أيمن',
+        d: 'M312,365 L345,365 Q344,420 340,478 L312,480 Z'
+    },
+    left_quarter: {
+        id: 'left_quarter',
+        label: 'رفرف خلفي أيسر',
+        d: 'M60,485 L88,485 L88,570 L72,572 Q64,550 62,520 Z'
+    },
+    right_quarter: {
+        id: 'right_quarter',
+        label: 'رفرف خلفي أيمن',
+        d: 'M312,485 L340,485 Q338,520 336,550 L328,572 L312,570 Z'
+    },
+    trunk: {
+        id: 'trunk',
+        label: 'الشنطة',
+        d: 'M95,488 L305,488 Q308,490 310,495 L310,565 Q308,570 305,573 L95,573 Q92,570 90,565 L90,495 Q92,490 95,488 Z'
+    },
+    rear_bumper: {
+        id: 'rear_bumper',
+        label: 'صدام خلفي',
+        d: 'M100,578 L300,578 Q305,580 310,585 L310,610 Q200,635 90,610 L90,585 Q95,580 100,578 Z'
+    },
+    roof: {
+        id: 'roof',
+        label: 'السقف',
+        d: 'M95,285 L305,285 Q310,288 312,293 L312,425 Q310,430 305,433 L95,433 Q90,430 88,425 L88,293 Q90,288 95,285 Z'
+    },
 
-    // Contextual (Non-interactive)
-    windshield_front: { d: 'M80,188 L220,188 L225,220 L75,220 Z', fill: '#e2e8f0', opacity: 0.5 },
-    windshield_rear: { d: 'M75,315 L225,315 L220,365 L80,365 Z', fill: '#e2e8f0', opacity: 0.5 },
-    mirror_left: { d: 'M38,185 L25,175 L25,195 Z', fill: '#94a3b8', opacity: 0.8 },
-    mirror_right: { d: 'M262,185 L275,175 L275,195 Z', fill: '#94a3b8', opacity: 0.8 },
-    headlight_left: { d: 'M55,65 L70,68 L70,85 L52,80 Z', fill: '#fcd34d', opacity: 0.6 },
-    headlight_right: { d: 'M245,65 L230,68 L230,85 L248,80 Z', fill: '#fcd34d', opacity: 0.6 },
-    wheel_fl: { rx: 5, ry: 15, x: 25, y: 100, fill: '#334155' },
-    wheel_fr: { rx: 5, ry: 15, x: 265, y: 100, fill: '#334155' },
-    wheel_rl: { rx: 5, ry: 15, x: 25, y: 380, fill: '#334155' },
-    wheel_rr: { rx: 5, ry: 15, x: 265, y: 380, fill: '#334155' },
+    // Contextual (Non-interactive) - Enhanced realism
+
+    // Front Windshield with curve
+    windshield_front: {
+        d: 'M92,242 L308,242 Q312,245 314,250 L314,280 Q312,283 308,285 L92,285 Q88,283 86,280 L86,250 Q88,245 92,242 Z',
+        fill: '#cbd5e1',
+        opacity: 0.6,
+        stroke: '#64748b',
+        strokeWidth: 1
+    },
+
+    // Rear Windshield
+    windshield_rear: {
+        d: 'M92,438 L308,438 Q312,440 314,444 L314,480 Q312,483 308,485 L92,485 Q88,483 86,480 L86,444 Q88,440 92,438 Z',
+        fill: '#cbd5e1',
+        opacity: 0.6,
+        stroke: '#64748b',
+        strokeWidth: 1
+    },
+
+    // Left window (front door)
+    window_left_front: {
+        d: 'M58,255 L85,258 L85,350 L58,348 Q56,320 56,304 Q56,280 58,255 Z',
+        fill: '#94a3b8',
+        opacity: 0.5
+    },
+
+    // Right window (front door)
+    window_right_front: {
+        d: 'M315,258 L342,255 Q344,280 344,304 Q344,320 342,348 L315,350 Z',
+        fill: '#94a3b8',
+        opacity: 0.5
+    },
+
+    // Left window (rear door)
+    window_left_rear: {
+        d: 'M58,372 L85,373 L85,472 L62,470 Q58,440 58,405 Z',
+        fill: '#94a3b8',
+        opacity: 0.5
+    },
+
+    // Right window (rear door)
+    window_right_rear: {
+        d: 'M315,373 L342,372 Q342,405 338,470 L315,472 Z',
+        fill: '#94a3b8',
+        opacity: 0.5
+    },
+
+    // Side Mirrors with better shape
+    mirror_left: {
+        d: 'M52,242 L35,238 Q28,240 28,248 L28,256 Q28,264 35,266 L52,262 Z',
+        fill: '#475569',
+        opacity: 0.9,
+        stroke: '#1e293b',
+        strokeWidth: 1
+    },
+    mirror_right: {
+        d: 'M348,242 L365,238 Q372,240 372,248 L372,256 Q372,264 365,266 L348,262 Z',
+        fill: '#475569',
+        opacity: 0.9,
+        stroke: '#1e293b',
+        strokeWidth: 1
+    },
+
+    // Headlights - More realistic
+    headlight_left: {
+        d: 'M75,78 L92,82 L92,98 L75,95 Q72,88 72,86 Z',
+        fill: '#fef3c7',
+        opacity: 0.8,
+        stroke: '#fbbf24',
+        strokeWidth: 1
+    },
+    headlight_right: {
+        d: 'M308,82 L325,78 Q328,86 328,88 L325,95 L308,98 Z',
+        fill: '#fef3c7',
+        opacity: 0.8,
+        stroke: '#fbbf24',
+        strokeWidth: 1
+    },
+
+    // Tail lights
+    taillight_left: {
+        d: 'M78,585 L92,587 L92,605 L78,603 Z',
+        fill: '#fecaca',
+        opacity: 0.8,
+        stroke: '#ef4444',
+        strokeWidth: 1
+    },
+    taillight_right: {
+        d: 'M308,587 L322,585 L322,603 L308,605 Z',
+        fill: '#fecaca',
+        opacity: 0.8,
+        stroke: '#ef4444',
+        strokeWidth: 1
+    },
+
+    // Wheels - More realistic with better proportions
+    wheel_fl: { rx: 10, ry: 25, x: 38, y: 135, fill: '#1e293b', stroke: '#475569', strokeWidth: 2 },
+    wheel_fr: { rx: 10, ry: 25, x: 362, y: 135, fill: '#1e293b', stroke: '#475569', strokeWidth: 2 },
+    wheel_rl: { rx: 10, ry: 25, x: 38, y: 520, fill: '#1e293b', stroke: '#475569', strokeWidth: 2 },
+    wheel_rr: { rx: 10, ry: 25, x: 362, y: 520, fill: '#1e293b', stroke: '#475569', strokeWidth: 2 },
+
+    // Wheel hubcaps for detail
+    hubcap_fl: { rx: 6, ry: 15, x: 38, y: 135, fill: '#64748b' },
+    hubcap_fr: { rx: 6, ry: 15, x: 362, y: 135, fill: '#64748b' },
+    hubcap_rl: { rx: 6, ry: 15, x: 38, y: 520, fill: '#64748b' },
+    hubcap_rr: { rx: 6, ry: 15, x: 362, y: 520, fill: '#64748b' },
 };
 
 export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange, readOnly = false }) => {
@@ -120,57 +272,95 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
             </div>
 
             {/* The Diagram */}
-            <div className="relative mx-auto max-w-[340px] perspective-1000">
+            <div className="relative mx-auto max-w-[420px] perspective-1000">
                 <div
                     className={cn(
-                        "relative bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50",
-                        "rounded-[3rem] p-8 border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden",
-                        "transition-all duration-500 hover:shadow-lg"
+                        "relative bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900/50 dark:via-slate-800/50 dark:to-slate-900/50",
+                        "rounded-[3rem] p-4 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden",
+                        "transition-all duration-500 hover:shadow-3xl"
                     )}
                 >
-                    {/* Grid Background Effect */}
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+                    {/* Subtle Grid Background Effect */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080801a_1px,transparent_1px),linear-gradient(to_bottom,#8080801a_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-30" />
 
                     <svg
-                        viewBox="0 0 300 520"
+                        viewBox="0 0 400 700"
                         className="w-full h-auto drop-shadow-2xl"
-                        style={{ maxHeight: '600px' }}
+                        style={{ maxHeight: '800px' }}
                     >
                         <defs>
-                            <filter id="part-glow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="4" result="blur" />
+                            {/* Enhanced glow filter */}
+                            <filter id="part-glow" x="-30%" y="-30%" width="160%" height="160%">
+                                <feGaussianBlur stdDeviation="5" result="blur" />
                                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
                             </filter>
-                            <linearGradient id="glass-shine" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-                                <stop offset="100%" stopColor="white" stopOpacity="0" />
+
+                            {/* Metallic shine effect */}
+                            <linearGradient id="metallic-shine" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="white" stopOpacity="0.5" />
+                                <stop offset="50%" stopColor="white" stopOpacity="0.1" />
+                                <stop offset="100%" stopColor="white" stopOpacity="0.3" />
+                            </linearGradient>
+
+                            {/* Car body base color gradient */}
+                            <linearGradient id="car-body-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.3" />
+                                <stop offset="50%" stopColor="#cbd5e1" stopOpacity="0.2" />
+                                <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.3" />
                             </linearGradient>
                         </defs>
 
-                        {/* Shadows for wheels */}
+                        {/* Drop shadows for depth */}
                         {['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr'].map(key => {
                             const part = carPaths[key as keyof typeof carPaths];
                             if ('rx' in part) {
-                                return <ellipse key={key} cx={part.x + 5} cy={part.y + 7.5} rx={part.rx} ry={part.ry} fill="black" opacity="0.2" filter="url(#part-glow)" />
+                                return <ellipse key={`shadow-${key}`} cx={part.x} cy={part.y + 10} rx={part.rx + 2} ry={part.ry + 2} fill="black" opacity="0.15" filter="url(#part-glow)" />
                             }
                             return null;
                         })}
 
-                        {/* Context Parts (Wheels, Glass, Lights - Underneath) */}
+                        {/* Car body base outline for depth */}
+                        <path
+                            d="M90,70 Q200,45 310,70 L310,95 L332,100 Q342,180 342,180 Q340,220 332,238 L345,245 Q348,302.5 348,302.5 Q348,330 345,360 L345,365 Q344,420 340,478 L340,485 Q338,520 336,550 L328,572 L310,585 L310,610 Q200,635 90,610 L90,585 L72,572 Q64,550 62,520 Q60,485 60,485 L60,478 Q56,450 55,420 L55,365 L55,360 Q52,330 52,302.5 Q52,275 55,245 L68,238 Q60,220 58,180 Q60,140 68,120 L68,100 L90,95 Z"
+                            fill="url(#car-body-gradient)"
+                            stroke="#cbd5e1"
+                            strokeWidth="2"
+                            opacity="0.4"
+                        />
+
+                        {/* Context Parts (Windows, Glass, Lights, Mirrors - Underneath) */}
                         {Object.entries(carPaths).map(([key, part]) => {
                             // Skip interactive parts (they have an ID)
                             if ('id' in part) return null;
 
                             if ('d' in part) {
-                                // Must be ContextPathPart
                                 const pathPart = part as ContextPathPart;
-                                return <path key={key} d={pathPart.d} fill={pathPart.fill} fillOpacity={pathPart.opacity} />
+                                return (
+                                    <path
+                                        key={key}
+                                        d={pathPart.d}
+                                        fill={pathPart.fill}
+                                        fillOpacity={pathPart.opacity}
+                                        stroke={pathPart.stroke}
+                                        strokeWidth={pathPart.strokeWidth}
+                                    />
+                                );
                             }
 
                             if ('rx' in part) {
-                                // Must be ContextEllipsePart
                                 const ellipsePart = part as ContextEllipsePart;
-                                return <ellipse key={key} cx={ellipsePart.x} cy={ellipsePart.y} rx={ellipsePart.rx} ry={ellipsePart.ry} fill={ellipsePart.fill} />
+                                return (
+                                    <ellipse
+                                        key={key}
+                                        cx={ellipsePart.x}
+                                        cy={ellipsePart.y}
+                                        rx={ellipsePart.rx}
+                                        ry={ellipsePart.ry}
+                                        fill={ellipsePart.fill}
+                                        stroke={ellipsePart.stroke}
+                                        strokeWidth={ellipsePart.strokeWidth}
+                                    />
+                                );
                             }
 
                             return null;
@@ -195,22 +385,22 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                                     )}
                                     style={{
                                         transformOrigin: 'center center',
-                                        transform: isHovered && !readOnly ? 'scale(1.01)' : 'scale(1)'
+                                        transform: isHovered && !readOnly ? 'scale(1.02)' : 'scale(1)'
                                     }}
                                 >
                                     <path
                                         d={d}
                                         fill={config.color}
-                                        fillOpacity={isPristine ? 0.15 : 0.85} // More subtle when pristine
+                                        fillOpacity={isPristine ? 0.12 : 0.75}
                                         stroke={config.color}
-                                        strokeWidth={isHovered && !readOnly ? 3 : 1.5}
-                                        strokeOpacity={isHovered ? 1 : 0.6}
+                                        strokeWidth={isHovered && !readOnly ? 4 : 2}
+                                        strokeOpacity={isHovered ? 1 : 0.5}
                                         filter={isHovered && !readOnly ? 'url(#part-glow)' : undefined}
                                         className="transition-all duration-300 ease-out"
                                     />
 
-                                    {/* Glass shine effect overlay for cool look */}
-                                    <path d={d} fill="url(#glass-shine)" className="pointer-events-none opacity-30" />
+                                    {/* Metallic shine overlay for premium look */}
+                                    <path d={d} fill="url(#metallic-shine)" className="pointer-events-none opacity-20" />
                                 </g>
                             );
                         })}
@@ -248,10 +438,7 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                             <div className="w-px h-4 bg-white/20 dark:bg-black/10" />
                             <span className="text-sm font-medium flex items-center gap-1.5">
                                 {React.createElement(conditionConfig[value[hoveredPart] as keyof typeof conditionConfig || 'pristine'].icon, { size: 14 })}
-                                <span className={cn(
-                                    "font-bold",
-                                    `text-${conditionConfig[value[hoveredPart] as keyof typeof conditionConfig || 'pristine'].color.replace('#', '')}-400`
-                                )}>
+                                <span className="font-bold">
                                     {conditionConfig[value[hoveredPart] as keyof typeof conditionConfig || 'pristine'].label}
                                 </span>
                             </span>
