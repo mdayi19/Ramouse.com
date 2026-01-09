@@ -12,7 +12,7 @@ import { useAppState } from '../../hooks/useAppState';
 const RentCarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const { showToast, isAuthenticated, userPhone } = useAppState();
+    const { showToast, isAuthenticated, userPhone, setShowLogin } = useAppState();
 
     const [listing, setListing] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
@@ -67,6 +67,7 @@ const RentCarListingDetail: React.FC = () => {
     const handleFavoriteToggle = async () => {
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للإضافة للمفضلة', 'info');
+            setShowLogin(true);
             return;
         }
         if (!listing) return;
@@ -83,9 +84,7 @@ const RentCarListingDetail: React.FC = () => {
     const handlePhoneCall = async () => {
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للاتصال بالبائع', 'info');
-            setTimeout(() => {
-                navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-            }, 1000);
+            setShowLogin(true);
             return;
         }
         if (!listing?.contact_phone) {
@@ -109,9 +108,7 @@ const RentCarListingDetail: React.FC = () => {
     const handleWhatsAppContact = async () => {
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للتواصل عبر واتساب', 'info');
-            setTimeout(() => {
-                navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-            }, 1000);
+            setShowLogin(true);
             return;
         }
 

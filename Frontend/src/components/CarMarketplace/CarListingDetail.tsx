@@ -125,7 +125,7 @@ const SpecItem: React.FC<{ icon: any; label: string; value: string | number | un
 const CarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const { showToast, isAuthenticated } = useAppState();
+    const { showToast, isAuthenticated, setShowLogin } = useAppState();
 
     const [listing, setListing] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
@@ -163,6 +163,13 @@ const CarListingDetail: React.FC = () => {
     const handleFavoriteToggle = async () => {
         if (!listing) return;
 
+        // Check authentication first
+        if (!isAuthenticated) {
+            showToast('الرجاء تسجيل الدخول لحفظ الإعلانات', 'info');
+            setShowLogin(true);
+            return;
+        }
+
         try {
             await CarProviderService.toggleFavorite(listing.id);
             setIsFavorited(!isFavorited);
@@ -180,10 +187,7 @@ const CarListingDetail: React.FC = () => {
         // Check authentication first
         if (!isAuthenticated) {
             showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
-            // Redirect to login with return URL
-            setTimeout(() => {
-                navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-            }, 1000);
+            setShowLogin(true);
             return;
         }
 
