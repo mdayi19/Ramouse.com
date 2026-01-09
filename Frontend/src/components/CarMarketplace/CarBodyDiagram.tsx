@@ -116,7 +116,7 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
         const condition = value[partId] || 'pristine';
         const config = conditionConfig[condition as keyof typeof conditionConfig];
 
-        if (config.pattern === 'stripes') {
+        if ('pattern' in config && config.pattern === 'stripes') {
             return `url(#stripe-pattern-${partId})`;
         }
         return config.color;
@@ -350,7 +350,7 @@ export const CarBodyDiagram: React.FC<CarBodyDiagramProps> = ({ value, onChange,
                                 className="w-6 h-6 rounded border-2 border-slate-300 dark:border-slate-600 flex-shrink-0"
                                 style={{
                                     backgroundColor: config.color,
-                                    backgroundImage: config.pattern === 'stripes'
+                                    backgroundImage: ('pattern' in config && config.pattern === 'stripes')
                                         ? `repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.6) 2px, rgba(255,255,255,0.6) 4px)`
                                         : 'none'
                                 }}
