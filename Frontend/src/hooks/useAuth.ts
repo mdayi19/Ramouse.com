@@ -186,7 +186,18 @@ export const useAuth = (settings: Settings, allCustomers: Customer[]) => {
         }
 
         setShowLogin(false);
-        navigate(targetPath);
+
+        // Only redirect to dashboard if logging in from welcome screen
+        // Stay on current page if logging in from marketplace/listing pages
+        const currentPath = window.location.pathname;
+        const isOnMarketplacePage = currentPath.startsWith('/car-listings') ||
+            currentPath.startsWith('/rent-car') ||
+            currentPath.startsWith('/car-providers');
+
+        if (!isOnMarketplacePage) {
+            navigate(targetPath);
+        }
+        // If on marketplace page, stay there (don't navigate)
     }, [settings.adminPhone, navigate]);
 
     const handleLogout = useCallback(() => {
