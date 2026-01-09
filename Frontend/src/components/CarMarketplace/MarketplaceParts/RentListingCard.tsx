@@ -127,11 +127,18 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                         <CheckCircle className="w-3 h-3" /> {feature}
                     </span>
                 ))}
-                {listing.rental_terms && Array.isArray(listing.rental_terms) && listing.rental_terms.slice(0, 2).map((term, idx) => (
-                    <span key={`term-${idx}`} className="text-[10px] px-2 py-1 bg-teal-50 dark:bg-teal-900/30 rounded-full flex items-center gap-1 text-teal-600 dark:text-teal-300">
-                        <ShieldCheck className="w-3 h-3" /> {term}
-                    </span>
-                ))}
+                {(() => {
+                    const terms = listing.rental_terms;
+                    if (!terms) return null;
+                    const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
+                    // Also add security deposit if exists as a badge? Maybe too detailed.
+                    // Just show first 2 terms for now.
+                    return termsList.slice(0, 2).map((term: string, idx: number) => (
+                        <span key={`term-${idx}`} className="text-[10px] px-2 py-1 bg-teal-50 dark:bg-teal-900/30 rounded-full flex items-center gap-1 text-teal-600 dark:text-teal-300">
+                            <ShieldCheck className="w-3 h-3" /> {term}
+                        </span>
+                    ));
+                })()}
             </div>
 
             {/* Footer: Location & Provider */}
@@ -188,11 +195,16 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                                         <CheckCircle className="w-3 h-3" /> {feature}
                                     </span>
                                 ))}
-                                {listing.rental_terms && Array.isArray(listing.rental_terms) && listing.rental_terms.slice(0, 2).map((term, idx) => (
-                                    <span key={`term-${idx}`} className="bg-teal-50 dark:bg-teal-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-teal-600 dark:text-teal-300">
-                                        <ShieldCheck className="w-3 h-3" /> {term}
-                                    </span>
-                                ))}
+                                {(() => {
+                                    const terms = listing.rental_terms;
+                                    if (!terms) return null;
+                                    const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
+                                    return termsList.slice(0, 2).map((term: string, idx: number) => (
+                                        <span key={`term-${idx}`} className="bg-teal-50 dark:bg-teal-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-teal-600 dark:text-teal-300">
+                                            <ShieldCheck className="w-3 h-3" /> {term}
+                                        </span>
+                                    ));
+                                })()}
                             </div>
                         </div>
                         <div className="text-left">

@@ -81,6 +81,9 @@ export const RentFilters: React.FC<RentFiltersProps> = ({
         { id: 'delivery', label: 'توصيل للمكان' },
         { id: 'unlimimted_km', label: 'كيلومترات مفتوحة' },
         { id: 'comprehensive_insurance', label: 'تأمين شامل' },
+        { id: 'families_only', label: 'للعائلات فقط' },
+        { id: 'no_smoking', label: 'ممنوع التدخين' },
+        { id: 'additional_driver', label: 'سائق إضافي مسموح' },
     ];
 
     return (

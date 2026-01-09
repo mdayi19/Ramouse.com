@@ -52,16 +52,29 @@ export interface CarListing {
     contact_phone?: string;
     contact_whatsapp?: string;
     // Rental-specific fields
+    // Rental-specific fields
     daily_rate?: number;
     weekly_rate?: number;
     monthly_rate?: number;
-    rental_terms?: string[] | Record<string, boolean>;
+    rental_terms?: RentalTerms | string[]; // Backwards compatibility
     custom_rental_terms?: string;
     // Additional fields
     car_category_id?: string;
     license_plate?: string;
     chassis_number?: string;
     previous_owners?: number;
+}
+
+export interface RentalTerms {
+    daily_rate?: number;
+    weekly_rate?: number;
+    monthly_rate?: number;
+    terms?: string[];
+    km_limit?: number;
+    custom_terms?: string;
+    security_deposit?: number;
+    min_license_age?: number;
+    min_renter_age?: number;
 }
 
 export interface MarketplaceFilters {

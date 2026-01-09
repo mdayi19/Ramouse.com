@@ -5,7 +5,7 @@ import {
     Phone, MessageSquare, ShieldCheck, Star, User, Clock,
     CheckCircle2, AlertCircle, Info, Car
 } from 'lucide-react';
-import { CarProviderService, CarListing } from '../../services/carprovider.service';
+import { CarProviderService, CarListing, RentalTerms } from '../../services/carprovider.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../../hooks/useAppState';
 
@@ -281,25 +281,113 @@ const RentCarListingDetail: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Rental Terms */}
-                        {listing.rental_terms && Array.isArray(listing.rental_terms) && listing.rental_terms.length > 0 && (
-                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm">
-                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5 text-teal-600" />
-                                    شروط ومميزات الإيجار
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {listing.rental_terms.map((term, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
-                                            <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 text-teal-600">
-                                                <CheckCircle2 className="w-4 h-4" />
+
+                        {/* Rental Terms & Conditions */}
+                        {(() => {
+                            const rentalTerms = listing.rental_terms;
+                            if (!rentalTerms) return null;
+
+                            // Type guard helper
+                            const isRentalTermsObject = (terms: any): terms is RentalTerms => {
+                                return typeof terms === 'object' && !Array.isArray(terms);
+                            };
+
+                            const hasTerms = (
+                                (Array.isArray(rentalTerms) && rentalTerms.length > 0) ||
+                                (isRentalTermsObject(rentalTerms) && (
+                                    (rentalTerms.terms && rentalTerms.terms.length > 0) ||
+                                    !!rentalTerms.security_deposit ||
+                                    !!rentalTerms.min_license_age ||
+                                    !!rentalTerms.min_renter_age ||
+                                    !!rentalTerms.custom_terms
+                                ))
+                            );
+
+                            if (!hasTerms) return null;
+
+                            // Normalize data
+                            const termsList: string[] = Array.isArray(rentalTerms)
+                                ? rentalTerms
+                                : (rentalTerms as RentalTerms).terms || [];
+
+                            const structuredTerms: RentalTerms = !Array.isArray(rentalTerms) ? rentalTerms : {};
+
+                            return (
+                                <div className="space-y-6">
+                                    {/* Security Deposit & Requirements */}
+                                    {(structuredTerms.security_deposit || structuredTerms.min_license_age || structuredTerms.min_renter_age) && (
+                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-orange-100 dark:border-orange-900/30">
+                                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                                <AlertCircle className="w-5 h-5 text-orange-600" />
+                                                متطلبات الإيجار
+                                            </h2>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {structuredTerms.security_deposit && (
+                                                    <div className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
+                                                        <div className="p-2 bg-white dark:bg-slate-800 rounded-full text-orange-600 shadow-sm">
+                                                            <ShieldCheck className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400">مبلغ التأمين</p>
+                                                            <p className="font-bold text-slate-900 dark:text-white">
+                                                                {formatPrice(structuredTerms.security_deposit)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {(structuredTerms.min_license_age || structuredTerms.min_renter_age) && (
+                                                    <div className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
+                                                        <div className="p-2 bg-white dark:bg-slate-800 rounded-full text-orange-600 shadow-sm">
+                                                            <User className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400">العمر المطلوب</p>
+                                                            <div className="flex gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                                                                {structuredTerms.min_renter_age && <span>المستأجر: {structuredTerms.min_renter_age}+</span>}
+                                                                {structuredTerms.min_license_age && <span>الرخصة: {structuredTerms.min_license_age}+</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <span className="font-medium text-slate-700 dark:text-slate-300">{term as string}</span>
                                         </div>
-                                    ))}
+                                    )}
+
+                                    {/* Standard Terms */}
+                                    {(termsList.length > 0 || structuredTerms.custom_terms) && (
+                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-teal-100 dark:border-teal-900/30">
+                                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                                <CheckCircle2 className="w-5 h-5 text-teal-600" />
+                                                الشروط والمميزات
+                                            </h2>
+
+                                            {termsList.length > 0 && (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                                    {termsList.map((term: string, idx: number) => (
+                                                        <div key={idx} className="flex items-center gap-3 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
+                                                            <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 text-teal-600 shadow-sm">
+                                                                <CheckCircle2 className="w-4 h-4" />
+                                                            </div>
+                                                            <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{term}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {structuredTerms.custom_terms && (
+                                                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">شروط إضافية:</p>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                        {structuredTerms.custom_terms}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Description */}
                         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm">
