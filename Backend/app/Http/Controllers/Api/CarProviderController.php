@@ -281,15 +281,18 @@ class CarProviderController extends Controller
      * Get public profile (PUBLIC)
      * Lookup by user_id
      */
-    public function getPublicProfile($userId)
+    public function getPublicProfile($identifier)
     {
         $provider = CarProvider::with([
             'phones' => function ($q) {
                 $q->where('is_primary', true);
             }
         ])
-            ->where('user_id', $userId)
             ->where('is_active', true)
+            ->where(function ($query) use ($identifier) {
+                $query->where('unique_id', $identifier)
+                    ->orWhere('user_id', $identifier);
+            })
             ->first();
 
         if (!$provider) {
