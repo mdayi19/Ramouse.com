@@ -8,6 +8,7 @@ import { CarListing, CarProviderService, RentalTerms } from '../../../services/c
 import { cn } from '../../../lib/utils';
 import { motion } from 'framer-motion';
 import { OptimizedImage } from './OptimizedImage';
+import { useComparison } from '../../../hooks/useComparison';
 
 interface RentListingCardProps {
     listing: CarListing;
@@ -17,9 +18,11 @@ interface RentListingCardProps {
 
 export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewMode, showToast }) => {
     const navigate = useNavigate();
+    const { addItem, removeItem, isInComparison, items } = useComparison();
     const [isFavorited, setIsFavorited] = useState(false);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
+    const inComparison = isInComparison(listing.id);
 
     // Get images ensuring at least one exists
     const images = (listing.photos && listing.photos.length > 0)
@@ -63,6 +66,21 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
         } else {
             navigator.clipboard.writeText(url);
             showToast?.('تم نسخ الرابط', 'success');
+        }
+    };
+
+    const handleCompare = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (inComparison) {
+            removeItem(listing.id);
+            showToast?.('تم الإزالة من المقارنة', 'info');
+        } else {
+            if (items.length >= 4) {
+                showToast?.('لا يمكن مقارنة أكثر من 4 سيارات', 'error');
+                return;
+            }
+            addItem(listing);
+            showToast?.('تم الإضافة للمقارنة', 'success');
         }
     };
 
