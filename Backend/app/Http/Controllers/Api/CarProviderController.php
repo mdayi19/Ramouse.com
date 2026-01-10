@@ -279,27 +279,18 @@ class CarProviderController extends Controller
 
     /**
      * Get public profile (PUBLIC)
-     * Accepts both numeric ID and phone number
+     * Lookup by user_id
      */
-    public function getPublicProfile($id)
+    public function getPublicProfile($userId)
     {
-        $query = CarProvider::with([
+        $provider = CarProvider::with([
             'phones' => function ($q) {
-                // Only show primary phone publicly
                 $q->where('is_primary', true);
             }
         ])
-            ->where('is_active', true);
-
-        // Check if $id looks like a phone number (contains +, -, or starts with country code)
-        // Phone format examples: +963985985985, 0985985985, 963985985985
-        if (preg_match('/^[\+\d]/', $id) && (strlen($id) > 5 || str_contains($id, '+'))) {
-            // Lookup by phone (id field is phone in this schema)
-            $provider = $query->where('id', $id)->first();
-        } else {
-            // Fallback to exact match (in case numeric IDs exist)
-            $provider = $query->where('id', $id)->first();
-        }
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->first();
 
         if (!$provider) {
             return response()->json([
@@ -308,26 +299,48 @@ class CarProviderController extends Controller
             ], 404);
         }
 
+        // Calculate stats
+        $totalListings = CarListing::where('owner_id', $provider->user_id)
+            ->where('seller_type', 'provider')
+            ->count();
+
+        $activeListings = CarListing::where('owner_id', $provider->user_id)
+            ->where('seller_type', 'provider')
+            ->where('is_available', true)
+            ->count();
+
+        $totalViews = CarListing::where('owner_id', $provider->user_id)
+            ->where('seller_type', 'provider')
+            ->sum('views_count') ?? 0;
+
+        // Build response with all required fields
+        $providerData = $provider->makeHidden(['password', 'wallet_balance', 'payment_info'])->toArray();
+
+        // Add computed/alias fields for frontend compatibility
+        $providerData['phone'] = optional($provider->phones->first())->phone ?? $provider->id;
+        $providerData['logo_url'] = $provider->profile_photo;
+        $providerData['trust_score'] = $provider->average_rating ?? 0;
+        $providerData['member_since'] = $provider->created_at;
+        $providerData['total_listings'] = $totalListings;
+        $providerData['active_listings'] = $activeListings;
+        $providerData['total_views'] = $totalViews;
+        $providerData['email'] = $provider->public_email;
+
         return response()->json([
             'success' => true,
-            'provider' => $provider->makeHidden(['password', 'wallet_balance', 'payment_info'])
+            'data' => $providerData
         ]);
     }
 
     /**
      * Get provider's public listings (PUBLIC)
-     * Accepts both numeric ID and phone number
+     * Lookup by unique_id (secure, non-enumerable)
      */
-    public function getProviderListings($id)
+    public function getProviderListings($uniqueId)
     {
-        $query = CarProvider::where('is_active', true);
-
-        // Support phone number lookup (same logic as getPublicProfile)
-        if (preg_match('/^[\+\d]/', $id) && (strlen($id) > 5 || str_contains($id, '+'))) {
-            $provider = $query->where('id', $id)->first();
-        } else {
-            $provider = $query->where('id', $id)->first();
-        }
+        $provider = CarProvider::where('unique_id', $uniqueId)
+            ->where('is_active', true)
+            ->first();
 
         if (!$provider) {
             return response()->json([
@@ -346,8 +359,7 @@ class CarProviderController extends Controller
 
         return response()->json([
             'success' => true,
-            'provider' => $provider->makeHidden(['password', 'wallet_balance', 'payment_info']),
-            'listings' => $listings
+            'data' => $listings
         ]);
     }
 

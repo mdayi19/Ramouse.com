@@ -8,7 +8,8 @@ import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 
 interface ProviderProfile {
-    id: number;
+    id: string | number;
+    user_id: number;
     phone: string;
     business_name: string;
     business_name_ar?: string;
@@ -49,8 +50,8 @@ const CarProviderProfile: React.FC = () => {
         try {
             setLoading(true);
             const [providerData, listingsData] = await Promise.all([
-                CarProviderService.getPublicProfile(parseInt(id)),
-                CarProviderService.getProviderListings(parseInt(id))
+                CarProviderService.getPublicProfile(id),
+                CarProviderService.getProviderListings(id)
             ]);
 
             setProvider(providerData);
