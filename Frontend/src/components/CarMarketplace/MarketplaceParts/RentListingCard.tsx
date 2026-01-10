@@ -125,6 +125,11 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
         };
     };
 
+    const handleDetailsClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigate(`/rent-car/${listing.slug}`);
+    };
+
     const rentalInfo = getRentalInfo(listing);
 
     // Card Content for reuse in Grid/List layouts
@@ -229,7 +234,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                     </button>
                 </div>
                 <button
-                    onClick={handleView}
+                    onClick={handleDetailsClick}
                     className="flex-1 py-2.5 bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-100 text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95"
                 >
                     <Eye className="w-4 h-4" />
@@ -359,6 +364,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                         </div>
                         {/* 5. Show Details Button */}
                         <button
+                            onClick={handleDetailsClick}
                             className="px-6 py-2 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-colors shadow-md flex items-center gap-2"
                         >
                             <Eye className="w-4 h-4" />
