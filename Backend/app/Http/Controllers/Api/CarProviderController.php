@@ -334,12 +334,15 @@ class CarProviderController extends Controller
 
     /**
      * Get provider's public listings (PUBLIC)
-     * Lookup by unique_id (secure, non-enumerable)
+     * Supports both unique_id and user_id for backward compatibility
      */
-    public function getProviderListings($uniqueId)
+    public function getProviderListings($identifier)
     {
-        $provider = CarProvider::where('unique_id', $uniqueId)
-            ->where('is_active', true)
+        $provider = CarProvider::where('is_active', true)
+            ->where(function ($query) use ($identifier) {
+                $query->where('unique_id', $identifier)
+                    ->orWhere('user_id', $identifier);
+            })
             ->first();
 
         if (!$provider) {

@@ -89,9 +89,9 @@ const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
                     </button>
                 )}
 
-                {listing.seller_type === 'provider' && provider?.unique_id && (
+                {listing.seller_type === 'provider' && provider && (
                     <button
-                        onClick={() => navigate(`/car-providers/${provider.unique_id}`)}
+                        onClick={() => navigate(`/car-providers/${provider.unique_id || provider.user_id}`)}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl transition-all font-medium border border-gray-200 dark:border-gray-600"
                     >
                         <ExternalLink className="w-5 h-5" />

@@ -285,13 +285,13 @@ export class CarProviderService {
     }
 
     // Public Provider Profile Methods
-    static async getPublicProfile(uniqueId: string) {
-        const response = await api.get(`/car-providers/${uniqueId}`);
+    static async getPublicProfile(identifier: string | number) {
+        const response = await api.get(`/car-providers/${identifier}`);
         return response.data.data;
     }
 
-    static async getProviderListings(uniqueId: string, filters: any = {}) {
-        const response = await api.get(`/car-providers/${uniqueId}/listings`, { params: filters });
+    static async getProviderListings(identifier: string | number, filters: any = {}) {
+        const response = await api.get(`/car-providers/${identifier}/listings`, { params: filters });
         return response.data.data;
     }
 
