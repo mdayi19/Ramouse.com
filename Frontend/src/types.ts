@@ -345,7 +345,11 @@ export type NotificationType =
   | 'new_store_order'
   | 'NEW_CAR_PROVIDER_REQUEST'
   | 'NEW_ANNOUNCEMENT_CAR_PROVIDER'
-  | 'CAR_PROVIDER_VERIFIED';
+  | 'CAR_PROVIDER_VERIFIED'
+  | 'NEW_PROVIDER_REGISTRATION'
+  | 'NEW_TECHNICIAN_REGISTRATION'
+  | 'NEW_TOW_TRUCK_REGISTRATION'
+  | 'NEW_FLASH_PRODUCT_REQUEST';
 
 export interface Notification {
   id: string;
