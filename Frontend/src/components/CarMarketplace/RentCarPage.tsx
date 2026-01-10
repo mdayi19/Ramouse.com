@@ -156,7 +156,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                 <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-600/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-                <div className="w-full px-4 md:px-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="w-full px-2 md:px-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="max-w-2xl">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -221,7 +221,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
             </div>
 
             {/* 2. Main Content Area */}
-            <div className="w-full px-4 md:px-8 py-8 -mt-8 relative z-20">
+            <div className="w-full px-2 md:px-8 py-8 -mt-8 relative z-20">
                 <div className="flex flex-col lg:flex-row gap-8">
 
                     {/* Filters Sidebar (Desktop) */}

@@ -286,7 +286,7 @@ const RentCarListingDetail: React.FC = () => {
         >
             {/* Header Navigation */}
             <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
-                <div className="w-full px-4 md:px-8 sm:px-6 py-4 flex justify-between items-center">
+                <div className="w-full px-2 md:px-8 sm:px-6 py-4 flex justify-between items-center">
                     <button
                         onClick={() => navigate(-1)}
                         className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors gap-2"
@@ -314,7 +314,7 @@ const RentCarListingDetail: React.FC = () => {
                 </div>
             </div>
 
-            <div className="w-full px-4 md:px-8 sm:px-6 py-4">
+            <div className="w-full px-2 md:px-8 sm:px-6 py-4">
 
                 {/* Gallery */}
                 <div className="mb-8">
