@@ -19,13 +19,13 @@ class QuoteResource extends JsonResource
             'id' => $this->id,
             'order_number' => $this->order_number,
             'provider_id' => $this->provider_id,
-            'provider_name' => $this->provider_name,
-            'provider_unique_id' => $this->provider_unique_id,
+            'provider_name' => $this->provider_name ?? $this->provider?->name,
+            'provider_unique_id' => $this->provider_unique_id ?? $this->provider?->unique_id,
 
             // CamelCase for frontend
             'providerId' => $this->provider_id,
-            'providerName' => $this->provider_name,
-            'providerUniqueId' => $this->provider_unique_id,
+            'providerName' => $this->provider_name ?? $this->provider?->name,
+            'providerUniqueId' => $this->provider_unique_id ?? $this->provider?->unique_id,
 
             // Pricing
             'price' => (float) $this->price,
@@ -53,18 +53,25 @@ class QuoteResource extends JsonResource
             'updated_at' => $this->updated_at?->toIso8601String(),
 
             // Admin Only: Provider Phone
-            'provider_phone' => $this->when(
-                $request->user() && ($request->user()->role === 'admin' || (($this->provider && $request->user()->id === $this->provider->user_id))),
+
+            'providerPhone' => $this->when(
+                $request->user() && ($request->user()->is_admin || $request->user()->role === 'admin' || (($this->provider && $request->user()->id === $this->provider->user_id))),
                 function () {
+                    // 1. Try fetching from Provider -> User relation
                     if ($this->provider && $this->provider->user) {
                         return $this->provider->user->phone;
                     }
-                    // Fallback if provider ID acts as phone (legacy)
-                    return $this->provider ? $this->provider->id : $this->provider_id;
+                    // 2. Try fetching from Provider model ID (if it's the phone)
+                    if ($this->provider) {
+                        return $this->provider->id;
+                    }
+                    // 3. Fallback to foreign key on quote
+                    return $this->provider_id;
                 }
             ),
-            'providerPhone' => $this->when(
-                $request->user() && ($request->user()->role === 'admin' || (($this->provider && $request->user()->id === $this->provider->user_id))),
+            // Snake case alias
+            'provider_phone' => $this->when(
+                $request->user() && ($request->user()->is_admin || $request->user()->role === 'admin' || (($this->provider && $request->user()->id === $this->provider->user_id))),
                 function () {
                     if ($this->provider && $this->provider->user) {
                         return $this->provider->user->phone;

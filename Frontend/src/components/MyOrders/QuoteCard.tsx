@@ -94,14 +94,39 @@ const QuoteCard: React.FC<{
                     <div className="flex-1">
                         <div className="flex items-center gap-2">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold shadow-md">
-                                <Icon name="User" className="w-5 h-5" />
+                                {quote.providerName && quote.providerPhone ? (
+                                    quote.providerName.charAt(0).toUpperCase()
+                                ) : (
+                                    <Icon name="User" className="w-5 h-5" />
+                                )}
                             </div>
                             <div>
-                                <h4 className="font-bold text-gray-800 dark:text-gray-200">المزود #{quote.providerUniqueId}</h4>
-                                {providerRating !== undefined && (
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                        <Rating rating={providerRating} readOnly size="sm" />
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">({providerRating.toFixed(1)})</span>
+                                <h4 className="font-bold text-gray-800 dark:text-gray-200">
+                                    {quote.providerName && quote.providerPhone ? quote.providerName : `المزود #${quote.providerUniqueId}`}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    {quote.providerUniqueId && (quote.providerName && quote.providerPhone) && (
+                                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">#{quote.providerUniqueId}</span>
+                                    )}
+                                    {providerRating !== undefined && (
+                                        <div className="flex items-center gap-1.5">
+                                            <Rating rating={providerRating} readOnly size="sm" />
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">({providerRating.toFixed(1)})</span>
+                                        </div>
+                                    )}
+                                </div>
+                                {quote.providerPhone && (
+                                    <div className="mt-1">
+                                        <a
+                                            href={`https://wa.me/${quote.providerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً، بخصوص العرض المقدم للطلب رقم ${orderNumber} في تطبيق راموسة.`)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-medium transition-colors shadow-sm"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <Icon name="MessageCircle" className="w-3 h-3" />
+                                            <span>{quote.providerPhone}</span>
+                                        </a>
                                     </div>
                                 )}
                             </div>
