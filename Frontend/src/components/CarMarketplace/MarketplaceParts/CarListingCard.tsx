@@ -179,15 +179,15 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all cursor-pointer flex flex-col sm:flex-row h-auto sm:h-48"
+                className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all cursor-pointer flex flex-row h-32 sm:h-48 items-stretch"
                 onClick={handleView}
             >
                 {/* Image Section (Left/Top) */}
-                <div className="w-full sm:w-64 h-48 sm:h-full relative flex-shrink-0 overflow-hidden">
-                    <img
+                <div className="w-32 sm:w-64 relative flex-shrink-0 overflow-hidden">
+                    <OptimizedImage
                         src={images[0]}
                         alt={listing.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 absolute inset-0"
                     />
                     <div className="absolute top-2 left-2 flex gap-1">
                         {listing.is_sponsored && (
@@ -199,8 +199,8 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                 </div>
 
                 {/* Content Section */}
-                <div className="flex-1 flex flex-col justify-between p-4">
-                    <div className="flex justify-between items-start">
+                <div className="flex-1 flex flex-col justify-between p-2 sm:p-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                         <div>
                             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
                                 <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">{listing.year}</span>

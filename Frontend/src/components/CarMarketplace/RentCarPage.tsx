@@ -25,7 +25,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     // Initialize with rent type
     const [filters, setFilters] = useState<FilterType>({ listing_type: 'rent', page: 1 });
     const [categories, setCategories] = useState<any[]>([]);
