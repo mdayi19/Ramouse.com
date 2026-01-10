@@ -303,6 +303,40 @@ export class CarProviderService {
         return response.data;
     }
 
+    // Bulk Actions
+    static async bulkHide(listingIds: number[]) {
+        const response = await api.post('/car-provider/listings/bulk-hide', { listing_ids: listingIds });
+        return response.data;
+    }
+
+    static async bulkShow(listingIds: number[]) {
+        const response = await api.post('/car-provider/listings/bulk-show', { listing_ids: listingIds });
+        return response.data;
+    }
+
+    static async bulkDelete(listingIds: number[]) {
+        const response = await api.post('/car-provider/listings/bulk-delete', { listing_ids: listingIds });
+        return response.data;
+    }
+
+    // Quick Edit
+    static async quickEditListing(id: number, data: { price?: number; is_negotiable?: boolean; is_hidden?: boolean }) {
+        const response = await api.patch(`/car-provider/listings/${id}/quick-edit`, data);
+        return response.data;
+    }
+
+    // Duplicate Listing
+    static async duplicateListing(id: number) {
+        const response = await api.post(`/car-provider/listings/${id}/duplicate`);
+        return response.data;
+    }
+
+    // Listing Analytics
+    static async getListingAnalytics(listingId: number, days: number = 30) {
+        const response = await api.get(`/car-analytics/listing/${listingId}`, { params: { days } });
+        return response.data;
+    }
+
     // Reporting
     static async reportListing(id: number, data: { reason: string; details: string }) {
         const response = await api.post(`/car-listings/${id}/report`, data);

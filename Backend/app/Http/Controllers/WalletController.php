@@ -10,6 +10,7 @@ use App\Models\UserWalletHold;
 use App\Models\Customer;
 use App\Models\Technician;
 use App\Models\TowTruck;
+use App\Models\CarProvider;
 use App\Models\Notification;
 use App\Events\UserNotification;
 use Illuminate\Support\Facades\DB;

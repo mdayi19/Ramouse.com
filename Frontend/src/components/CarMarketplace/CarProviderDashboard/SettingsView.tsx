@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, User, Building2, MapPin, Building, FileText, Loader, Camera, Image as ImageIcon, Globe, Mail, Clock, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Save, User, Building2, MapPin, Building, FileText, Loader, Camera, Image as ImageIcon, Globe, Mail, Clock, Plus, Trash2, RotateCcw, AlertCircle, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarProvider } from '../../../types';
@@ -14,6 +14,8 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast, onUpdateProvider }) => {
     const [activeTab, setActiveTab] = useState<'general' | 'media' | 'contact' | 'hours'>('general');
     const [saving, setSaving] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
     // Form States
     const [formData, setFormData] = useState({
@@ -46,30 +48,81 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setHasUnsavedChanges(true);
+        // Clear validation error for this field
+        if (validationErrors[e.target.name]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[e.target.name];
+                return newErrors;
+            });
+        }
     };
 
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSocials({ ...socials, [e.target.name]: e.target.value });
+        setHasUnsavedChanges(true);
     };
 
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('حجم الصورة كبير جداً. الحد الأقصى 5 ميجابايت', 'error');
+                return;
+            }
             setLogo(file);
             setLogoPreview(URL.createObjectURL(file));
+            setHasUnsavedChanges(true);
         }
     };
 
     const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('حجم الصورة كبير جداً. الحد الأقصى 5 ميجابايت', 'error');
+                return;
+            }
             setCover(file);
             setCoverPreview(URL.createObjectURL(file));
+            setHasUnsavedChanges(true);
         }
+    };
+
+    const validateForm = (): boolean => {
+        const errors: Record<string, string> = {};
+
+        // Validate business name
+        if (!formData.business_name.trim()) {
+            errors.business_name = 'اسم المعرض مطلوب';
+        }
+
+        // Validate email format if provided
+        if (formData.public_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.public_email)) {
+            errors.public_email = 'البريد الإلكتروني غير صحيح';
+        }
+
+        // Validate website URL if provided
+        if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
+            errors.website = 'رابط الموقع يجب أن يبدأ بـ http:// أو https://';
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
+
+        // Validate form
+        if (!validateForm()) {
+            showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
+            return;
+        }
+
         setSaving(true);
         try {
             const data = new FormData();
@@ -99,12 +152,47 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
 
             const updated = await CarProviderService.updateProfile(data);
             onUpdateProvider(updated);
+            setHasUnsavedChanges(false);
             showToast('تم حفظ التغييرات بنجاح', 'success');
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            showToast('فشل حفظ التغييرات', 'error');
+            const errorMsg = error.response?.data?.message || 'فشل حفظ التغييرات';
+            showToast(errorMsg, 'error');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleReset = () => {
+        if (!hasUnsavedChanges || confirm('هل أنت متأكد من إلغاء التغييرات؟')) {
+            // Reset form data
+            setFormData({
+                name: provider.name || '',
+                business_name: provider.business_name || '',
+                business_type: provider.business_type || 'dealership',
+                description: provider.description || '',
+                city: provider.city || '',
+                address: provider.address || '',
+                website: provider.website || '',
+                public_email: provider.public_email || '',
+                working_hours: provider.working_hours || '',
+            });
+
+            setSocials({
+                facebook: provider.socials?.facebook || '',
+                instagram: provider.socials?.instagram || '',
+                whatsapp: provider.socials?.whatsapp || '',
+                twitter: provider.socials?.twitter || '',
+            });
+
+            setLogo(null);
+            setLogoPreview(provider.profile_photo || null);
+            setCover(null);
+            setCoverPreview(provider.cover_photo || null);
+            setGallery(provider.gallery || []);
+            setHasUnsavedChanges(false);
+            setValidationErrors({});
+            showToast('تم إلغاء التغييرات', 'info');
         }
     };
 
@@ -129,17 +217,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
         >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">إدارة الملف الشخصي</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">إدارة الملف الشخصي</h2>
+                        {hasUnsavedChanges && (
+                            <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold rounded-full flex items-center gap-1"
+                            >
+                                <AlertCircle className="w-3 h-3" />
+                                تغييرات غير محفوظة
+                            </motion.span>
+                        )}
+                    </div>
                     <p className="text-slate-600 dark:text-slate-400 mt-1">قم بتحديث معلومات معرضك وصور العرض</p>
                 </div>
-                <button
-                    onClick={() => handleSubmit()}
-                    disabled={saving}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-blue-600/20"
-                >
-                    {saving ? <Loader className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                    حفظ التغييرات
-                </button>
+                <div className="flex items-center gap-3">
+                    {hasUnsavedChanges && (
+                        <motion.button
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            onClick={handleReset}
+                            className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium flex items-center gap-2"
+                        >
+                            <RotateCcw className="w-4 h-4" />
+                            <span className="hidden sm:inline">إلغاء التغييرات</span>
+                        </motion.button>
+                    )}
+                    <button
+                        onClick={() => handleSubmit()}
+                        disabled={saving || !hasUnsavedChanges}
+                        className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-blue-600/20"
+                    >
+                        {saving ? <Loader className="w-5 h-5 animate-spin" /> : hasUnsavedChanges ? <Save className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                        {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+                    </button>
+                </div>
             </div>
 
             {/* Navigation Tabs */}
@@ -185,7 +298,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b pb-2 dark:border-slate-700">المعلومات الأساسية</h3>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">اسم المعرض (التجاري)</label>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">اسم المعرض (التجاري) *</label>
                                 <div className="relative">
                                     <Building className="absolute top-3 right-3 w-5 h-5 text-slate-400" />
                                     <input
@@ -193,10 +306,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                                         name="business_name"
                                         value={formData.business_name}
                                         onChange={handleChange}
-                                        className="w-full pr-10 pl-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                        className={`w-full pr-10 pl-4 py-3 rounded-xl border ${validationErrors.business_name ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500'} bg-slate-50 dark:bg-slate-900/50 outline-none focus:ring-2 transition-shadow`}
                                         placeholder="مثال: معرض النخبة للسيارات"
+                                        required
                                     />
                                 </div>
+                                {validationErrors.business_name && (
+                                    <motion.p
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1"
+                                    >
+                                        <AlertCircle className="w-3 h-3" />
+                                        {validationErrors.business_name}
+                                    </motion.p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">اسم المدير المسؤول</label>
@@ -448,6 +572,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                     )}
                 </AnimatePresence>
             </div>
-        </motion.div>
+        </motion.div >
     );
 };

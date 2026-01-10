@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     BarChart, Calendar, Eye, MousePointerClick,
-    Heart, TrendingUp, ArrowUp, ArrowDown, Activity
+    Heart, TrendingUp, ArrowUp, ArrowDown, Activity, RefreshCw, Share2, Phone, MessageCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
@@ -14,6 +14,7 @@ interface AnalyticsViewProps {
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
     const [period, setPeriod] = useState<number>(30);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [data, setData] = useState<any>(null);
 
     useEffect(() => {
@@ -24,35 +25,44 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
         setLoading(true);
         try {
             const res = await CarProviderService.getProviderAnalytics(period);
-            setData(res);
-        } catch (error) {
+
+            // Map the backend response to the format expected by the component
+            const mappedData = {
+                summary: {
+                    total_views: res.analytics?.total_events?.view || 0,
+                    views_growth: 0, // Backend doesn't provide growth yet
+                    total_contacts: (res.analytics?.total_events?.contact_phone || 0) +
+                        (res.analytics?.total_events?.contact_whatsapp || 0),
+                    contacts_growth: 0,
+                    total_favorites: res.analytics?.total_favorites || 0,
+                    favorites_growth: 0
+                },
+                events_breakdown: {
+                    view: res.analytics?.total_events?.view || 0,
+                    contact_phone: res.analytics?.total_events?.contact_phone || 0,
+                    contact_whatsapp: res.analytics?.total_events?.contact_whatsapp || 0,
+                    favorite: res.analytics?.total_events?.favorite || 0,
+                    share: res.analytics?.total_events?.share || 0,
+                },
+                views_history: res.views_history || [],
+                top_listings: res.top_performing_listings || []
+            };
+
+            setData(mappedData);
+        } catch (error: any) {
             console.error('Failed to load analytics:', error);
-            // Fallback mock data for demo if API fails or returns empty
-            setData(getMockData(period));
+            showToast(error.response?.data?.message || 'فشل تحميل الإحصائيات', 'error');
+            // Set empty data structure instead of mock data
+            setData({
+                summary: { total_views: 0, views_growth: 0, total_contacts: 0, contacts_growth: 0, total_favorites: 0, favorites_growth: 0 },
+                events_breakdown: { view: 0, contact_phone: 0, contact_whatsapp: 0, favorite: 0, share: 0 },
+                views_history: [],
+                top_listings: []
+            });
         } finally {
             setLoading(false);
         }
     };
-
-    const getMockData = (days: number) => ({
-        summary: {
-            total_views: 1250,
-            views_growth: 12.5,
-            total_contacts: 45,
-            contacts_growth: -5.2,
-            total_favorites: 89,
-            favorites_growth: 8.4
-        },
-        views_history: Array.from({ length: 7 }, (_, i) => ({
-            date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('ar-EG', { weekday: 'short' }),
-            value: Math.floor(Math.random() * 100) + 50
-        })),
-        top_listings: [
-            { id: 1, title: 'تويوتا كامري 2022', views: 450, contacts: 12 },
-            { id: 2, title: 'هيونداي سوناتا 2021', views: 320, contacts: 8 },
-            { id: 3, title: 'كيا سبورتاج 2023', views: 280, contacts: 15 },
-        ]
-    });
 
     if (loading && !data) {
         return (
@@ -94,23 +104,36 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
                     <p className="text-slate-600 dark:text-slate-400 mt-1">تتبع أداء إعلاناتك وتفاعل العملاء</p>
                 </div>
 
-                <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl w-fit">
-                    {[
-                        { label: '7 أيام', value: 7 },
-                        { label: '30 يوم', value: 30 },
-                        { label: '90 يوم', value: 90 }
-                    ].map((opt) => (
-                        <button
-                            key={opt.value}
-                            onClick={() => setPeriod(opt.value)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === opt.value
-                                ? 'bg-white dark:bg-slate-600 text-primary shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                                }`}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-3">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => loadAnalytics()}
+                        disabled={loading || refreshing}
+                        className="p-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl transition-all disabled:opacity-50"
+                        title="تحديث البيانات"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${loading || refreshing ? 'animate-spin' : ''}`} />
+                    </motion.button>
+
+                    <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl w-fit">
+                        {[
+                            { label: '7 أيام', value: 7 },
+                            { label: '30 يوم', value: 30 },
+                            { label: '90 يوم', value: 90 }
+                        ].map((opt) => (
+                            <button
+                                key={opt.value}
+                                onClick={() => setPeriod(opt.value)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === opt.value
+                                    ? 'bg-white dark:bg-slate-600 text-primary shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </motion.div>
 
