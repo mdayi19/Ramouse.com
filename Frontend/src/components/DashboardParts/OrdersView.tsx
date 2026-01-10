@@ -66,21 +66,21 @@ const QuoteDisplay: React.FC<{ quote: Quote, orderNumber: string, isAccepted?: b
                             : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
                         }
                     `}>
-                        {(quote.providerName || (quote as any).provider_name)?.charAt(0) || '؟'}
+                        {quote.providerName?.charAt(0) || '؟'}
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">{quote.providerName || (quote as any).provider_name || 'مزود مجهول'}</p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">{quote.providerName || 'مزود مجهول'}</p>
                         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono flex-wrap mt-1">
-                            <span>#{quote.providerUniqueId || (quote as any).provider_unique_id || 'N/A'}</span>
-                            {(quote.providerPhone || (quote as any).provider_phone) && (
+                            <span>#{quote.providerUniqueId || 'N/A'}</span>
+                            {(quote.providerPhone || quote.provider_phone) && (
                                 <>
                                     <span>•</span>
                                     <div className="flex items-center gap-2">
                                         <span dir="ltr" className="select-all font-semibold">
-                                            {quote.providerPhone || (quote as any).provider_phone}
+                                            {quote.providerPhone || quote.provider_phone}
                                         </span>
                                         <a
-                                            href={`https://wa.me/${(quote.providerPhone || (quote as any).provider_phone)?.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً، بخصوص العرض المقدم للطلب رقم ${orderNumber} في تطبيق راموسة.`)}`}
+                                            href={`https://wa.me/${(quote.providerPhone || quote.provider_phone)?.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً، بخصوص العرض المقدم للطلب رقم ${orderNumber} في تطبيق راموسة.`)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="inline-flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-medium transition-colors shadow-sm"

@@ -272,7 +272,8 @@ export interface Quote {
   providerId: string;
   providerName: string;
   providerUniqueId: string;
-  providerPhone?: string; // Added for display
+  provider_phone?: string; // Snake case from backend
+  providerPhone?: string; // Helper if mapped (but backend sends snake_case)
   price: number;
   partStatus: PartStatus;
   partSizeCategory?: PartSizeCategory;

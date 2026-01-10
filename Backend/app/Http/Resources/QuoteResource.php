@@ -46,9 +46,12 @@ class QuoteResource extends JsonResource
 
             // Admin Only: Provider Phone
             'provider_phone' => $this->when(
-                $request->user() && ($request->user()->role === 'admin' || $request->user()->id === $this->provider->user_id),
+                $request->user() && ($request->user()->role === 'admin' || (($this->provider && $request->user()->id === $this->provider->user_id))),
                 function () {
-                    // Since provider ID IS the phone number in many cases in this app design:
+                    if ($this->provider && $this->provider->user) {
+                        return $this->provider->user->phone;
+                    }
+                    // Fallback if provider ID acts as phone (legacy)
                     return $this->provider ? $this->provider->id : $this->provider_id;
                 }
             ),

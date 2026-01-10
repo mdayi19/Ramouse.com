@@ -174,7 +174,7 @@ class OrderController extends Controller
 
     public function show($orderNumber)
     {
-        $order = Order::with(['quotes', 'acceptedQuote'])->where('order_number', $orderNumber)->firstOrFail();
+        $order = Order::with(['quotes.provider.user', 'acceptedQuote.provider.user'])->where('order_number', $orderNumber)->firstOrFail();
         return ApiResponse::success(new OrderResource($order));
     }
 
@@ -419,7 +419,7 @@ class OrderController extends Controller
      */
     public function adminList(Request $request)
     {
-        $orders = Order::with(['quotes.provider', 'acceptedQuote.provider'])
+        $orders = Order::with(['quotes.provider.user', 'acceptedQuote.provider.user'])
             ->orderBy('created_at', 'desc')
             ->get();
 
