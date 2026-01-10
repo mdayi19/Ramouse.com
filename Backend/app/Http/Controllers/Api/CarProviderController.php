@@ -279,18 +279,34 @@ class CarProviderController extends Controller
 
     /**
      * Get public profile (PUBLIC)
+     * Accepts both numeric ID and phone number
      */
     public function getPublicProfile($id)
     {
-        $provider = CarProvider::with([
+        $query = CarProvider::with([
             'phones' => function ($q) {
                 // Only show primary phone publicly
                 $q->where('is_primary', true);
             }
         ])
-            ->where('id', $id)
-            ->where('is_active', true)
-            ->firstOrFail();
+            ->where('is_active', true);
+
+        // Check if $id looks like a phone number (contains +, -, or starts with country code)
+        // Phone format examples: +963985985985, 0985985985, 963985985985
+        if (preg_match('/^[\+\d]/', $id) && (strlen($id) > 5 || str_contains($id, '+'))) {
+            // Lookup by phone (id field is phone in this schema)
+            $provider = $query->where('id', $id)->first();
+        } else {
+            // Fallback to exact match (in case numeric IDs exist)
+            $provider = $query->where('id', $id)->first();
+        }
+
+        if (!$provider) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider not found'
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
@@ -300,12 +316,25 @@ class CarProviderController extends Controller
 
     /**
      * Get provider's public listings (PUBLIC)
+     * Accepts both numeric ID and phone number
      */
     public function getProviderListings($id)
     {
-        $provider = CarProvider::where('id', $id)
-            ->where('is_active', true)
-            ->firstOrFail();
+        $query = CarProvider::where('is_active', true);
+
+        // Support phone number lookup (same logic as getPublicProfile)
+        if (preg_match('/^[\+\d]/', $id) && (strlen($id) > 5 || str_contains($id, '+'))) {
+            $provider = $query->where('id', $id)->first();
+        } else {
+            $provider = $query->where('id', $id)->first();
+        }
+
+        if (!$provider) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider not found'
+            ], 404);
+        }
 
         $listings = CarListing::with(['category', 'brand'])
             ->where('owner_id', $provider->user_id)
