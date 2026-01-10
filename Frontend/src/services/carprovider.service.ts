@@ -95,6 +95,11 @@ export interface MarketplaceFilters {
     page?: number;
     features?: string[];
     rental_terms?: string[];
+    city?: string;
+    min_deposit?: number;
+    max_deposit?: number;
+    min_renter_age?: number;
+    min_license_age?: number;
 }
 
 export class CarProviderService {

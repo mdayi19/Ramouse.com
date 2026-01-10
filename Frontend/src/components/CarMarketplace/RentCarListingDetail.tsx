@@ -1,24 +1,114 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    MapPin, Calendar, Gauge, GitFork, Share2, Heart, ArrowLeft,
+    Car, MapPin, Calendar, Gauge, GitFork, Share2, Heart, ArrowLeft,
     Phone, MessageSquare, ShieldCheck, Star, User, Clock,
-    CheckCircle2, AlertCircle, Info, Car
+    CheckCircle2, AlertCircle, Info, ChevronRight, MessageCircle, Shield,
+    Eye
 } from 'lucide-react';
 import { CarProviderService, CarListing, RentalTerms } from '../../services/carprovider.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../../hooks/useAppState';
+import CarGallery from './ListingParts/CarGallery';
+import ProviderSidebar from './ListingParts/ProviderSidebar';
+import SimilarListings from './ListingParts/SimilarListings';
+import ReportListingModal from './ListingParts/ReportListingModal';
+import QuickSpecsBar from './ListingParts/QuickSpecsBar';
+import PriceCard from './ListingParts/PriceCard';
+import SpecificationsTabs from './ListingParts/SpecificationsTabs';
+import FeaturesShowcase from './ListingParts/FeaturesShowcase';
+import { CarBodyDiagram } from './CarBodyDiagram';
+
+// Helper for translations (aligned with CarListingDetail)
+const t = {
+    specs: {
+        year: 'السنة',
+        mileage: 'الممشى',
+        transmission: 'ناقل الحركة',
+        fuel_type: 'الوقود',
+        engine_size: 'حجم المحرك',
+        horsepower: 'قوة المحرك',
+        exterior_color: 'اللون الخارجي',
+        interior_color: 'اللون الداخلي',
+        body_style: 'نمط الهيكل',
+        body_condition: 'حالة الهيكل',
+        doors_count: 'عدد الأبواب',
+        seats_count: 'عدد المقاعد',
+        warranty: 'الضمان',
+        license_plate: 'رقم اللوحة',
+        vin_number: 'رقم الهيكل',
+        previous_owners: 'عدد الملاك السابقين',
+        car_category: 'المنشأ',
+        address: 'العنوان',
+    },
+    values: {
+        automatic: 'أوتوماتيك',
+        manual: 'عادي',
+        gasoline: 'بنزين',
+        diesel: 'ديزل',
+        electric: 'كهرباء',
+        hybrid: 'هجين',
+        new: 'جديدة',
+        used: 'مستعملة',
+        certified_pre_owned: 'مستعملة معتمدة',
+    },
+    ui: {
+        sponsored: 'مميزة',
+        featured: 'مختارة',
+        rent: 'للإيجار',
+        sale: 'للبيع',
+        negotiable: 'قابل للتفاوض',
+        video: 'فيديو توضيحي',
+        specs_title: 'المواصفات',
+        vehicle_info: 'معلومات السيارة',
+        additional_info: 'معلومات إضافية',
+        rental_rates: 'أسعار الإيجار',
+        daily_rate: 'يومي',
+        weekly_rate: 'أسبوعي',
+        monthly_rate: 'شهري',
+        rental_terms: 'شروط الإيجار',
+        features_title: 'المميزات',
+        description_title: 'الوصف',
+        view_count: 'مشاهدة',
+        km: 'كم',
+        call: 'اتصال',
+        whatsapp: 'واتساب',
+        view_profile: 'زيارة المعرض',
+        report: 'إبلاغ عن محتوى مخالف',
+        verified: 'موثّق',
+        hp: 'حصان',
+        owner: 'مالك',
+    }
+};
+
+const safeDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    try {
+        return new Date(dateString).toLocaleDateString('ar-SA');
+    } catch (e) {
+        return '';
+    }
+};
+
+const safePrice = (price: number | undefined) => {
+    if (typeof price !== 'number') return '';
+    try {
+        return new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(price);
+    } catch (e) {
+        return `${price} SYP`;
+    }
+};
 
 const RentCarListingDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const { showToast, isAuthenticated, userPhone, setShowLogin } = useAppState();
+    const { showToast, isAuthenticated, setShowLogin } = useAppState();
 
     const [listing, setListing] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [error, setError] = useState<string | null>(null);
     const [isFavorited, setIsFavorited] = useState(false);
-    const [showFullDesc, setShowFullDesc] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
 
     useEffect(() => {
         if (slug) {
@@ -31,28 +121,31 @@ const RentCarListingDetail: React.FC = () => {
             setLoading(true);
             const data = await CarProviderService.getListingBySlug(slug);
             setListing(data);
-            setIsFavorited(false); // Ideally check from API
-            // Check favorite status
+            setIsFavorited(false);
+
             if (data?.id) {
                 CarProviderService.checkFavorite(data.id).then(setIsFavorited).catch(console.error);
                 CarProviderService.trackAnalytics(data.id, 'view').catch(console.error);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load listing:', error);
-            showToast('فشل تحميل تفاصيل السيارة', 'error');
-            navigate('/rent-car');
+            setError(error.message || 'فشل تحميل تفاصيل السيارة');
         } finally {
             setLoading(false);
         }
     };
 
     const handleShare = async () => {
+        if (!listing) return;
+
+        CarProviderService.trackAnalytics(listing.id, 'share').catch(console.error);
         const url = window.location.href;
+
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: listing?.title || 'Rent Car',
-                    text: `Check out this rental car: ${listing?.title}`,
+                    title: listing.title,
+                    text: `Check out this rental car: ${listing.title}`,
                     url: url,
                 });
             } catch (err) {
@@ -85,37 +178,9 @@ const RentCarListingDetail: React.FC = () => {
         }
     };
 
-    const handlePhoneCall = async () => {
+    const handleContact = async (type: 'phone' | 'email' | 'whatsapp') => {
         if (!isAuthenticated) {
-            showToast('الرجاء تسجيل الدخول للاتصال بالبائع', 'info');
-            if (setShowLogin) {
-                setShowLogin(true);
-            } else {
-                setTimeout(() => navigate('/'), 1000);
-            }
-            return;
-        }
-        if (!listing?.contact_phone) {
-            showToast('رقم الهاتف غير متوفر', 'error');
-            return;
-        }
-
-        // Track contact analytics
-        if (listing?.id) {
-            try {
-                await CarProviderService.trackAnalytics(listing.id, 'contact_phone');
-            } catch (error) {
-                console.error('Failed to track phone contact:', error);
-            }
-        }
-
-        // Open phone dialer
-        window.location.href = `tel:${listing.contact_phone}`;
-    };
-
-    const handleWhatsAppContact = async () => {
-        if (!isAuthenticated) {
-            showToast('الرجاء تسجيل الدخول للتواصل عبر واتساب', 'info');
+            showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
             if (setShowLogin) {
                 setShowLogin(true);
             } else {
@@ -124,35 +189,45 @@ const RentCarListingDetail: React.FC = () => {
             return;
         }
 
-        const phone = listing?.contact_whatsapp || listing?.contact_phone;
-        if (!phone) {
-            showToast('رقم الواتساب غير متوفر', 'error');
-            return;
-        }
+        if (!listing) return;
 
-        // Track WhatsApp contact analytics
-        if (listing?.id) {
-            try {
-                await CarProviderService.trackAnalytics(listing.id, 'contact_whatsapp');
-            } catch (error) {
-                console.error('Failed to track WhatsApp contact:', error);
+        const phone = listing.contact_phone || (listing.provider || listing.owner?.car_provider)?.phone;
+        const email = (listing.provider || listing.owner?.car_provider)?.email;
+        const whatsapp = listing.contact_whatsapp || phone;
+
+        if (type === 'phone') {
+            if (!phone) {
+                showToast('رقم الهاتف غير متوفر', 'error');
+                return;
             }
+            CarProviderService.trackAnalytics(listing.id, 'contact_phone').catch(console.error);
+            window.location.href = `tel:${phone}`;
+        } else if (type === 'whatsapp') {
+            if (!whatsapp) {
+                showToast('رقم الواتساب غير متوفر', 'error');
+                return;
+            }
+            CarProviderService.trackAnalytics(listing.id, 'contact_whatsapp').catch(console.error);
+
+            const message = encodeURIComponent(
+                `مرحباً، أنا مهتم بسيارتك ${listing.title}\n` +
+                `السعر: ${safePrice(listing.daily_rate || listing.price)} (يومي)\n` +
+                `الرابط: ${window.location.href}`
+            );
+
+            const whatsappUrl = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${message}`;
+            window.open(whatsappUrl, '_blank');
         }
-
-        // Prepare WhatsApp message in Arabic
-        const message = encodeURIComponent(
-            `مرحباً، أنا مهتم بسيارتك ${listing.title}\n` +
-            `السعر: ${formatPrice(listing.daily_rate || listing.price)} (يومي)\n` +
-            `الرابط: ${window.location.href}`
-        );
-
-        // Open WhatsApp (works on mobile and desktop)
-        const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${message}`;
-        window.open(whatsappUrl, '_blank');
     };
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(price);
+    const handleReportSubmit = async (reason: string, details: string) => {
+        if (!listing) return;
+        try {
+            await CarProviderService.reportListing(listing.id, { reason, details });
+            showToast('تم إرسال البلاغ بنجاح', 'success');
+        } catch (error) {
+            showToast('فشل إرسال البلاغ', 'error');
+        }
     };
 
     if (loading) {
@@ -163,32 +238,70 @@ const RentCarListingDetail: React.FC = () => {
         );
     }
 
-    if (!listing) return null;
+    if (!listing) return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+            <div className="text-center">
+                <h2 className="text-xl font-bold mb-4">القائمة غير موجودة</h2>
+                <button onClick={() => navigate('/rent-car')} className="text-primary hover:underline">العودة</button>
+            </div>
+        </div>
+    );
 
-    const images = (listing.photos && listing.photos.length > 0) ? listing.photos : ['/placeholder-car.jpg'];
+    const images = (listing.photos && listing.photos.length > 0)
+        ? listing.photos
+        : (listing.images && listing.images.length > 0)
+            ? listing.images
+            : ['/placeholder-car.jpg'];
+
+    const provider = listing.provider || listing.owner?.car_provider;
+    const hasWhatsapp = listing.contact_whatsapp || (provider?.phone);
+
+    // Rental Terms Parsing
+    const rentalTerms = listing.rental_terms;
+    const isRentalTermsObject = (terms: any): terms is RentalTerms => {
+        return typeof terms === 'object' && !Array.isArray(terms);
+    };
+
+    // Convert to structured object if possible
+    const structuredTerms: RentalTerms = isRentalTermsObject(rentalTerms) ? rentalTerms : {};
+    // Extract terms list
+    const termsList: string[] = Array.isArray(rentalTerms)
+        ? rentalTerms
+        : (rentalTerms as RentalTerms)?.terms || [];
+
+    const hasRequirements = !!structuredTerms.security_deposit || !!structuredTerms.min_renter_age || !!structuredTerms.min_license_age;
+    const hasConditions = termsList.length > 0 || !!structuredTerms.custom_terms;
+
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
-            {/* Header / Nav */}
-            <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 lg:pb-0"
+        >
+            {/* Header Navigation */}
+            <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors gap-2"
                     >
-                        <ArrowLeft className="w-6 h-6 text-slate-600 dark:text-slate-300" />
+                        <ChevronRight className="w-5 h-5" />
+                        <span className="font-medium">عودة</span>
                     </button>
-                    <h1 className="text-lg font-bold truncate max-w-xs md:max-w-md">{listing.title}</h1>
-                    <div className="flex items-center gap-2">
+
+                    <div className="flex gap-2">
                         <button
                             onClick={handleShare}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-600 dark:text-slate-300"
+                            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                            title="مشاركة"
                         >
                             <Share2 className="w-5 h-5" />
                         </button>
                         <button
                             onClick={handleFavoriteToggle}
-                            className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors ${isFavorited ? 'text-red-500' : 'text-slate-600 dark:text-slate-300'}`}
+                            className={`p-2 transition-colors ${isFavorited ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                            title="حفظ"
                         >
                             <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
                         </button>
@@ -196,295 +309,291 @@ const RentCarListingDetail: React.FC = () => {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Gallery & Details */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Gallery */}
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="aspect-video relative bg-black">
-                                <motion.img
-                                    key={activeImageIndex}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.3 }}
-                                    src={images[activeImageIndex]}
-                                    alt={listing.title}
-                                    className="w-full h-full object-contain"
-                                />
-                                <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
-                                    {images.map((_, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveImageIndex(idx)}
-                                            className={`w-2 h-2 rounded-full transition-all ${idx === activeImageIndex ? 'bg-white w-4' : 'bg-white/50'}`}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Thumbnails */}
-                            {images.length > 1 && (
-                                <div className="p-4 flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                                    {images.map((img, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveImageIndex(idx)}
-                                            className={`relative w-20 h-14 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${idx === activeImageIndex ? 'border-primary' : 'border-transparent'}`}
-                                        >
-                                            <img src={img} alt="" className="w-full h-full object-cover" />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
-                        {/* Rental Rates Card */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-teal-100 dark:border-teal-900/30">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                <Clock className="w-6 h-6 text-teal-600" />
-                                خيارات الإيجار
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800 text-center">
-                                    <span className="text-sm text-slate-500 dark:text-slate-400 block mb-1">يومي</span>
-                                    <span className="text-xl font-bold text-teal-700 dark:text-teal-300">
-                                        {formatPrice(listing.daily_rate || listing.price)}
+                {/* Gallery */}
+                <div className="mb-8">
+                    <CarGallery
+                        images={images}
+                        title={listing.title}
+                        isSponsored={listing.is_sponsored}
+                        isFeatured={listing.is_featured}
+                        isRent={listing.listing_type === 'rent'}
+                        videoUrl={listing.video_url}
+                        t={t}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                    {/* Main Content Column (8 cols) */}
+                    <div className="lg:col-span-8 space-y-8">
+
+                        {/* Title Section */}
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-xs font-bold">
+                                    {t.ui.rent}
+                                </span>
+                                {listing.is_sponsored && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
+                                        <Star className="w-3 h-3 fill-current" />
+                                        {t.ui.sponsored}
                                     </span>
-                                </div>
-                                {listing.weekly_rate && (
-                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-center">
-                                        <span className="text-sm text-slate-500 dark:text-slate-400 block mb-1">أسبوعي</span>
-                                        <span className="text-xl font-bold text-slate-700 dark:text-slate-300">
-                                            {formatPrice(listing.weekly_rate)}
+                                )}
+                            </div>
+
+                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight">
+                                {listing.title}
+                            </h1>
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                {(listing.city || listing.address || listing.location) && (
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        <span>
+                                            {listing.city}
+                                            {listing.city && listing.address && '، '}
+                                            {listing.address}
+                                            {!listing.city && listing.location}
                                         </span>
                                     </div>
                                 )}
-                                {listing.monthly_rate && (
-                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-center">
-                                        <span className="text-sm text-slate-500 dark:text-slate-400 block mb-1">شهري</span>
-                                        <span className="text-xl font-bold text-slate-700 dark:text-slate-300">
-                                            {formatPrice(listing.monthly_rate)}
-                                        </span>
-                                    </div>
-                                )}
+                                <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
+                                <span className="flex items-center gap-1.5">
+                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                    {safeDate(listing.created_at)}
+                                </span>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
+                                <span className="flex items-center gap-1.5">
+                                    <Eye className="w-4 h-4 text-gray-400" />
+                                    {listing.views_count || 0} {t.ui.view_count}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Specs */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm space-y-6">
-                            <h2 className="text-xl font-bold">المواصفات</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <SpecItem icon={Calendar} label="السنة" value={listing.year} />
-                                <SpecItem icon={Gauge} label="الممشى" value={`${listing.mileage.toLocaleString()} كم`} />
-                                <SpecItem icon={GitFork} label="ناقل الحركة" value={listing.transmission} />
-                                <SpecItem icon={Car} label="الموديل" value={listing.model} />
-                            </div>
+                        {/* Mobile Price Card */}
+                        <div className="lg:hidden">
+                            <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
                         </div>
 
+                        {/* Quick Specs */}
+                        <QuickSpecsBar listing={listing} />
 
-                        {/* Rental Terms & Conditions */}
-                        {(() => {
-                            const rentalTerms = listing.rental_terms;
-                            if (!rentalTerms) return null;
+                        {/* Description */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.description_title}</h2>
+                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
+                                {listing.description}
+                            </p>
+                        </div>
 
-                            // Type guard helper
-                            const isRentalTermsObject = (terms: any): terms is RentalTerms => {
-                                return typeof terms === 'object' && !Array.isArray(terms);
-                            };
-
-                            const hasTerms = (
-                                (Array.isArray(rentalTerms) && rentalTerms.length > 0) ||
-                                (isRentalTermsObject(rentalTerms) && (
-                                    (rentalTerms.terms && rentalTerms.terms.length > 0) ||
-                                    !!rentalTerms.security_deposit ||
-                                    !!rentalTerms.min_license_age ||
-                                    !!rentalTerms.min_renter_age ||
-                                    !!rentalTerms.custom_terms
-                                ))
-                            );
-
-                            if (!hasTerms) return null;
-
-                            // Normalize data
-                            const termsList: string[] = Array.isArray(rentalTerms)
-                                ? rentalTerms
-                                : (rentalTerms as RentalTerms).terms || [];
-
-                            const structuredTerms: RentalTerms = !Array.isArray(rentalTerms) ? rentalTerms : {};
-
-                            return (
-                                <div className="space-y-6">
-                                    {/* Security Deposit & Requirements */}
-                                    {(structuredTerms.security_deposit || structuredTerms.min_license_age || structuredTerms.min_renter_age) && (
-                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-orange-100 dark:border-orange-900/30">
-                                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                                <AlertCircle className="w-5 h-5 text-orange-600" />
-                                                متطلبات الإيجار
-                                            </h2>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {structuredTerms.security_deposit && (
-                                                    <div className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
-                                                        <div className="p-2 bg-white dark:bg-slate-800 rounded-full text-orange-600 shadow-sm">
-                                                            <ShieldCheck className="w-5 h-5" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs text-slate-500 dark:text-slate-400">مبلغ التأمين</p>
-                                                            <p className="font-bold text-slate-900 dark:text-white">
-                                                                {formatPrice(structuredTerms.security_deposit)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {(structuredTerms.min_license_age || structuredTerms.min_renter_age) && (
-                                                    <div className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
-                                                        <div className="p-2 bg-white dark:bg-slate-800 rounded-full text-orange-600 shadow-sm">
-                                                            <User className="w-5 h-5" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs text-slate-500 dark:text-slate-400">العمر المطلوب</p>
-                                                            <div className="flex gap-2 text-sm font-bold text-slate-900 dark:text-white">
-                                                                {structuredTerms.min_renter_age && <span>المستأجر: {structuredTerms.min_renter_age}+</span>}
-                                                                {structuredTerms.min_license_age && <span>الرخصة: {structuredTerms.min_license_age}+</span>}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
+                        {/* Rental Requirements */}
+                        {hasRequirements && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-orange-100 dark:border-orange-900/30">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <AlertCircle className="w-6 h-6 text-orange-600" />
+                                    متطلبات الأيجار
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {structuredTerms.security_deposit && (
+                                        <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                                            <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
+                                                <ShieldCheck className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">مبلغ التأمين</p>
+                                                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                                    {safePrice(structuredTerms.security_deposit)}
+                                                </p>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Standard Terms */}
-                                    {(termsList.length > 0 || structuredTerms.custom_terms) && (
-                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-teal-100 dark:border-teal-900/30">
-                                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                                <CheckCircle2 className="w-5 h-5 text-teal-600" />
-                                                الشروط والمميزات
-                                            </h2>
-
-                                            {termsList.length > 0 && (
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                                    {termsList.map((term: string, idx: number) => (
-                                                        <div key={idx} className="flex items-center gap-3 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
-                                                            <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 text-teal-600 shadow-sm">
-                                                                <CheckCircle2 className="w-4 h-4" />
-                                                            </div>
-                                                            <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{term}</span>
-                                                        </div>
-                                                    ))}
+                                    {(structuredTerms.min_renter_age || structuredTerms.min_license_age) && (
+                                        <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                                            <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
+                                                <User className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الحد الأدنى للعمر / الرخصة</p>
+                                                <div className="flex gap-4">
+                                                    {structuredTerms.min_renter_age && (
+                                                        <span className="font-bold text-gray-900 dark:text-white">
+                                                            {structuredTerms.min_renter_age} سنة (عمر)
+                                                        </span>
+                                                    )}
+                                                    {structuredTerms.min_license_age && (
+                                                        <span className="font-bold text-gray-900 dark:text-white border-r border-gray-300 dark:border-gray-600 pr-4 mr-1">
+                                                            {structuredTerms.min_license_age} سنة (رخصة)
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            )}
-
-                                            {structuredTerms.custom_terms && (
-                                                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">شروط إضافية:</p>
-                                                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                                                        {structuredTerms.custom_terms}
-                                                    </p>
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
-                            );
-                        })()}
-
-                        {/* Description */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm">
-                            <h2 className="text-xl font-bold mb-3">الوصف</h2>
-                            <p className={`text-slate-600 dark:text-slate-300 leading-relaxed ${!showFullDesc && 'line-clamp-4'}`}>
-                                {listing.description}
-                            </p>
-                            {listing.description && listing.description.length > 200 && (
-                                <button
-                                    onClick={() => setShowFullDesc(!showFullDesc)}
-                                    className="text-primary font-medium mt-2 hover:underline"
-                                >
-                                    {showFullDesc ? 'عرض أقل' : 'عرض المزيد'}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Features */}
-                        {listing.features && listing.features.length > 0 && (
-                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm">
-                                <h2 className="text-xl font-bold mb-4">المميزات</h2>
-                                <div className="flex flex-wrap gap-2">
-                                    {listing.features.map((feature, i) => (
-                                        <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm flex items-center gap-1.5">
-                                            <CheckCircle2 className="w-4 h-4 text-teal-600" />
-                                            {feature}
-                                        </span>
-                                    ))}
-                                </div>
                             </div>
                         )}
+
+                        {/* Rental Terms / Conditions */}
+                        {hasConditions && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <CheckCircle2 className="w-6 h-6 text-teal-600" />
+                                    {t.ui.rental_terms}
+                                </h2>
+
+                                {termsList.length > 0 && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                        {termsList.map((term, idx) => (
+                                            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                                                <div className="w-5 h-5 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                </div>
+                                                <span className="text-slate-700 dark:text-slate-300 font-medium">{term}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {structuredTerms.custom_terms && (
+                                    <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                                        <h3 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">شروط اضافية</h3>
+                                        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                                            {structuredTerms.custom_terms}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Features */}
+                        <FeaturesShowcase listing={listing} />
+
+                        {/* Detailed Specs Tabs */}
+                        <SpecificationsTabs listing={listing} />
+
+                        {/* Car Body Diagram */}
+                        {listing.body_condition && typeof listing.body_condition === 'object' && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
+                                <CarBodyDiagram
+                                    value={listing.body_condition}
+                                    onChange={() => { }}
+                                    readOnly={true}
+                                />
+                            </div>
+                        )}
+
+                        {/* Similar Listings */}
+                        <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                            <SimilarListings
+                                currentListingId={listing.id}
+                                categoryId={listing.category?.id}
+                                brandId={listing.brand?.id}
+                                t={t}
+                            />
+                        </div>
+
                     </div>
 
-                    {/* Right Column: Provider Info & Contact - Sidebar */}
-                    <div className="space-y-6">
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm sticky top-24 border border-slate-100 dark:border-slate-700">
-                            {/* Provider Profile */}
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden">
-                                    {listing.owner?.avatar ? (
-                                        <img src={listing.owner.avatar} alt={listing.owner.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="w-6 h-6 text-slate-400" />
-                                    )}
-                                </div>
-                                <div>
-                                    <p className="text-sm text-slate-500">مقدم الخدمة</p>
-                                    <h3 className="font-bold text-lg">{listing.owner?.name || 'غير متوفر'}</h3>
-                                </div>
+                    {/* Sidebar Column (4 cols) */}
+                    <div className="lg:col-span-4">
+                        <div className="sticky top-24 space-y-6">
+
+                            {/* Price Card (Desktop) */}
+                            <div className="hidden lg:block">
+                                <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
                             </div>
 
-                            {/* Contact Actions */}
-                            <div className="space-y-3">
+                            {/* Contact Buttons */}
+                            <div className="flex flex-col gap-3">
                                 <button
-                                    onClick={handleWhatsAppContact}
-                                    className="flex-1 bg-green-600 text-white py-4 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 font-bold shadow-lg shadow-green-600/20"
+                                    onClick={() => handleContact('phone')}
+                                    className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
                                 >
                                     <Phone className="w-5 h-5" />
-                                    اتصال
+                                    {t.ui.call}
                                 </button>
-                                <button
-                                    onClick={handleWhatsAppContact}
-                                    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
-                                >
-                                    <MessageSquare className="w-5 h-5" />
-                                    واتساب
-                                </button>
+                                {hasWhatsapp && (
+                                    <button
+                                        onClick={() => handleContact('whatsapp')}
+                                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <MessageCircle className="w-5 h-5" />
+                                        {t.ui.whatsapp}
+                                    </button>
+                                )}
                             </div>
 
-                            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
-                                <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                                    <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                                    <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                                        سلامة المعاملة: لا تقم بأي تحويلات مالية قبل معاينة السيارة وتوقيع العقد.
+                            {/* Safety Box */}
+                            <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
+                                <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                                <div>
+                                    <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">سلامة المعاملة</h4>
+                                    <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                        لا تقم بأي تحويلات مالية قبل معاينة السيارة وتوقيع العقد.
                                     </p>
                                 </div>
                             </div>
+
+                            {/* Provider Info */}
+                            <ProviderSidebar
+                                provider={provider}
+                                listing={listing}
+                                t={t}
+                                onContact={handleContact}
+                                onReport={() => setShowReportModal(true)}
+                            />
+
+                            <div className="text-center">
+                                <button
+                                    onClick={() => setShowReportModal(true)}
+                                    className="text-sm text-gray-400 hover:text-red-500 underline decoration-dotted transition-colors"
+                                >
+                                    {t.ui.report}
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
-    );
-};
+            </div>
 
-const SpecItem: React.FC<{ icon: any; label: string; value: string | number | undefined | null | any }> = ({ icon: Icon, label, value }) => {
-    if (value === undefined || value === null || value === '' || typeof value === 'object') return null;
-    return (
-        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-            <div className="p-2 bg-white dark:bg-slate-700 rounded-md shadow-sm text-slate-400">
-                <Icon className="w-5 h-5" />
-            </div>
-            <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
-                <p className="font-bold text-slate-900 dark:text-white line-clamp-1">{value}</p>
-            </div>
-        </div>
+            {/* Mobile Sticky Footer */}
+            <motion.div
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40"
+            >
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => handleContact('phone')}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3.5 rounded-xl font-bold"
+                    >
+                        <Phone className="w-5 h-5" />
+                        {t.ui.call}
+                    </button>
+                    {hasWhatsapp && (
+                        <button
+                            onClick={() => handleContact('whatsapp')}
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3.5 rounded-xl font-bold"
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            {t.ui.whatsapp}
+                        </button>
+                    )}
+                </div>
+            </motion.div>
+
+            <ReportListingModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                onSubmit={handleReportSubmit}
+                t={t}
+            />
+
+        </motion.div>
     );
 };
 

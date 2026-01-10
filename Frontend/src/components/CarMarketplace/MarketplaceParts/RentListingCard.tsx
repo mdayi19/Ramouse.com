@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Heart, Share2, MapPin, Gauge, GitFork, Calendar,
-    Fuel, Car, Eye, CheckCircle, Clock, ShieldCheck
+    Fuel, Car, Eye, CheckCircle, Clock, ShieldCheck, User
 } from 'lucide-react';
-import { CarListing, CarProviderService } from '../../../services/carprovider.service';
+import { CarListing, CarProviderService, RentalTerms } from '../../../services/carprovider.service';
 import { cn } from '../../../lib/utils';
 import { motion } from 'framer-motion';
 import { OptimizedImage } from './OptimizedImage';
@@ -84,6 +84,23 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
         return listing.model || '';
     };
 
+    const getRentalInfo = (listing: CarListing) => {
+        const terms = listing.rental_terms;
+        if (!terms) return null;
+
+        const isObject = typeof terms === 'object' && !Array.isArray(terms);
+        const structuredTerms = isObject ? (terms as RentalTerms) : {};
+        const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
+
+        return {
+            deposit: structuredTerms.security_deposit,
+            minAge: structuredTerms.min_renter_age,
+            terms: termsList
+        };
+    };
+
+    const rentalInfo = getRentalInfo(listing);
+
     // Card Content for reuse in Grid/List layouts
     const CardContent = () => (
         <div className="flex flex-col h-full">
@@ -113,8 +130,17 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                         <span className="text-xs text-slate-500">/ يومياً</span>
                     </div>
                     {(listing.weekly_rate || listing.monthly_rate) && (
-                        <div className="flex gap-3 text-xs text-slate-400">
-                            {listing.monthly_rate && <span>{formatPrice(listing.monthly_rate)} / شهرياً</span>}
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500 mt-1">
+                            {listing.weekly_rate && (
+                                <span className="inline-flex items-center gap-1">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">{formatPrice(listing.weekly_rate)}</span> أسبوعي
+                                </span>
+                            )}
+                            {listing.monthly_rate && (
+                                <span className="inline-flex items-center gap-1">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">{formatPrice(listing.monthly_rate)}</span> شهري
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
@@ -122,23 +148,29 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
 
             {/* Rent Features / Badges */}
             <div className="px-4 py-2 flex flex-wrap gap-2">
-                {listing.features && listing.features.slice(0, 3).map((feature, idx) => (
+                {/* Security Deposit Badge */}
+                {rentalInfo?.deposit ? (
+                    <span className="text-[10px] px-2 py-1 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center gap-1 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-800/30">
+                        <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
+                    </span>
+                ) : (
+                    <span className="text-[10px] px-2 py-1 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center gap-1 text-green-600 dark:text-green-300 border border-green-100 dark:border-green-800/30">
+                        <ShieldCheck className="w-3 h-3" /> بدون تأمين
+                    </span>
+                )}
+
+                {/* Age Badge */}
+                {rentalInfo?.minAge && (
+                    <span className="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center gap-1 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
+                        <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
+                    </span>
+                )}
+
+                {listing.features && listing.features.slice(0, 2).map((feature, idx) => (
                     <span key={idx} className="text-[10px] px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center gap-1 text-slate-600 dark:text-slate-300">
                         <CheckCircle className="w-3 h-3" /> {feature}
                     </span>
                 ))}
-                {(() => {
-                    const terms = listing.rental_terms;
-                    if (!terms) return null;
-                    const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
-                    // Also add security deposit if exists as a badge? Maybe too detailed.
-                    // Just show first 2 terms for now.
-                    return termsList.slice(0, 2).map((term: string, idx: number) => (
-                        <span key={`term-${idx}`} className="text-[10px] px-2 py-1 bg-teal-50 dark:bg-teal-900/30 rounded-full flex items-center gap-1 text-teal-600 dark:text-teal-300">
-                            <ShieldCheck className="w-3 h-3" /> {term}
-                        </span>
-                    ));
-                })()}
             </div>
 
             {/* Footer: Location & Provider */}
@@ -190,21 +222,21 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-teal-600 transition-colors">{listing.title}</h3>
                             <div className="flex items-center gap-2 text-xs text-slate-500 mb-3 flex-wrap">
+                                {/* Rental Badges for List View */}
+                                {rentalInfo?.deposit ? (
+                                    <span className="bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-orange-600 dark:text-orange-300">
+                                        <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
+                                    </span>
+                                ) : (
+                                    <span className="bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-green-600 dark:text-green-300">
+                                        <ShieldCheck className="w-3 h-3" /> بدون تأمين
+                                    </span>
+                                )}
                                 {listing.features && listing.features.slice(0, 3).map((feature, idx) => (
                                     <span key={idx} className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md flex items-center gap-1">
                                         <CheckCircle className="w-3 h-3" /> {feature}
                                     </span>
                                 ))}
-                                {(() => {
-                                    const terms = listing.rental_terms;
-                                    if (!terms) return null;
-                                    const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
-                                    return termsList.slice(0, 2).map((term: string, idx: number) => (
-                                        <span key={`term-${idx}`} className="bg-teal-50 dark:bg-teal-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-teal-600 dark:text-teal-300">
-                                            <ShieldCheck className="w-3 h-3" /> {term}
-                                        </span>
-                                    ));
-                                })()}
                             </div>
                         </div>
                         <div className="text-left">
@@ -256,6 +288,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                     aspectRatio="aspect-[16/10]"
                     className="group-hover:scale-110 transition-transform duration-700"
                 />
+
                 {/* Top Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-20">
                     {listing.is_sponsored && (
