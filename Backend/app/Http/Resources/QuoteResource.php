@@ -22,10 +22,17 @@ class QuoteResource extends JsonResource
             'provider_name' => $this->provider_name,
             'provider_unique_id' => $this->provider_unique_id,
 
+            // CamelCase for frontend
+            'providerId' => $this->provider_id,
+            'providerName' => $this->provider_name,
+            'providerUniqueId' => $this->provider_unique_id,
+
             // Pricing
             'price' => (float) $this->price,
             'part_status' => $this->part_status,
+            'partStatus' => $this->part_status,
             'part_size_category' => $this->part_size_category,
+            'partSizeCategory' => $this->part_size_category,
 
             // Additional info
             'notes' => $this->notes,
@@ -35,6 +42,7 @@ class QuoteResource extends JsonResource
 
             // Status
             'viewed_by_customer' => (bool) ($this->viewed_by_customer ?? false),
+            'viewedByCustomer' => (bool) ($this->viewed_by_customer ?? false),
 
             // Computed - Is this the cheapest quote?
             'is_cheapest' => $this->when(isset($this->is_cheapest), $this->is_cheapest),
@@ -52,6 +60,15 @@ class QuoteResource extends JsonResource
                         return $this->provider->user->phone;
                     }
                     // Fallback if provider ID acts as phone (legacy)
+                    return $this->provider ? $this->provider->id : $this->provider_id;
+                }
+            ),
+            'providerPhone' => $this->when(
+                $request->user() && ($request->user()->role === 'admin' || (($this->provider && $request->user()->id === $this->provider->user_id))),
+                function () {
+                    if ($this->provider && $this->provider->user) {
+                        return $this->provider->user->phone;
+                    }
                     return $this->provider ? $this->provider->id : $this->provider_id;
                 }
             ),
