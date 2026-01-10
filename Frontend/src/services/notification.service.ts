@@ -244,7 +244,7 @@ export const NotificationService = {
     async sendBulk(data: {
         title: string;
         message: string;
-        target_group: 'all' | 'customers' | 'providers' | 'technicians' | 'tow_providers';
+        target_group: 'all' | 'customers' | 'providers' | 'technicians' | 'tow_providers' | 'car_providers';
         type: NotificationType;
         link?: Notification['link'];
     }): Promise<void> {

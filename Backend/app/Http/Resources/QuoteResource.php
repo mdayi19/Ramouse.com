@@ -43,6 +43,15 @@ class QuoteResource extends JsonResource
             'timestamp' => $this->created_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+
+            // Admin Only: Provider Phone
+            'provider_phone' => $this->when(
+                $request->user() && ($request->user()->role === 'admin' || $request->user()->id === $this->provider->user_id),
+                function () {
+                    // Since provider ID IS the phone number in many cases in this app design:
+                    return $this->provider ? $this->provider->id : $this->provider_id;
+                }
+            ),
         ];
     }
 }

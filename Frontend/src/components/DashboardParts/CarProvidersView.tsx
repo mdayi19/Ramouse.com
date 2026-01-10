@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, RefreshCw, CheckCircle, XCircle, Shield, Star, Eye, Trash2 } from 'lucide-react';
+import { AdminService } from '../../services/admin.service';
 
 interface CarProvider {
     id: string;
@@ -44,14 +45,9 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
         }
     };
 
-    const toggleVerification = async (providerId: string) => {
+    const toggleVerification = async (providerId: string, currentStatus: boolean) => {
         try {
-            await fetch(`/api/admin/car-providers/${providerId}/verify`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
+            await AdminService.verifyCarProvider(providerId, !currentStatus);
             showToast('Provider verification updated', 'success');
             loadProviders();
         } catch (error) {
@@ -59,14 +55,9 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
         }
     };
 
-    const toggleTrustedStatus = async (providerId: string) => {
+    const toggleTrustedStatus = async (providerId: string, currentStatus: boolean) => {
         try {
-            await fetch(`/api/admin/car-providers/${providerId}/trusted`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
+            await AdminService.toggleTrustedCarProvider(providerId, !currentStatus);
             showToast('Trusted status updated', 'success');
             loadProviders();
         } catch (error) {
@@ -218,7 +209,7 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => toggleVerification(provider.id)}
+                                                onClick={() => toggleVerification(provider.id, provider.is_verified)}
                                                 className={`p-2 rounded-lg transition-colors ${provider.is_verified
                                                     ? 'bg-green-100 text-green-600 hover:bg-green-200'
                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -228,7 +219,7 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
                                                 <CheckCircle className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={() => toggleTrustedStatus(provider.id)}
+                                                onClick={() => toggleTrustedStatus(provider.id, provider.is_trusted)}
                                                 className={`p-2 rounded-lg transition-colors ${provider.is_trusted
                                                     ? 'bg-purple-100 text-purple-600 hover:bg-purple-200'
                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

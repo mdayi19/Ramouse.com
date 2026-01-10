@@ -192,4 +192,14 @@ export const AdminService = {
         const response = await api.patch(`/admin/tow-trucks/${id}/verify`, { is_verified });
         return response.data;
     },
+
+    verifyCarProvider: async (id: string, is_verified: boolean) => {
+        const response = await api.patch(`/admin/car-providers/${id}/verify`, { is_verified });
+        return response.data;
+    },
+
+    toggleTrustedCarProvider: async (id: string, is_trusted: boolean) => {
+        const response = await api.patch(`/admin/car-providers/${id}/trusted`, { is_trusted });
+        return response.data;
+    },
 };

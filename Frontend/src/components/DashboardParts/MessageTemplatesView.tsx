@@ -56,10 +56,18 @@ const towTruckTemplates: TemplateDefinition[] = [
     { type: 'FLASH_PRODUCT_REQUEST_REJECTED', label: 'رفض طلب العرض الفوري', placeholders: ['{productName}', '{reason}'] },
 ];
 
+const carProviderTemplates: TemplateDefinition[] = [
+    { type: 'CAR_PROVIDER_VERIFIED', label: 'توثيق حساب معرض سيارات', placeholders: ['{carProviderName}', '{appName}'] },
+    { type: 'NEW_ANNOUNCEMENT_CAR_PROVIDER', label: 'إعلان جديد لمعارض السيارات', placeholders: ['{appName}', '{title}'] },
+    { type: 'FLASH_PRODUCT_REQUEST_APPROVED', label: 'الموافقة على طلب العرض الفوري', placeholders: ['{productName}'] },
+    { type: 'FLASH_PRODUCT_REQUEST_REJECTED', label: 'رفض طلب العرض الفوري', placeholders: ['{productName}', '{reason}'] },
+];
+
 const adminTemplates: TemplateDefinition[] = [
     { type: 'NEW_PROVIDER_REQUEST', label: 'طلب تسجيل مزود جديد', placeholders: ['{providerName}', '{phone}'] },
     { type: 'NEW_TECHNICIAN_REQUEST', label: 'طلب تسجيل فني جديد', placeholders: ['{technicianName}', '{phone}'] },
     { type: 'NEW_TOW_TRUCK_REQUEST', label: 'طلب تسجيل سائق سطحة جديد', placeholders: ['{towTruckName}', '{phone}'] },
+    { type: 'NEW_CAR_PROVIDER_REQUEST', label: 'طلب تسجيل معرض سيارات جديد', placeholders: ['{carProviderName}', '{phone}'] },
     { type: 'WITHDRAWAL_REQUEST_ADMIN', label: 'طلب سحب جديد', placeholders: ['{providerName}', '{amount}'] },
 ];
 
@@ -179,6 +187,7 @@ const MessageTemplatesView: React.FC<MessageTemplatesViewProps> = ({ settings, o
                 <TemplateGroup title="رسائل المزودين" definitions={providerTemplates} />
                 <TemplateGroup title="رسائل الفنيين" definitions={technicianTemplates} />
                 <TemplateGroup title="رسائل سائقي السطحات" definitions={towTruckTemplates} />
+                <TemplateGroup title="رسائل معارض السيارات" definitions={carProviderTemplates} />
                 <TemplateGroup title="رسائل المشرف (Admin)" definitions={adminTemplates} />
 
                 <div className="flex justify-end pt-8 mt-8 border-t border-slate-200 dark:border-slate-700">

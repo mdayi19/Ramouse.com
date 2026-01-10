@@ -339,6 +339,7 @@ class AdminController extends Controller
                 'provider' => 'NEW_ANNOUNCEMENT_PROVIDER',
                 'technician' => 'NEW_ANNOUNCEMENT_TECHNICIAN',
                 'tow_truck' => 'NEW_ANNOUNCEMENT_TOW_TRUCK',
+                'car_provider' => 'NEW_ANNOUNCEMENT_CAR_PROVIDER',
             ];
 
             $usersToNotify = [];
@@ -346,7 +347,7 @@ class AdminController extends Controller
             if ($target === 'all') {
                 // Notify all users
                 $usersToNotify = \App\Models\User::all();
-            } elseif (in_array($target, ['customer', 'provider', 'technician', 'tow_truck'])) {
+            } elseif (in_array($target, ['customer', 'provider', 'technician', 'tow_truck', 'car_provider'])) {
                 // Notify specific user role
                 $usersToNotify = \App\Models\User::where('role', $target)->get();
             }
@@ -1655,6 +1656,15 @@ class AdminController extends Controller
         }
 
         $providers = $query->orderBy('created_at', 'desc')->paginate(50);
+
+        // Transform the collection to include phone field
+        $providers->getCollection()->transform(function ($provider) {
+            $data = $provider->toArray();
+            // In this system, the ID is the phone number
+            $data['phone'] = $provider->id;
+            return $data;
+        });
+
         return response()->json($providers);
     }
 

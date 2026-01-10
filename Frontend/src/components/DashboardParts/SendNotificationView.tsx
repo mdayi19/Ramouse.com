@@ -11,7 +11,7 @@ interface SendNotificationViewProps {
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
 }
 
-type TargetGroup = 'all' | 'customers' | 'providers' | 'technicians' | 'tow_providers';
+type TargetGroup = 'all' | 'customers' | 'providers' | 'technicians' | 'tow_providers' | 'car_providers';
 
 type NotificationView = 'welcome' | 'newOrder' | 'myOrders' | 'adminDashboard' | 'providerDashboard' | 'announcements' | 'customerDashboard' | 'notificationCenter' | 'technicianDashboard' | 'technicianDirectory' | 'technicianProfile' | 'technicianRegistration' | 'blog' | 'blogPost' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'towTruckDirectory' | 'towTruckProfile' | 'towTruckRegistration' | 'towTruckDashboard' | 'store';
 
@@ -95,6 +95,7 @@ const SendNotificationView: React.FC<SendNotificationViewProps> = ({ showToast }
         { value: 'providers', label: 'المزودين فقط', icon: 'Package' },
         { value: 'technicians', label: 'الفنيين فقط', icon: 'Wrench' },
         { value: 'tow_providers', label: 'السطحات فقط', icon: 'Truck' },
+        { value: 'car_providers', label: 'معارض السيارات', icon: 'Car' },
     ];
 
     return (

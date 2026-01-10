@@ -81,7 +81,9 @@ const NotificationSettingsEditor: React.FC<NotificationSettingsEditorProps> = ({
         DEPOSIT_REQUEST: "طلب إيداع",
         WITHDRAWAL_REQUEST: "طلب سحب",
         new_store_order: "طلب متجر جديد",
-        NEW_CAR_PROVIDER_REQUEST: "طلب تسجيل معرض سيارات جديد"
+        NEW_CAR_PROVIDER_REQUEST: "طلب تسجيل معرض سيارات جديد",
+        NEW_ANNOUNCEMENT_CAR_PROVIDER: "إعلان جديد لمعارض السيارات",
+        CAR_PROVIDER_VERIFIED: "تم توثيق معرض السيارات"
     };
 
     const customerKeys: NotificationType[] = ['FIRST_QUOTE_RECEIVED', 'QUOTE_EXPIRING_SOON', 'ORDER_STATUS_CHANGED', 'STALE_ORDER_CUSTOMER', 'NEW_ANNOUNCEMENT_CUSTOMER', 'PAYMENT_REJECTED'];
@@ -89,6 +91,7 @@ const NotificationSettingsEditor: React.FC<NotificationSettingsEditorProps> = ({
     const adminKeys: NotificationType[] = ['HIGH_VALUE_TRANSACTION', 'STALE_ORDER_ADMIN', 'PROVIDER_INACTIVITY_ADMIN', 'WITHDRAWAL_REQUEST_ADMIN', 'NEW_PROVIDER_REQUEST', 'NEW_TECHNICIAN_REQUEST', 'NEW_TOW_TRUCK_REQUEST', 'NEW_FLASH_PRODUCT_REQUEST', 'NEW_CAR_PROVIDER_REQUEST'];
     const technicianKeys: NotificationType[] = ['TECHNICIAN_VERIFIED', 'NEW_ANNOUNCEMENT_TECHNICIAN'];
     const towTruckKeys: NotificationType[] = ['TOW_TRUCK_VERIFIED', 'NEW_ANNOUNCEMENT_TOW_TRUCK'];
+    const carProviderKeys: NotificationType[] = ['CAR_PROVIDER_VERIFIED', 'NEW_ANNOUNCEMENT_CAR_PROVIDER'];
     const storeKeys: NotificationType[] = ['FLASH_PRODUCT_REQUEST_APPROVED', 'FLASH_PRODUCT_REQUEST_REJECTED'];
 
 
@@ -132,6 +135,13 @@ const NotificationSettingsEditor: React.FC<NotificationSettingsEditorProps> = ({
                         <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات سائقي السطحات</legend>
                         <div className="space-y-3">
                             {towTruckKeys.map(k => <CheckboxField key={k} name={k} />)}
+                        </div>
+                    </Card>
+
+                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
+                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات معارض السيارات</legend>
+                        <div className="space-y-3">
+                            {carProviderKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 

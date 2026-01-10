@@ -419,7 +419,7 @@ class OrderController extends Controller
      */
     public function adminList(Request $request)
     {
-        $orders = Order::with('quotes', 'acceptedQuote')
+        $orders = Order::with(['quotes.provider', 'acceptedQuote.provider'])
             ->orderBy('created_at', 'desc')
             ->get();
 

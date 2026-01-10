@@ -343,7 +343,9 @@ export type NotificationType =
   | 'DEPOSIT_REQUEST'
   | 'WITHDRAWAL_REQUEST'
   | 'new_store_order'
-  | 'NEW_CAR_PROVIDER_REQUEST';
+  | 'NEW_CAR_PROVIDER_REQUEST'
+  | 'NEW_ANNOUNCEMENT_CAR_PROVIDER'
+  | 'CAR_PROVIDER_VERIFIED';
 
 export interface Notification {
   id: string;

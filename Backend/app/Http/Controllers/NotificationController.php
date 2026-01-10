@@ -213,7 +213,7 @@ class NotificationController extends Controller
         $request->validate([
             'title' => 'required|string|max:100',
             'message' => 'required|string|max:500',
-            'target_group' => 'required|in:all,customers,providers,technicians,tow_providers',
+            'target_group' => 'required|in:all,customers,providers,technicians,tow_providers,car_providers',
             'type' => 'string|nullable',
             'link' => 'array|nullable',
         ]);
@@ -237,6 +237,9 @@ class NotificationController extends Controller
         } elseif ($targetGroup === 'tow_providers') {
             // Get user_ids from tow_trucks table
             $userIds = \DB::table('tow_trucks')->pluck('user_id')->toArray();
+        } elseif ($targetGroup === 'car_providers') {
+            // Get user_ids from car_providers table
+            $userIds = \DB::table('car_providers')->pluck('user_id')->toArray();
         }
 
         if (empty($userIds)) {
