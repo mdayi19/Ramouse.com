@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarProviderService, CarListing, MarketplaceFilters as FilterType } from '../../services/carprovider.service';
-import { Car, Grid, List, Search, SlidersHorizontal, ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { Car, Grid, List, Search, SlidersHorizontal, ArrowLeft, ArrowRight, X, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CarListingCard } from './MarketplaceParts/CarListingCard';
 import { MarketplaceFilters } from './MarketplaceParts/MarketplaceFilters';
@@ -150,30 +150,68 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
             {/* 1. Hero / Header Section */}
-            <div className="relative bg-[#0f172a] text-white py-16 overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+            <div className="relative bg-gradient-to-br from-primary via-primary-900 to-slate-800 text-white py-20 md:py-28 overflow-hidden">
+                {/* Animated Background Blobs - Following DesktopWelcomeScreen */}
+                <motion.div
+                    className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-secondary/30 to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.5, 0.3],
+                    }}
+                    transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                />
+                <motion.div
+                    className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-400/20 to-transparent rounded-full blur-3xl"
+                    animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.2, 0.4, 0.2],
+                    }}
+                    transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 2
+                    }}
+                />
+
+                {/* Noise texture overlay */}
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
 
                 <div className="w-full px-4 md:px-8 relative z-10">
-                    <div className="max-w-2xl">
+                    <div className="max-w-4xl mx-auto text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="flex items-center gap-3 mb-4"
+                            className="flex items-center justify-center gap-3 mb-6"
                         >
-                            <span className="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-medium">
+                            <span className="px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30 text-secondary text-sm font-bold backdrop-blur-sm">
                                 {listingType === 'rent' ? 'متاح للإيجار' : 'سوق السيارات'}
                             </span>
                         </motion.div>
+
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight"
+                            className="text-5xl md:text-7xl font-black mb-6 leading-tight"
                         >
                             {listingType === 'rent'
                                 ? 'استأجر سيارة أحلامك بكل سهولة'
-                                : 'اكتشف أفضل السيارات المستعملة والجديدة'
+                                : (
+                                    <>
+                                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-secondary to-white">
+                                            اكتشف أفضل السيارات
+                                        </span>
+                                        <br />
+                                        <span className="text-4xl md:text-5xl text-white/90 block mt-2">
+                                            المستعملة والجديدة
+                                        </span>
+                                    </>
+                                )
                             }
                         </motion.h1>
 
@@ -181,22 +219,45 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="relative max-w-xl"
+                            className="relative max-w-2xl mx-auto"
                         >
-                            <input
-                                type="text"
-                                placeholder="ابحث عن ماركة، موديل، أو كلمة مفتاحية..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                className="w-full px-6 py-4 pr-12 rounded-2xl bg-white text-slate-900 shadow-xl focus:ring-4 focus:ring-blue-500/20 border-0 outline-none text-lg transition-all"
-                            />
-                            <button
-                                onClick={handleSearch}
-                                className="absolute left-2 top-2 bottom-2 bg-primary hover:bg-primary/90 text-white rounded-xl px-4 flex items-center justify-center transition-colors"
-                            >
-                                <Search className="w-5 h-5" />
-                            </button>
+                            {/* Glassmorphism Search Bar */}
+                            <div className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-2 border border-white/20 shadow-2xl">
+                                <input
+                                    type="text"
+                                    placeholder="ابحث عن ماركة، موديل، أو كلمة مفتاحية..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    className="w-full px-8 py-5 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-lg
+                                             focus:ring-4 focus:ring-secondary/30 focus:bg-white border-0 outline-none transition-all"
+                                />
+                                <button
+                                    onClick={handleSearch}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-800 text-white rounded-xl px-6 py-3 
+                                             flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
+                                >
+                                    <Search className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </motion.div>
+
+                        {/* Trust Badges */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="mt-8 flex items-center justify-center gap-6 text-white/80 text-sm"
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                <span>{pagination.total || 0}+ سيارة متاحة</span>
+                            </div>
+                            <div className="w-1 h-1 bg-white/40 rounded-full" />
+                            <div className="flex items-center gap-2">
+                                <span>✓</span>
+                                <span>تحديث يومي</span>
+                            </div>
                         </motion.div>
                     </div>
                 </div>
@@ -277,25 +338,48 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                 </div>
                             ) : listings.length === 0 ? (
                                 <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col items-center justify-center py-24 px-6 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm"
                                 >
-                                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-full mb-4">
-                                        <Search className="w-8 h-8 text-slate-400" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                                        لا توجد سيارات مطابقة
-                                    </h3>
-                                    <p className="text-slate-500 text-center max-w-sm mb-6">
-                                        لم نتمكن من العثور على سيارات تطابق معايير البحث الخاصة بك. جرب تغيير الفلاتر أو كلمة البحث.
-                                    </p>
-                                    <button
-                                        onClick={handleResetFilters}
-                                        className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.2, type: "spring" }}
+                                        className="relative mb-6"
                                     >
-                                        إزالة الفلاتر
-                                    </button>
+                                        <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl" />
+                                        <div className="relative bg-white dark:bg-slate-800 p-6 rounded-full border-4 border-primary/20 shadow-lg">
+                                            <Search className="w-12 h-12 text-primary" />
+                                        </div>
+                                    </motion.div>
+
+                                    <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-3">
+                                        لا توجد سيارات مطابقة للبحث
+                                    </h3>
+
+                                    <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md text-center leading-relaxed">
+                                        جرب تغيير الفلاتر أو البحث بكلمات مختلفة للعثور على السيارة المثالية
+                                    </p>
+
+                                    <div className="flex flex-wrap gap-3 justify-center">
+                                        <button
+                                            onClick={() => {
+                                                setFilters({});
+                                                setSearchQuery('');
+                                            }}
+                                            className="px-6 py-3 bg-primary hover:bg-primary-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                                        >
+                                            <RotateCcw className="w-4 h-4" />
+                                            إعادة تعيين الفلاتر
+                                        </button>
+                                        <button
+                                            onClick={() => window.location.href = '/'}
+                                            className="px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all"
+                                        >
+                                            العودة للرئيسية
+                                        </button>
+                                    </div>
                                 </motion.div>
                             ) : (
                                 <div className={viewMode === 'grid'

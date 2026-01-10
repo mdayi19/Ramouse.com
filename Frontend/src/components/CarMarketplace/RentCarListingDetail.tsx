@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    Car, MapPin, Calendar, Gauge, GitFork, Share2, Heart, ArrowLeft,
-    Phone, MessageSquare, ShieldCheck, Star, User, Clock,
-    CheckCircle2, AlertCircle, Info, ChevronRight, MessageCircle, Shield,
-    Eye
+    Car, MapPin, Calendar, Gauge, Fuel, Settings, Phone,
+    Heart, Share2, ChevronRight, Star, Eye, MessageCircle, DollarSign,
+    Clock, Shield, Users, CheckCircle, AlertCircle
 } from 'lucide-react';
-import { CarProviderService, CarListing, RentalTerms } from '../../services/carprovider.service';
+import { cn } from '../../lib/utils';
+import { getImageUrl } from '../../utils/helpers';
+import { CarProviderService } from '../../services/carprovider.service';
+import type { CarListing, RentalTerms } from '../../services/carprovider.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../../hooks/useAppState';
+import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import SEO from '../SEO';
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
 import SimilarListings from './ListingParts/SimilarListings';
@@ -127,13 +131,35 @@ const RentCarListingDetail: React.FC = () => {
                 CarProviderService.checkFavorite(data.id).then(setIsFavorited).catch(console.error);
                 CarProviderService.trackAnalytics(data.id, 'view').catch(console.error);
             }
-        } catch (error: any) {
-            console.error('Failed to load listing:', error);
-            setError(error.message || 'فشل تحميل تفاصيل السيارة');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'فشل تحميل الإعلان');
         } finally {
             setLoading(false);
         }
     };
+
+    // SEO Integration - Using existing useSEO hook for rental listings
+    useEffect(() => {
+        if (listing) {
+            const rentalInfo = {
+                dailyRate: listing.daily_rate,
+                weeklyRate: listing.weekly_rate,
+                monthlyRate: listing.monthly_rate
+            };
+            const description = listing.description ||
+                `${listing.title} للإيجار - ${rentalInfo.dailyRate ? `${safePrice(rentalInfo.dailyRate)} يومياً` : ''} ${listing.year || ''}`.trim();
+
+            // Generate and inject structured data for rental listings
+            const structuredData = generateStructuredData({
+                ...listing,
+                listing_type: 'rent',
+                daily_rate: rentalInfo.dailyRate,
+                weekly_rate: rentalInfo.weeklyRate,
+                monthly_rate: rentalInfo.monthlyRate
+            });
+            injectStructuredData(structuredData);
+        }
+    }, [listing]);
 
     const handleShare = async () => {
         if (!listing) return;
@@ -403,7 +429,7 @@ const RentCarListingDetail: React.FC = () => {
                                     {structuredTerms.security_deposit && (
                                         <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
                                             <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
-                                                <ShieldCheck className="w-6 h-6" />
+                                                <Shield className="w-6 h-6" />
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">مبلغ التأمين</p>
@@ -417,7 +443,7 @@ const RentCarListingDetail: React.FC = () => {
                                     {(structuredTerms.min_renter_age || structuredTerms.min_license_age) && (
                                         <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
                                             <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
-                                                <User className="w-6 h-6" />
+                                                <Users className="w-6 h-6" />
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الحد الأدنى للعمر / الرخصة</p>
@@ -444,7 +470,7 @@ const RentCarListingDetail: React.FC = () => {
                         {hasConditions && (
                             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                    <CheckCircle2 className="w-6 h-6 text-teal-600" />
+                                    <CheckCircle className="w-6 h-6 text-teal-600" />
                                     {t.ui.rental_terms}
                                 </h2>
 
@@ -453,7 +479,7 @@ const RentCarListingDetail: React.FC = () => {
                                         {termsList.map((term, idx) => (
                                             <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
                                                 <div className="w-5 h-5 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
-                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    <CheckCircle className="w-3.5 h-3.5" />
                                                 </div>
                                                 <span className="text-slate-700 dark:text-slate-300 font-medium">{term}</span>
                                             </div>

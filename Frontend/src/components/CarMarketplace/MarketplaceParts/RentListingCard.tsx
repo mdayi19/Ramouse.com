@@ -254,7 +254,11 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-teal-500/30 transition-all cursor-pointer flex flex-row h-auto sm:h-52 items-stretch"
+                whileHover={{
+                    boxShadow: "var(--marketplace-card-hover)"
+                }}
+                transition={{ duration: 0.3 }}
+                className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200/50 dark:border-slate-700/50 hover:border-teal-500/30 transition-all cursor-pointer flex flex-row h-auto sm:h-52 items-stretch"
                 onClick={handleView}
             >
                 {/* Image Section */}
@@ -387,9 +391,18 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
     return (
         <motion.article
             layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 hover:border-teal-500/30 transition-all duration-300 cursor-pointer h-full flex flex-col"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{
+                y: -8,
+                boxShadow: "var(--marketplace-card-hover)"
+            }}
+            whileTap={{ scale: 0.98 }}
+            transition={{
+                duration: 0.3,
+                ease: "easeOut"
+            }}
+            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200/50 dark:border-slate-700/50 hover:border-teal-500/30 transition-all cursor-pointer h-full flex flex-col"
             onClick={handleView}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}

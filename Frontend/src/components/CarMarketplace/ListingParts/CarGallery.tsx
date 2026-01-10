@@ -225,40 +225,76 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-md"
-                        onKeyDown={handleKeyDown}
+                        onKeyDown={(e) => {
+                            if (e.key === 'ArrowRight') nextImage();
+                            if (e.key === 'ArrowLeft') prevImage();
+                            if (e.key === 'Escape') {
+                                setShowGalleryModal(false);
+                                setIsZoomed(false);
+                            }
+                            if (e.key === '+' || e.key === '=') setIsZoomed(true);
+                            if (e.key === '-' || e.key === '_') setIsZoomed(false);
+                        }}
                         tabIndex={0}
                         autoFocus
                         onClick={() => !isZoomed && setShowGalleryModal(false)}
                     >
                         {/* Close Button */}
                         <button
-                            onClick={() => setShowGalleryModal(false)}
+                            onClick={() => {
+                                setShowGalleryModal(false);
+                                setIsZoomed(false);
+                            }}
                             className="absolute top-4 right-4 p-3 glass-effect text-white hover:bg-white/20 rounded-xl transition-all z-10 touch-target"
-                            aria-label="Close"
+                            aria-label="إغلاق"
                         >
                             <X className="w-6 h-6 sm:w-8 sm:h-8" />
                         </button>
+
+                        {/* Zoom Controls */}
+                        <div className="absolute top-4 left-4 flex gap-2 z-10">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsZoomed(!isZoomed);
+                                }}
+                                className={cn(
+                                    "p-3 glass-effect rounded-xl transition-all touch-target",
+                                    isZoomed
+                                        ? "bg-primary text-white"
+                                        : "text-white hover:bg-white/20"
+                                )}
+                                aria-label={isZoomed ? "تصغير" : "تكبير"}
+                                title={isZoomed ? "تصغير (Esc أو -)" : "تكبير (+)"}
+                            >
+                                <ZoomIn className="w-6 h-6" />
+                            </button>
+                        </div>
 
                         <div
                             className="relative w-full h-full flex items-center justify-center"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Navigation Buttons */}
-                            <button
-                                onClick={prevImage}
-                                className="absolute left-0 sm:left-4 p-3 glass-effect text-white hover:bg-white/20 rounded-full transition-all z-10 hover:scale-110 active:scale-95"
-                                aria-label="Previous image"
-                            >
-                                <ChevronLeft className="w-8 h-8" />
-                            </button>
+                            {images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={prevImage}
+                                        className="absolute left-0 sm:left-4 p-3 glass-effect text-white hover:bg-white/20 rounded-full transition-all z-10 hover:scale-110 active:scale-95"
+                                        aria-label="الصورة السابقة (←)"
+                                    >
+                                        <ChevronLeft className="w-8 h-8" />
+                                    </button>
 
-                            <button
-                                onClick={nextImage}
-                                className="absolute right-0 sm:right-4 p-3 glass-effect text-white hover:bg-white/20 rounded-full transition-all z-10 hover:scale-110 active:scale-95"
-                                aria-label="Next image"
-                            >
-                                <ChevronRight className="w-8 h-8" />
-                            </button>
+                                    <button
+                                        onClick={nextImage}
+                                        className="absolute right-0 sm:right-4 p-3 glass-effect text-white hover:bg-white/20 rounded-full transition-all z-10 hover:scale-110 active:scale-95"
+                                        aria-label="الصورة التالية (→)"
+                                    >
+                                        <ChevronRight className="w-8 h-8" />
+                                    </button>
+                                </>
+                            )}
 
                             <div
                                 className="relative max-w-7xl max-h-[90vh] mx-auto"
@@ -267,13 +303,20 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                                 <motion.img
                                     key={images[selectedImageIndex]}
                                     src={getImageUrl(images[selectedImageIndex])}
-                                    alt={`${title} - Fullscreen ${selectedImageIndex + 1}`}
-                                    className="max-h-[85vh] w-auto mx-auto rounded-lg shadow-2xl"
+                                    alt={`${title} - معرض الصور ${selectedImageIndex + 1}`}
+                                    className={cn(
+                                        "max-h-[85vh] w-auto mx-auto rounded-lg shadow-2xl transition-transform duration-300",
+                                        isZoomed && "scale-150 cursor-grab active:cursor-grabbing"
+                                    )}
                                     initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    drag={isZoomed ? "x" : false} // Allow dragging only when zoomed? Or pan
-                                    dragConstraints={{ left: -200, right: 200, top: -200, bottom: 200 }}
-                                    style={{ cursor: isZoomed ? 'grab' : 'default' }}
+                                    animate={{
+                                        opacity: 1,
+                                        scale: isZoomed ? 1.5 : 1
+                                    }}
+                                    drag={isZoomed}
+                                    dragConstraints={{ left: -300, right: 300, top: -300, bottom: 300 }}
+                                    dragElastic={0.1}
+                                    whileDrag={{ cursor: 'grabbing' }}
                                 />
 
                                 {/* Modal Watermark */}
@@ -285,11 +328,26 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                                 </div>
                             </div>
 
+                            {/* Image Counter & Zoom Indicator */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3">
+                                <div className="glass-effect px-4 py-2 rounded-full text-white font-medium">
+                                    {selectedImageIndex + 1} / {images.length}
+                                </div>
+                                {isZoomed && (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="glass-effect px-3 py-2 rounded-full text-white text-sm flex items-center gap-1.5"
+                                    >
+                                        <ZoomIn className="w-4 h-4" />
+                                        <span>150%</span>
+                                    </motion.div>
+                                )}
+                            </div>
 
-
-                            {/* Image Counter */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-effect px-4 py-2 rounded-full text-white font-medium">
-                                {selectedImageIndex + 1} / {images.length}
+                            {/* Keyboard Hints */}
+                            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 glass-effect px-4 py-2 rounded-full text-white/70 text-xs hidden sm:block">
+                                استخدم ← → للتنقل • + - للتكبير • ESC للإغلاق
                             </div>
                         </div>
                     </motion.div>

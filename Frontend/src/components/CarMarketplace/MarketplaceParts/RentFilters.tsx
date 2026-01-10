@@ -112,7 +112,30 @@ export const RentFilters: React.FC<RentFiltersProps> = ({
                 <h3 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                     <Filter className="w-5 h-5 text-teal-600" />
                     تصفية الإيجارات
+                    {/* Active Filters Count */}
+                    {Object.values(filters).some(v => v && v !== '' && (Array.isArray(v) ? v.length > 0 : true)) && (
+                        <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-teal-600 rounded-full"
+                        >
+                            {Object.values(filters).filter(v => v && v !== '' && (Array.isArray(v) ? v.length > 0 : true)).length}
+                        </motion.span>
+                    )}
                 </h3>
+
+                {/* Reset Button */}
+                {Object.values(filters).some(v => v && v !== '' && (Array.isArray(v) ? v.length > 0 : true)) && (
+                    <motion.button
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        onClick={onReset}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-500 bg-slate-100 dark:bg-slate-700/50 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-all"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        إعادة تعيين
+                    </motion.button>
+                )}
             </div>
 
             {/* City Filter */}

@@ -83,8 +83,30 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                 <h3 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                     <Filter className="w-5 h-5 text-primary" />
                     تصفية النتائج
+                    {/* Active Filters Count */}
+                    {Object.values(filters).some(v => v && v !== '') && (
+                        <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-primary rounded-full"
+                        >
+                            {Object.values(filters).filter(v => v && v !== '').length}
+                        </motion.span>
+                    )}
                 </h3>
 
+                {/* Reset Button */}
+                {Object.values(filters).some(v => v && v !== '') && (
+                    <motion.button
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        onClick={onReset}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary bg-slate-100 dark:bg-slate-700/50 hover:bg-primary/10 rounded-lg transition-all"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        إعادة تعيين
+                    </motion.button>
+                )}
             </div>
 
             {/* Filter Presets - Quick filters */}

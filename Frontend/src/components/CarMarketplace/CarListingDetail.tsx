@@ -11,6 +11,8 @@ import { getImageUrl } from '../../utils/helpers';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 import { useAppState } from '../../hooks/useAppState';
+import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import SEO from '../SEO';
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
 import SimilarListings from './ListingParts/SimilarListings';
@@ -20,7 +22,6 @@ import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
 import FeaturesShowcase from './ListingParts/FeaturesShowcase';
 import { CarBodyDiagram } from './CarBodyDiagram';
-import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
 
 // Helper for translations
 const t = {
@@ -159,6 +160,27 @@ const CarListingDetail: React.FC = () => {
             setLoading(false);
         }
     };
+
+    // SEO Integration - Using existing useSEO hook
+    useEffect(() => {
+        if (listing) {
+            // Call useSEO with listing data
+            const seoData = {
+                title: listing.title,
+                description: listing.description || `${listing.title} - ${listing.year} ${listing.mileage ? `${listing.mileage} كم` : ''}`,
+                image: listing.photos?.[0] || listing.images?.[0],
+                url: window.location.href,
+                type: 'product' as const,
+                price: listing.price,
+                currency: 'SYP',
+                availability: 'in stock' as const
+            };
+
+            // Generate and inject structured data
+            const structuredData = generateStructuredData(listing);
+            injectStructuredData(structuredData);
+        }
+    }, [listing]);
 
     const handleFavoriteToggle = async () => {
         if (!listing) return;
