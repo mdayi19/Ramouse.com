@@ -86,16 +86,42 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
 
     const getRentalInfo = (listing: CarListing) => {
         const terms = listing.rental_terms;
-        if (!terms) return null;
 
-        const isObject = typeof terms === 'object' && !Array.isArray(terms);
-        const structuredTerms = isObject ? (terms as RentalTerms) : {};
-        const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
+        // Always try to get rates from top level if available, as fallback or primary
+        let dailyRate = listing.daily_rate;
+        let weeklyRate = listing.weekly_rate;
+        let monthlyRate = listing.monthly_rate;
+
+        if (terms) {
+            const isObject = typeof terms === 'object' && !Array.isArray(terms);
+            const structuredTerms = isObject ? (terms as RentalTerms) : {};
+            const termsList = Array.isArray(terms) ? terms : (terms as any).terms || [];
+
+            // If rates are in terms, prefer them (or vice versa? User said "use ... from rental_terms")
+            // Assuming rental_terms is the source of truth for RENT listings constructed via wizard
+            if (isObject) {
+                if (structuredTerms.daily_rate) dailyRate = structuredTerms.daily_rate;
+                if (structuredTerms.weekly_rate) weeklyRate = structuredTerms.weekly_rate;
+                if (structuredTerms.monthly_rate) monthlyRate = structuredTerms.monthly_rate;
+            }
+
+            return {
+                deposit: structuredTerms.security_deposit,
+                minAge: structuredTerms.min_renter_age,
+                terms: termsList,
+                dailyRate,
+                weeklyRate,
+                monthlyRate
+            };
+        }
 
         return {
-            deposit: structuredTerms.security_deposit,
-            minAge: structuredTerms.min_renter_age,
-            terms: termsList
+            deposit: undefined,
+            minAge: undefined,
+            terms: [],
+            dailyRate,
+            weeklyRate,
+            monthlyRate
         };
     };
 
@@ -103,84 +129,111 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
 
     // Card Content for reuse in Grid/List layouts
     const CardContent = () => (
-        <div className="flex flex-col h-full">
-            {/* Header: Title, Price, Brand */}
+        <div className="flex flex-col h-full bg-white dark:bg-slate-800">
+            {/* 2. Year / Brand / Model */}
             <div className="p-4 pb-2">
-                <div className="flex justify-between items-start gap-2 mb-1">
-                    <div>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
+                <div className="flex flex-col gap-1 mb-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                            <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-300">
+                                {listing.year}
+                            </span>
                             {getBrandName() && (
-                                <span className="bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded text-teal-700 dark:text-teal-300">
+                                <span className="text-teal-600 dark:text-teal-400">
                                     {getBrandName()}
                                 </span>
                             )}
                             {getModelName() && <span>{getModelName()}</span>}
                         </div>
-                        <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 text-lg group-hover:text-teal-600 transition-colors">
-                            {listing.title}
-                        </h3>
-                    </div>
-                </div>
-
-                <div className="mt-2 flex flex-col gap-1">
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-bold text-teal-600">
-                            {formatPrice(listing.daily_rate || listing.price)}
-                        </span>
-                        <span className="text-xs text-slate-500">/ يومياً</span>
-                    </div>
-                    {(listing.weekly_rate || listing.monthly_rate) && (
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500 mt-1">
-                            {listing.weekly_rate && (
-                                <span className="inline-flex items-center gap-1">
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">{formatPrice(listing.weekly_rate)}</span> أسبوعي
-                                </span>
-                            )}
-                            {listing.monthly_rate && (
-                                <span className="inline-flex items-center gap-1">
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">{formatPrice(listing.monthly_rate)}</span> شهري
-                                </span>
-                            )}
+                        <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                            <MapPin className="w-3 h-3" />
+                            <span className="truncate max-w-[80px]">{listing.city || listing.address || 'سوريا'}</span>
                         </div>
-                    )}
+                    </div>
+                </div>
+
+                {/* 3. Rates Prices */}
+                <div className="flex flex-col gap-2 mt-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-slate-500">يومي</span>
+                        <span className="font-bold text-teal-600 text-lg">
+                            {(() => {
+                                const dailyRate = rentalInfo?.dailyRate || listing.daily_rate;
+                                return dailyRate ? formatPrice(dailyRate) : 'اتصل للسعر';
+                            })()}
+                        </span>
+                    </div>
+                    {(() => {
+                        const weeklyRate = rentalInfo?.weeklyRate || listing.weekly_rate;
+                        const monthlyRate = rentalInfo?.monthlyRate || listing.monthly_rate;
+
+                        if (!weeklyRate && !monthlyRate) return null;
+
+                        return (
+                            <>
+                                {weeklyRate && (
+                                    <div className="flex items-baseline justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
+                                        <span className="text-xs text-slate-500">أسبوعي</span>
+                                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{formatPrice(weeklyRate)}</span>
+                                    </div>
+                                )}
+                                {monthlyRate && (
+                                    <div className="flex items-baseline justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
+                                        <span className="text-xs text-slate-500">شهري</span>
+                                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{formatPrice(monthlyRate)}</span>
+                                    </div>
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
             </div>
 
-            {/* Rent Features / Badges */}
-            <div className="px-4 py-2 flex flex-wrap gap-2">
-                {/* Security Deposit Badge */}
-                {rentalInfo?.deposit ? (
-                    <span className="text-[10px] px-2 py-1 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center gap-1 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-800/30">
-                        <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
-                    </span>
-                ) : (
-                    <span className="text-[10px] px-2 py-1 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center gap-1 text-green-600 dark:text-green-300 border border-green-100 dark:border-green-800/30">
-                        <ShieldCheck className="w-3 h-3" /> بدون تأمين
-                    </span>
-                )}
-
-                {/* Age Badge */}
-                {rentalInfo?.minAge && (
-                    <span className="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center gap-1 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
-                        <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
-                    </span>
-                )}
-
-                {listing.features && listing.features.slice(0, 2).map((feature, idx) => (
-                    <span key={idx} className="text-[10px] px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                        <CheckCircle className="w-3 h-3" /> {feature}
-                    </span>
-                ))}
-            </div>
-
-            {/* Footer: Location & Provider */}
-            <div className="mt-auto p-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 truncate max-w-[60%] text-xs text-slate-500">
-                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="truncate">{listing.city || listing.address || 'سوريا'}</span>
+            {/* 4. Rental Requirements (متطلبات الأيجار) */}
+            {(rentalInfo?.deposit || rentalInfo?.minAge) && (
+                <div className="px-4 py-2">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">متطلبات الأيجار</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {rentalInfo?.deposit ? (
+                            <span className="text-[10px] px-2 py-1 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center gap-1 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-800/30">
+                                <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] px-2 py-1 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center gap-1 text-green-600 dark:text-green-300 border border-green-100 dark:border-green-800/30">
+                                <ShieldCheck className="w-3 h-3" /> بدون تأمين
+                            </span>
+                        )}
+                        {rentalInfo?.minAge && (
+                            <span className="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center gap-1 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
+                                <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <button className="text-xs font-bold bg-teal-600 text-white px-3 py-1.5 rounded-lg hover:bg-teal-700 transition-colors">
-                    احجز الآن
+            )}
+
+            {/* 5. Show Details Button & Actions */}
+            <div className="mt-auto p-4 pt-2 flex items-center justify-between gap-2">
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleFavorite}
+                        className={`p-2 rounded-full border ${isFavorited ? 'bg-red-50 border-red-200 text-red-500' : 'border-slate-200 text-slate-500 hover:bg-slate-50'} transition-colors`}
+                    >
+                        <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+                    </button>
+                    <button
+                        onClick={handleShare}
+                        className="p-2 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                    >
+                        <Share2 className="w-4 h-4" />
+                    </button>
+                </div>
+                <button
+                    onClick={handleView}
+                    className="flex-1 py-2.5 bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-100 text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95"
+                >
+                    <Eye className="w-4 h-4" />
+                    عرض التفاصيل
                 </button>
             </div>
         </div>
@@ -215,37 +268,81 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                 <div className="flex-1 flex flex-col justify-between p-4">
                     <div className="flex justify-between items-start">
                         <div>
+                            {/* 2. Year / Brand / Model */}
                             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">{listing.year}</span>
-                                <span>•</span>
-                                <span>{getBrandName()}</span>
+                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-300">{listing.year}</span>
+                                <span className="text-teal-600 dark:text-teal-400 font-medium">{getBrandName()}</span>
+                                <span>{getModelName()}</span>
+                                <span className="text-slate-300">•</span>
+                                <div className="flex items-center gap-1 text-slate-400">
+                                    <MapPin className="w-3 h-3" />
+                                    <span>{listing.city || listing.address || 'سوريا'}</span>
+                                </div>
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-teal-600 transition-colors">{listing.title}</h3>
-                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-3 flex-wrap">
-                                {/* Rental Badges for List View */}
-                                {rentalInfo?.deposit ? (
-                                    <span className="bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-orange-600 dark:text-orange-300">
-                                        <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
-                                    </span>
-                                ) : (
-                                    <span className="bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-green-600 dark:text-green-300">
-                                        <ShieldCheck className="w-3 h-3" /> بدون تأمين
-                                    </span>
-                                )}
-                                {listing.features && listing.features.slice(0, 3).map((feature, idx) => (
-                                    <span key={idx} className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md flex items-center gap-1">
-                                        <CheckCircle className="w-3 h-3" /> {feature}
-                                    </span>
-                                ))}
-                            </div>
+
+                            {/* 4. Rental Requirements */}
+                            {(rentalInfo?.deposit || rentalInfo?.minAge) && (
+                                <div className="mt-2">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1">متطلبات الأيجار</h4>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        {rentalInfo?.deposit ? (
+                                            <span className="bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-orange-600 dark:text-orange-300 text-xs">
+                                                <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
+                                            </span>
+                                        ) : (
+                                            <span className="bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-green-600 dark:text-green-300 text-xs">
+                                                <ShieldCheck className="w-3 h-3" /> بدون تأمين
+                                            </span>
+                                        )}
+                                        {rentalInfo?.minAge && (
+                                            <span className="bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-blue-600 dark:text-blue-300 text-xs">
+                                                <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="text-left">
-                            <div className="text-xl font-bold text-teal-600">{formatPrice(listing.daily_rate || listing.price)}</div>
-                            <div className="text-xs text-slate-400">يومياً</div>
+
+                        {/* 3. Rates Prices */}
+                        <div className="text-left bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 min-w-[140px]">
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-baseline justify-between gap-4">
+                                    <span className="text-xs text-slate-500">يومي</span>
+                                    <span className="font-bold text-teal-600">
+                                        {(() => {
+                                            const dailyRate = rentalInfo?.dailyRate || listing.daily_rate;
+                                            return dailyRate ? formatPrice(dailyRate) : 'اتصل';
+                                        })()}
+                                    </span>
+                                </div>
+                                {(() => {
+                                    const weeklyRate = rentalInfo?.weeklyRate || listing.weekly_rate;
+                                    const monthlyRate = rentalInfo?.monthlyRate || listing.monthly_rate;
+                                    if (!weeklyRate && !monthlyRate) return null;
+                                    return (
+                                        <>
+                                            {weeklyRate && (
+                                                <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 dark:border-slate-700 pt-1 mt-1">
+                                                    <span className="text-[10px] text-slate-500">أسبوعي</span>
+                                                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{formatPrice(weeklyRate)}</span>
+                                                </div>
+                                            )}
+                                            {monthlyRate && (
+                                                <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 dark:border-slate-700 pt-1 mt-1">
+                                                    <span className="text-[10px] text-slate-500">شهري</span>
+                                                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{formatPrice(monthlyRate)}</span>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center mt-4">
+                    <div className="flex justify-between items-center mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
                         <div className="flex gap-2">
                             <button
                                 onClick={handleFavorite}
@@ -260,8 +357,12 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                                 <Share2 className="w-4 h-4" />
                             </button>
                         </div>
-                        <button className="px-6 py-2 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20">
-                            احجز الآن
+                        {/* 5. Show Details Button */}
+                        <button
+                            className="px-6 py-2 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-colors shadow-md flex items-center gap-2"
+                        >
+                            <Eye className="w-4 h-4" />
+                            عرض التفاصيل
                         </button>
                     </div>
                 </div>

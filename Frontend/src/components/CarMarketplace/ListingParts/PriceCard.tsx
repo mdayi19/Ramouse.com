@@ -9,7 +9,40 @@ interface PriceCardProps {
 }
 
 const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
-    const formatPrice = (price: number): string => {
+    // Helper to extract rates
+    const getRates = () => {
+        if (listing.listing_type !== 'rent') {
+            return { price: listing.price };
+        }
+
+        const terms = listing.rental_terms;
+        let dailyRate = listing.daily_rate;
+        let weeklyRate = listing.weekly_rate;
+        let monthlyRate = listing.monthly_rate;
+
+        if (terms) {
+            const isObject = typeof terms === 'object' && !Array.isArray(terms);
+            const structuredTerms = isObject ? (terms as any) : {};
+
+            if (isObject) {
+                if (structuredTerms.daily_rate) dailyRate = structuredTerms.daily_rate;
+                if (structuredTerms.weekly_rate) weeklyRate = structuredTerms.weekly_rate;
+                if (structuredTerms.monthly_rate) monthlyRate = structuredTerms.monthly_rate;
+            }
+        }
+
+        return {
+            dailyRate: dailyRate || 0,
+            weeklyRate: weeklyRate || 0,
+            monthlyRate: monthlyRate || 0
+        };
+    };
+
+    const rates = getRates();
+    const displayPrice = listing.listing_type === 'rent' ? rates.dailyRate : rates.price;
+
+    const formatPrice = (price: number | undefined): string => {
+        if (price === undefined) return '';
         try {
             return new Intl.NumberFormat('ar-SY', {
                 style: 'currency',
@@ -49,7 +82,7 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
                                 'bg-clip-text text-transparent'
                             )}
                         >
-                            {formatPrice(listing.price)}
+                            {displayPrice ? formatPrice(displayPrice) : (listing.listing_type === 'rent' ? 'اتصل للسعر' : formatPrice(0))}
                         </motion.span>
                         {listing.listing_type === 'rent' && (
                             <span className="text-slate-600 dark:text-slate-400 text-base sm:text-lg font-medium">
@@ -80,28 +113,28 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
             </div>
 
             {/* Rental Rates Summary (if rent) */}
-            {listing.listing_type === 'rent' && (listing.weekly_rate || listing.monthly_rate) && (
+            {listing.listing_type === 'rent' && (rates.weeklyRate || rates.monthlyRate) ? (
                 <div className="mt-4 pt-4 border-t border-blue-200/50 dark:border-blue-800/30">
                     <div className="flex gap-3 flex-wrap text-sm">
-                        {listing.weekly_rate && (
+                        {rates.weeklyRate ? (
                             <div className="flex items-center gap-1.5">
                                 <span className="text-slate-500 dark:text-slate-400">أسبوعي:</span>
                                 <span className="font-bold text-slate-900 dark:text-white">
-                                    {new Intl.NumberFormat('ar-SY').format(listing.weekly_rate)} ل.س
+                                    {new Intl.NumberFormat('ar-SY').format(rates.weeklyRate)} ل.س
                                 </span>
                             </div>
-                        )}
-                        {listing.monthly_rate && (
+                        ) : null}
+                        {rates.monthlyRate ? (
                             <div className="flex items-center gap-1.5">
                                 <span className="text-slate-500 dark:text-slate-400">شهري:</span>
                                 <span className="font-bold text-slate-900 dark:text-white">
-                                    {new Intl.NumberFormat('ar-SY').format(listing.monthly_rate)} ل.س
+                                    {new Intl.NumberFormat('ar-SY').format(rates.monthlyRate)} ل.س
                                 </span>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
-            )}
+            ) : null}
         </motion.div>
     );
 };
