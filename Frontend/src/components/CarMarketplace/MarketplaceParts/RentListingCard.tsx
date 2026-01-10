@@ -158,64 +158,68 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                 </div>
 
                 {/* 3. Rates Prices */}
-                <div className="flex flex-col gap-2 mt-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-slate-500">يومي</span>
-                        <span className="font-bold text-teal-600 text-lg">
-                            {(() => {
-                                const dailyRate = rentalInfo?.dailyRate || listing.daily_rate;
-                                return dailyRate ? formatPrice(dailyRate) : 'اتصل للسعر';
-                            })()}
-                        </span>
+                {/* 3. Rates & Conditions Merged Card */}
+                <div className="flex flex-col gap-3 mt-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                    {/* Rates Section */}
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-baseline justify-between">
+                            <span className="text-xs text-slate-500">يومي</span>
+                            <span className="font-bold text-teal-600 text-lg">
+                                {(() => {
+                                    const dailyRate = rentalInfo?.dailyRate || listing.daily_rate;
+                                    return dailyRate ? formatPrice(dailyRate) : 'اتصل للسعر';
+                                })()}
+                            </span>
+                        </div>
+                        {(() => {
+                            const weeklyRate = rentalInfo?.weeklyRate || listing.weekly_rate;
+                            const monthlyRate = rentalInfo?.monthlyRate || listing.monthly_rate;
+
+                            if (!weeklyRate && !monthlyRate) return null;
+
+                            return (
+                                <>
+                                    {weeklyRate && (
+                                        <div className="flex items-baseline justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
+                                            <span className="text-xs text-slate-500">أسبوعي</span>
+                                            <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{formatPrice(weeklyRate)}</span>
+                                        </div>
+                                    )}
+                                    {monthlyRate && (
+                                        <div className="flex items-baseline justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
+                                            <span className="text-xs text-slate-500">شهري</span>
+                                            <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{formatPrice(monthlyRate)}</span>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
-                    {(() => {
-                        const weeklyRate = rentalInfo?.weeklyRate || listing.weekly_rate;
-                        const monthlyRate = rentalInfo?.monthlyRate || listing.monthly_rate;
 
-                        if (!weeklyRate && !monthlyRate) return null;
-
-                        return (
-                            <>
-                                {weeklyRate && (
-                                    <div className="flex items-baseline justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
-                                        <span className="text-xs text-slate-500">أسبوعي</span>
-                                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{formatPrice(weeklyRate)}</span>
-                                    </div>
+                    {/* Conditions Section (Merged) */}
+                    {(rentalInfo?.deposit || rentalInfo?.minAge) && (
+                        <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+                            <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">شروط الإيجار</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {rentalInfo?.deposit ? (
+                                    <span className="text-[10px] px-2 py-1 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center gap-1 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-800/30">
+                                        <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
+                                    </span>
+                                ) : (
+                                    <span className="text-[10px] px-2 py-1 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center gap-1 text-green-600 dark:text-green-300 border border-green-100 dark:border-green-800/30">
+                                        <ShieldCheck className="w-3 h-3" /> بدون تأمين
+                                    </span>
                                 )}
-                                {monthlyRate && (
-                                    <div className="flex items-baseline justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
-                                        <span className="text-xs text-slate-500">شهري</span>
-                                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{formatPrice(monthlyRate)}</span>
-                                    </div>
+                                {rentalInfo?.minAge && (
+                                    <span className="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center gap-1 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
+                                        <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
+                                    </span>
                                 )}
-                            </>
-                        );
-                    })()}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {/* 4. Rental Requirements (متطلبات الأيجار) */}
-            {(rentalInfo?.deposit || rentalInfo?.minAge) && (
-                <div className="px-4 py-2">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">متطلبات الأيجار</h4>
-                    <div className="flex flex-wrap gap-2">
-                        {rentalInfo?.deposit ? (
-                            <span className="text-[10px] px-2 py-1 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center gap-1 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-800/30">
-                                <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
-                            </span>
-                        ) : (
-                            <span className="text-[10px] px-2 py-1 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center gap-1 text-green-600 dark:text-green-300 border border-green-100 dark:border-green-800/30">
-                                <ShieldCheck className="w-3 h-3" /> بدون تأمين
-                            </span>
-                        )}
-                        {rentalInfo?.minAge && (
-                            <span className="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center gap-1 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
-                                <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
-                            </span>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {/* 5. Show Details Button & Actions */}
             <div className="mt-auto p-4 pt-2 flex items-center justify-between gap-2">
@@ -287,27 +291,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-teal-600 transition-colors">{listing.title}</h3>
 
                             {/* 4. Rental Requirements */}
-                            {(rentalInfo?.deposit || rentalInfo?.minAge) && (
-                                <div className="mt-2">
-                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1">متطلبات الأيجار</h4>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        {rentalInfo?.deposit ? (
-                                            <span className="bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-orange-600 dark:text-orange-300 text-xs">
-                                                <ShieldCheck className="w-3 h-3" /> تأمين: {formatPrice(rentalInfo.deposit)}
-                                            </span>
-                                        ) : (
-                                            <span className="bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-green-600 dark:text-green-300 text-xs">
-                                                <ShieldCheck className="w-3 h-3" /> بدون تأمين
-                                            </span>
-                                        )}
-                                        {rentalInfo?.minAge && (
-                                            <span className="bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md flex items-center gap-1 text-blue-600 dark:text-blue-300 text-xs">
-                                                <User className="w-3 h-3" /> عمر {rentalInfo.minAge}+
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+
                         </div>
 
                         {/* 3. Rates Prices */}
@@ -344,6 +328,29 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                                     );
                                 })()}
                             </div>
+
+                            {/* Conditions Section (Merged for List View) */}
+                            {(rentalInfo?.deposit || rentalInfo?.minAge) && (
+                                <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-right">شروط الإيجار</h4>
+                                    <div className="flex flex-col gap-1 items-end">
+                                        {rentalInfo?.deposit ? (
+                                            <span className="text-[10px] text-orange-600 dark:text-orange-300 whitespace-nowrap">
+                                                تأمين: {formatPrice(rentalInfo.deposit)}
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] text-green-600 dark:text-green-300 whitespace-nowrap">
+                                                بدون تأمين
+                                            </span>
+                                        )}
+                                        {rentalInfo?.minAge && (
+                                            <span className="text-[10px] text-blue-600 dark:text-blue-300 whitespace-nowrap">
+                                                عمر {rentalInfo.minAge}+
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
