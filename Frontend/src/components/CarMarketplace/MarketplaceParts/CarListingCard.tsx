@@ -143,7 +143,7 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                     <div className="flex flex-col items-center justify-center p-2 rounded bg-white dark:bg-slate-700 shadow-sm text-center">
                         <Gauge className="w-4 h-4 text-slate-400 mb-1" />
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200" dir="ltr">
-                            {listing.mileage >= 1000 ? `${(listing.mileage / 1000).toFixed(0)}k` : listing.mileage}
+                            {listing.mileage >= 1000 ? `${(listing.mileage / 1000).toFixed(0)} ألف كم` : `${listing.mileage} كم`}
                         </span>
                     </div>
                     <div className="flex flex-col items-center justify-center p-2 rounded bg-white dark:bg-slate-700 shadow-sm text-center">
@@ -175,18 +175,18 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
 
     if (viewMode === 'list') {
         return (
-            <motion.div
+            <motion.article
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all cursor-pointer flex flex-row h-32 sm:h-48 items-stretch"
+                className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all cursor-pointer flex flex-row h-32 sm:h-48 items-stretch"
                 onClick={handleView}
             >
                 {/* Image Section (Left/Top) */}
                 <div className="w-32 sm:w-64 relative flex-shrink-0 overflow-hidden">
                     <OptimizedImage
                         src={images[0]}
-                        alt={listing.title}
+                        alt={`${listing.title} ${listing.year} - ${listing.city || 'سوريا'}`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 absolute inset-0"
                     />
                     <div className="absolute top-2 left-2 flex gap-1">
@@ -239,17 +239,17 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                         </span>
                     </div>
                 </div>
-            </motion.div>
+            </motion.article>
         );
     }
 
     // Grid View (Default)
     return (
-        <motion.div
+        <motion.article
             layout
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col"
+            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col"
             onClick={handleView}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}
@@ -258,7 +258,7 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
                 <img
                     src={images[activeImageIndex]}
-                    alt={listing.title}
+                    alt={`${listing.title} ${listing.year} - ${listing.city || 'سوريا'} - صورة ${activeImageIndex + 1}`}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
 
@@ -300,14 +300,14 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                     <button
                         onClick={handleFavorite}
                         className={`p-2 rounded-full backdrop-blur-md shadow-lg transition-all ${isFavorited ? 'bg-white text-red-500' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
-                        title="Add to favorites"
+                        title="أضف للمفضلة"
                     >
                         <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
                     </button>
                     <button
                         onClick={handleShare}
                         className="p-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-white hover:text-blue-600 shadow-lg transition-all"
-                        title="Share"
+                        title="مشاركة"
                     >
                         <Share2 className="w-4 h-4" />
                     </button>
@@ -327,6 +327,6 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
             </div>
 
             <CardContent />
-        </motion.div>
+        </motion.article>
     );
 };

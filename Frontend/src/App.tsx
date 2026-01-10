@@ -691,7 +691,10 @@ const App: React.FC = () => {
                 }}
             />
 
-            <main className="flex-grow w-full px-4 sm:px-6 py-8 flex flex-col pb-28 md:pb-8">
+            <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car')
+                    ? 'p-0'
+                    : 'px-4 sm:px-6 py-8'
+                }`}>
                 <ErrorBoundary>
                     <Suspense fallback={<PageLoader />}>
                         <RouteTracker />

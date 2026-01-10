@@ -23,7 +23,7 @@ const FILTER_PRESETS: FilterPreset[] = [
         filters: {
             price_min: 50000000,
             year_min: 2020,
-            features: ['Leather Seats', 'Sunroof', 'Premium Audio']
+            features: ['مقاعد جلد', 'فتحة سقف', 'نظام صوتي فاخر']
         }
     },
     {
@@ -32,7 +32,7 @@ const FILTER_PRESETS: FilterPreset[] = [
         icon: <DollarSign className="w-4 h-4" />,
         filters: {
             price_max: 20000000,
-            features: ['Fuel Efficient']
+            features: ['موفر للوقود']
         }
     },
     {
@@ -48,7 +48,7 @@ const FILTER_PRESETS: FilterPreset[] = [
         name: 'عالية الأداء',
         icon: <Zap className="w-4 h-4" />,
         filters: {
-            features: ['Sport Mode', 'Turbo', 'All-Wheel Drive']
+            features: ['وضعية رياضية', 'تيربو', 'دفع رباعي']
         }
     },
     {

@@ -14,7 +14,7 @@ const ShimmerEffect = () => (
 const SkeletonCard = ({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) => {
     if (viewMode === 'list') {
         return (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row h-auto sm:h-48">
+            <div className="bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row h-auto sm:h-48">
                 {/* Image */}
                 <div className="w-full sm:w-64 h-48 sm:h-full bg-slate-200 dark:bg-slate-700 relative overflow-hidden">
                     <ShimmerEffect />
@@ -55,7 +55,7 @@ const SkeletonCard = ({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) => 
 
     // Grid view skeleton
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 h-full flex flex-col">
+        <div className="bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 h-full flex flex-col">
             {/* Image */}
             <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-700 relative overflow-hidden">
                 <ShimmerEffect />

@@ -239,7 +239,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                 </div>
                 <button
                     onClick={handleDetailsClick}
-                    className="flex-1 py-2.5 bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-100 text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95"
+                    className="flex-1 py-3 bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-100 text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95 touch-manipulation"
                 >
                     <Eye className="w-4 h-4" />
                     عرض التفاصيل
@@ -250,18 +250,18 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
 
     if (viewMode === 'list') {
         return (
-            <motion.div
+            <motion.article
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-teal-500/30 transition-all cursor-pointer flex flex-row h-auto sm:h-52 items-stretch"
+                className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-teal-500/30 transition-all cursor-pointer flex flex-row h-auto sm:h-52 items-stretch"
                 onClick={handleView}
             >
                 {/* Image Section */}
                 <div className="w-32 sm:w-72 relative flex-shrink-0 overflow-hidden">
                     <OptimizedImage
                         src={images[0]}
-                        alt={listing.title}
+                        alt={`${listing.title} ${listing.year} - ${listing.city || 'سوريا'}`}
                         className="h-full group-hover:scale-110 transition-transform duration-700 absolute inset-0 w-full object-cover"
                     />
                     <div className="absolute top-2 left-2 flex gap-1">
@@ -379,17 +379,17 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                         </button>
                     </div>
                 </div>
-            </motion.div>
+            </motion.article>
         );
     }
 
     // Grid View
     return (
-        <motion.div
+        <motion.article
             layout
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 hover:border-teal-500/30 transition-all duration-300 cursor-pointer h-full flex flex-col"
+            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-2xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 hover:border-teal-500/30 transition-all duration-300 cursor-pointer h-full flex flex-col"
             onClick={handleView}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}
@@ -398,7 +398,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
             <div className="relative overflow-hidden bg-slate-100 dark:bg-slate-900">
                 <OptimizedImage
                     src={images[activeImageIndex]}
-                    alt={listing.title}
+                    alt={`${listing.title} ${listing.year} - ${listing.city || 'سوريا'} - صورة ${activeImageIndex + 1}`}
                     aspectRatio="aspect-[16/10]"
                     className="group-hover:scale-110 transition-transform duration-700"
                 />
@@ -435,6 +435,6 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
             </div>
 
             <CardContent />
-        </motion.div>
+        </motion.article>
     );
 };

@@ -84,13 +84,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                     <Filter className="w-5 h-5 text-primary" />
                     تصفية النتائج
                 </h3>
-                <button
-                    onClick={onReset}
-                    className="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors"
-                >
-                    <RotateCcw className="w-3 h-3" />
-                    إعادة تعيين
-                </button>
+
             </div>
 
             {/* Filter Presets - Quick filters */}
