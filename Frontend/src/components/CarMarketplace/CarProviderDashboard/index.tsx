@@ -127,7 +127,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
         id: carProvider.id,
         user_id: carProvider.user_id,
         name: carProvider.name,
-        phone: carProvider.phone, // Use business phone, not auth user phone
+        phone: userPhone, // Auth user phone for store purchases
         city: carProvider.city,
         // Add other required fields if missing in CarProvider
     } as any;
@@ -166,7 +166,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
                             {...props}
                             allOrders={props.orders}
                             isDashboardView={true}
-                            currentUser={mockCustomerForStore}
+                            currentUser={carProvider as any}
                             isLoading={isLoading}
                             onUpdateCustomer={async (customerId, updatedData) => {
                                 if (props.onUpdateCustomer) {
