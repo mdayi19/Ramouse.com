@@ -91,12 +91,22 @@ class OrderController extends Controller
                     break;
             }
 
+            \Log::info('🔍 PROFILE CHECK', [
+                'user_type' => $userType,
+                'profile_exists' => $profile !== null,
+                'profile_name' => $profile->name ?? 'NULL',
+            ]);
+
             if ($profile && isset($profile->name)) {
                 $customerName = $profile->name;
+                \Log::info('✅ Name from profile', ['name' => $customerName]);
             } else {
                 $customerName = 'عميل جديد'; // Fallback
+                \Log::warning('⚠️ Using fallback name');
             }
         }
+
+        \Log::info('📝 FINAL NAME', ['customer_name' => $customerName]);
 
         $order = Order::create([
             'order_number' => (string) now()->timestamp, // Simplified: timestamp only
