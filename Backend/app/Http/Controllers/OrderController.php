@@ -70,15 +70,43 @@ class OrderController extends Controller
             };
         }
 
+        // Auto-populate customer name from user profile if not provided
+        $customerName = $request->customer_name;
+        $customerPhone = $request->customer_phone ?? $user->phone;
+
+        if (!$customerName || $customerName === 'عميل جديد') {
+            $profile = null;
+            switch ($userType) {
+                case 'customer':
+                    $profile = $user->customer;
+                    break;
+                case 'technician':
+                    $profile = $user->technician;
+                    break;
+                case 'tow_truck':
+                    $profile = $user->towTruck;
+                    break;
+                case 'car_provider':
+                    $profile = $user->carProvider;
+                    break;
+            }
+
+            if ($profile && isset($profile->name)) {
+                $customerName = $profile->name;
+            } else {
+                $customerName = 'عميل جديد'; // Fallback
+            }
+        }
+
         $order = Order::create([
             'order_number' => (string) now()->timestamp, // Simplified: timestamp only
             'user_id' => $user->phone ?? $user->id ?? 'guest', // Use phone for notifications
             'user_type' => $userType,
             'status' => 'pending',
             'form_data' => $request->form_data,
-            'customer_name' => $request->customer_name,
+            'customer_name' => $customerName,
             'customer_address' => $request->customer_address,
-            'customer_phone' => $request->customer_phone,
+            'customer_phone' => $customerPhone,
             'delivery_method' => $request->delivery_method ?? 'shipping',
         ]);
 
