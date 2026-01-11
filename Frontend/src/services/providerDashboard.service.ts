@@ -3,14 +3,7 @@
  * Handles all provider dashboard operations including analytics, bulk actions, and listing management
  */
 
-import axios from 'axios';
-
-const api = axios.create({
-    baseURL: '/api',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+import { api } from '@/lib/api';
 
 export interface ListingAnalytics {
     listing_id: number;

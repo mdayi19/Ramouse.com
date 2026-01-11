@@ -15,6 +15,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
   const isProduction = mode === 'production';
 
+  // Use env variable or fallback to production URL
+  const proxyTarget = env.VITE_PROXY_TARGET || 'https://ramouse.com';
+  console.log('🔧 Vite Proxy Target:', proxyTarget);
+
   const routes = [
     '/',
     '/store',
@@ -39,46 +43,38 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Proxy API requests to production backend
         '/api': {
-          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
+          target: proxyTarget,
           changeOrigin: true,
-          secure: true,
-          ws: true, // Enable WebSocket for API
-          configure: (proxy, _options) => {
-            proxy.on('error', (err, _req, _res) => {
-              console.log('proxy error', err);
-            });
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log('Sending Request to the Target:', req.method, req.url);
-            });
-            proxy.on('proxyRes', (proxyRes, req, _res) => {
-              console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-            });
+          secure: false,
+          rewrite: (path) => path,
+          headers: {
+            'Origin': 'https://ramouse.com',
+            'Referer': 'https://ramouse.com',
           },
         },
         // Proxy storage/media requests
         '/storage': {
-          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
+          target: proxyTarget,
           changeOrigin: true,
-          secure: true,
+          secure: false,
         },
         // Proxy broadcasting auth requests
         '/broadcasting': {
-          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
+          target: proxyTarget,
           changeOrigin: true,
-          secure: true,
-          ws: true, // Enable WebSocket proxy
+          secure: false,
         },
         // Proxy watchlist endpoint
         '/watchlist': {
-          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
+          target: proxyTarget,
           changeOrigin: true,
-          secure: true,
+          secure: false,
         },
         // Proxy sanctum/csrf endpoints if needed
         '/sanctum': {
-          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
+          target: proxyTarget,
           changeOrigin: true,
-          secure: true,
+          secure: false,
         }
       }
     },

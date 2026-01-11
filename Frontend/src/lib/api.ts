@@ -2,9 +2,11 @@
 import axios from 'axios';
 import { apiCache, createCacheKey, shouldCache, invalidateCache } from './apiCache';
 
-// Use import.meta.env for Vite
-export const API_URL = '/api';
-export const BASE_URL = '';
+// Use full production URL in development to bypass Vite proxy issues
+// In production build, use relative URLs since the app is served from the same domain
+const isDev = import.meta.env.DEV;
+export const API_URL = isDev ? 'https://ramouse.com/api' : '/api';
+export const BASE_URL = isDev ? 'https://ramouse.com' : '';
 
 export const api = axios.create({
     baseURL: API_URL,
@@ -12,6 +14,7 @@ export const api = axios.create({
         'Content-Type': 'application/json',
     },
     timeout: 30000,
+    withCredentials: false, // Set to false for cross-origin requests without cookies
 });
 
 // Request interceptor for authentication and caching
