@@ -18,6 +18,10 @@ function createEchoConfig() {
     const defaultHost = window.location.hostname;
     const defaultPort = isHttps ? 443 : 6001;
 
+    // In dev mode, use full production URL for auth endpoint to bypass Vite proxy issues
+    const isDev = (import.meta as any).env.DEV;
+    const authEndpoint = isDev ? 'https://ramouse.com/api/broadcasting/auth' : '/api/broadcasting/auth';
+
     return {
         broadcaster: 'reverb' as any,
         key: (import.meta as any).env.VITE_REVERB_APP_KEY || 'ramouse-app-key',
@@ -26,7 +30,7 @@ function createEchoConfig() {
         wssPort: parseInt((import.meta as any).env.VITE_REVERB_PORT) || defaultPort,
         forceTLS: (import.meta as any).env.VITE_REVERB_SCHEME === 'https' || isHttps,
         enabledTransports: ['ws', 'wss'],
-        authEndpoint: '/api/broadcasting/auth',
+        authEndpoint: authEndpoint,
         auth: {
             headers: {
                 Accept: 'application/json',
