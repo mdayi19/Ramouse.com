@@ -92,10 +92,11 @@ export interface CarProvider {
   user_id?: number;
   id: string;
   name: string;
-  business_name?: string;
   business_type: string;
   city: string;
   address: string;
+  latitude?: string | number;
+  longitude?: string | number;
   profile_photo?: string;
   gallery?: string[];
   is_verified: boolean;

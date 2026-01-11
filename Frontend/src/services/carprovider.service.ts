@@ -123,21 +123,17 @@ export class CarProviderService {
         // Based on the plan, the component will send FormData.
 
         if (!(data instanceof FormData)) {
-            // Fallback for legacy calls if any (though we are rewriting the component)
-            // Ideally we should enforce FormData if files are involved, but for simple text updates JSON is fine.
-            // But the backend now handles both or expects files.
-            // Let's assume the component will pass FormData if file upload is needed.
-        } else {
-            headers = { 'Content-Type': 'multipart/form-data' };
+            // Fallback for legacy calls
         }
+        // Do NOT manually set Content-Type for FormData; let Axios/Browser set it with the boundary.
 
         // Note: For Laravel PUT requests with FormData (files), we must use POST with _method=PUT
         if (data instanceof FormData) {
             data.append('_method', 'PUT');
-            const response = await api.post('/car-providers/profile', data, { headers });
+            const response = await api.post('/car-provider/profile', data, { headers });
             return response.data.provider;
         } else {
-            const response = await api.put('/car-providers/profile', data);
+            const response = await api.put('/car-provider/profile', data);
             return response.data.provider;
         }
     }

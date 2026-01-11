@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { Upload, X, Star } from 'lucide-react';
+import { getStorageUrl } from '../../config/api';
 
 interface PhotoUploaderProps {
     photos: (File | string)[];
@@ -43,7 +44,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     };
 
     const getPreviewUrl = (file: File | string) => {
-        if (typeof file === 'string') return file;
+        if (typeof file === 'string') return getStorageUrl(file);
         return URL.createObjectURL(file);
     };
 

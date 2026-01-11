@@ -73,9 +73,11 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
     const handleBottomNavClick = (id: string) => {
         if (id === 'notifications') {
             onNavigate('notificationCenter');
-        } else if (id === 'add-listing') {
-            navigate('/car-provider-dashboard/listings');
-            // Ideally open wizard directly, but routing to listings is safe
+        } else if (id === 'new-order') {
+            // Trigger new order form
+            if (props.onStartNewOrder) {
+                props.onStartNewOrder();
+            }
         } else {
             handleViewChange(id);
         }
@@ -107,7 +109,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
     const bottomNavItems = useMemo(() => [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
         { id: 'listings', label: 'سياراتي', icon: <Icon name="Car" /> },
-        { id: 'add-listing', label: 'إضافة', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
+        { id: 'new-order', label: 'قطعة جديدة', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'store', label: 'المتجر', icon: <Icon name="ShoppingBag" /> },
     ], []);

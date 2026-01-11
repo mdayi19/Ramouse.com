@@ -8,6 +8,7 @@ import { getEcho } from './lib/echo';
 import { NotificationService } from './services/notification.service';
 import { AuthService } from './services/auth.service';
 import { DirectoryService } from './services/directory.service';
+import { CarProviderService } from './services/carprovider.service';
 import { CarProviderDashboardProps } from './types';
 
 // Eager imports for critical path
@@ -204,21 +205,34 @@ const App: React.FC = () => {
         if (isAuthenticated && userPhone && !hasFetchedProfile.current) {
             hasFetchedProfile.current = true;
 
-            // Fetch latest profile data to ensure UI is in sync with DB
-            AuthService.getProfile()
-                .then(user => {
-                    if (!user) return;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    if (isTowTruck) setLoggedInTowTruck(user);
-                    else if (isProvider) setLoggedInProvider(user);
-                    else if (isTechnician) setLoggedInTechnician(user);
-                    else if (isCarProvider) setLoggedInCarProvider(user);
-                    else setLoggedInCustomer(user);
-                })
-                .catch(err => {
-                    console.error('Failed to fetch profile:', err);
-                    showToast('فشل تحميل الملف الشخصي', 'error');
-                });
+            // Specialized profile fetching based on role
+            if (isCarProvider) {
+                CarProviderService.getProfile()
+                    .then(provider => {
+                        if (!provider) return;
+                        localStorage.setItem('currentUser', JSON.stringify(provider));
+                        setLoggedInCarProvider(provider);
+                    })
+                    .catch(err => {
+                        console.error('Failed to fetch Car Provider profile:', err);
+                        showToast('فشل تحميل بيانات المعرض', 'error');
+                    });
+            } else {
+                // Default generic profile fetch for others (can be specialized for others too if needed)
+                AuthService.getProfile()
+                    .then(user => {
+                        if (!user) return;
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        if (isTowTruck) setLoggedInTowTruck(user);
+                        else if (isProvider) setLoggedInProvider(user);
+                        else if (isTechnician) setLoggedInTechnician(user);
+                        else setLoggedInCustomer(user);
+                    })
+                    .catch(err => {
+                        console.error('Failed to fetch profile:', err);
+                        showToast('فشل تحميل الملف الشخصي', 'error');
+                    });
+            }
 
             NotificationService.getAll()
                 .then(data => {
@@ -692,8 +706,8 @@ const App: React.FC = () => {
             />
 
             <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car')
-                    ? 'p-0'
-                    : 'px-4 sm:px-6 py-8'
+                ? 'p-0'
+                : 'px-4 sm:px-6 py-8'
                 }`}>
                 <ErrorBoundary>
                     <Suspense fallback={<PageLoader />}>
