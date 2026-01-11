@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Proxy API requests to production backend
         '/api': {
-          target: 'https://ramouse.com',
+          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
           changeOrigin: true,
           secure: true,
           ws: true, // Enable WebSocket for API
@@ -57,26 +57,26 @@ export default defineConfig(({ mode }) => {
         },
         // Proxy storage/media requests
         '/storage': {
-          target: 'https://ramouse.com',
+          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
           changeOrigin: true,
           secure: true,
         },
         // Proxy broadcasting auth requests
         '/broadcasting': {
-          target: 'https://ramouse.com',
+          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
           changeOrigin: true,
           secure: true,
           ws: true, // Enable WebSocket proxy
         },
         // Proxy watchlist endpoint
         '/watchlist': {
-          target: 'https://ramouse.com',
+          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
           changeOrigin: true,
           secure: true,
         },
         // Proxy sanctum/csrf endpoints if needed
         '/sanctum': {
-          target: 'https://ramouse.com',
+          target: env.VITE_PROXY_TARGET || 'https://ramouse.com',
           changeOrigin: true,
           secure: true,
         }

@@ -320,7 +320,9 @@ class CarProviderController extends Controller
         $providerData = $provider->makeHidden(['password', 'wallet_balance', 'payment_info'])->toArray();
 
         // Add computed/alias fields for frontend compatibility
-        $providerData['phone'] = optional($provider->phones->first())->phone ?? $provider->id;
+        // Add computed/alias fields for frontend compatibility
+        $providerData['phone'] = (string) (optional($provider->phones->first())->phone ?? $provider->id);
+        $providerData['business_name'] = $provider->business_name ?? $provider->name ?? 'Car Provider';
         $providerData['logo_url'] = $provider->profile_photo;
         $providerData['trust_score'] = $provider->average_rating ?? 0;
         $providerData['member_since'] = $provider->created_at;

@@ -10,7 +10,7 @@ import type { CarListing } from '../../services/carprovider.service';
 interface ProviderProfile {
     id: string | number;
     user_id: number;
-    phone: string;
+    phone?: string;
     business_name: string;
     business_name_ar?: string;
     address?: string;
@@ -71,7 +71,8 @@ const CarProviderProfile: React.FC = () => {
         } else if (type === 'email' && provider.email) {
             window.location.href = `mailto:${provider.email}`;
         } else if (type === 'whatsapp' && provider.phone) {
-            window.open(`https://wa.me/${provider.phone.replace(/[^0-9]/g, '')}`, '_blank');
+            const phone = provider.phone.toString().replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${phone}`, '_blank');
         }
     };
 
@@ -149,7 +150,7 @@ const CarProviderProfile: React.FC = () => {
                                             className="w-full h-full object-cover rounded-xl"
                                         />
                                     ) : (
-                                        provider.business_name.charAt(0)
+                                        (provider.business_name || 'P').charAt(0)
                                     )}
                                 </div>
                             </div>
@@ -185,15 +186,14 @@ const CarProviderProfile: React.FC = () => {
                                             )}
                                             <span className="flex items-center gap-1">
                                                 <Clock className="w-4 h-4" />
-                                                Member since {new Date(provider.member_since).getFullYear()}
+                                                Member since {provider.member_since ? new Date(provider.member_since).getFullYear() : new Date().getFullYear()}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Car className="w-4 h-4" />
                                                 {provider.active_listings} Active Listings
                                             </span>
                                             <span className="flex items-center gap-1">
-                                                <Eye className="w-4 h-4" />
-                                                {provider.total_views.toLocaleString()} Total Views
+                                                {(provider.total_views || 0).toLocaleString()} Total Views
                                             </span>
                                         </div>
                                     </div>
@@ -237,7 +237,7 @@ const CarProviderProfile: React.FC = () => {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-sm">
                         <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                            {provider.total_views.toLocaleString()}
+                            {(provider.total_views || 0).toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Total Views</div>
                     </div>
@@ -397,7 +397,7 @@ const CarProviderProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
