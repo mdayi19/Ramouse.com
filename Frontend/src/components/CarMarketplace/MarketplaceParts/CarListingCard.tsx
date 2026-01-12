@@ -267,7 +267,7 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                 duration: 0.3,
                 ease: "easeOut"
             }}
-            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/30 transition-all cursor-pointer h-full flex flex-col"
+            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:border-primary/30 shadow-sm hover:shadow-md transition-all cursor-pointer h-full flex flex-col"
             onClick={handleView}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}

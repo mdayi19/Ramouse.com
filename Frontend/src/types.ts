@@ -114,6 +114,7 @@ export interface CarProvider {
     instagram?: string;
     whatsapp?: string;
     twitter?: string;
+    tiktok?: string;
   };
 }
 

@@ -82,7 +82,7 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
                                 'bg-clip-text text-transparent'
                             )}
                         >
-                            {displayPrice ? formatPrice(displayPrice) : (listing.listing_type === 'rent' ? 'اتصل للسعر' : formatPrice(0))}
+                            {displayPrice ? formatPrice(displayPrice) : (listing.listing_type === 'rent' ? 'اتصل' : formatPrice(0))}
                         </motion.span>
                         {listing.listing_type === 'rent' && (
                             <span className="text-slate-600 dark:text-slate-400 text-base sm:text-lg font-medium">

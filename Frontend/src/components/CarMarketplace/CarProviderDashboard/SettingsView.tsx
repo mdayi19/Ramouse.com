@@ -1,21 +1,74 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Save, Building2, MapPin, Loader, Camera, Image as ImageIcon, Globe, Mail, Clock, RotateCcw, AlertCircle, Phone, Check, Eye, X } from 'lucide-react';
+import { Save, Building2, MapPin, Loader, Camera, Image as ImageIcon, Globe, Mail, Clock, RotateCcw, AlertCircle, Phone, Check, Eye, X, Printer, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarProvider } from '../../../types';
 import { PhotoUploader } from '../PhotoUploader';
 import { getStorageUrl } from '../../../config/api';
+import PrintableCarProviderProfile from '../PrintableCarProviderProfile';
+import { Settings } from '../../../types';
 
 interface SettingsViewProps {
     provider: CarProvider;
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
     onUpdateProvider: (updatedData: Partial<CarProvider>) => void;
+    settings: Settings;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast, onUpdateProvider }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast, onUpdateProvider, settings }) => {
     const [saving, setSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+    // Print / PDF States
+    const [showPreview, setShowPreview] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isReadyForExport, setIsReadyForExport] = useState(false);
+    const printableProfileRef = React.useRef<HTMLDivElement>(null);
+
+    const handleOpenPreview = () => {
+        setIsReadyForExport(false);
+        setShowPreview(true);
+    };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleDownload = async () => {
+        if (!printableProfileRef.current || !isReadyForExport) {
+            showToast('الرجاء الانتظار حتى يكتمل تحميل المعاينة.', 'info');
+            return;
+        }
+        setIsGenerating(true);
+        showToast('جارٍ إنشاء ملف PDF...', 'info');
+
+        try {
+            // @ts-ignore
+            const html2pdfModule = await import('html2pdf.js');
+            const html2pdf = html2pdfModule.default;
+
+            if (!html2pdf) {
+                throw new Error("html2pdf library not found");
+            }
+
+            const element = printableProfileRef.current;
+            const opt = {
+                margin: 0,
+                filename: `profile-${provider.id || 'provider'}.pdf`,
+                image: { type: 'jpeg' as const, quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+            };
+
+            await html2pdf().set(opt).from(element).save();
+            setIsGenerating(false);
+        } catch (err: any) {
+            console.error("PDF generation failed:", err);
+            showToast('فشل إنشاء ملف PDF.', 'error');
+            setIsGenerating(false);
+        }
+    };
 
     // Schedule Builder State
     const [useScheduleBuilder, setUseScheduleBuilder] = useState(true);
@@ -133,6 +186,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
         instagram: provider.socials?.instagram || '',
         whatsapp: provider.socials?.whatsapp || '',
         twitter: provider.socials?.twitter || '',
+        tiktok: provider.socials?.tiktok || '',
     });
 
     // Media States
@@ -163,6 +217,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
             instagram: provider.socials?.instagram || '',
             whatsapp: provider.socials?.whatsapp || '',
             twitter: provider.socials?.twitter || '',
+            tiktok: provider.socials?.tiktok || '',
         });
         setLogoPreview(provider.profile_photo || null);
         setCoverPreview(provider.cover_photo || null);
@@ -390,6 +445,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                 instagram: provider.socials?.instagram || '',
                 whatsapp: provider.socials?.whatsapp || '',
                 twitter: provider.socials?.twitter || '',
+                tiktok: provider.socials?.tiktok || '',
             });
 
             setLogo(null);
@@ -412,10 +468,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="max-w-4xl mx-auto space-y-8 pb-20"
+            className="w-full pb-20"
         >
             {/* Header Actions */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 bg-slate-50 dark:bg-slate-900/95 backdrop-blur-sm z-10 py-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 bg-slate-50 dark:bg-slate-900/95 backdrop-blur-sm z-10 py-4 px-4 md:px-8 border-b border-slate-200 dark:border-slate-800">
                 <div>
                     <div className="flex items-center gap-3">
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">إعدادات الملف الشخصي</h2>
@@ -442,6 +498,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                             <span className="hidden sm:inline">إلغاء</span>
                         </button>
                     )}
+                    <button
+                        onClick={handleOpenPreview}
+                        className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium flex items-center gap-2"
+                    >
+                        <Printer className="w-4 h-4" />
+                        <span className="hidden sm:inline">طباعة / PDF</span>
+                    </button>
                     <a
                         href={`/car-providers/${provider.id}`}
                         target="_blank"
@@ -462,7 +525,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                 </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 px-4 md:px-8 mt-8">
                 {/* 1. General Information */}
                 <div className={cardClasses}>
                     <h3 className={sectionHeaderClasses}><Building2 className="w-6 h-6 text-blue-500" /> المعلومات العامة</h3>
@@ -752,6 +815,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                                 placeholder="https://x.com/..."
                             />
                         </div>
+                        <div>
+                            <label className={labelClasses}>TikTok URL</label>
+                            <input
+                                type="url"
+                                name="tiktok"
+                                value={socials.tiktok}
+                                onChange={handleSocialChange}
+                                className={inputClasses}
+                                placeholder="https://tiktok.com/@..."
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -877,6 +951,80 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                     </div>
                 </div>
             </div>
-        </motion.div>
+            {
+                showPreview && (
+                    <div className="fixed inset-0 bg-black/70 flex flex-col items-center z-[100] p-4 print:p-0 print:bg-white animate-fade-in">
+                        <style>{`
+                        @media print {
+                            @page {
+                                size: A4 portrait;
+                                margin: 0;
+                            }
+                            html, body {
+                                height: 297mm !important;
+                                width: 210mm !important;
+                                overflow: hidden !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                            body * {
+                                visibility: hidden;
+                            }
+                            .printable-area, .printable-area * {
+                                visibility: visible;
+                            }
+                            .printable-area {
+                                position: fixed;
+                                top: 0;
+                                left: 50% !important;
+                                transform: translateX(-50%) scale(0.95) !important;
+                                transform-origin: top center !important;
+                                width: 210mm !important;
+                                height: 297mm !important;
+                                margin: 0;
+                                padding: 0;
+                                overflow: hidden !important;
+                                background: white;
+                                z-index: 99999;
+                                page-break-after: avoid !important;
+                                page-break-before: avoid !important;
+                            }
+                            .printable-area > div {
+                                transform: none !important;
+                                width: 100% !important;
+                            }
+                            .print-hidden {
+                                display: none !important;
+                            }
+                        }
+                    `}</style>
+                        <div className="w-full max-w-[210mm] bg-white dark:bg-slate-800 p-3 rounded-t-lg shadow-lg flex justify-between items-center print-hidden">
+                            <h3 className="font-bold text-slate-800 dark:text-slate-200">معاينة الملف الشخصي</h3>
+                            <div className="flex gap-2">
+                                <button onClick={handleDownload} disabled={isGenerating || !isReadyForExport} className="flex items-center gap-2 bg-blue-600 text-white font-semibold text-xs sm:text-sm px-3 py-2 rounded-md disabled:bg-slate-400">
+                                    {isGenerating ? <><Loader className="w-4 h-4 animate-spin" /> جارٍ التحميل...</> : <><Download className="w-4 h-4" /> تحميل PDF</>}
+                                </button>
+                                <button onClick={handlePrint} disabled={!isReadyForExport} className="flex items-center gap-2 bg-slate-600 text-white font-semibold text-xs sm:text-sm px-3 py-2 rounded-md disabled:bg-slate-400">
+                                    <Printer className="w-4 h-4" /> طباعة
+                                </button>
+                                <button onClick={() => setShowPreview(false)} className="text-2xl text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white p-1">&times;</button>
+                            </div>
+                        </div>
+
+                        <div className="printable-area w-full max-w-[210mm] h-[calc(100vh-80px)] print:h-auto overflow-y-auto bg-white shadow-lg pb-10">
+                            {/* The content is scaled slightly on mobile screens to fit width if needed */}
+                            <div className="md:scale-100 scale-[0.8] origin-top-left w-[125%] md:w-full">
+                                <PrintableCarProviderProfile
+                                    ref={printableProfileRef}
+                                    provider={{ ...provider, ...formData, profile_photo: logoPreview || undefined, cover_photo: coverPreview || undefined, gallery: gallery as string[] }}
+                                    settings={settings}
+                                    onReady={() => setIsReadyForExport(true)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </motion.div >
     );
 };

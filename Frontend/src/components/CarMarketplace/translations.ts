@@ -11,7 +11,13 @@ export const TRANSLATIONS = {
         green: 'أخضر',
         yellow: 'أصفر',
         brown: 'بني',
-        gold: 'ذهبي'
+        gold: 'ذهبي',
+        bronze: 'برونزي',
+        beige: 'بيج',
+        orange: 'برتقالي',
+        maroon: 'خمري',
+        purple: 'بنفسجي',
+        navy: 'كحلي'
     },
 
     // Transmission

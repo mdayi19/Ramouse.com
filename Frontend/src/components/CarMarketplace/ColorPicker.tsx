@@ -15,15 +15,21 @@ interface ColorPickerProps {
 
 const COLORS: ColorOption[] = [
     { name: 'white', nameAr: 'أبيض', hex: '#FFFFFF' },
-    { name: 'black', nameAr: 'أسود', hex: '#000000' },
+    { name: 'beige', nameAr: 'بيج', hex: '#F5F5DC' },
     { name: 'silver', nameAr: 'فضي', hex: '#C0C0C0' },
-    { name: 'gray', nameAr: 'رمادي', hex: '#808080' },
+    { name: 'gray', nameAr: 'رمادي', hex: '#6B7280' },
+    { name: 'black', nameAr: 'أسود', hex: '#000000' },
     { name: 'red', nameAr: 'أحمر', hex: '#DC2626' },
-    { name: 'blue', nameAr: 'أزرق', hex: '#2563EB' },
-    { name: 'green', nameAr: 'أخضر', hex: '#16A34A' },
-    { name: 'yellow', nameAr: 'أصفر', hex: '#EAB308' },
-    { name: 'brown', nameAr: 'بني', hex: '#92400E' },
+    { name: 'maroon', nameAr: 'خمري', hex: '#800000' },
+    { name: 'orange', nameAr: 'برتقالي', hex: '#F97316' },
     { name: 'gold', nameAr: 'ذهبي', hex: '#F59E0B' },
+    { name: 'yellow', nameAr: 'أصفر', hex: '#EAB308' },
+    { name: 'green', nameAr: 'أخضر', hex: '#16A34A' },
+    { name: 'navy', nameAr: 'كحلي', hex: '#1E3A8A' },
+    { name: 'blue', nameAr: 'أزرق', hex: '#2563EB' },
+    { name: 'purple', nameAr: 'بنفسجي', hex: '#7E22CE' },
+    { name: 'brown', nameAr: 'بني', hex: '#92400E' },
+    { name: 'bronze', nameAr: 'برونزي', hex: '#CD7F32' },
 ];
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
@@ -36,7 +42,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 {label}
             </label>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-4 gap-3">
                 {COLORS.map(color => (
                     <button
                         key={color.name}

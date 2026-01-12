@@ -213,7 +213,7 @@ export const RentFilters: React.FC<RentFiltersProps> = ({
             )}
 
             {/* Daily Rate Range */}
-            <FilterSection id="price" title="السعر اليومي (ل.س)">
+            <FilterSection id="price" title="التعرفة اليومية (ل.س)">
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="text-xs text-slate-500 mb-1 block">من</label>

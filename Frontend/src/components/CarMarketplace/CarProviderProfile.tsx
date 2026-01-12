@@ -5,6 +5,7 @@ import Icon from '../Icon'; // Assuming Icon is in ../Icon.tsx based on file str
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 import { CarListingCard } from './MarketplaceParts/CarListingCard';
+import { RentListingCard } from './MarketplaceParts/RentListingCard';
 import { getStorageUrl } from '../../config/api';
 import SEO from '../SEO';
 
@@ -39,7 +40,9 @@ interface ProviderProfile {
         instagram?: string;
         whatsapp?: string;
         twitter?: string;
+        tiktok?: string;
     };
+    gallery?: string[];
 }
 
 const InfoCard: React.FC<{ icon: string; title: string; children: React.ReactNode, className?: string }> = ({ icon, title, children, className }) => (
@@ -80,7 +83,7 @@ const CarProviderProfile: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
-    const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'rent'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'rent' | 'gallery'>('all');
 
     // QR Code State
     const [showQrCode, setShowQrCode] = useState(false);
@@ -186,10 +189,11 @@ const CarProviderProfile: React.FC = () => {
             instagram: p.instagram,
             whatsapp: p.whatsapp,
             twitter: p.twitter,
+            tiktok: p.tiktok,
         };
     };
     const socials = provider ? getSocials(provider) : {};
-    const hasSocials = !!(socials.facebook || socials.instagram || socials.whatsapp || socials.twitter || provider?.website);
+    const hasSocials = !!(socials.facebook || socials.instagram || socials.whatsapp || socials.twitter || socials.tiktok || provider?.website || provider?.public_email);
     const whatsappNumber = socials.whatsapp || provider?.phone;
 
     const SocialLink: React.FC<{ href?: string; icon: string; name: string; colorClass?: string }> = ({ href, icon, name, colorClass }) => {
@@ -306,7 +310,7 @@ const CarProviderProfile: React.FC = () => {
             </div>
 
             {/* Main Content Container */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-32 z-20">
+            <div className="w-full px-4 md:px-8 relative -mt-32 z-20">
                 <div className="flex flex-col lg:flex-row gap-8 items-start">
 
                     {/* Left Sidebar (Desktop) / Top Section (Mobile) */}
@@ -390,7 +394,7 @@ const CarProviderProfile: React.FC = () => {
                                         <div className="text-[10px] text-slate-500 uppercase tracking-wider">إعلان</div>
                                     </div>
                                     <div className="text-center border-r border-l border-slate-100 dark:border-slate-800">
-                                        <div className="text-lg font-bold text-green-600 dark:text-green-400">{provider.trust_score}%</div>
+                                        <div className="text-lg font-bold text-green-600 dark:text-green-400">100%</div>
                                         <div className="text-[10px] text-slate-500 uppercase tracking-wider">الثقة</div>
                                     </div>
                                     <div className="text-center">
@@ -411,7 +415,9 @@ const CarProviderProfile: React.FC = () => {
                                     <div className="flex flex-wrap justify-center gap-3">
                                         {socials.facebook && <SocialLink href={socials.facebook} icon="Facebook" name="Facebook" colorClass="bg-[#1877F2] text-white hover:bg-[#1877F2]/90" />}
                                         {socials.instagram && <SocialLink href={socials.instagram} icon="Instagram" name="Instagram" colorClass="bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white" />}
-                                        {socials.twitter && <SocialLink href={socials.twitter} icon="ExternalLink" name="Twitter" colorClass="bg-black text-white hover:bg-black/90" />}
+                                        {socials.twitter && <SocialLink href={socials.twitter} icon="Twitter" name="X (Twitter)" colorClass="bg-black text-white hover:bg-black/90" />}
+                                        {socials.tiktok && <SocialLink href={socials.tiktok} icon="TikTok" name="TikTok" colorClass="bg-black text-white hover:bg-[#FE2C55]" />}
+                                        {provider.public_email && <SocialLink href={`mailto:${provider.public_email}`} icon="Mail" name="Email" colorClass="bg-red-500 text-white hover:bg-red-600" />}
                                         {socials.whatsapp && <SocialLink href={`https://wa.me/${socials.whatsapp.replace(/[^0-9]/g, '')}`} icon="MessageCircle" name="WhatsApp" colorClass="bg-[#25D366] text-white hover:bg-[#25D366]/90" />}
                                         {provider.website && <SocialLink href={provider.website} icon="Globe" name="Website" colorClass="bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200" />}
                                     </div>
@@ -457,15 +463,40 @@ const CarProviderProfile: React.FC = () => {
                     <div className="flex-1 w-full min-w-0 space-y-6">
 
                         {/* About Section */}
-                        {provider.description && (
+                        {/* About Section */}
+                        {(provider.description || (provider.gallery && provider.gallery.length > 0)) && (
                             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                                     <Icon name="Info" className="w-5 h-5 text-blue-500" />
                                     عن المعرض
                                 </h3>
-                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                                    {provider.description}
-                                </p>
+                                {provider.description && (
+                                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line text-sm sm:text-base mb-6">
+                                        {provider.description}
+                                    </p>
+                                )}
+
+                                {/* Gallery Grid in About Section */}
+                                {provider.gallery && provider.gallery.length > 0 && (
+                                    <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                        <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                            <Icon name="Image" className="w-4 h-4 text-slate-500" />
+                                            صور المعرض
+                                        </h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {provider.gallery.map((image, index) => (
+                                                <div key={index} className="aspect-[4/3] rounded-2xl overflow-hidden shadow-sm group relative cursor-pointer hover:shadow-md transition-all">
+                                                    <img
+                                                        src={getStorageUrl(image)}
+                                                        alt={`Gallery ${index + 1}`}
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -482,22 +513,22 @@ const CarProviderProfile: React.FC = () => {
                                     </h3>
 
                                     {/* Tabs */}
-                                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto">
+                                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto overflow-x-auto">
                                         <button
                                             onClick={() => setActiveTab('all')}
-                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
                                         >
                                             الكل
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('sale')}
-                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'sale' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'sale' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
                                         >
                                             للبيع
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('rent')}
-                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'rent' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'rent' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
                                         >
                                             للإيجار
                                         </button>
@@ -505,13 +536,21 @@ const CarProviderProfile: React.FC = () => {
                                 </div>
 
                                 {filteredListings.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {filteredListings.map(listing => (
-                                            <CarListingCard
-                                                key={listing.id}
-                                                listing={listing}
-                                                viewMode="grid"
-                                            />
+                                            listing.listing_type === 'rent' ? (
+                                                <RentListingCard
+                                                    key={listing.id}
+                                                    listing={listing}
+                                                    viewMode="grid"
+                                                />
+                                            ) : (
+                                                <CarListingCard
+                                                    key={listing.id}
+                                                    listing={listing}
+                                                    viewMode="grid"
+                                                />
+                                            )
                                         ))}
                                     </div>
                                 ) : (

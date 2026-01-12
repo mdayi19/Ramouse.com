@@ -237,7 +237,7 @@ const RentCarListingDetail: React.FC = () => {
 
             const message = encodeURIComponent(
                 `مرحباً، أنا مهتم بسيارتك ${listing.title}\n` +
-                `السعر: ${dailyRate ? safePrice(dailyRate) : 'اتصل للسعر'} (يومي)\n` +
+                `السعر: ${dailyRate ? safePrice(dailyRate) : 'اتصل'} (يومي)\n` +
                 `الرابط: ${window.location.href}`
             );
 

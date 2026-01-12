@@ -705,7 +705,7 @@ const App: React.FC = () => {
                 }}
             />
 
-            <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car')
+            <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car') || location.pathname.startsWith('/car-providers') || location.pathname.startsWith('/car-provider-dashboard')
                 ? 'p-0'
                 : 'px-4 sm:px-6 py-8'
                 }`}>

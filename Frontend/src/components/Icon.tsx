@@ -15,6 +15,7 @@ import {
     BellRing,
     BookOpen,
     Briefcase,
+    Building2,
     Calendar,
     Camera,
     Car,
@@ -81,6 +82,7 @@ import {
     Moon,
     MoreHorizontal,
     MoreVertical,
+    Music,
     Navigation,
     Package,
     Paintbrush,
@@ -133,7 +135,47 @@ import {
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 
+// Custom TikTok Icon
+const TikTok = (props: LucideProps) => (
+    <svg
+        {...props}
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5v4a9 9 0 0 1-9-9v9z" />
+    </svg>
+);
+
+// Custom X (Twitter) Icon
+const XLogo = (props: LucideProps) => (
+    <svg
+        {...props}
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
+        <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
+    </svg>
+);
+
 const iconMap: Record<string, React.FC<LucideProps>> = {
+    TikTok,
+    'Twitter': XLogo, // Map Twitter to X Logo
+    'X': XLogo,
     AlertCircle,
     AlertTriangle,
     Archive,
@@ -148,6 +190,7 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
     BellRing,
     BookOpen,
     Briefcase,
+    Building2,
     Calendar,
     Camera,
     Car,
@@ -215,6 +258,7 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
     Moon,
     MoreHorizontal,
     MoreVertical,
+    Music,
     Navigation,
     Package,
     Paintbrush,
@@ -261,7 +305,7 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
     Waves,
     Wind,
     Wrench,
-    X,
+
     XCircle,
     Zap,
     // Aliases for modern names (compatibility)

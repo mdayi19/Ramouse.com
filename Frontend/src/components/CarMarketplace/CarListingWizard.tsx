@@ -1234,11 +1234,13 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                     <span className="font-bold">السيارة:</span>
                     <span>{selectedBrand?.name_ar || selectedBrand?.name} {formData.model} {formData.year}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <DollarSign className="w-5 h-5 text-primary" />
-                    <span className="font-bold">السعر:</span>
-                    <span>{formData.price} ل.س</span>
-                </div>
+                {formData.listing_type === 'sale' && (
+                    <div className="flex items-center gap-3">
+                        <DollarSign className="w-5 h-5 text-primary" />
+                        <span className="font-bold">السعر:</span>
+                        <span>{formData.price} ل.س</span>
+                    </div>
+                )}
                 <div className="flex items-center gap-3">
                     <Camera className="w-5 h-5 text-primary" />
                     <span className="font-bold">الصور:</span>

@@ -158,6 +158,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
                         <Route path="settings" element={<SettingsView
                             provider={carProvider}
                             showToast={props.showToast}
+                            settings={props.settings}
                             onUpdateProvider={(data) => {
                                 if (onUpdateCarProvider) onUpdateCarProvider(data);
                             }}

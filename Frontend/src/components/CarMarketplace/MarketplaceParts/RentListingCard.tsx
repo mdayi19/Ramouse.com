@@ -185,7 +185,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                             <span className="font-bold text-teal-600 text-lg">
                                 {(() => {
                                     const dailyRate = rentalInfo?.dailyRate || listing.daily_rate;
-                                    return dailyRate ? formatPrice(dailyRate) : 'اتصل للسعر';
+                                    return dailyRate ? formatPrice(dailyRate) : 'اتصل';
                                 })()}
                             </span>
                         </div>
@@ -420,7 +420,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
                 duration: 0.3,
                 ease: "easeOut"
             }}
-            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200/50 dark:border-slate-700/50 hover:border-teal-500/30 transition-all cursor-pointer h-full flex flex-col"
+            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:border-teal-500/30 shadow-sm hover:shadow-md transition-all cursor-pointer h-full flex flex-col"
             onClick={handleView}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}
