@@ -7,6 +7,7 @@ import { PhotoUploader } from '../PhotoUploader';
 import { getStorageUrl } from '../../../config/api';
 import PrintableCarProviderProfile from '../PrintableCarProviderProfile';
 import { Settings } from '../../../types';
+import { SYRIAN_CITIES } from '../../../constants';
 
 interface SettingsViewProps {
     provider: CarProvider;
@@ -661,13 +662,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClasses}>المدينة</label>
-                            <input
-                                type="text"
+                            <select
                                 name="city"
                                 value={formData.city}
                                 onChange={handleChange}
                                 className={`${inputClasses} ${validationErrors.city ? 'border-red-500 ring-red-500' : ''}`}
-                            />
+                            >
+                                <option value="">اختر المدينة...</option>
+                                {SYRIAN_CITIES.map((city) => (
+                                    <option key={city} value={city}>
+                                        {city}
+                                    </option>
+                                ))}
+                            </select>
                             {validationErrors.city && <p className="text-xs text-red-500 mt-1">{validationErrors.city}</p>}
                         </div>
                         <div>

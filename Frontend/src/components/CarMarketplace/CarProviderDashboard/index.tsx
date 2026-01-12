@@ -153,7 +153,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
                     <Routes>
                         <Route index element={<OverviewView provider={carProvider} showToast={props.showToast} />} />
                         <Route path="overview" element={<OverviewView provider={carProvider} showToast={props.showToast} />} />
-                        <Route path="listings" element={<ListingsView showToast={props.showToast} userPhone={userPhone} />} />
+                        <Route path="listings" element={<ListingsView showToast={props.showToast} userPhone={userPhone} provider={carProvider} settings={props.settings} />} />
                         <Route path="analytics" element={<AnalyticsView showToast={props.showToast} />} />
                         <Route path="settings" element={<SettingsView
                             provider={carProvider}

@@ -28,3 +28,10 @@ https://whatsoio.com/api/create-message
 ------------------
 elzeromedia@gmail.com
 Elzero@640680.
+----------------
+VAPID_PUBLIC_KEY=BABw0vEagc-H-dWVBEb0Eb6djj3JuFcXAQsBZnDB8KwSCaWTpri-y8832vqSSmOFhY7MWyNJZ25OhjYoKm992Uk
+VAPID_PRIVATE_KEY=zwpd3xzsddw6gop37CfLOt0B93SvUM13LsyccMV_NzQ
+VAPID_SUBJECT=mailto:admin@ramouse.com
+
+
+

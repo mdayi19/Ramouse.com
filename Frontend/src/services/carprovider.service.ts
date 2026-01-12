@@ -317,7 +317,14 @@ export class CarProviderService {
     }
 
     // Quick Edit
-    static async quickEditListing(id: number, data: { price?: number; is_negotiable?: boolean; is_hidden?: boolean }) {
+    static async quickEditListing(id: number, data: {
+        price?: number;
+        daily_rate?: number;
+        weekly_rate?: number;
+        monthly_rate?: number;
+        is_negotiable?: boolean;
+        is_hidden?: boolean
+    }) {
         const response = await api.patch(`/car-provider/listings/${id}/quick-edit`, data);
         return response.data;
     }

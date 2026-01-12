@@ -458,13 +458,30 @@ class CarProviderController extends Controller
         }
 
         $validated = $request->validate([
-            'field' => 'required|in:price,daily_rate,is_available,is_negotiable',
-            'value' => 'required'
+            'price' => 'nullable|numeric|min:0',
+            'daily_rate' => 'nullable|numeric|min:0',
+            'weekly_rate' => 'nullable|numeric|min:0',
+            'monthly_rate' => 'nullable|numeric|min:0',
+            'is_available' => 'nullable|boolean',
+            'is_negotiable' => 'nullable|boolean',
         ]);
 
-        $listing->update([
-            $validated['field'] => $validated['value']
-        ]);
+        // Filter valid keys that are present in the request
+        $updateData = [];
+        foreach ($validated as $key => $value) {
+            if ($request->has($key)) {
+                $updateData[$key] = $value;
+            }
+        }
+
+        if (empty($updateData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid fields provided for update'
+            ], 422);
+        }
+
+        $listing->update($updateData);
 
         return response()->json([
             'success' => true,
