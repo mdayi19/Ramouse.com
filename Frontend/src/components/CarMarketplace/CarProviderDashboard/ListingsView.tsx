@@ -618,10 +618,13 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                         ) : (
                                                             <div className="flex items-start gap-2 group/price cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors -ml-2" onClick={() => startPriceEdit(listing)}>
                                                                 {listing.listing_type?.toLowerCase() === 'rent' ? (
-                                                                    <div>
-                                                                        <div className="font-black text-blue-600">{getRates(listing)?.daily?.toLocaleString()} <span className="text-xs font-medium text-slate-400">ل.س / يوم</span></div>
-                                                                        {getRates(listing)?.weekly > 0 && <div className="text-xs text-slate-500 mt-1">{getRates(listing)?.weekly?.toLocaleString()} <span className="text-[10px]">أسبوعي</span></div>}
-                                                                        {getRates(listing)?.monthly > 0 && <div className="text-xs text-slate-500 mt-0.5">{getRates(listing)?.monthly?.toLocaleString()} <span className="text-[10px]">شهري</span></div>}
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <div className="font-black text-blue-600 text-base">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-medium text-slate-400">ل.س / يوم</span></div>
+                                                                        <div className="flex gap-3 text-xs text-slate-500">
+                                                                            <span>{getRates(listing)?.weekly?.toLocaleString() || 0} <span className="text-[10px]">أسبوعي</span></span>
+                                                                            <span className="text-slate-300">•</span>
+                                                                            <span>{getRates(listing)?.monthly?.toLocaleString() || 0} <span className="text-[10px]">شهري</span></span>
+                                                                        </div>
                                                                     </div>
                                                                 ) : (
                                                                     <span className="font-black text-slate-800 dark:text-slate-200 text-lg">{Number(listing.price).toLocaleString()} <span className="text-xs font-bold text-slate-400">ل.س</span></span>
@@ -775,26 +778,48 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                 <div className="flex items-end justify-between w-full">
                                                     {editingPriceId === listing.id ? (
                                                         listing.listing_type?.toLowerCase() === 'rent' ? (
-                                                            <div className="w-full relative z-10">
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="يومي"
-                                                                    value={tempRates.daily}
-                                                                    onChange={(e) => setTempRates({ ...tempRates, daily: e.target.value })}
-                                                                    className="w-full px-3 py-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-lg mb-2"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    autoFocus
-                                                                />
-                                                                <div className="flex gap-2">
+                                                            <div className="w-full relative z-10 bg-white dark:bg-slate-800 p-3 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800">
+                                                                <div className="space-y-2">
+                                                                    <input
+                                                                        type="number"
+                                                                        placeholder="يومي"
+                                                                        value={tempRates.daily}
+                                                                        onChange={(e) => setTempRates({ ...tempRates, daily: e.target.value })}
+                                                                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        autoFocus
+                                                                    />
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            placeholder="أسبوعي"
+                                                                            value={tempRates.weekly}
+                                                                            onChange={(e) => setTempRates({ ...tempRates, weekly: e.target.value })}
+                                                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                        />
+                                                                        <input
+                                                                            type="number"
+                                                                            placeholder="شهري"
+                                                                            value={tempRates.monthly}
+                                                                            onChange={(e) => setTempRates({ ...tempRates, monthly: e.target.value })}
+                                                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex gap-2 mt-3">
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); savePriceEdit(listing.id); }}
-                                                                        className="flex-1 py-1.5 bg-green-500 text-white rounded-lg flex items-center justify-center shadow-md active:scale-95 transition-transform"
+                                                                        disabled={savingPrice}
+                                                                        className="flex-1 py-2 bg-green-500 text-white rounded-lg flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-50"
                                                                     >
-                                                                        <Check className="w-4 h-4" />
+                                                                        {savingPrice ? <Loader className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                                                     </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); cancelPriceEdit(); }}
-                                                                        className="flex-1 py-1.5 bg-red-100 text-red-600 rounded-lg flex items-center justify-center active:bg-red-200 transition-colors"
+                                                                        disabled={savingPrice}
+                                                                        className="flex-1 py-2 bg-red-100 text-red-600 rounded-lg flex items-center justify-center active:bg-red-200 transition-colors disabled:opacity-50"
                                                                     >
                                                                         <X className="w-4 h-4" />
                                                                     </button>
@@ -831,8 +856,12 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                         >
                                                             {listing.listing_type?.toLowerCase() === 'rent' ? (
                                                                 <>
-                                                                    <span className="font-black text-blue-600 text-lg leading-none">{getRates(listing)?.daily?.toLocaleString()} <span className="text-xs font-bold text-slate-400">ل.س</span></span>
-                                                                    <span className="text-[10px] text-slate-400 font-medium">يومياً</span>
+                                                                    <span className="font-black text-blue-600 text-lg leading-none">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-bold text-slate-400">ل.س/يوم</span></span>
+                                                                    <div className="flex gap-2 text-[10px] text-slate-400 font-medium mt-1">
+                                                                        <span>{getRates(listing)?.weekly?.toLocaleString() || 0} أسبوعي</span>
+                                                                        <span>•</span>
+                                                                        <span>{getRates(listing)?.monthly?.toLocaleString() || 0} شهري</span>
+                                                                    </div>
                                                                 </>
                                                             ) : (
                                                                 <>

@@ -290,14 +290,15 @@ class CarListingController extends Controller
             ], 403);
         }
 
+        // Toggle is_hidden for visibility control
         $listing->update([
-            'is_available' => !$listing->is_available
+            'is_hidden' => !$listing->is_hidden
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Availability updated',
-            'is_available' => $listing->is_available
+            'message' => 'Visibility updated',
+            'is_hidden' => $listing->is_hidden
         ]);
     }
 }

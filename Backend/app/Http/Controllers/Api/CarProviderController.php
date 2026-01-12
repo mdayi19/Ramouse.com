@@ -386,7 +386,7 @@ class CarProviderController extends Controller
         // Verify ownership and update
         $updated = CarListing::whereIn('id', $validated['listing_ids'])
             ->where('owner_id', $user->id)
-            ->update(['is_available' => false]);
+            ->update(['is_hidden' => true]);
 
         return response()->json([
             'success' => true,
@@ -409,7 +409,7 @@ class CarProviderController extends Controller
 
         $updated = CarListing::whereIn('id', $validated['listing_ids'])
             ->where('owner_id', $user->id)
-            ->update(['is_available' => true]);
+            ->update(['is_hidden' => false]);
 
         return response()->json([
             'success' => true,
