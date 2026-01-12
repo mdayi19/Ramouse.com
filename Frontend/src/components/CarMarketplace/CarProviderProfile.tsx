@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-    MapPin, Phone, Mail, Star, Car, CheckCircle, Award,
-    Clock, Eye, Heart, ChevronLeft, ChevronRight, MessageCircle, Shield
-} from 'lucide-react';
+import { toCanvas } from 'qrcode';
+import Icon from '../Icon'; // Assuming Icon is in ../Icon.tsx based on file structure
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
+import { CarListingCard } from './MarketplaceParts/CarListingCard';
+import { getStorageUrl } from '../../config/api';
+import SEO from '../SEO';
 
 interface ProviderProfile {
     id: string | number;
     user_id: number;
-    phone?: string;
+    name?: string;
     business_name: string;
     business_name_ar?: string;
     address?: string;
     city?: string;
+    latitude?: string;
+    longitude?: string;
     description?: string;
     is_verified: boolean;
     is_trusted: boolean;
@@ -24,11 +27,49 @@ interface ProviderProfile {
     total_views: number;
     member_since: string;
     logo_url?: string;
+    profile_photo?: string;
     cover_photo?: string;
     working_hours?: string;
     email?: string;
+    public_email?: string;
+    phone?: string;
     website?: string;
+    socials?: {
+        facebook?: string;
+        instagram?: string;
+        whatsapp?: string;
+        twitter?: string;
+    };
 }
+
+const InfoCard: React.FC<{ icon: string; title: string; children: React.ReactNode, className?: string }> = ({ icon, title, children, className }) => (
+    <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 ${className}`}>
+        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-3">
+            <Icon name={icon} className="w-6 h-6 text-primary dark:text-primary-400" />
+            {title}
+        </h3>
+        <div className="text-sm space-y-2 text-slate-600 dark:text-slate-300 leading-relaxed">
+            {children}
+        </div>
+    </div>
+);
+
+const ActionButton: React.FC<{ onClick?: () => void; href?: string; children: React.ReactNode; className?: string; isPrimary?: boolean; disabled?: boolean }> = ({ onClick, href, children, className, isPrimary, disabled }) => {
+    const commonClasses = `flex items-center justify-center gap-3 w-full text-center font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 ${className} ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`;
+    const primaryClasses = "bg-blue-600 text-white hover:bg-blue-700";
+    const secondaryClasses = "bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500";
+    const finalClasses = `${commonClasses} ${isPrimary ? primaryClasses : secondaryClasses}`;
+
+    if (href) {
+        return <a href={href} target="_blank" rel="noopener noreferrer" className={finalClasses}>{children}</a>;
+    }
+    return <button onClick={onClick} disabled={disabled} className={finalClasses}>{children}</button>;
+};
+
+const SocialLink: React.FC<{ href?: string; icon: string; name: string }> = ({ href, icon, name }) => {
+    if (!href) return null;
+    return <a href={href} target="_blank" rel="noopener noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-2 bg-slate-100 dark:bg-slate-700 rounded-full" title={name}><Icon name={icon} className="w-5 h-5" /></a>
+};
 
 const CarProviderProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -38,7 +79,13 @@ const CarProviderProfile: React.FC = () => {
     const [listings, setListings] = useState<CarListing[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'listings' | 'about'>('listings');
+    const [copied, setCopied] = useState(false);
+    const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'rent'>('all');
+
+    // QR Code State
+    const [showQrCode, setShowQrCode] = useState(false);
+    const [qrCodeStatus, setQrCodeStatus] = useState<'loading' | 'success' | 'error'>('loading');
+    const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
         loadProviderData();
@@ -57,31 +104,140 @@ const CarProviderProfile: React.FC = () => {
             setProvider(providerData);
             setListings(listingsData.data || listingsData);
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to load provider profile');
+            console.error(err);
+            setError(err.response?.data?.message || 'فشل تحميل بيانات المعرض');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleContact = (type: 'phone' | 'email' | 'whatsapp') => {
-        if (!provider) return;
+    const filteredListings = useMemo(() => {
+        if (activeTab === 'all') return listings;
+        return listings.filter(l => l.listing_type === activeTab);
+    }, [listings, activeTab]);
 
-        if (type === 'phone' && provider.phone) {
+    const logoUrl = useMemo(() => {
+        if (!provider) return null;
+        return provider.logo_url ? getStorageUrl(provider.logo_url) : (provider.profile_photo ? getStorageUrl(provider.profile_photo) : null);
+    }, [provider]);
+
+    const coverUrl = useMemo(() => {
+        if (!provider) return null;
+        return provider.cover_photo ? getStorageUrl(provider.cover_photo) : null;
+    }, [provider]);
+
+    const shareUrl = window.location.href;
+
+    // QR Code Generation
+    useEffect(() => {
+        if (showQrCode && qrCanvasRef.current) {
+            setQrCodeStatus('loading');
+
+            const generate = async () => {
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                if (!qrCanvasRef.current) {
+                    setQrCodeStatus('error');
+                    return;
+                }
+
+                try {
+                    await toCanvas(
+                        qrCanvasRef.current,
+                        shareUrl,
+                        { width: 256, margin: 2, errorCorrectionLevel: 'H', color: { dark: '#2563eb', light: '#FFFFFF' } }
+                    );
+                    setQrCodeStatus('success');
+                } catch (error) {
+                    console.error("QR Code generation failed:", error);
+                    setQrCodeStatus('error');
+                }
+            };
+
+            generate();
+        }
+    }, [showQrCode, shareUrl]);
+
+    const handleDownloadQr = () => {
+        if (qrCanvasRef.current && qrCodeStatus === 'success') {
+            const link = document.createElement('a');
+            link.download = `qrcode-${provider?.business_name || 'provider'}.png`;
+            link.href = qrCanvasRef.current.toDataURL('image/png');
+            link.click();
+        }
+    };
+
+    const [showPhone, setShowPhone] = useState(false);
+
+    const handleCall = () => {
+        if (!showPhone) {
+            setShowPhone(true);
+            return;
+        }
+        if (provider?.phone) {
             window.location.href = `tel:${provider.phone}`;
-        } else if (type === 'email' && provider.email) {
-            window.location.href = `mailto:${provider.email}`;
-        } else if (type === 'whatsapp' && provider.phone) {
-            const phone = provider.phone.toString().replace(/[^0-9]/g, '');
-            window.open(`https://wa.me/${phone}`, '_blank');
+        }
+    };
+
+    const getSocials = (p: any) => {
+        if (p.socials && Object.keys(p.socials).length > 0) return p.socials;
+        return {
+            facebook: p.facebook,
+            instagram: p.instagram,
+            whatsapp: p.whatsapp,
+            twitter: p.twitter,
+        };
+    };
+    const socials = provider ? getSocials(provider) : {};
+    const hasSocials = !!(socials.facebook || socials.instagram || socials.whatsapp || socials.twitter || provider?.website);
+    const whatsappNumber = socials.whatsapp || provider?.phone;
+
+    const SocialLink: React.FC<{ href?: string; icon: string; name: string; colorClass?: string }> = ({ href, icon, name, colorClass }) => {
+        if (!href) return null;
+        return (
+            <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-2 rounded-full transition-all transform hover:scale-110 shadow-sm ${colorClass || 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'}`}
+                title={name}
+            >
+                <Icon name={icon} className="w-5 h-5" />
+            </a>
+        );
+    };
+
+    const handleShare = async () => {
+        if (!provider) return;
+        const shareData = {
+            title: provider.business_name || 'معرض سيارات',
+            text: provider.description,
+            url: shareUrl,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.log('Share canceled');
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error('Failed to copy!', err);
+            }
         }
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Loading provider...</p>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-600 dark:text-slate-400 font-medium">جاري تحميل المعرض...</p>
                 </div>
             </div>
         );
@@ -89,316 +245,358 @@ const CarProviderProfile: React.FC = () => {
 
     if (error || !provider) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="text-center">
-                    <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Provider Not Found</h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'This provider may not exist.'}</p>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+                <div className="text-center max-w-md bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl">
+                    <Icon name="Shield" className="w-20 h-20 text-slate-300 dark:text-slate-600 mx-auto mb-6" />
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">المعرض غير موجود</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                        {error || 'عذراً، لم نتمكن من العثور على المعرض المطلوب.'}
+                    </p>
                     <button
                         onClick={() => navigate('/car-listings')}
-                        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold shadow-lg shadow-blue-600/20"
                     >
-                        Back to Marketplace
+                        العودة لسوق السيارات
                     </button>
                 </div>
             </div>
         );
     }
 
+    const businessName = provider.business_name || provider.name || 'معرض سيارات';
+    const whatsappMessage = encodeURIComponent(`مرحباً، رأيت معرضك "${businessName}" عبر تطبيق راموسة.`);
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 md:pb-20 animate-fade-in w-full">
+            <SEO
+                title={`${businessName} | راموسة لتجارة السيارات`}
+                description={provider.description || `تصفح أحدث السيارات المعروضة لدى ${businessName} في ${provider.city}.`}
+                openGraph={{
+                    title: `${businessName} | معرض سيارات`,
+                    description: provider.description,
+                    image: logoUrl || undefined,
+                    type: 'profile'
+                }}
+            />
+
+            {/* Full Width Hero */}
+            <div className="relative h-64 md:h-80 lg:h-96 w-full bg-slate-900 overflow-hidden group">
+                {coverUrl ? (
+                    <img
+                        src={coverUrl}
+                        alt="Cover"
+                        className="w-full h-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105"
+                    />
+                ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center opacity-50">
+                        <Icon name="Car" className="w-32 h-32 text-white/5" />
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+
+                {/* Back Button */}
+                <div className="absolute top-4 right-4 z-10">
                     <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        onClick={() => navigate('/car-listings')}
+                        className="bg-white/10 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/20 transition-all border border-white/10"
                     >
-                        <ChevronLeft className="w-5 h-5 mr-1" />
-                        Back
+                        <Icon name="ArrowRight" className="h-6 w-6" />
                     </button>
                 </div>
             </div>
 
-            {/* Cover Photo */}
-            <div className="relative h-64 bg-gradient-to-r from-blue-600 to-purple-600">
-                {provider.cover_photo ? (
-                    <img
-                        src={provider.cover_photo}
-                        alt="Cover"
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Car className="w-24 h-24 text-white/30" />
-                    </div>
-                )}
-            </div>
+            {/* Main Content Container */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-32 z-20">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Provider Info Card */}
-                <div className="relative -mt-16 mb-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <div className="flex flex-col md:flex-row gap-6">
-                            {/* Logo */}
-                            <div className="flex-shrink-0">
-                                <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-5xl font-bold shadow-lg">
-                                    {provider.logo_url ? (
-                                        <img
-                                            src={provider.logo_url}
-                                            alt={provider.business_name}
-                                            className="w-full h-full object-cover rounded-xl"
-                                        />
+                    {/* Left Sidebar (Desktop) / Top Section (Mobile) */}
+                    <div className="w-full lg:w-[350px] flex-shrink-0 space-y-6">
+
+                        {/* Profile Card */}
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-100 dark:border-slate-800 relative backdrop-blur-sm">
+                            {/* Logo & Basic Info */}
+                            <div className="p-6 text-center">
+                                <div className="relative inline-block mx-auto mb-4">
+                                    {logoUrl ? (
+                                        <img className="w-32 h-32 rounded-full object-cover ring-4 ring-white dark:ring-slate-800 shadow-2xl bg-white dark:bg-slate-800" src={logoUrl} alt={businessName} />
                                     ) : (
-                                        (provider.business_name || 'P').charAt(0)
+                                        <div className="w-32 h-32 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center ring-4 ring-white dark:ring-slate-800 shadow-md">
+                                            <Icon name="Store" className="w-16 h-16 text-slate-400 dark:text-slate-500" />
+                                        </div>
+                                    )}
+                                    {provider.is_verified && (
+                                        <div className="absolute bottom-1 right-1 bg-white dark:bg-slate-900 rounded-full p-1.5 shadow-sm" title="معرض موثوق">
+                                            <Icon name="BadgeCheck" className="w-6 h-6 text-blue-500 fill-blue-500/10" />
+                                        </div>
                                     )}
                                 </div>
-                            </div>
 
-                            {/* Info */}
-                            <div className="flex-1">
-                                <div className="flex items-start justify-between flex-wrap gap-4">
-                                    <div>
-                                        <div className="flex items-center gap-3 flex-wrap mb-2">
-                                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                                                {provider.business_name}
-                                            </h1>
-                                            {provider.is_verified && (
-                                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full text-sm font-medium">
-                                                    <CheckCircle className="w-4 h-4" />
-                                                    Verified
-                                                </span>
-                                            )}
-                                            {provider.is_trusted && (
-                                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 rounded-full text-sm font-medium">
-                                                    <Award className="w-4 h-4" />
-                                                    Trusted
-                                                </span>
-                                            )}
-                                        </div>
+                                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">{businessName}</h1>
 
-                                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                            {provider.city && (
-                                                <span className="flex items-center gap-1">
-                                                    <MapPin className="w-4 h-4" />
-                                                    {provider.city}
-                                                </span>
-                                            )}
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-4 h-4" />
-                                                Member since {provider.member_since ? new Date(provider.member_since).getFullYear() : new Date().getFullYear()}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Car className="w-4 h-4" />
-                                                {provider.active_listings} Active Listings
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                {(provider.total_views || 0).toLocaleString()} Total Views
-                                            </span>
-                                        </div>
+                                <div className="flex flex-col gap-2 items-center text-sm text-slate-500 dark:text-slate-400 mb-6">
+                                    <div className="flex items-center gap-1.5">
+                                        <Icon name="MapPin" className="w-4 h-4 text-slate-400" />
+                                        <span>{provider.city || 'سوريا'} {provider.address && `- ${provider.address}`}</span>
                                     </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Icon name="Calendar" className="w-4 h-4 text-slate-400" />
+                                        <span>عضو منذ {new Date(provider.member_since).getFullYear()}</span>
+                                    </div>
+                                </div>
 
-                                    {/* Contact Buttons */}
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleContact('phone')}
-                                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                                {/* Main Actions (Desktop) */}
+                                <div className="hidden sm:grid grid-cols-2 gap-3 mb-6">
+                                    <ActionButton
+                                        onClick={handleCall}
+                                        className={!showPhone ? "!bg-blue-600 hover:!bg-blue-700 text-white" : "!bg-white dark:!bg-slate-800 !text-slate-900 dark:!text-white border border-slate-200 dark:border-slate-700"}
+                                        disabled={!provider.phone}
+                                    >
+                                        <Icon name={showPhone ? "Phone" : "Eye"} className="w-4 h-4" />
+                                        {showPhone ? provider.phone : 'إظهار الرقم'}
+                                    </ActionButton>
+
+                                    {(whatsappNumber) && (
+                                        <ActionButton
+                                            href={`https://wa.me/${whatsappNumber.toString().replace(/[^0-9]/g, '')}?text=${whatsappMessage}`}
+                                            className="!bg-green-500 hover:!bg-green-600 text-white"
                                         >
-                                            <Phone className="w-4 h-4" />
-                                            Call
-                                        </button>
-                                        <button
-                                            onClick={() => handleContact('whatsapp')}
-                                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2"
-                                        >
-                                            <MessageCircle className="w-4 h-4" />
-                                            WhatsApp
-                                        </button>
+                                            <Icon name="MessageCircle" className="w-4 h-4" /> واتساب
+                                        </ActionButton>
+                                    )}
+                                </div>
+
+                                {/* QR & Share Row */}
+                                <div className="flex items-center justify-center gap-3 mb-6">
+                                    <button
+                                        onClick={handleShare}
+                                        className="flex-1 py-2.5 px-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700"
+                                    >
+                                        {copied ? <Icon name="Check" className="w-4 h-4 text-green-500" /> : <Icon name="Share2" className="w-4 h-4" />}
+                                        مشاركة
+                                    </button>
+                                    <button
+                                        onClick={() => setShowQrCode(true)}
+                                        className="flex-1 py-2.5 px-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 border border-blue-100 dark:border-blue-900/30"
+                                    >
+                                        <Icon name="QrCode" className="w-4 h-4" />
+                                        الرمز
+                                    </button>
+                                </div>
+
+                                {/* Stats Grid */}
+                                <div className="grid grid-cols-3 gap-2 py-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="text-center">
+                                        <div className="text-lg font-bold text-slate-900 dark:text-white">{provider.active_listings}</div>
+                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider">إعلان</div>
+                                    </div>
+                                    <div className="text-center border-r border-l border-slate-100 dark:border-slate-800">
+                                        <div className="text-lg font-bold text-green-600 dark:text-green-400">{provider.trust_score}%</div>
+                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider">الثقة</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-lg font-bold text-slate-900 dark:text-white">{provider.total_views}</div>
+                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider">مشاهدة</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-sm">
-                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                            {provider.total_listings}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Total Listings</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-sm">
-                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-                            {provider.active_listings}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Active Now</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-sm">
-                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                            {(provider.total_views || 0).toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Total Views</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-sm">
-                        <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-                            {provider.trust_score}%
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Trust Score</div>
-                    </div>
-                </div>
-
-                {/* Tabs */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm mb-8">
-                    <div className="border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex gap-4 px-6">
-                            <button
-                                onClick={() => setActiveTab('listings')}
-                                className={`py-4 px-4 border-b-2 font-medium transition-colors ${activeTab === 'listings'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                Listings ({listings.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('about')}
-                                className={`py-4 px-4 border-b-2 font-medium transition-colors ${activeTab === 'about'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                    }`}
-                            >
-                                About
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="p-6">
-                        {/* Listings Tab */}
-                        {activeTab === 'listings' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {listings.length === 0 ? (
-                                    <div className="col-span-full text-center py-12">
-                                        <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                        <p className="text-gray-600 dark:text-gray-400">No active listings</p>
+                        {/* Contact & Socials Info */}
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 space-y-6">
+                            {(hasSocials) ? (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                                        <Icon name="Globe" className="w-5 h-5 text-slate-400" /> تواصل معنا
+                                    </h3>
+                                    <div className="flex flex-wrap justify-center gap-3">
+                                        {socials.facebook && <SocialLink href={socials.facebook} icon="Facebook" name="Facebook" colorClass="bg-[#1877F2] text-white hover:bg-[#1877F2]/90" />}
+                                        {socials.instagram && <SocialLink href={socials.instagram} icon="Instagram" name="Instagram" colorClass="bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white" />}
+                                        {socials.twitter && <SocialLink href={socials.twitter} icon="ExternalLink" name="Twitter" colorClass="bg-black text-white hover:bg-black/90" />}
+                                        {socials.whatsapp && <SocialLink href={`https://wa.me/${socials.whatsapp.replace(/[^0-9]/g, '')}`} icon="MessageCircle" name="WhatsApp" colorClass="bg-[#25D366] text-white hover:bg-[#25D366]/90" />}
+                                        {provider.website && <SocialLink href={provider.website} icon="Globe" name="Website" colorClass="bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200" />}
                                     </div>
-                                ) : (
-                                    listings.map((listing) => (
-                                        <div
-                                            key={listing.id}
-                                            onClick={() => navigate(`/car-listings/${listing.slug}`)}
-                                            className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all cursor-pointer group"
-                                        >
-                                            <div className="relative aspect-video bg-gray-100 dark:bg-gray-700">
-                                                <img
-                                                    src={(listing.photos && listing.photos.length > 0)
-                                                        ? listing.photos[0]
-                                                        : (listing.images && listing.images.length > 0)
-                                                            ? listing.images[0]
-                                                            : '/placeholder-car.jpg'}
-                                                    alt={listing.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                                {listing.is_sponsored && (
-                                                    <span className="absolute top-2 left-2 px-2 py-1 bg-purple-500 text-white text-xs font-semibold rounded">
-                                                        Sponsored
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
-                                                    {listing.title}
-                                                </h3>
-                                                <div className="flex items-baseline gap-2 mb-3">
-                                                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                        ${listing.price.toLocaleString()}
-                                                    </span>
-                                                    {listing.listing_type === 'rent' && (
-                                                        <span className="text-sm text-gray-500 dark:text-gray-400">/ day</span>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                                                    <span>{listing.year}</span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Eye className="w-4 h-4" />
-                                                        {listing.views_count || 0}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                                </div>
+                            ) : null}
+
+                            {/* Working Hours */}
+                            <div className={hasSocials ? "pt-6 border-t border-slate-100 dark:border-slate-800" : ""}>
+                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                                    <Icon name="Clock" className="w-5 h-5 text-orange-500" /> ساعات العمل
+                                </h3>
+                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed">
+                                    {provider.working_hours || 'غير محدد'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Map Widget */}
+                        {(provider.latitude && provider.longitude) && (
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                                <iframe
+                                    width="100%"
+                                    height="250"
+                                    style={{ border: 0 }}
+                                    loading="lazy"
+                                    allowFullScreen
+                                    src={`https://www.google.com/maps?q=${provider.latitude},${provider.longitude}&z=15&output=embed`}
+                                    title="Provider Location"
+                                ></iframe>
+                                <a
+                                    href={`https://www.google.com/maps?q=${provider.latitude},${provider.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block p-3 text-center text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                >
+                                    فتح في خرائط Google
+                                </a>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex-1 w-full min-w-0 space-y-6">
+
+                        {/* About Section */}
+                        {provider.description && (
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <Icon name="Info" className="w-5 h-5 text-blue-500" />
+                                    عن المعرض
+                                </h3>
+                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                                    {provider.description}
+                                </p>
                             </div>
                         )}
 
-                        {/* About Tab */}
-                        {activeTab === 'about' && (
-                            <div className="space-y-6">
-                                {provider.description && (
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                                            About Us
-                                        </h3>
-                                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
-                                            {provider.description}
+                        {/* Listings Section */}
+                        <div>
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 w-full sm:w-auto">
+                                        <Icon name="Car" className="w-6 h-6 text-blue-600" />
+                                        <span>السيارات المعروضة</span>
+                                        <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs py-1 px-2.5 rounded-full font-bold">
+                                            {listings.length}
+                                        </span>
+                                    </h3>
+
+                                    {/* Tabs */}
+                                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto">
+                                        <button
+                                            onClick={() => setActiveTab('all')}
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                        >
+                                            الكل
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('sale')}
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'sale' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                        >
+                                            للبيع
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('rent')}
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'rent' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                        >
+                                            للإيجار
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {filteredListings.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {filteredListings.map(listing => (
+                                            <CarListingCard
+                                                key={listing.id}
+                                                listing={listing}
+                                                viewMode="grid"
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Icon name="Car" className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                                        </div>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium">
+                                            {activeTab === 'all' ? 'لا توجد سيارات معروضة حالياً' :
+                                                activeTab === 'sale' ? 'لا توجد سيارات للبيع' : 'لا توجد سيارات للإيجار'}
                                         </p>
                                     </div>
                                 )}
-
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                                        Contact Information
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {provider.phone && (
-                                            <div className="flex items-center gap-3">
-                                                <Phone className="w-5 h-5 text-gray-400" />
-                                                <a
-                                                    href={`tel:${provider.phone}`}
-                                                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                                                >
-                                                    {provider.phone}
-                                                </a>
-                                            </div>
-                                        )}
-                                        {provider.email && (
-                                            <div className="flex items-center gap-3">
-                                                <Mail className="w-5 h-5 text-gray-400" />
-                                                <a
-                                                    href={`mailto:${provider.email}`}
-                                                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                                                >
-                                                    {provider.email}
-                                                </a>
-                                            </div>
-                                        )}
-                                        {provider.address && (
-                                            <div className="flex items-center gap-3">
-                                                <MapPin className="w-5 h-5 text-gray-400" />
-                                                <span className="text-gray-600 dark:text-gray-400">
-                                                    {provider.address}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {provider.working_hours && (
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                                            Working Hours
-                                        </h3>
-                                        <p className="text-gray-600 dark:text-gray-400">{provider.working_hours}</p>
-                                    </div>
-                                )}
                             </div>
-                        )}
+                        </div>
+
                     </div>
                 </div>
             </div>
-        </div >
+
+            {/* Mobile Sticky Action Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 md:hidden shadow-[0_-5px_15px_rgba(0,0,0,0.1)]">
+                <div className="grid grid-cols-2 gap-3">
+                    <ActionButton
+                        onClick={handleCall}
+                        className={!showPhone ? "!bg-blue-600 hover:!bg-blue-700 text-white" : "!bg-slate-100 dark:!bg-slate-800 !text-slate-900 dark:!text-white border border-slate-200 dark:border-slate-700"}
+                        disabled={!provider.phone}
+                    >
+                        <Icon name="Phone" className="w-5 h-5" />
+                        {showPhone ? provider.phone : 'اتصال'}
+                    </ActionButton>
+
+                    {(whatsappNumber) ? (
+                        <ActionButton
+                            href={`https://wa.me/${whatsappNumber.toString().replace(/[^0-9]/g, '')}?text=${whatsappMessage}`}
+                            className="!bg-green-500 hover:!bg-green-600 text-white"
+                        >
+                            <Icon name="MessageCircle" className="w-5 h-5" /> واتساب
+                        </ActionButton>
+                    ) : (
+                        <div />
+                    )}
+                </div>
+            </div>
+
+            {/* QR Code Modal */}
+            {showQrCode && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] animate-fade-in p-4" onClick={() => setShowQrCode(false)}>
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-2xl relative animate-scale-in w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                        <div className="text-center">
+                            {logoUrl && (
+                                <img src={logoUrl} className="w-20 h-20 rounded-full object-cover mx-auto -mt-16 mb-4 ring-8 ring-white dark:ring-slate-900 shadow-lg bg-white dark:bg-slate-800" alt={businessName} />
+                            )}
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{businessName}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">امسح الرمز لزيارة المعرض</p>
+
+                            <div className="p-4 bg-white rounded-2xl border-2 border-slate-100 dark:border-slate-800 inline-block mb-6">
+                                {qrCodeStatus === 'loading' && (
+                                    <div className="w-[200px] h-[200px] flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    </div>
+                                )}
+                                {qrCodeStatus === 'error' && (
+                                    <div className="w-[200px] h-[200px] flex items-center justify-center text-red-500">
+                                        <Icon name="AlertTriangle" className="w-8 h-8" />
+                                    </div>
+                                )}
+                                <canvas ref={qrCanvasRef} className={`w-[200px] h-[200px] ${qrCodeStatus !== 'success' ? 'hidden' : ''}`}></canvas>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button onClick={handleDownloadQr} disabled={qrCodeStatus !== 'success'} className="flex-1 bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+                                    تحميل الصورة
+                                </button>
+                                <button onClick={() => setShowQrCode(false)} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 px-4 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                    إغلاق
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
 export default CarProviderProfile;
+

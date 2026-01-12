@@ -125,12 +125,13 @@ export class CarProviderService {
         if (!(data instanceof FormData)) {
             // Fallback for legacy calls
         }
-        // Do NOT manually set Content-Type for FormData; let Axios/Browser set it with the boundary.
-
-        // Note: For Laravel PUT requests with FormData (files), we must use POST with _method=PUT
+        // Explicitly set multipart/form-data to override the default application/json
+        // Axios/Browser will automatically append the boundary
         if (data instanceof FormData) {
             data.append('_method', 'PUT');
-            const response = await api.post('/car-provider/profile', data, { headers });
+            const response = await api.post('/car-provider/profile', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             return response.data.provider;
         } else {
             const response = await api.put('/car-provider/profile', data);

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, Building2, MapPin, Loader, Camera, Image as ImageIcon, Globe, Mail, Clock, RotateCcw, AlertCircle, Phone, Check, Eye } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Save, Building2, MapPin, Loader, Camera, Image as ImageIcon, Globe, Mail, Clock, RotateCcw, AlertCircle, Phone, Check, Eye, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarProvider } from '../../../types';
@@ -16,6 +16,103 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
     const [saving, setSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+    // Schedule Builder State
+    const [useScheduleBuilder, setUseScheduleBuilder] = useState(true);
+    const [defaultStart, setDefaultStart] = useState('09:00');
+    const [defaultEnd, setDefaultEnd] = useState('22:00');
+    const [exceptions, setExceptions] = useState<{ day: string, start: string, end: string, isClosed: boolean }[]>([]);
+
+    const daysMap = {
+        'Sat': 'السبت',
+        'Sun': 'الأحد',
+        'Mon': 'الاثنين',
+        'Tue': 'الثلاثاء',
+        'Wed': 'الأربعاء',
+        'Thu': 'الخميس',
+        'Fri': 'الجمعة'
+    };
+
+    const generateScheduleString = useCallback(() => {
+        if (!useScheduleBuilder) return;
+
+        const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const scheduleMap: Record<string, string> = {};
+
+        days.forEach(day => {
+            const exception = exceptions.find(e => e.day === day);
+            if (exception) {
+                if (exception.isClosed) {
+                    scheduleMap[day] = 'مغلق';
+                } else {
+                    scheduleMap[day] = `${formatTime(exception.start)} - ${formatTime(exception.end)}`;
+                }
+            } else {
+                scheduleMap[day] = `${formatTime(defaultStart)} - ${formatTime(defaultEnd)}`;
+            }
+        });
+
+        // Grouping logic
+        const groups: { days: string[], time: string }[] = [];
+        let currentGroup: { days: string[], time: string } | null = null;
+
+        days.forEach(day => {
+            const time = scheduleMap[day];
+            if (currentGroup && currentGroup.time === time) {
+                currentGroup.days.push(daysMap[day as keyof typeof daysMap]);
+            } else {
+                if (currentGroup) groups.push(currentGroup);
+                currentGroup = { days: [daysMap[day as keyof typeof daysMap]], time };
+            }
+        });
+        if (currentGroup) groups.push(currentGroup);
+
+        const formattedString = groups.map(g => {
+            const dayRange = g.days.length > 2
+                ? `${g.days[0]} - ${g.days[g.days.length - 1]}`
+                : g.days.join('، ');
+            return `${dayRange}: ${g.time}`;
+        }).join('\n');
+
+        setFormData(prev => ({ ...prev, working_hours: formattedString }));
+        setHasUnsavedChanges(true); // Mark as modified
+    }, [useScheduleBuilder, defaultStart, defaultEnd, exceptions]);
+
+    // Update string when builder state changes
+    useEffect(() => {
+        if (useScheduleBuilder) {
+            generateScheduleString();
+        }
+    }, [useScheduleBuilder, defaultStart, defaultEnd, exceptions, generateScheduleString]);
+
+    const formatTime = (time: string) => {
+        if (!time) return '';
+        const [hour, minute] = time.split(':');
+        const h = parseInt(hour);
+        const ampm = h >= 12 ? 'م' : 'ص';
+        const displayH = h % 12 || 12;
+        return `${displayH}:${minute} ${ampm}`;
+    };
+
+    const addException = () => {
+        const usedDays = exceptions.map(e => e.day);
+        const allDays = ['Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun', 'Sat']; // Fri first as common exception
+        const nextDay = allDays.find(d => !usedDays.includes(d)) || 'Fri';
+
+        setExceptions([...exceptions, { day: nextDay, start: defaultStart, end: defaultEnd, isClosed: true }]);
+    };
+
+    const removeException = (index: number) => {
+        const newExceptions = [...exceptions];
+        newExceptions.splice(index, 1);
+        setExceptions(newExceptions);
+    };
+
+    const updateException = (index: number, field: string, value: any) => {
+        const newExceptions = [...exceptions];
+        newExceptions[index] = { ...newExceptions[index], [field]: value };
+        setExceptions(newExceptions);
+    };
 
     // Form States
     const [formData, setFormData] = useState({
@@ -89,29 +186,60 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
         setHasUnsavedChanges(true);
     };
 
-    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('حجم الصورة كبير جداً. الحد الأقصى 5 ميجابايت', 'error');
-                return;
+
+    const validateImage = (file: File): boolean => {
+        if (!file.type.startsWith('image/')) {
+            showToast('يجب تحميل ملف صورة فقط', 'error');
+            return false;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('حجم الصورة يجب أن لا يتجاوز 5 ميجابايت', 'error');
+            return false;
+        }
+        return true;
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDrop = (e: React.DragEvent, type: 'logo' | 'cover') => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const file = e.dataTransfer.files?.[0];
+        if (file && validateImage(file)) {
+            if (type === 'logo') {
+                setLogo(file);
+                setLogoPreview(URL.createObjectURL(file));
+            } else {
+                setCover(file);
+                setCoverPreview(URL.createObjectURL(file));
             }
-            setLogo(file);
-            setLogoPreview(URL.createObjectURL(file));
             setHasUnsavedChanges(true);
         }
     };
 
-    const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('حجم الصورة كبير جداً. الحد الأقصى 5 ميجابايت', 'error');
-                return;
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (validateImage(file)) {
+                setLogo(file);
+                setLogoPreview(URL.createObjectURL(file));
+                setHasUnsavedChanges(true);
             }
-            setCover(file);
-            setCoverPreview(URL.createObjectURL(file));
-            setHasUnsavedChanges(true);
+        }
+    };
+
+    const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (validateImage(file)) {
+                setCover(file);
+                setCoverPreview(URL.createObjectURL(file));
+                setHasUnsavedChanges(true);
+            }
         }
     };
 
@@ -315,7 +443,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                         </button>
                     )}
                     <a
-                        href={`/car-provider/${provider.id}`} // Assuming route structure, verify if slug exists or use ID
+                        href={`/car-providers/${provider.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-4 py-2.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors font-medium flex items-center gap-2"
@@ -387,33 +515,64 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div className="space-y-3">
                                 <label className={labelClasses}>شعار المعرض</label>
-                                <div className="relative w-full aspect-square bg-slate-100 dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden group hover:border-blue-500 transition-colors cursor-pointer">
+                                <div
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, 'logo')}
+                                    className="relative w-full aspect-square bg-slate-100 dark:bg-slate-900 rounded-full border-4 border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden group hover:border-blue-500 transition-colors cursor-pointer shadow-lg"
+                                >
                                     {logoPreview ? (
                                         <img src={getStorageUrl(logoPreview)} alt="Logo" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="text-center p-4">
                                             <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                                            <span className="text-xs text-slate-500">رفع الشعار</span>
+                                            <span className="text-xs text-slate-500 font-medium">رفع الشعار</span>
                                         </div>
                                     )}
-                                    <input type="file" onChange={handleLogoUpload} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-medium">تغيير</div>
+                                    <input type="file" onChange={handleLogoUpload} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-50" />
+
+                                    {/* Overlay for Edit */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
+                                        <Camera className="w-8 h-8 text-white drop-shadow-md" />
+                                    </div>
+
+                                    {/* Edit Icon Badge */}
+                                    <div className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-md z-10 pointer-events-none group-hover:scale-110 transition-transform">
+                                        <ImageIcon className="w-4 h-4" />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="md:col-span-2 space-y-3">
                                 <label className={labelClasses}>صورة الغلاف</label>
-                                <div className="relative w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden group hover:border-blue-500 transition-colors cursor-pointer">
+                                <div
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, 'cover')}
+                                    className="relative w-full aspect-video bg-slate-100 dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden group hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                                >
                                     {coverPreview ? (
                                         <img src={getStorageUrl(coverPreview)} alt="Cover" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="text-center p-4">
-                                            <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                                            <span className="text-sm text-slate-500">اضغط لرفع صورة الغلاف</span>
+                                        <div className="text-center p-4 space-y-2">
+                                            <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mx-auto group-hover:scale-110 transition-transform">
+                                                <ImageIcon className="w-6 h-6 text-blue-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">اسحب صورة الغلاف هنا</p>
+                                                <p className="text-xs text-slate-500 mt-1">أو اضغط للاختيار من الجهاز</p>
+                                            </div>
                                         </div>
                                     )}
-                                    <input type="file" onChange={handleCoverUpload} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-medium">تغيير</div>
+                                    <input type="file" onChange={handleCoverUpload} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-50" />
+
+                                    {/* Overlay for Edit */}
+                                    {coverPreview && (
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-sm font-medium pointer-events-none">
+                                            <span className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
+                                                <Camera className="w-4 h-4" />
+                                                تغيير الصورة
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -600,15 +759,120 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                 <div className={cardClasses}>
                     <h3 className={sectionHeaderClasses}><Clock className="w-6 h-6 text-orange-500" /> ساعات العمل</h3>
                     <div className="space-y-2">
-                        <label className={labelClasses}>أوقات الدوام</label>
-                        <textarea
-                            name="working_hours"
-                            value={formData.working_hours}
-                            onChange={handleChange}
-                            rows={5}
-                            className={`${inputClasses} ${validationErrors.working_hours ? 'border-red-500 ring-red-500' : ''}`}
-                            placeholder="مثال:&#10;السبت - الخميس: 9:00 ص - 10:00 م&#10;الجمعة: 4:00 م - 10:00 م"
-                        />
+                        <div className="flex items-center justify-between mb-4">
+                            <label className={labelClasses}>أوقات الدوام</label>
+                            <div className="flex items-center gap-2">
+                                <span className={`text-xs font-bold ${useScheduleBuilder ? 'text-blue-600' : 'text-slate-500'}`}>
+                                    {useScheduleBuilder ? 'منشئ الجدول الذكي' : 'نص يدوي'}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setUseScheduleBuilder(!useScheduleBuilder)}
+                                    className={`w-10 h-6 rounded-full transition-colors relative ${useScheduleBuilder ? 'bg-blue-600' : 'bg-slate-300'}`}
+                                >
+                                    <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${useScheduleBuilder ? 'translate-x-4' : ''}`} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {useScheduleBuilder ? (
+                            <div className="space-y-6 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                {/* Default Hours */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs text-slate-500 mb-1 block">بداية الدوام (الافتراضي)</label>
+                                        <input
+                                            type="time"
+                                            value={defaultStart}
+                                            onChange={(e) => setDefaultStart(e.target.value)}
+                                            className={inputClasses}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-slate-500 mb-1 block">نهاية الدوام (الافتراضي)</label>
+                                        <input
+                                            type="time"
+                                            value={defaultEnd}
+                                            onChange={(e) => setDefaultEnd(e.target.value)}
+                                            className={inputClasses}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Exceptions */}
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                                        <span>الاستثناءات / أيام العطل</span>
+                                        <button type="button" onClick={addException} className="text-blue-600 hover:text-blue-700 text-xs">+ إضافة استثناء</button>
+                                    </label>
+
+                                    {exceptions.map((ex, idx) => (
+                                        <div key={idx} className="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <select
+                                                value={ex.day}
+                                                onChange={(e) => updateException(idx, 'day', e.target.value)}
+                                                className="bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 outline-none w-20"
+                                            >
+                                                {Object.entries(daysMap).map(([key, label]) => (
+                                                    <option key={key} value={key}>{label}</option>
+                                                ))}
+                                            </select>
+
+                                            <label className="flex items-center gap-1 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={ex.isClosed}
+                                                    onChange={(e) => updateException(idx, 'isClosed', e.target.checked)}
+                                                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <span className="text-xs text-slate-500">مغلق</span>
+                                            </label>
+
+                                            {!ex.isClosed && (
+                                                <>
+                                                    <input
+                                                        type="time"
+                                                        value={ex.start}
+                                                        onChange={(e) => updateException(idx, 'start', e.target.value)}
+                                                        className="w-24 px-2 py-1 text-sm bg-slate-100 dark:bg-slate-900 rounded border-none"
+                                                    />
+                                                    <span className="text-slate-400">-</span>
+                                                    <input
+                                                        type="time"
+                                                        value={ex.end}
+                                                        onChange={(e) => updateException(idx, 'end', e.target.value)}
+                                                        className="w-24 px-2 py-1 text-sm bg-slate-100 dark:bg-slate-900 rounded border-none"
+                                                    />
+                                                </>
+                                            )}
+
+                                            <button onClick={() => removeException(idx)} className="mr-auto text-red-500 hover:text-red-600">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {exceptions.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">لا توجد استثناءات، سيتم تطبيق التوقيت الافتراضي على جميع الأيام.</p>}
+                                </div>
+
+                                {/* Preview */}
+                                <div>
+                                    <label className="text-xs text-slate-500 mb-1 block">معاينة النص الناتج:</label>
+                                    <div className="p-3 bg-slate-100 dark:bg-slate-900 rounded-lg text-sm text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap">
+                                        {formData.working_hours || '...'}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <textarea
+                                name="working_hours"
+                                value={formData.working_hours}
+                                onChange={handleChange}
+                                rows={5}
+                                className={`${inputClasses} ${validationErrors.working_hours ? 'border-red-500 ring-red-500' : ''}`}
+                                placeholder="مثال:&#10;السبت - الخميس: 9:00 ص - 10:00 م&#10;الجمعة: 4:00 م - 10:00 م"
+                            />
+                        )}
                         {validationErrors.working_hours && <p className="text-xs text-red-500 mt-1">{validationErrors.working_hours}</p>}
                     </div>
                 </div>

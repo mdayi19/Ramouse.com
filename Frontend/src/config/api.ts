@@ -1,6 +1,5 @@
-// API Configuration
-// This will work both locally and in production
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+import { BASE_URL } from '../lib/api';
 
 // Helper function to get full storage URL
 export const getStorageUrl = (path: string): string => {
@@ -27,10 +26,11 @@ export const getStorageUrl = (path: string): string => {
         cleanPath = cleanPath.substring(8); // Remove 'storage/' prefix
     }
 
-    // Determine Base URL for storage
-    // If API_BASE_URL ends with /api, remove it to get the server root
-    const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+    // Use BASE_URL from lib/api which is already configured correctly (https://ramouse.com in dev)
+    const serverUrl = BASE_URL || '';
 
     // Construct full URL pointing to storage root
-    return `${SERVER_URL}/storage/${cleanPath}`;
+    // If serverUrl is empty (prod maybe), result is /storage/... which is correct for same-origin
+    // If serverUrl is https://ramouse.com (dev), result is https://ramouse.com/storage/...
+    return `${serverUrl}/storage/${cleanPath}`;
 };
