@@ -104,200 +104,209 @@ const PrintableSaleCar = forwardRef<
     }, [generateQrCode]);
 
     return (
-        <div
-            ref={ref}
-            id="printable-sale-car"
-            className="relative w-[210mm] min-h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border"
-        >
-            {/* Header */}
-            <header className="border-b-4 border-blue-600 pb-4 mb-4 shrink-0">
-                <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                        <img
-                            src="/logo without name.svg"
-                            alt="Logo"
-                            className="h-16 w-16 object-contain"
-                        />
-                        <div>
-                            <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">
-                                {settings.appName}
-                            </h1>
-                            <p className="text-xs text-gray-500 mt-1">
-                                سوق السيارات المعتمد
-                            </p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <h2 className="text-xl font-bold text-gray-700 mb-1">
-                            {provider.name}
-                        </h2>
-                        <div className="flex items-center justify-end gap-2 text-sm text-gray-500">
-                            <span>{provider.city}</span>
-                            <Icon name="MapPin" className="w-4 h-4" />
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="flex-grow flex flex-col items-start justify-start w-full gap-8">
-
-                {/* Header Section: Title & Price */}
-                <div className="w-full flex justify-between items-start border-b-2 border-slate-100 pb-6">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="bg-slate-900 text-white px-3 py-1 rounded-lg text-sm font-bold tracking-wide">
-                                موديل {listing.year}
-                            </span>
-                            <span className="text-slate-500 font-bold text-sm bg-slate-100 px-3 py-1 rounded-lg">
-                                {listing.condition || 'مستعمل'}
-                            </span>
-                        </div>
-                        <h1 className="text-4xl font-black text-slate-900 leading-tight mb-2">{listing.title}</h1>
-                        <div className="flex items-center gap-6 text-slate-500 font-medium">
-                            <div className="flex items-center gap-2">
-                                <Icon name="Gauge" className="w-5 h-5" />
-                                <span dir="ltr">{Number(listing.mileage).toLocaleString()} كم</span>
-                            </div>
-                            <div className="w-px h-4 bg-slate-300"></div>
-                            <div className="flex items-center gap-2">
-                                <Icon name="Fuel" className="w-5 h-5" />
-                                <span>{listing.fuel_type}</span>
+        <>
+            {/* Print-specific styles */}
+            <style>{`
+                @media print {
+                    #printable-sale-car {
+                        page-break-inside: avoid !important;
+                        page-break-after: avoid !important;
+                        page-break-before: avoid !important;
+                        break-inside: avoid-page !important;
+                        display: block !important;
+                        position: relative !important;
+                        max-height: 297mm !important;
+                        height: 297mm !important;
+                        overflow: hidden !important;
+                    }
+                    @page { 
+                        size: A4 portrait;
+                        margin: 0;
+                    }
+                    html, body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        overflow: hidden !important;
+                        height: 297mm !important;
+                    }
+                }
+            `}</style>
+            <div
+                ref={ref}
+                id="printable-sale-car"
+                className="relative w-[210mm] min-h-[297mm] max-h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border"
+            >
+                {/* Header */}
+                <header className="border-b-4 border-blue-600 pb-4 mb-4 shrink-0">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-4">
+                            <img
+                                src="/logo without name.svg"
+                                alt="Logo"
+                                className="h-16 w-16 object-contain"
+                            />
+                            <div>
+                                <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">
+                                    {settings.appName}
+                                </h1>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    سوق السيارات المعتمد
+                                </p>
                             </div>
                         </div>
+                        <div className="text-right">
+                            <h2 className="text-2xl font-black text-blue-700 mb-1">
+                                سيارة للبيع
+                            </h2>
+                        </div>
                     </div>
+                </header>
 
-                    <div className="text-left bg-blue-50 px-6 py-4 rounded-2xl border border-blue-100">
-                        <span className="block text-sm text-blue-600 font-bold mb-1">السعر المطلوب</span>
-                        <h2 className="text-5xl font-black text-blue-600 tracking-tight">
-                            {Number(listing.price).toLocaleString()}
-                        </h2>
-                    </div>
-                </div>
+                {/* Main Content */}
+                <main className="flex-grow flex flex-col items-start justify-start w-full gap-8">
 
-                {/* Data Grid & Details */}
-                <div className="w-full grid grid-cols-12 gap-8">
-
-                    {/* Specs Table */}
-                    <div className="col-span-12">
-                        <h3 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                                <Icon name="FileText" className="w-4 h-4" />
-                            </div>
-                            المواصفات الفنية
-                        </h3>
-
-                        <div className="grid grid-cols-4 gap-4">
-                            {[
-                                { label: 'الشركة المصنعة', value: listing.brand?.name_ar || listing.brand?.name || '-' },
-                                { label: 'الموديل', value: listing.model },
-                                { label: 'سنة الصنع', value: listing.year },
-                                { label: 'الوقود', value: listing.fuel_type === 'Petrol' ? 'بنزين' : listing.fuel_type === 'Diesel' ? 'ديزل' : listing.fuel_type === 'Electric' ? 'كهرباء' : listing.fuel_type === 'Hybrid' ? 'هايبرد' : listing.fuel_type },
-                                { label: 'ناقل الحركة', value: listing.transmission === 'Manual' ? 'عادي' : listing.transmission === 'Automatic' ? 'أوتوماتيك' : listing.transmission },
-                                { label: 'اللون', value: listing.color },
-                                { label: 'سعة المحرك', value: listing.engine_size ? `${listing.engine_size} سي سي` : '-' },
-                                { label: 'عداد المشي', value: listing.mileage ? `${listing.mileage.toLocaleString()} كم` : '-' },
-                            ].map((item, idx) => (
-                                <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <span className="block text-xs font-bold text-slate-400 mb-1">{item.label}</span>
-                                    <span className="block text-lg font-bold text-slate-800 truncate">{item.value || '-'}</span>
-                                </div>
-                            ))}
+                    {/* Header Section: Title Only */}
+                    <div className="w-full flex justify-between items-center border-b-2 border-slate-100 pb-6">
+                        <div className="flex-1">
+                            <h1 className="text-4xl font-black text-slate-900 leading-tight">{listing.title}</h1>
                         </div>
                     </div>
 
-                    {/* Description */}
-                    <div className="col-span-8">
-                        <div className="bg-white rounded-2xl p-6 border-2 border-slate-100 h-full">
-                            <h3 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-                                    <Icon name="AlignLeft" className="w-4 h-4" />
-                                </div>
-                                تفاصيل السيارة
-                            </h3>
-                            <p className="text-base text-slate-600 leading-8 whitespace-pre-line text-justify">
-                                {listing.description || 'لا يتوفر وصف إضافي لهذه السيارة.'}
-                            </p>
-                        </div>
-                    </div>
+                    {/* Data Grid & Details */}
+                    <div className="w-full grid grid-cols-12 gap-8">
 
-                    {/* QR Code Column */}
-                    <div className="col-span-4 flex flex-col gap-4">
-                        <div className="bg-slate-900 text-white p-6 rounded-2xl flex flex-col items-center text-center h-full justify-center">
-                            <div className="bg-white p-2 rounded-xl mb-4">
+                        {/* Listing QR Code & Specs */}
+                        <div className="col-span-12 flex justify-center items-center gap-8 mt-4">
+                            {/* QR Code */}
+                            <div className="bg-white p-4 rounded-2xl shadow-sm text-center border border-slate-200">
                                 <canvas ref={qrCanvasRef} className="w-[220px] h-[220px]" />
+                                <p className="text-slate-800 text-sm font-bold mt-2">امسح الكود لعرض السيارة</p>
                             </div>
-                            <h3 className="text-lg font-bold mb-1">التفاصيل الكاملة</h3>
-                            <p className="text-slate-400 text-sm">امسح الكود لعرض الصور والمزيد</p>
-                        </div>
-                    </div>
 
-                    {/* Provider Section */}
-                    <div className="col-span-12 mt-2 pt-6 border-t-2 border-slate-100">
-                        <div className="flex items-start justify-between bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                            <div className="flex-1">
-                                <h3 className="text-2xl font-black text-slate-900 mb-2">{provider.name}</h3>
+                            {/* Specs Card */}
+                            <div className="bg-gradient-to-br from-blue-50 to-slate-50 p-6 rounded-2xl border border-blue-100 shadow-sm w-[268px] h-[268px] flex flex-col">
+                                <h3 className="text-sm font-bold text-slate-600 mb-3 uppercase tracking-wider">المواصفات الأساسية</h3>
+                                <div className="grid grid-cols-2 gap-2.5 flex-1 content-start">
+                                    {(() => {
+                                        const getTransmissionAr = (val: string) => {
+                                            if (!val) return null;
+                                            const v = val.toLowerCase();
+                                            if (v.includes('auto')) return 'أوتوماتيك';
+                                            if (v.includes('manual') || v.includes('normal')) return 'عادي';
+                                            return val;
+                                        };
+                                        const getFuelAr = (val: string) => {
+                                            if (!val) return null;
+                                            const v = val.toLowerCase();
+                                            if (v.includes('petrol') || v.includes('gasoline') || v.includes('gas')) return 'بنزين';
+                                            if (v.includes('diesel')) return 'ديزل';
+                                            if (v.includes('electric') || v.includes('ev')) return 'كهرباء';
+                                            if (v.includes('hybrid')) return 'هايبرد';
+                                            return val;
+                                        };
 
-                                <div className="space-y-3">
-                                    {provider.socials?.whatsapp && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center">
-                                                <Icon name="Phone" className="w-4 h-4" />
+                                        const specs = [
+                                            { value: listing.brand?.name_ar || listing.brand?.name },
+                                            { value: listing.model },
+                                            { value: listing.year },
+                                            { value: getTransmissionAr(listing.transmission) },
+                                            { value: getFuelAr(listing.fuel_type) },
+                                            { value: listing.mileage ? `${Number(listing.mileage).toLocaleString()} كم` : null }
+                                        ].filter(item => item.value);
+
+                                        return specs.map((spec, index) => (
+                                            <div
+                                                key={index}
+                                                className="bg-white px-3 py-3 rounded-xl border border-slate-200 text-center shadow-sm flex items-center justify-center"
+                                            >
+                                                <span className="text-base font-black text-slate-800 leading-tight">{spec.value}</span>
                                             </div>
-                                            <span dir="ltr" className="text-xl font-bold text-slate-900">
-                                                {(() => {
-                                                    const phone = provider.socials.whatsapp.replace(/\D/g, '');
-                                                    return '+' + phone.replace(/(\d{3})/g, '$1 ').trim();
-                                                })()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {provider.city && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center">
-                                                <Icon name="MapPin" className="w-4 h-4" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-lg font-bold text-slate-900">{provider.city}</span>
-                                                {provider.address && (
-                                                    <span className="text-sm font-medium text-slate-600">{provider.address}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                        ));
+                                    })()}
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Provider Profile QR */}
-                            <div className="bg-white p-3 rounded-xl border border-slate-200 text-center ml-4">
-                                <canvas ref={providerQrCanvasRef} className="w-[180px] h-[180px]" />
-                                <p className="text-slate-500 text-xs font-bold mt-2">ملف المعرض</p>
+                        {/* Provider Section */}
+                        <div className="col-span-12 mt-6 pt-6 border-t border-slate-200">
+                            <div className="flex items-center justify-between bg-gradient-to-br from-slate-50 to-white p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                {/* Decorative Background Element */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50"></div>
+
+                                <div className="flex-1 relative z-10">
+                                    <h3 className="text-3xl font-black text-slate-900 mb-6">{provider.name}</h3>
+
+                                    <div className="flex flex-col gap-6">
+                                        {provider.socials?.whatsapp && (
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                                                    <Icon name="Phone" className="w-6 h-6" />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-500 mb-1">للحجز والتواصل</span>
+                                                    <span dir="ltr" className="text-2xl font-black text-slate-900 tracking-tight">
+                                                        {(() => {
+                                                            const phone = provider.socials.whatsapp.replace(/\D/g, '');
+                                                            return '+' + phone.replace(/(\d{3})/g, '$1 ').trim();
+                                                        })()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {provider.city && (
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                                    <Icon name="MapPin" className="w-6 h-6" />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-500 mb-1">العنوان</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xl font-bold text-slate-900">{provider.city}</span>
+                                                        {provider.address && (
+                                                            <span className="text-sm font-medium text-slate-500">{provider.address}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Provider Profile QR */}
+                                <div className="flex flex-col items-center gap-3 relative z-10 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                                    <canvas ref={providerQrCanvasRef} className="w-[160px] h-[160px]" />
+                                    <div className="flex items-center gap-2 text-slate-400">
+                                        <Icon name="User" className="w-4 h-4" />
+                                        <span className="text-xs font-bold">ملف المعرض</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </main>
+                </main>
 
-            {/* Footer */}
-            <footer className="absolute bottom-[10mm] left-[10mm] right-[10mm] pt-2 border-t-4 border-blue-600 bg-white z-[99999] print:visible print:block !important">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center text-gray-800 gap-3">
-                        <Icon name="Globe" className="w-5 h-5 text-blue-600" />
-                        <span className="text-lg font-black text-gray-800 dir-ltr">
-                            {settings.mainDomain || 'ramouse.com'}
-                        </span>
-                    </div>
+                {/* Footer */}
+                <footer className="mt-auto pt-4 border-t-4 border-blue-600 shrink-0">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center text-gray-800 gap-3">
+                            <Icon name="Globe" className="w-5 h-5 text-blue-600" />
+                            <span className="text-lg font-black text-gray-800 dir-ltr">
+                                {settings.mainDomain || 'ramouse.com'}
+                            </span>
+                        </div>
 
-                    <div className="flex items-center gap-3 text-gray-800">
-                        <span className="text-lg font-bold">للدعم الفني:</span>
-                        <span dir="ltr" className="text-lg font-black text-blue-700 font-mono tracking-wider">
-                            {settings.companyPhone}
-                        </span>
-                        <Icon name="Phone" className="w-5 h-5 text-blue-600" />
+                        <div className="flex items-center gap-3 text-gray-800">
+                            <span className="text-lg font-bold">للدعم الفني:</span>
+                            <span dir="ltr" className="text-lg font-black text-blue-700 font-mono tracking-wider">
+                                {settings.companyPhone}
+                            </span>
+                            <Icon name="Phone" className="w-5 h-5 text-blue-600" />
+                        </div>
                     </div>
-                </div>
-            </footer>
-        </div>
+                </footer>
+            </div>
+        </>
     );
 });
 

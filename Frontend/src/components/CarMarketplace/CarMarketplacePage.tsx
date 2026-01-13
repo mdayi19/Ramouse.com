@@ -150,7 +150,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
             {/* 1. Hero / Header Section */}
-            <div className="relative bg-gradient-to-br from-primary via-primary-900 to-slate-800 text-white py-20 md:py-28 overflow-hidden">
+            <div className="relative bg-gradient-to-br from-primary via-primary-900 to-slate-800 text-white py-12 md:py-16 overflow-hidden">
                 {/* Animated Background Blobs - Following DesktopWelcomeScreen */}
                 <motion.div
                     className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-secondary/30 to-transparent rounded-full blur-3xl"
@@ -197,7 +197,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black mb-6 leading-tight"
+                            className="text-3xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight"
                         >
                             {listingType === 'rent'
                                 ? 'استأجر سيارة أحلامك بكل سهولة'
@@ -207,7 +207,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                             اكتشف أفضل السيارات
                                         </span>
                                         <br />
-                                        <span className="text-4xl md:text-5xl text-white/90 block mt-2">
+                                        <span className="text-2xl md:text-3xl text-white/90 block mt-2">
                                             المستعملة والجديدة
                                         </span>
                                     </>
@@ -229,12 +229,12 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                    className="w-full px-8 py-5 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-lg
+                                    className="w-full px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-base
                                              focus:ring-4 focus:ring-secondary/30 focus:bg-white border-0 outline-none transition-all"
                                 />
                                 <button
                                     onClick={handleSearch}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-800 text-white rounded-xl px-6 py-3 
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-800 text-white rounded-xl px-5 py-2.5 
                                              flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
                                 >
                                     <Search className="w-5 h-5" />
@@ -264,7 +264,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
             </div>
 
             {/* 2. Main Content Area */}
-            <div className="w-full px-0 md:px-8 py-8 -mt-8 relative z-20">
+            <div className="w-full px-4 md:px-6 py-6 -mt-6 relative z-20">
                 <div className="flex flex-col lg:flex-row gap-8">
 
                     {/* Filters Sidebar (Desktop) */}
@@ -282,9 +282,9 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                     {/* Listings Column */}
                     <div className="flex-1">
                         {/* Toolbar */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <Car className="w-6 h-6 text-primary" />
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 px-4 md:px-0">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Car className="w-5 h-5 text-primary" />
                                 {pagination.total > 0 ? `${pagination.total} سيارة متاحة` : 'جاري البحث...'}
                             </h2>
 
@@ -354,11 +354,11 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                         </div>
                                     </motion.div>
 
-                                    <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-3">
+                                    <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-2">
                                         لا توجد سيارات مطابقة للبحث
                                     </h3>
 
-                                    <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md text-center leading-relaxed">
+                                    <p className="text-slate-600 dark:text-slate-400 mb-5 max-w-md text-center leading-relaxed text-sm">
                                         جرب تغيير الفلاتر أو البحث بكلمات مختلفة للعثور على السيارة المثالية
                                     </p>
 

@@ -2,8 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Phone, MessageCircle, ExternalLink, Shield,
-    CheckCircle, MapPin
+    CheckCircle, MapPin, Calendar
 } from 'lucide-react';
+import { getImageUrl } from '../../../utils/helpers';
 
 interface ProviderSidebarProps {
     provider: any;
@@ -28,53 +29,65 @@ const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
     const hasPhone = listing.contact_phone || provider.phone;
     const hasWhatsapp = listing.contact_whatsapp || provider.phone;
 
+    // Get profile photo with fallback priority
+    const profilePhoto = provider.logo_url || provider.profile_photo || provider.user?.profile_photo_url;
+    const providerName = provider.business_name || provider.name || 'مزود الخدمة';
+    const initials = providerName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sticky top-4 border border-gray-100 dark:border-gray-700">
-            <div className="text-center mb-6">
-                <div className="relative inline-block">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-md ring-4 ring-white dark:ring-gray-800">
-                        {provider.logo_url || provider.profile_photo || provider.user?.profile_photo_url ? (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-5 sticky top-24">
+            {/* Profile Section */}
+            <div className="text-center mb-5">
+                <div className="relative inline-block mb-3">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mx-auto flex items-center justify-center text-white text-2xl font-bold overflow-hidden shadow-md">
+                        {profilePhoto ? (
                             <img
-                                src={provider.logo_url || provider.profile_photo || provider.user?.profile_photo_url}
-                                alt="Provider Logo"
+                                src={getImageUrl(profilePhoto)}
+                                alt={providerName}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML = `<span class="text-2xl">${initials}</span>`;
+                                }}
                             />
                         ) : (
-                            provider.business_name?.charAt(0) || 'P'
+                            <span>{initials}</span>
                         )}
                     </div>
                     {provider.is_verified && (
-                        <div className="absolute bottom-1 right-0 bg-blue-500 text-white p-1.5 rounded-full border-2 border-white dark:border-gray-800 shadow-sm" title={t.ui.verified}>
-                            <CheckCircle className="w-4 h-4" />
+                        <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white p-1 rounded-md border-2 border-white dark:border-slate-800 shadow-sm">
+                            <CheckCircle className="w-3 h-3" />
                         </div>
                     )}
                 </div>
 
-                <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1">
-                    {provider.business_name}
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">
+                    {providerName}
                 </h3>
 
                 {provider.city && (
-                    <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mb-2">
-                        <MapPin className="w-4 h-4" />
+                    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                        <MapPin className="w-3 h-3" />
                         <span>{provider.city}</span>
                     </div>
                 )}
 
                 {(provider.member_since || provider.created_at) && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50 inline-block px-3 py-1 rounded-full">
-                        عضو منذ {new Date(provider.member_since || provider.created_at).getFullYear()}
-                    </p>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs text-slate-600 dark:text-slate-400">
+                        <Calendar className="w-3 h-3" />
+                        <span>عضو منذ {new Date(provider.member_since || provider.created_at).getFullYear()}</span>
+                    </div>
                 )}
             </div>
 
-            <div className="space-y-3">
+            {/* Action Buttons */}
+            <div className="space-y-2 mb-5">
                 {hasPhone && (
                     <button
                         onClick={() => onContact('phone')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl transition-all font-bold shadow-sm hover:shadow-md"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold text-sm"
                     >
-                        <Phone className="w-5 h-5" />
+                        <Phone className="w-4 h-4" />
                         <span>{t.ui.call}</span>
                     </button>
                 )}
@@ -82,9 +95,9 @@ const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
                 {hasWhatsapp && (
                     <button
                         onClick={() => onContact('whatsapp')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl transition-all font-bold shadow-sm hover:shadow-md"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-semibold text-sm"
                     >
-                        <MessageCircle className="w-5 h-5" />
+                        <MessageCircle className="w-4 h-4" />
                         <span>{t.ui.whatsapp}</span>
                     </button>
                 )}
@@ -92,18 +105,19 @@ const ProviderSidebar: React.FC<ProviderSidebarProps> = ({
                 {listing.seller_type === 'provider' && provider && (
                     <button
                         onClick={() => navigate(`/car-providers/${provider.unique_id || provider.user_id}`)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl transition-all font-medium border border-gray-200 dark:border-gray-600"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors font-medium text-sm border border-slate-200 dark:border-slate-600"
                     >
-                        <ExternalLink className="w-5 h-5" />
+                        <ExternalLink className="w-4 h-4" />
                         <span>{t.ui.view_profile}</span>
                     </button>
                 )}
             </div>
 
-            <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            {/* Report Button */}
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
                 <button
                     onClick={onReport}
-                    className="w-full text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1.5 group"
+                    className="w-full text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1 group"
                 >
                     <Shield className="w-3 h-3 group-hover:text-red-500" />
                     <span>{t.ui.report}</span>

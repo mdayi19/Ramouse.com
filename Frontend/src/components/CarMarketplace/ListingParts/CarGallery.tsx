@@ -58,7 +58,7 @@ const CarGallery: React.FC<CarGalleryProps> = ({
             <div className="space-y-4">
                 {/* Main Image Container */}
                 <div
-                    className="relative aspect-[4/3] sm:aspect-[16/9] bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg group"
+                    className="relative aspect-[16/10] sm:aspect-[21/9] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg group"
                     onClick={() => setShowGalleryModal(true)}
                 >
                     <AnimatePresence mode='wait'>

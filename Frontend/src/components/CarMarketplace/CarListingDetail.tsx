@@ -366,7 +366,7 @@ const CarListingDetail: React.FC = () => {
                 </div>
             </div>
 
-            <div className="w-full px-2 md:px-8 sm:px-6 py-4">
+            <div className="w-full px-4 md:px-6 lg:px-8 py-4">
 
                 {/* 1. Gallery First (Full Width or Grid Top) */}
                 <div className="mb-8">
@@ -381,13 +381,13 @@ const CarListingDetail: React.FC = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
 
                     {/* Main Content Column (8 cols) */}
-                    <div className="lg:col-span-8 space-y-8">
+                    <div className="lg:col-span-8 space-y-6">
 
                         {/* 2. Title Section (Now inside grid flow or just below gallery) */}
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <div className="flex flex-wrap items-center gap-3">
                                 {listing.is_sponsored && (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
@@ -408,7 +408,7 @@ const CarListingDetail: React.FC = () => {
                                 </span>
                             </div>
 
-                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight">
+                            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                                 {listing.title}
                             </h1>
 
@@ -416,23 +416,48 @@ const CarListingDetail: React.FC = () => {
                             {(listing.brand || listing.model) && (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {listing.brand && (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-lg font-bold text-sm border border-blue-100 dark:border-blue-800">
-                                            <Car className="w-4 h-4" />
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-md font-semibold text-xs border border-blue-100 dark:border-blue-800">
+                                            <Car className="w-3 h-3" />
                                             {typeof listing.brand === 'object' ? listing.brand.name_ar || listing.brand.name : listing.brand}
                                         </span>
                                     )}
                                     {listing.model && (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 rounded-lg font-bold text-sm border border-purple-100 dark:border-purple-800">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300 rounded-md font-semibold text-xs border border-violet-100 dark:border-violet-800">
                                             {listing.model}
+                                        </span>
+                                    )}
+                                    {listing.year && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 rounded-md font-semibold text-xs border border-amber-100 dark:border-amber-800">
+                                            {listing.year}
+                                        </span>
+                                    )}
+                                    {listing.mileage && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 rounded-md font-semibold text-xs border border-emerald-100 dark:border-emerald-800">
+                                            {Number(listing.mileage).toLocaleString()} كم
+                                        </span>
+                                    )}
+                                    {listing.transmission && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-300 rounded-md font-semibold text-xs border border-teal-100 dark:border-teal-800">
+                                            {translateValue(listing.transmission)}
+                                        </span>
+                                    )}
+                                    {listing.fuel_type && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-300 rounded-md font-semibold text-xs border border-rose-100 dark:border-rose-800">
+                                            {translateValue(listing.fuel_type)}
+                                        </span>
+                                    )}
+                                    {listing.horsepower && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 rounded-md font-semibold text-xs border border-indigo-100 dark:border-indigo-800">
+                                            {listing.horsepower} حصان
                                         </span>
                                     )}
                                 </div>
                             )}
 
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                                 {(listing.city || listing.address || listing.location) && (
-                                    <div className="flex items-center gap-1.5">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                    <div className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-gray-400" />
                                         <span>
                                             {listing.city}
                                             {listing.city && listing.address && '، '}
@@ -442,13 +467,13 @@ const CarListingDetail: React.FC = () => {
                                     </div>
                                 )}
                                 <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                <span className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3 text-gray-400" />
                                     {safeDate(listing.created_at)}
                                 </span>
                                 <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
-                                <span className="flex items-center gap-1.5">
-                                    <Eye className="w-4 h-4 text-gray-400" />
+                                <span className="flex items-center gap-1">
+                                    <Eye className="w-3 h-3 text-gray-400" />
                                     {listing.views_count || 0} {t.ui.view_count}
                                 </span>
                             </div>
@@ -458,20 +483,6 @@ const CarListingDetail: React.FC = () => {
                         <div className="lg:hidden">
                             <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
                         </div>
-
-                        {/* Quick Specs */}
-                        <QuickSpecsBar listing={listing} />
-
-                        {/* Description */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.description_title}</h2>
-                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
-                                {listing.description}
-                            </p>
-                        </div>
-
-                        {/* Features */}
-                        <FeaturesShowcase listing={listing} />
 
                         {/* Detailed Specs Tabs */}
                         <SpecificationsTabs listing={listing} />
@@ -528,7 +539,7 @@ const CarListingDetail: React.FC = () => {
                             </div>
 
                             {/* Main CTAs */}
-                            <div className="flex flex-col gap-3">
+                            <div className="hidden lg:flex flex-col gap-3">
                                 <button
                                     onClick={() => handleContact('phone')}
                                     className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"

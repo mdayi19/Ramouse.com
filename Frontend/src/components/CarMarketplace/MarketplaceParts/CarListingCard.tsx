@@ -102,28 +102,46 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
         return listing.model || '';
     };
 
-    // Card Content for reuse in Grid/List layouts
+    //Card Content for reuse in Grid/List layouts
     const CardContent = () => (
         <div className="flex flex-col h-full">
             {/* Header: Title, Price, Brand */}
             <div className="p-4 pb-2">
-                <div className="flex justify-between items-start gap-2 mb-1">
-                    <div>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
-                            {getBrandName() && (
-                                <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
-                                    {getBrandName()}
-                                </span>
-                            )}
-                            {getModelName() && <span>{getModelName()}</span>}
-                        </div>
-                        <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 text-lg group-hover:text-primary transition-colors">
-                            {listing.title}
-                        </h3>
-                    </div>
+                <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 text-base mb-2 group-hover:text-primary transition-colors">
+                    {listing.title}
+                </h3>
+
+                {/* Badges - Similar to CarListingDetail */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                    {getBrandName() && (
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-md font-semibold text-xs border border-blue-100 dark:border-blue-800">
+                            <Car className="w-2.5 h-2.5" />
+                            {getBrandName()}
+                        </span>
+                    )}
+                    {getModelName() && (
+                        <span className="inline-flex items-center px-2 py-0.5 bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300 rounded-md font-semibold text-xs border border-violet-100 dark:border-violet-800">
+                            {getModelName()}
+                        </span>
+                    )}
+                    {listing.year && (
+                        <span className="inline-flex items-center px-2 py-0.5 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 rounded-md font-semibold text-xs border border-amber-100 dark:border-amber-800">
+                            {listing.year}
+                        </span>
+                    )}
+                    {listing.mileage && (
+                        <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 rounded-md font-semibold text-xs border border-emerald-100 dark:border-emerald-800">
+                            {listing.mileage >= 1000 ? `${(listing.mileage / 1000).toFixed(0)}k كم` : `${listing.mileage} كم`}
+                        </span>
+                    )}
+                    {listing.transmission && (
+                        <span className="inline-flex items-center px-2 py-0.5 bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-300 rounded-md font-semibold text-xs border border-teal-100 dark:border-teal-800">
+                            {listing.transmission}
+                        </span>
+                    )}
                 </div>
 
-                <div className="mt-2 flex items-baseline gap-1">
+                <div className="flex items-baseline gap-1">
                     <span className="text-xl font-bold text-primary">
                         {formatPrice(listing.price)}
                     </span>
@@ -133,27 +151,7 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                 </div>
             </div>
 
-            {/* Specs Grid */}
-            <div className="px-4 py-3 border-y border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 mt-auto">
-                <div className="grid grid-cols-3 gap-2">
-                    <div className="flex flex-col items-center justify-center p-2 rounded bg-white dark:bg-slate-700 shadow-sm text-center">
-                        <Calendar className="w-4 h-4 text-slate-400 mb-1" />
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{listing.year}</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-2 rounded bg-white dark:bg-slate-700 shadow-sm text-center">
-                        <Gauge className="w-4 h-4 text-slate-400 mb-1" />
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200" dir="ltr">
-                            {listing.mileage >= 1000 ? `${(listing.mileage / 1000).toFixed(0)} ألف كم` : `${listing.mileage} كم`}
-                        </span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-2 rounded bg-white dark:bg-slate-700 shadow-sm text-center">
-                        <GitFork className="w-4 h-4 text-slate-400 mb-1" />
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate w-full">
-                            {listing.transmission}
-                        </span>
-                    </div>
-                </div>
-            </div>
+
 
             {/* Footer: Location, Provider & Compare Button */}
             <div className="p-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
@@ -185,20 +183,31 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{
-                    boxShadow: "var(--marketplace-card-hover)"
+                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                    borderColor: "var(--primary-color, #3b82f6)",
+                    scale: 1.01
                 }}
-                transition={{ duration: 0.3 }}
-                className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/30 transition-all cursor-pointer flex flex-row h-32 sm:h-48 items-stretch"
+                transition={{ duration: 0.2 }}
+                className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 transition-all cursor-pointer flex flex-row h-32 sm:h-48 items-stretch mb-4 shadow-sm"
                 onClick={handleView}
             >
                 {/* Image Section (Left/Top) */}
-                <div className="w-32 sm:w-64 relative flex-shrink-0 overflow-hidden">
+                <div className="w-32 sm:w-64 relative flex-shrink-0 overflow-hidden group/image">
                     <OptimizedImage
                         src={images[0]}
                         alt={`${listing.title} ${listing.year} - ${listing.city || 'سوريا'}`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 absolute inset-0"
                     />
-                    <div className="absolute top-2 left-2 flex gap-1">
+
+                    {/* Watermark */}
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <span className="text-white/20 font-black text-xl sm:text-3xl -rotate-45 select-none font-sans whitespace-nowrap"
+                            style={{ textShadow: '0 0 10px rgba(255,255,255,0.1)' }}>
+                            RAMOUSE.COM
+                        </span>
+                    </div>
+
+                    <div className="absolute top-2 left-2 flex gap-1 z-20">
                         {listing.is_sponsored && (
                             <span className="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded shadow-sm">
                                 مميز
@@ -210,25 +219,48 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                 {/* Content Section */}
                 <div className="flex-1 flex flex-col justify-between p-2 sm:p-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                        <div>
-                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">{listing.year}</span>
-                                <span>•</span>
-                                <span>{getBrandName()}</span>
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{listing.title}</h3>
-                            <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                                <span className="flex items-center gap-1"><Gauge className="w-4 h-4" /> {listing.mileage.toLocaleString()}</span>
-                                <span className="flex items-center gap-1"><GitFork className="w-4 h-4" /> {listing.transmission}</span>
+                        <div className="flex-1">
+                            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">{listing.title}</h3>
+
+                            {/* Badges - Same as grid view */}
+                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                {getBrandName() && (
+                                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-md font-semibold text-xs border border-blue-100 dark:border-blue-800">
+                                        <Car className="w-2.5 h-2.5" />
+                                        {getBrandName()}
+                                    </span>
+                                )}
+                                {getModelName() && (
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300 rounded-md font-semibold text-xs border border-violet-100 dark:border-violet-800">
+                                        {getModelName()}
+                                    </span>
+                                )}
+                                {listing.year && (
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 rounded-md font-semibold text-xs border border-amber-100 dark:border-amber-800">
+                                        {listing.year}
+                                    </span>
+                                )}
+                                {listing.mileage && (
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 rounded-md font-semibold text-xs border border-emerald-100 dark:border-emerald-800">
+                                        {listing.mileage >= 1000 ? `${(listing.mileage / 1000).toFixed(0)}k كم` : `${listing.mileage} كم`}
+                                    </span>
+                                )}
+                                {listing.transmission && (
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-300 rounded-md font-semibold text-xs border border-teal-100 dark:border-teal-800">
+                                        {listing.transmission}
+                                    </span>
+                                )}
                             </div>
                         </div>
-                        <div className="text-left">
-                            <div className="text-xl font-bold text-primary">{formatPrice(listing.price)}</div>
-                            <div className="text-xs text-slate-400 mt-1">{listing.created_at ? new Date(listing.created_at).toLocaleDateString('ar-SY') : ''}</div>
+                        <div className="text-left sm:text-right">
+                            <div className="text-lg sm:text-xl font-bold text-primary">{formatPrice(listing.price)}</div>
+                            {listing.listing_type === 'rent' && (
+                                <span className="text-xs text-slate-500">/ يوم</span>
+                            )}
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <div className="flex justify-between items-center mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-700">
                         <div className="flex gap-2">
                             <button
                                 onClick={handleFavorite}
@@ -242,9 +274,20 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                             >
                                 <Share2 className="w-4 h-4" />
                             </button>
+                            <button
+                                onClick={handleCompare}
+                                className={cn(
+                                    "p-2 rounded-full border transition-colors",
+                                    inComparison
+                                        ? "bg-primary border-primary text-white"
+                                        : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                                )}
+                            >
+                                <GitCompare className="w-4 h-4" />
+                            </button>
                         </div>
-                        <span className="text-sm text-slate-500 flex items-center gap-1">
-                            <MapPin className="w-4 h-4" /> {listing.city}
+                        <span className="text-xs sm:text-sm text-slate-500 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> {listing.city}
                         </span>
                     </div>
                 </div>
@@ -259,26 +302,35 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{
-                y: -8,
-                boxShadow: "var(--marketplace-card-hover)"
+                y: -5,
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                borderColor: "var(--primary-color, #3b82f6)"
             }}
             whileTap={{ scale: 0.98 }}
             transition={{
-                duration: 0.3,
+                duration: 0.2,
                 ease: "easeOut"
             }}
-            className="group relative bg-white dark:bg-slate-800 rounded-none md:rounded-3xl overflow-hidden border-y md:border border-slate-200 dark:border-slate-700 hover:border-primary/30 shadow-sm hover:shadow-md transition-all cursor-pointer h-full flex flex-col"
+            className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm transition-all cursor-pointer h-full flex flex-col"
             onClick={handleView}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setActiveImageIndex(0); }}
         >
             {/* Image Container with Hover Slider */}
-            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
+            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900 group/image">
                 <img
                     src={images[activeImageIndex]}
                     alt={`${listing.title} ${listing.year} - ${listing.city || 'سوريا'} - صورة ${activeImageIndex + 1}`}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
+
+                {/* Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <span className="text-white/20 font-black text-4xl -rotate-45 select-none font-sans whitespace-nowrap"
+                        style={{ textShadow: '0 0 10px rgba(255,255,255,0.1)' }}>
+                        RAMOUSE.COM
+                    </span>
+                </div>
 
                 {/* Image Navigation Hints (if multiple images) */}
                 {isHovered && images.length > 1 && (
@@ -296,8 +348,8 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
                     </div>
                 )}
 
-                {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                {/* Overlay Gradient - Stronger on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
 
                 {/* Top Left Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-20">
