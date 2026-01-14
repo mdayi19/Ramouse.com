@@ -2,9 +2,11 @@
 import axios from 'axios';
 import { apiCache, createCacheKey, shouldCache, invalidateCache } from './apiCache';
 
-// Always use relative URLs - Vite proxy forwards to backend in dev, production serves from same domain
-export const API_URL = '/api';
-export const BASE_URL = '';
+// In dev mode, use full production URL (server CORS allows localhost origins)
+// In production, use relative URLs since app is served from same domain
+const isDev = import.meta.env.DEV;
+export const API_URL = isDev ? 'https://ramouse.com/api' : '/api';
+export const BASE_URL = isDev ? 'https://ramouse.com' : '';
 
 export const api = axios.create({
     baseURL: API_URL,

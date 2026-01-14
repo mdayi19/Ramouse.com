@@ -18,8 +18,9 @@ function createEchoConfig() {
     const defaultHost = window.location.hostname;
     const defaultPort = isHttps ? 443 : 6001;
 
-    // Use relative URL - Vite proxy forwards to backend in dev, production serves from same domain
-    const authEndpoint = '/api/broadcasting/auth';
+    // In dev mode, use full production URL (server CORS allows localhost origins)
+    const isDev = (import.meta as any).env.DEV;
+    const authEndpoint = isDev ? 'https://ramouse.com/api/broadcasting/auth' : '/api/broadcasting/auth';
 
     return {
         broadcaster: 'reverb' as any,

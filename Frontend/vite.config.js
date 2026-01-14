@@ -33,23 +33,16 @@ export default defineConfig(function (_a) {
             port: 3000,
             host: '0.0.0.0',
             proxy: {
-                // Proxy API requests to Laravel backend during development
+                // Proxy API requests to Laravel backend when running locally
                 '/api': {
-                    target: env.VITE_API_URL || 'https://ramouse.com',
-                    changeOrigin: true,
-                    secure: false, // Set to false to bypass SSL verification
-                    rewrite: (path) => path,
-                    configure: (proxy, options) => {
-                        proxy.on('error', (err, req, res) => {
-                            console.log('proxy error', err);
-                        });
-                    },
-                },
-                '/storage': {
-                    target: env.VITE_API_URL || 'https://ramouse.com',
+                    target: env.VITE_API_URL || 'http://localhost:8000',
                     changeOrigin: true,
                     secure: false,
-                    rewrite: (path) => path,
+                },
+                '/storage': {
+                    target: env.VITE_API_URL || 'http://localhost:8000',
+                    changeOrigin: true,
+                    secure: false,
                 }
             }
         },
