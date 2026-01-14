@@ -35,14 +35,21 @@ export default defineConfig(function (_a) {
             proxy: {
                 // Proxy API requests to Laravel backend during development
                 '/api': {
-                    target: env.VITE_API_URL || 'http://localhost:8000',
+                    target: env.VITE_API_URL || 'https://ramouse.com',
                     changeOrigin: true,
-                    secure: false,
+                    secure: false, // Set to false to bypass SSL verification
+                    rewrite: (path) => path,
+                    configure: (proxy, options) => {
+                        proxy.on('error', (err, req, res) => {
+                            console.log('proxy error', err);
+                        });
+                    },
                 },
                 '/storage': {
-                    target: env.VITE_API_URL || 'http://localhost:8000',
+                    target: env.VITE_API_URL || 'https://ramouse.com',
                     changeOrigin: true,
                     secure: false,
+                    rewrite: (path) => path,
                 }
             }
         },
