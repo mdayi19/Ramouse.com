@@ -63,6 +63,8 @@ export interface CarListing {
     license_plate?: string;
     chassis_number?: string;
     previous_owners?: number;
+    drive_type?: string;
+    engine_type?: string;
 }
 
 export interface RentalTerms {
