@@ -152,7 +152,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
             {/* 1. Hero / Header Section for RENT */}
-            <div className="relative bg-gradient-to-br from-teal-800 via-teal-900 to-slate-800 text-white py-20 md:py-28 overflow-hidden">
+            <div className="relative bg-gradient-to-br from-teal-800 via-teal-900 to-slate-800 text-white py-12 md:py-16 overflow-hidden">
                 {/* Animated Background Blobs - Teal Theme */}
                 <motion.div
                     className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-400/30 to-transparent rounded-full blur-3xl"
@@ -200,13 +200,13 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black mb-6 leading-tight"
+                            className="text-4xl md:text-5xl lg:text-6xl font-black mb-4 leading-tight"
                         >
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-300 to-white">
                                 استأجر سيارتك المثالية
                             </span>
                             <br />
-                            <span className="text-4xl md:text-5xl text-white/90 block mt-2">
+                            <span className="text-2xl md:text-3xl text-white/90 block mt-2">
                                 لقضاء مشاويرك بكل راحة
                             </span>
                         </motion.h1>
@@ -225,46 +225,51 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                    className="w-full px-8 py-5 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-lg
+                                    className="w-full px-6 py-3.5 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-base
                                              focus:ring-4 focus:ring-cyan-400/30 focus:bg-white border-0 outline-none transition-all"
                                 />
                                 <button
                                     onClick={handleSearch}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl px-6 py-3 
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl px-5 py-2.5 
                                              flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
                                 >
-                                    <Search className="w-5 h-5" />
+                                    <Search className="w-4 h-4" />
                                 </button>
                             </div>
-                        </motion.div>
 
-                        {/* Features & Trust Badges */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="mt-8 flex flex-col md:flex-row items-center justify-center gap-6"
-                        >
-                            {/* Stats */}
-                            <div className="flex items-center gap-6 text-white/80 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                    <span>{pagination.total || 0}+ سيارة للإيجار</span>
+                            {/* Controls Bar (Rent Version) */}
+                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-lg">
+                                {/* Result Count */}
+                                <div className="flex items-center gap-2 px-3 text-white font-medium">
+                                    <Car className="w-5 h-5 text-cyan-300" />
+                                    <span>{pagination.total > 0 ? `${pagination.total} سيارة للإيجار` : 'جاري البحث...'}</span>
                                 </div>
-                                <div className="w-1 h-1 bg-white/40 rounded-full" />
-                                <div className="flex items-center gap-2">
-                                    <span>✓</span>
-                                    <span>تأمين شامل</span>
-                                </div>
-                            </div>
 
-                            {/* Feature Icons */}
-                            <div className="flex gap-4 md:mr-6">
-                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
-                                    <ShieldCheck className="w-6 h-6 text-cyan-300" />
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
-                                    <Armchair className="w-6 h-6 text-cyan-300" />
+                                <div className="flex items-center gap-2">
+                                    {/* Mobile Filter */}
+                                    <button
+                                        onClick={() => setShowMobileFilters(true)}
+                                        className="lg:hidden flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm"
+                                    >
+                                        <SlidersHorizontal className="w-4 h-4" />
+                                        <span>تصفية</span>
+                                    </button>
+
+                                    {/* View Toggles */}
+                                    <div className="flex bg-black/20 rounded-xl p-1 gap-1">
+                                        <button
+                                            onClick={() => setViewMode('grid')}
+                                            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-teal-700 shadow-sm' : 'text-white/70 hover:text-white'}`}
+                                        >
+                                            <Grid className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('list')}
+                                            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-teal-700 shadow-sm' : 'text-white/70 hover:text-white'}`}
+                                        >
+                                            <List className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -273,7 +278,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
             </div>
 
             {/* 2. Main Content Area */}
-            <div className="w-full px-0 md:px-8 py-8 -mt-8 relative z-20">
+            <div className="w-full px-0 md:px-8 py-6 -mt-8 relative z-20">
                 <div className="flex flex-col lg:flex-row gap-8">
 
                     {/* Filters Sidebar (Desktop) */}
@@ -290,42 +295,6 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
 
                     {/* Listings Column */}
                     <div className="flex-1">
-                        {/* Toolbar */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <Car className="w-6 h-6 text-teal-600" />
-                                {pagination.total > 0 ? `${pagination.total} سيارة للإيجار` : 'جاري البحث...'}
-                            </h2>
-
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setShowMobileFilters(true)}
-                                    className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm text-slate-700 dark:text-slate-200"
-                                >
-                                    <SlidersHorizontal className="w-4 h-4" />
-                                    <span>تصفية</span>
-                                </button>
-
-                                <div className="bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm flex items-center">
-                                    <button
-                                        onClick={() => setViewMode('grid')}
-                                        className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                            ? 'bg-teal-600 text-white shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    >
-                                        <Grid className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('list')}
-                                        className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                                            ? 'bg-teal-600 text-white shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    >
-                                        <List className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Content Grid */}
                         <div className="min-h-[400px]">
@@ -338,8 +307,8 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                 />
                             ) : loading && !loadingMore ? (
                                 <div className={viewMode === 'grid'
-                                    ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                                    : 'space-y-4'
+                                    ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4'
+                                    : 'flex flex-col gap-3 sm:gap-4'
                                 }>
                                     {[1, 2, 3, 4, 5, 6].map((i) => (
                                         <ListingSkeleton key={i} viewMode={viewMode} />
@@ -392,13 +361,13 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                 </motion.div>
                             ) : (
                                 <div className={viewMode === 'grid'
-                                    ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                                    : 'space-y-4'
+                                    ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4'
+                                    : 'flex flex-col gap-3 sm:gap-4'
                                 }>
                                     {listings.map((listing, index) => {
                                         if (index === listings.length - 1) {
                                             return (
-                                                <div ref={lastListingElementRef} key={listing.id}>
+                                                <div ref={lastListingElementRef} key={listing.id} className="w-full">
                                                     <RentListingCard
                                                         listing={listing}
                                                         viewMode={viewMode}

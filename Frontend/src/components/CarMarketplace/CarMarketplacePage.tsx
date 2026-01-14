@@ -87,7 +87,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                 response = await CarProviderService.searchListings(searchQuery);
                 const results = response.results || {};
 
-                // Search API might behave differently regarding pagination, assume basic structure for now
+                // Search API might behave differently regarding pagination
                 if (isReset) {
                     setListings(results.data || []);
                 } else {
@@ -134,7 +134,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     };
 
     const handleSearch = () => {
-        // Reset to page 1 for new search
         setFilters(prev => ({ ...prev, page: 1 }));
     };
 
@@ -151,31 +150,16 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
             {/* 1. Hero / Header Section */}
             <div className="relative bg-gradient-to-br from-primary via-primary-900 to-slate-800 text-white py-12 md:py-16 overflow-hidden">
-                {/* Animated Background Blobs - Following DesktopWelcomeScreen */}
+                {/* Animated Background Blobs */}
                 <motion.div
                     className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-secondary/30 to-transparent rounded-full blur-3xl"
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.5, 0.3],
-                    }}
-                    transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
                     className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-400/20 to-transparent rounded-full blur-3xl"
-                    animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [0.2, 0.4, 0.2],
-                    }}
-                    transition={{
-                        duration: 10,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 2
-                    }}
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
                 />
 
                 {/* Noise texture overlay */}
@@ -229,36 +213,53 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                    className="w-full px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-base
-                                             focus:ring-4 focus:ring-secondary/30 focus:bg-white border-0 outline-none transition-all"
+                                    className="w-full px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-base focus:ring-4 focus:ring-secondary/30 focus:bg-white border-0 outline-none transition-all"
                                 />
                                 <button
                                     onClick={handleSearch}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-800 text-white rounded-xl px-5 py-2.5 
-                                             flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-800 text-white rounded-xl px-5 py-2.5 flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
                                 >
                                     <Search className="w-5 h-5" />
                                 </button>
                             </div>
+
+                            {/* Controls Bar (Moved to Header) */}
+                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-lg">
+                                {/* Result Count */}
+                                <div className="flex items-center gap-2 px-3 text-white font-medium">
+                                    <Car className="w-5 h-5 text-secondary" />
+                                    <span>{pagination.total > 0 ? `${pagination.total} سيارة متاحة` : 'جاري البحث...'}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {/* Mobile Filter */}
+                                    <button
+                                        onClick={() => setShowMobileFilters(true)}
+                                        className="lg:hidden flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm"
+                                    >
+                                        <SlidersHorizontal className="w-4 h-4" />
+                                        <span>تصفية</span>
+                                    </button>
+
+                                    {/* View Toggles */}
+                                    <div className="flex bg-black/20 rounded-xl p-1 gap-1">
+                                        <button
+                                            onClick={() => setViewMode('grid')}
+                                            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-white/70 hover:text-white'}`}
+                                        >
+                                            <Grid className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('list')}
+                                            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-white/70 hover:text-white'}`}
+                                        >
+                                            <List className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
 
-                        {/* Trust Badges */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="mt-8 flex items-center justify-center gap-6 text-white/80 text-sm"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                <span>{pagination.total || 0}+ سيارة متاحة</span>
-                            </div>
-                            <div className="w-1 h-1 bg-white/40 rounded-full" />
-                            <div className="flex items-center gap-2">
-                                <span>✓</span>
-                                <span>تحديث يومي</span>
-                            </div>
-                        </motion.div>
                     </div>
                 </div>
             </div>
@@ -281,42 +282,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 
                     {/* Listings Column */}
                     <div className="flex-1">
-                        {/* Toolbar */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 px-4 md:px-0">
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <Car className="w-5 h-5 text-primary" />
-                                {pagination.total > 0 ? `${pagination.total} سيارة متاحة` : 'جاري البحث...'}
-                            </h2>
-
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setShowMobileFilters(true)}
-                                    className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm text-slate-700 dark:text-slate-200"
-                                >
-                                    <SlidersHorizontal className="w-4 h-4" />
-                                    <span>تصفية</span>
-                                </button>
-
-                                <div className="bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm flex items-center">
-                                    <button
-                                        onClick={() => setViewMode('grid')}
-                                        className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    >
-                                        <Grid className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('list')}
-                                        className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    >
-                                        <List className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Content Grid */}
                         <div className="min-h-[400px]">

@@ -232,15 +232,46 @@ class CarListingController extends Controller
             ], 403);
         }
 
+        // Validate all fields similar to store method
         $validated = $request->validate([
-            'title' => 'string|max:255',
+            'listing_type' => 'sometimes|in:sale,rent',
             'car_listing_category_id' => 'nullable|exists:car_listing_categories,id',
-            'price' => 'numeric|min:0',
+            'title' => 'sometimes|string|max:255',
+            'brand_id' => 'sometimes|exists:brands,id',
+            'model' => 'sometimes|string|max:255',
+            'year' => 'sometimes|integer|min:1900|max:' . (date('Y') + 1),
+            'mileage' => 'sometimes|integer|min:0',
+            'condition' => 'sometimes|in:new,used,certified_pre_owned',
+            'price' => 'nullable|numeric|min:0', // Can be nullable for rent
             'is_negotiable' => 'boolean',
+            'rental_terms' => 'nullable|array',
+            'exterior_color' => 'nullable|string',
+            'interior_color' => 'nullable|string',
+            'transmission' => 'nullable|in:automatic,manual',
+            'fuel_type' => 'nullable|in:gasoline,diesel,electric,hybrid',
+            'doors_count' => 'nullable|integer|min:2|max:5',
+            'seats_count' => 'nullable|integer|min:2|max:9',
+            'license_plate' => 'nullable|string',
+            'chassis_number' => 'nullable|string',
+            'engine_size' => 'nullable|string',
+            'horsepower' => 'nullable|integer',
+            'body_style' => 'nullable|string',
+            'body_condition' => 'nullable|array',
+            'previous_owners' => 'nullable|integer|min:0',
+            'warranty' => 'nullable|string',
+            'features' => 'nullable|array',
             'description' => 'nullable|string',
-            'photos' => 'array|min:1|max:20',
+            'city' => 'sometimes|string|max:50',
+            'address' => 'nullable|string|max:500',
+            'car_category_id' => 'nullable|string',
+            'country_id' => 'nullable|exists:countries,id',
+            'photos' => 'sometimes|array|min:1|max:20',
+            'photos.*' => 'string',
+            'video_url' => 'nullable|url',
+            'contact_phone' => 'nullable|string',
+            'contact_whatsapp' => 'nullable|string',
             'is_available' => 'boolean',
-            // ... other updatable fields
+            'is_hidden' => 'boolean'
         ]);
 
         $listing->update($validated);

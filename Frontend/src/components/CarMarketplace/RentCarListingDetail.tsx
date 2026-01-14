@@ -85,6 +85,42 @@ const t = {
     }
 };
 
+const translateValue = (val: string | undefined): string => {
+    if (!val) return '';
+    return (t.values as any)[val.toLowerCase()] || val;
+};
+
+// Rental Terms Translation
+const rentalTermsTranslations: { [key: string]: string } = {
+    insurance_required: 'التأمين مطلوب',
+    valid_license: 'رخصة قيادة سارية',
+    min_age: 'الحد الأدنى للعمر',
+    credit_card: 'بطاقة ائتمان مطلوبة',
+    notarized_contract: 'عقد موثق',
+    km_limit: 'حد أقصى للكيلومترات',
+    no_smoking: 'ممنوع التدخين',
+    no_pets: 'ممنوع الحيوانات الأليفة',
+    families_only: 'للعائلات فقط',
+    insurance_waiver: 'إعفاء التأمين',
+    additional_driver: 'سائق إضافي مسموح',
+    fuel_on_renter: 'الوقود على عاتق المستأجر'
+};
+
+const translateRentalTerm = (term: string): string => {
+    if (!term) return '';
+    // Try exact match first
+    if (rentalTermsTranslations[term]) {
+        return rentalTermsTranslations[term];
+    }
+    // Try lowercase match
+    const lowerTerm = term.toLowerCase().replace(/\s+/g, '_');
+    if (rentalTermsTranslations[lowerTerm]) {
+        return rentalTermsTranslations[lowerTerm];
+    }
+    // Return original if no translation found
+    return term;
+};
+
 const safeDate = (dateString: string | undefined) => {
     if (!dateString) return '';
     try {
@@ -355,32 +391,52 @@ const RentCarListingDetail: React.FC = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
                     {/* Main Content Column (8 cols) */}
-                    <div className="lg:col-span-8 space-y-8">
+                    <div className="lg:col-span-8 space-y-6">
 
                         {/* Title Section */}
-                        <div className="space-y-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-xs font-bold">
-                                    {t.ui.rent}
-                                </span>
-                                {listing.is_sponsored && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
-                                        <Star className="w-3 h-3 fill-current" />
-                                        {t.ui.sponsored}
-                                    </span>
-                                )}
-                            </div>
-
-                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight">
+                        <div className="space-y-3">
+                            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                                 {listing.title}
                             </h1>
 
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                            {/* Brand & Model Badges */}
+                            {(listing.brand || listing.model || listing.year || listing.mileage || listing.transmission || listing.fuel_type) && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {listing.brand && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-md font-semibold text-xs border border-blue-100 dark:border-blue-800">
+                                            <Car className="w-3 h-3" />
+                                            {typeof listing.brand === 'object' ? listing.brand.name_ar || listing.brand.name : listing.brand}
+                                        </span>
+                                    )}
+                                    {listing.model && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300 rounded-md font-semibold text-xs border border-violet-100 dark:border-violet-800">
+                                            {listing.model}
+                                        </span>
+                                    )}
+                                    {listing.year && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 rounded-md font-semibold text-xs border border-amber-100 dark:border-amber-800">
+                                            {listing.year}
+                                        </span>
+                                    )}
+                                    {listing.transmission && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-300 rounded-md font-semibold text-xs border border-teal-100 dark:border-teal-800">
+                                            {translateValue(listing.transmission)}
+                                        </span>
+                                    )}
+                                    {listing.fuel_type && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-300 rounded-md font-semibold text-xs border border-rose-100 dark:border-rose-800">
+                                            {translateValue(listing.fuel_type)}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                                 {(listing.city || listing.address || listing.location) && (
-                                    <div className="flex items-center gap-1.5">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                    <div className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-gray-400" />
                                         <span>
                                             {listing.city}
                                             {listing.city && listing.address && '، '}
@@ -390,13 +446,13 @@ const RentCarListingDetail: React.FC = () => {
                                     </div>
                                 )}
                                 <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                <span className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3 text-gray-400" />
                                     {safeDate(listing.created_at)}
                                 </span>
                                 <span className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></span>
-                                <span className="flex items-center gap-1.5">
-                                    <Eye className="w-4 h-4 text-gray-400" />
+                                <span className="flex items-center gap-1">
+                                    <Eye className="w-3 h-3 text-gray-400" />
                                     {listing.views_count || 0} {t.ui.view_count}
                                 </span>
                             </div>
@@ -407,16 +463,61 @@ const RentCarListingDetail: React.FC = () => {
                             <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
                         </div>
 
-                        {/* Quick Specs */}
-                        <QuickSpecsBar listing={listing} />
+                        {/* Detailed Specs Tabs */}
+                        <SpecificationsTabs listing={listing} />
 
-                        {/* Description */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.ui.description_title}</h2>
-                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
-                                {listing.description}
-                            </p>
-                        </div>
+                        {/* Rental Terms / Conditions - Enhanced */}
+                        {hasConditions && (
+                            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-2xl p-6 sm:p-8 shadow-sm border-2 border-teal-200 dark:border-teal-800">
+                                <h2 className="text-2xl font-bold text-teal-900 dark:text-teal-100 mb-6 flex items-center gap-3">
+                                    <div className="p-2 bg-teal-600 dark:bg-teal-700 rounded-xl">
+                                        <CheckCircle className="w-6 h-6 text-white" />
+                                    </div>
+                                    شروط الإيجار
+                                </h2>
+
+                                {termsList.length > 0 && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                                        {termsList.map((term, idx) => (
+                                            <div key={idx} className="flex items-start gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/50 hover:shadow-md transition-shadow">
+                                                <div className="mt-0.5 w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
+                                                    <CheckCircle className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">{translateRentalTerm(term)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {structuredTerms.custom_terms && (
+                                    <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border-2 border-amber-200 dark:border-amber-800/50 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <h3 className="font-bold text-amber-900 dark:text-amber-100 text-base">شروط إضافية</h3>
+                                        </div>
+                                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                                            {structuredTerms.custom_terms}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Car Body Diagram */}
+                        {listing.body_condition && typeof listing.body_condition === 'object' && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
+                                <CarBodyDiagram
+                                    value={listing.body_condition}
+                                    onChange={() => { }}
+                                    readOnly={true}
+                                />
+                            </div>
+                        )}
 
                         {/* Rental Requirements */}
                         {hasRequirements && (
@@ -463,56 +564,6 @@ const RentCarListingDetail: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Rental Terms / Conditions */}
-                        {hasConditions && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                    <CheckCircle className="w-6 h-6 text-teal-600" />
-                                    {t.ui.rental_terms}
-                                </h2>
-
-                                {termsList.length > 0 && (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        {termsList.map((term, idx) => (
-                                            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
-                                                <div className="w-5 h-5 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
-                                                    <CheckCircle className="w-3.5 h-3.5" />
-                                                </div>
-                                                <span className="text-slate-700 dark:text-slate-300 font-medium">{term}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {structuredTerms.custom_terms && (
-                                    <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
-                                        <h3 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">شروط اضافية</h3>
-                                        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                                            {structuredTerms.custom_terms}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Features */}
-                        <FeaturesShowcase listing={listing} />
-
-                        {/* Detailed Specs Tabs */}
-                        <SpecificationsTabs listing={listing} />
-
-                        {/* Car Body Diagram */}
-                        {listing.body_condition && typeof listing.body_condition === 'object' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
-                                <CarBodyDiagram
-                                    value={listing.body_condition}
-                                    onChange={() => { }}
-                                    readOnly={true}
-                                />
                             </div>
                         )}
 

@@ -507,7 +507,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                         <span className="hidden sm:inline">طباعة / PDF</span>
                     </button>
                     <a
-                        href={`/car-providers/${provider.id}`}
+                        href={`/car-providers/${provider.unique_id || provider.user_id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-4 py-2.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors font-medium flex items-center gap-2"

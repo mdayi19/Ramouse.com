@@ -90,6 +90,7 @@ export interface Provider {
 
 export interface CarProvider {
   user_id?: number;
+  unique_id?: string; // Add this
   id: string;
   name: string;
   business_type: string;
