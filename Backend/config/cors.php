@@ -6,18 +6,14 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => env('APP_ENV') === 'production'
-        ? [
+    // Always allow both production and dev origins for local development
+    'allowed_origins' => [
         'https://ramouse.com',
         'https://www.ramouse.com',
-    ]
-        : [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3001',
-        'https://ramouse.com',
-        'https://www.ramouse.com',
     ],
 
     'allowed_headers' => ['*'],
