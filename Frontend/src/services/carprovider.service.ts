@@ -269,7 +269,10 @@ export class CarProviderService {
     }
 
     static async updateListing(id: number, data: FormData) {
-        const response = await api.put(`/car-provider/listings/${id}`, data);
+        data.append('_method', 'PUT');
+        const response = await api.post(`/car-provider/listings/${id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     }
 
