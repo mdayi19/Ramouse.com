@@ -60,13 +60,9 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
     const formatPrice = (price: number | undefined): string => {
         if (price === undefined) return '';
         try {
-            return new Intl.NumberFormat('ar-SY', {
-                style: 'currency',
-                currency: 'SYP',
-                maximumFractionDigits: 0
-            }).format(price);
+            return new Intl.NumberFormat('en-US').format(price) + ' ل.س';
         } catch (e) {
-            return `${price.toLocaleString('ar-SY')} ل.س`;
+            return `${price.toLocaleString('en-US')} ل.س`;
         }
     };
 
@@ -79,18 +75,23 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
         >
             {/* Main Price - Only for sale listings */}
             {listing.listing_type !== 'rent' && (
-                <div className="mb-3">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                            {displayPrice ? formatPrice(displayPrice) : formatPrice(0)}
-                        </span>
+                <div className="p-4 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-800/80 dark:to-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex flex-col">
+                            <span className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">السعر</span>
+                            <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white">
+                                {displayPrice ? formatPrice(displayPrice) : formatPrice(0)}
+                            </span>
+                        </div>
+                        {listing.is_negotiable && (
+                            <div className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-green-500/30 flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                قابل للتفاوض
+                            </div>
+                        )}
                     </div>
-                    {listing.is_negotiable && (
-                        <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs font-medium">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                            قابل للتفاوض
-                        </span>
-                    )}
                 </div>
             )}
 

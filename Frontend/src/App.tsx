@@ -858,12 +858,30 @@ const App: React.FC = () => {
                                 />
                             } />
 
-                            <Route path="/rent-car/:slug" element={<RentCarListingDetail />} />
+                            <Route path="/rent-car/:slug" element={
+                                <RentCarListingDetail
+                                    isAuthenticated={isAuthenticated}
+                                    setShowLogin={setShowLogin}
+                                    showToast={showToast}
+                                />
+                            } />
                             {/* Car Listing Detail */}
-                            <Route path="/car-listings/:slug" element={<CarListingDetail />} />
+                            <Route path="/car-listings/:slug" element={
+                                <CarListingDetail
+                                    isAuthenticated={isAuthenticated}
+                                    setShowLogin={setShowLogin}
+                                    showToast={showToast}
+                                />
+                            } />
 
                             {/* Car Provider Profile */}
-                            <Route path="/car-providers/:id" element={<CarProviderProfile />} />
+                            <Route path="/car-providers/:id" element={
+                                <CarProviderProfile
+                                    isAuthenticated={isAuthenticated}
+                                    onLoginClick={handleLoginClick}
+                                    showToast={showToast}
+                                />
+                            } />
 
                             {/* Car Provider Registration */}
                             <Route path="/register-car-provider" element={

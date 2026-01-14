@@ -238,43 +238,316 @@ class CarProviderController extends Controller
         $user = auth('sanctum')->user();
 
         $days = $request->days ?? 30;
+        $now = now();
 
-        $listings = CarListing::where('owner_id', $user->id)
+        // Get all provider listing IDs
+        $listingIds = CarListing::where('owner_id', $user->id)
             ->where('seller_type', 'provider')
-            ->with([
-                'dailyStats' => function ($q) use ($days) {
-                    $q->where('date', '>=', now()->subDays($days));
-                }
-            ])
-            ->get();
+            ->pluck('id');
 
-        // Aggregate daily stats
-        $dailyData = DB::table('car_listing_daily_stats')
-            ->join('car_listings', 'car_listings.id', '=', 'car_listing_daily_stats.car_listing_id')
-            ->where('car_listings.owner_id', $user->id)
-            ->where('car_listings.seller_type', 'provider')
-            ->where('car_listing_daily_stats.date', '>=', now()->subDays($days))
-            ->select(
-                'car_listing_daily_stats.date',
-                DB::raw('SUM(total_views) as views'),
-                DB::raw('SUM(unique_visitors) as visitors'),
-                DB::raw('SUM(contact_phone_clicks) as phone_clicks'),
-                DB::raw('SUM(contact_whatsapp_clicks) as whatsapp_clicks'),
-                DB::raw('SUM(favorites) as favorites'),
-                DB::raw('SUM(shares) as shares')
-            )
-            ->groupBy('car_listing_daily_stats.date')
-            ->orderBy('car_listing_daily_stats.date')
-            ->get();
+        if ($listingIds->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'analytics' => [
+                    'period_days' => $days,
+                    'total_events' => [],
+                    'total_favorites' => 0,
+                    'unique_visitors' => 0,
+                    'views_history' => [],
+                    'top_performing_listings' => [],
+                    'growth' => [
+                        'views' => 0,
+                        'contacts' => 0,
+                        'favorites' => 0
+                    ]
+                ]
+            ]);
+        }
+
+        // Current period analytics from raw events table (more accurate)
+        $currentPeriodStart = $now->copy()->subDays($days);
+        $previousPeriodStart = $now->copy()->subDays($days * 2);
+        $previousPeriodEnd = $now->copy()->subDays($days);
+
+        // Get current period event counts
+        $currentEvents = \App\Models\CarListingAnalytic::whereIn('car_listing_id', $listingIds)
+            ->where('created_at', '>=', $currentPeriodStart)
+            ->select('event_type', DB::raw('count(*) as count'))
+            ->groupBy('event_type')
+            ->get()
+            ->pluck('count', 'event_type');
+
+        // Get previous period event counts for growth calculation
+        $previousEvents = \App\Models\CarListingAnalytic::whereIn('car_listing_id', $listingIds)
+            ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
+            ->select('event_type', DB::raw('count(*) as count'))
+            ->groupBy('event_type')
+            ->get()
+            ->pluck('count', 'event_type');
+
+        // Calculate growth percentages
+        $calculateGrowth = function ($current, $previous) {
+            if ($previous == 0)
+                return $current > 0 ? 100 : 0;
+            return round((($current - $previous) / $previous) * 100, 1);
+        };
+
+        $currentViews = $currentEvents['view'] ?? 0;
+        $previousViews = $previousEvents['view'] ?? 0;
+        $currentContacts = ($currentEvents['contact_phone'] ?? 0) + ($currentEvents['contact_whatsapp'] ?? 0);
+        $previousContacts = ($previousEvents['contact_phone'] ?? 0) + ($previousEvents['contact_whatsapp'] ?? 0);
+        $currentFavorites = $currentEvents['favorite'] ?? 0;
+        $previousFavorites = $previousEvents['favorite'] ?? 0;
+
+        // Unique visitors in current period
+        $uniqueVisitors = \App\Models\CarListingAnalytic::whereIn('car_listing_id', $listingIds)
+            ->where('event_type', 'view')
+            ->where('created_at', '>=', $currentPeriodStart)
+            ->distinct('user_ip')
+            ->count('user_ip');
+
+        // Views history (daily breakdown for chart) - last N days
+        $viewsHistory = collect();
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = $now->copy()->subDays($i);
+            $dayStart = $date->copy()->startOfDay();
+            $dayEnd = $date->copy()->endOfDay();
+
+            // First try daily_stats table
+            $dailyViews = DB::table('car_listing_daily_stats')
+                ->whereIn('car_listing_id', $listingIds)
+                ->where('date', $date->toDateString())
+                ->sum('total_views');
+
+            // If no data in daily_stats, fallback to raw events
+            if ($dailyViews == 0) {
+                $dailyViews = \App\Models\CarListingAnalytic::whereIn('car_listing_id', $listingIds)
+                    ->where('event_type', 'view')
+                    ->whereBetween('created_at', [$dayStart, $dayEnd])
+                    ->count();
+            }
+
+            $viewsHistory->push([
+                'date' => $date->format('M d'),
+                'value' => (int) $dailyViews
+            ]);
+        }
+
+        // Limit to last 14 entries for chart readability
+        if ($viewsHistory->count() > 14) {
+            $viewsHistory = $viewsHistory->slice(-14)->values();
+        }
+
+        // Top performing listings
+        $topListings = CarListing::whereIn('id', $listingIds)
+            ->orderBy('views_count', 'desc')
+            ->limit(5)
+            ->with(['category', 'brand'])
+            ->get()
+            ->map(function ($listing) use ($currentPeriodStart) {
+                $contacts = \App\Models\CarListingAnalytic::where('car_listing_id', $listing->id)
+                    ->whereIn('event_type', ['contact_phone', 'contact_whatsapp'])
+                    ->where('created_at', '>=', $currentPeriodStart)
+                    ->count();
+
+                return [
+                    'id' => $listing->id,
+                    'title' => $listing->title,
+                    'views' => $listing->views_count,
+                    'contacts' => $contacts,
+                    'price' => $listing->price,
+                    'listing_type' => $listing->listing_type
+                ];
+            });
+
+        // Total favorites from favorites table
+        $totalFavorites = DB::table('user_car_favorites')
+            ->whereIn('car_listing_id', $listingIds)
+            ->count();
+
+        // Calculate conversion rates
+        $viewToContactRate = $currentViews > 0
+            ? round(($currentContacts / $currentViews) * 100, 1)
+            : 0;
+        $viewToFavoriteRate = $currentViews > 0
+            ? round(($currentFavorites / $currentViews) * 100, 1)
+            : 0;
+
+        // Events breakdown for visualization
+        $eventsBreakdown = [
+            ['name' => 'مشاهدات', 'name_en' => 'Views', 'value' => $currentViews, 'color' => '#3b82f6'],
+            ['name' => 'اتصال هاتف', 'name_en' => 'Phone Calls', 'value' => $currentEvents['contact_phone'] ?? 0, 'color' => '#22c55e'],
+            ['name' => 'واتساب', 'name_en' => 'WhatsApp', 'value' => $currentEvents['contact_whatsapp'] ?? 0, 'color' => '#25d366'],
+            ['name' => 'مفضلة', 'name_en' => 'Favorites', 'value' => $currentEvents['favorite'] ?? 0, 'color' => '#ef4444'],
+            ['name' => 'مشاركة', 'name_en' => 'Shares', 'value' => $currentEvents['share'] ?? 0, 'color' => '#8b5cf6'],
+        ];
+
+        // Listings by type breakdown
+        $listingsByType = [
+            'sale' => CarListing::whereIn('id', $listingIds)->where('listing_type', 'sale')->count(),
+            'rent' => CarListing::whereIn('id', $listingIds)->where('listing_type', 'rent')->count(),
+        ];
 
         return response()->json([
             'success' => true,
             'analytics' => [
                 'period_days' => $days,
-                'daily_data' => $dailyData,
-                'listings' => $listings
+                'total_events' => $currentEvents,
+                'total_favorites' => $totalFavorites,
+                'unique_visitors' => $uniqueVisitors,
+                'views_history' => $viewsHistory,
+                'top_performing_listings' => $topListings,
+                'growth' => [
+                    'views' => $calculateGrowth($currentViews, $previousViews),
+                    'contacts' => $calculateGrowth($currentContacts, $previousContacts),
+                    'favorites' => $calculateGrowth($currentFavorites, $previousFavorites)
+                ],
+                'conversion_rates' => [
+                    'view_to_contact' => $viewToContactRate,
+                    'view_to_favorite' => $viewToFavoriteRate
+                ],
+                'events_breakdown' => $eventsBreakdown,
+                'listings_by_type' => $listingsByType
             ]
         ]);
+    }
+
+    /**
+     * Export analytics data as CSV
+     */
+    public function exportAnalytics(Request $request)
+    {
+        $user = auth('sanctum')->user();
+        $days = $request->input('days', 30);
+        $format = $request->input('format', 'csv');
+
+        // Get all provider listing IDs
+        $listingIds = CarListing::where('owner_id', $user->id)
+            ->where('seller_type', 'provider')
+            ->pluck('id');
+
+        if ($listingIds->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا توجد إعلانات للتصدير'
+            ], 404);
+        }
+
+        $now = now();
+        $currentPeriodStart = $now->copy()->subDays($days);
+
+        // Get per-listing analytics
+        $listingsData = CarListing::whereIn('id', $listingIds)
+            ->with(['category', 'brand'])
+            ->get()
+            ->map(function ($listing) use ($currentPeriodStart) {
+                $events = \App\Models\CarListingAnalytic::where('car_listing_id', $listing->id)
+                    ->where('created_at', '>=', $currentPeriodStart)
+                    ->select('event_type', DB::raw('count(*) as count'))
+                    ->groupBy('event_type')
+                    ->get()
+                    ->pluck('count', 'event_type');
+
+                return [
+                    'id' => $listing->id,
+                    'title' => $listing->title,
+                    'type' => $listing->listing_type === 'sale' ? 'بيع' : 'إيجار',
+                    'brand' => $listing->brand->name ?? '-',
+                    'category' => $listing->category->name ?? '-',
+                    'price' => $listing->price,
+                    'views' => $events['view'] ?? 0,
+                    'phone_clicks' => $events['contact_phone'] ?? 0,
+                    'whatsapp_clicks' => $events['contact_whatsapp'] ?? 0,
+                    'favorites' => $events['favorite'] ?? 0,
+                    'shares' => $events['share'] ?? 0,
+                    'total_views' => $listing->views_count,
+                    'created_at' => $listing->created_at->format('Y-m-d'),
+                ];
+            });
+
+        // Get daily summary
+        $dailyData = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = $now->copy()->subDays($i);
+            $dayStart = $date->copy()->startOfDay();
+            $dayEnd = $date->copy()->endOfDay();
+
+            $events = \App\Models\CarListingAnalytic::whereIn('car_listing_id', $listingIds)
+                ->whereBetween('created_at', [$dayStart, $dayEnd])
+                ->select('event_type', DB::raw('count(*) as count'))
+                ->groupBy('event_type')
+                ->get()
+                ->pluck('count', 'event_type');
+
+            $dailyData[] = [
+                'date' => $date->format('Y-m-d'),
+                'views' => $events['view'] ?? 0,
+                'phone_clicks' => $events['contact_phone'] ?? 0,
+                'whatsapp_clicks' => $events['contact_whatsapp'] ?? 0,
+                'favorites' => $events['favorite'] ?? 0,
+                'shares' => $events['share'] ?? 0,
+            ];
+        }
+
+        if ($format === 'json') {
+            return response()->json([
+                'success' => true,
+                'export' => [
+                    'period_days' => $days,
+                    'generated_at' => now()->toIso8601String(),
+                    'listings' => $listingsData,
+                    'daily_summary' => $dailyData
+                ]
+            ]);
+        }
+
+        // CSV format
+        $csvRows = [];
+
+        // Listings sheet
+        $csvRows[] = "=== تقرير أداء الإعلانات ===";
+        $csvRows[] = "الفترة: آخر {$days} يوم";
+        $csvRows[] = "تاريخ التصدير: " . now()->format('Y-m-d H:i');
+        $csvRows[] = "";
+        $csvRows[] = "العنوان,النوع,الماركة,الفئة,السعر,المشاهدات (الفترة),اتصال هاتف,واتساب,مفضلة,مشاركة,إجمالي المشاهدات,تاريخ الإنشاء";
+
+        foreach ($listingsData as $listing) {
+            $csvRows[] = implode(',', [
+                '"' . str_replace('"', '""', $listing['title']) . '"',
+                $listing['type'],
+                $listing['brand'],
+                $listing['category'],
+                $listing['price'],
+                $listing['views'],
+                $listing['phone_clicks'],
+                $listing['whatsapp_clicks'],
+                $listing['favorites'],
+                $listing['shares'],
+                $listing['total_views'],
+                $listing['created_at'],
+            ]);
+        }
+
+        $csvRows[] = "";
+        $csvRows[] = "=== الملخص اليومي ===";
+        $csvRows[] = "التاريخ,المشاهدات,اتصال هاتف,واتساب,مفضلة,مشاركة";
+
+        foreach ($dailyData as $day) {
+            $csvRows[] = implode(',', [
+                $day['date'],
+                $day['views'],
+                $day['phone_clicks'],
+                $day['whatsapp_clicks'],
+                $day['favorites'],
+                $day['shares'],
+            ]);
+        }
+
+        $csvContent = implode("\n", $csvRows);
+
+        return response($csvContent)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="analytics_report_' . now()->format('Y-m-d') . '.csv"');
     }
 
     /**

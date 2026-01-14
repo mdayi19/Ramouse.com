@@ -13,6 +13,8 @@ interface CarListingCardProps {
     listing: CarListing;
     viewMode: 'grid' | 'list';
     showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+    isAuthenticated?: boolean;
+    onLoginClick?: () => void;
 }
 
 // --- Helper: Translations ---
@@ -103,7 +105,7 @@ const SpecsRow = ({ listing }: { listing: CarListing }) => {
 };
 
 // --- Main Component ---
-export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMode, showToast }) => {
+export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMode, showToast, isAuthenticated, onLoginClick }) => {
     const navigate = useNavigate();
     const { addItem, removeItem, isInComparison, items } = useComparison();
     const [isFavorited, setIsFavorited] = useState(false);
@@ -122,6 +124,11 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
 
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!isAuthenticated) {
+            showToast?.('الرجاء تسجيل الدخول لحفظ الإعلانات', 'info');
+            onLoginClick?.();
+            return;
+        }
         try {
             await CarProviderService.toggleFavorite(listing.id);
             setIsFavorited(!isFavorited);
@@ -131,6 +138,11 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
 
     const handleCompare = (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!isAuthenticated) {
+            showToast?.('الرجاء تسجيل الدخول لإضافة للمقارنة', 'info');
+            onLoginClick?.();
+            return;
+        }
         if (inComparison) {
             removeItem(listing.id);
             showToast?.('تم الإزالة من المقارنة', 'info');

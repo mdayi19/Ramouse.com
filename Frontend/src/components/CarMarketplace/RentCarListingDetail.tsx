@@ -139,10 +139,21 @@ const safePrice = (price: number | undefined) => {
     }
 };
 
-const RentCarListingDetail: React.FC = () => {
+interface RentCarListingDetailProps {
+    isAuthenticated?: boolean;
+    setShowLogin?: (show: boolean) => void;
+    showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+}
+
+const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const { showToast, isAuthenticated, setShowLogin } = useAppState();
+    const appState = useAppState();
+
+    // Use props if provided, fallback to useAppState
+    const isAuthenticated = props.isAuthenticated ?? appState.isAuthenticated;
+    const setShowLogin = props.setShowLogin ?? appState.setShowLogin;
+    const showToast = props.showToast ?? appState.showToast;
 
     const [listing, setListing] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
@@ -389,6 +400,22 @@ const RentCarListingDetail: React.FC = () => {
                         videoUrl={listing.video_url}
                         t={t}
                     />
+
+                    {/* Video Button - Outside Gallery */}
+                    {listing.video_url && (
+                        <button
+                            onClick={() => window.open(listing.video_url!, '_blank', 'noopener,noreferrer')}
+                            className="mt-4 w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-xl flex items-center justify-center gap-3 text-white font-bold transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                        >
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <span>مشاهدة الفيديو</span>
+                            <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">

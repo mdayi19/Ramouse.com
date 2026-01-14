@@ -87,3 +87,14 @@ Schedule::call(function () {
     \Illuminate\Support\Facades\Log::debug('[Scheduler] Heartbeat');
 })->everyFiveMinutes();
 
+// Aggregate car listing analytics daily
+Schedule::command('analytics:aggregate')
+    ->dailyAt('00:30')
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('[Scheduler] Car analytics aggregation completed successfully');
+    })
+    ->onFailure(function () {
+        Log::error('[Scheduler] Failed to aggregate car analytics');
+    });
+

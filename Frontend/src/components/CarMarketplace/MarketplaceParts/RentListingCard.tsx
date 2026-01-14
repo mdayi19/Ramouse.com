@@ -13,6 +13,8 @@ interface RentListingCardProps {
     listing: CarListing;
     viewMode: 'grid' | 'list';
     showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+    isAuthenticated?: boolean;
+    onLoginClick?: () => void;
 }
 
 // --- Helper: Rental Terms Translations ---
@@ -157,7 +159,7 @@ const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number; weekly?: 
 );
 
 // --- Main Component ---
-export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewMode, showToast }) => {
+export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewMode, showToast, isAuthenticated, onLoginClick }) => {
     const navigate = useNavigate();
     const [isFavorited, setIsFavorited] = useState(false);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -189,6 +191,11 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({ listing, viewM
 
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!isAuthenticated) {
+            showToast?.('الرجاء تسجيل الدخول لحفظ الإعلانات', 'info');
+            onLoginClick?.();
+            return;
+        }
         try {
             await CarProviderService.toggleFavorite(listing.id);
             setIsFavorited(!isFavorited);

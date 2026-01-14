@@ -74,7 +74,13 @@ const SocialLink: React.FC<{ href?: string; icon: string; name: string }> = ({ h
     return <a href={href} target="_blank" rel="noopener noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-2 bg-slate-100 dark:bg-slate-700 rounded-full" title={name}><Icon name={icon} className="w-5 h-5" /></a>
 };
 
-const CarProviderProfile: React.FC = () => {
+interface CarProviderProfileProps {
+    isAuthenticated?: boolean;
+    onLoginClick?: () => void;
+    showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+}
+
+const CarProviderProfile: React.FC<CarProviderProfileProps> = ({ isAuthenticated, onLoginClick, showToast }) => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
@@ -170,15 +176,29 @@ const CarProviderProfile: React.FC = () => {
         }
     };
 
-    const [showPhone, setShowPhone] = useState(false);
-
     const handleCall = () => {
-        if (!showPhone) {
-            setShowPhone(true);
+        // Check authentication first
+        if (!isAuthenticated) {
+            showToast?.('الرجاء تسجيل الدخول للتواصل مع المعرض', 'info');
+            onLoginClick?.();
             return;
         }
         if (provider?.phone) {
             window.location.href = `tel:${provider.phone}`;
+        }
+    };
+
+    const handleWhatsApp = () => {
+        // Check authentication first
+        if (!isAuthenticated) {
+            showToast?.('الرجاء تسجيل الدخول للتواصل مع المعرض', 'info');
+            onLoginClick?.();
+            return;
+        }
+        const whatsappNum = socials?.whatsapp || provider?.phone;
+        if (whatsappNum) {
+            const message = encodeURIComponent(`مرحباً، رأيت معرضكم "${provider?.business_name || provider?.name || 'معرض سيارات'}" عبر تطبيق راموسة.`);
+            window.open(`https://wa.me/${whatsappNum.toString().replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
         }
     };
 
@@ -268,7 +288,6 @@ const CarProviderProfile: React.FC = () => {
     }
 
     const businessName = provider.business_name || provider.name || 'معرض سيارات';
-    const whatsappMessage = encodeURIComponent(`مرحباً، رأيت معرضك "${businessName}" عبر تطبيق راموسة.`);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 md:pb-20 animate-fade-in w-full">
@@ -352,16 +371,16 @@ const CarProviderProfile: React.FC = () => {
                                 <div className="hidden sm:grid grid-cols-2 gap-3 mb-6">
                                     <ActionButton
                                         onClick={handleCall}
-                                        className={!showPhone ? "!bg-blue-600 hover:!bg-blue-700 text-white" : "!bg-white dark:!bg-slate-800 !text-slate-900 dark:!text-white border border-slate-200 dark:border-slate-700"}
+                                        className="!bg-blue-600 hover:!bg-blue-700 text-white"
                                         disabled={!provider.phone}
                                     >
-                                        <Icon name={showPhone ? "Phone" : "Eye"} className="w-4 h-4" />
-                                        {showPhone ? provider.phone : 'إظهار الرقم'}
+                                        <Icon name="Phone" className="w-4 h-4" />
+                                        اتصال
                                     </ActionButton>
 
                                     {(whatsappNumber) && (
                                         <ActionButton
-                                            href={`https://wa.me/${whatsappNumber.toString().replace(/[^0-9]/g, '')}?text=${whatsappMessage}`}
+                                            onClick={handleWhatsApp}
                                             className="!bg-green-500 hover:!bg-green-600 text-white"
                                         >
                                             <Icon name="MessageCircle" className="w-4 h-4" /> واتساب
@@ -543,12 +562,18 @@ const CarProviderProfile: React.FC = () => {
                                                     key={listing.id}
                                                     listing={listing}
                                                     viewMode="grid"
+                                                    showToast={showToast}
+                                                    isAuthenticated={isAuthenticated}
+                                                    onLoginClick={onLoginClick}
                                                 />
                                             ) : (
                                                 <CarListingCard
                                                     key={listing.id}
                                                     listing={listing}
                                                     viewMode="grid"
+                                                    showToast={showToast}
+                                                    isAuthenticated={isAuthenticated}
+                                                    onLoginClick={onLoginClick}
                                                 />
                                             )
                                         ))}
@@ -576,16 +601,16 @@ const CarProviderProfile: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <ActionButton
                         onClick={handleCall}
-                        className={!showPhone ? "!bg-blue-600 hover:!bg-blue-700 text-white" : "!bg-slate-100 dark:!bg-slate-800 !text-slate-900 dark:!text-white border border-slate-200 dark:border-slate-700"}
+                        className="!bg-blue-600 hover:!bg-blue-700 text-white"
                         disabled={!provider.phone}
                     >
                         <Icon name="Phone" className="w-5 h-5" />
-                        {showPhone ? provider.phone : 'اتصال'}
+                        اتصال
                     </ActionButton>
 
                     {(whatsappNumber) ? (
                         <ActionButton
-                            href={`https://wa.me/${whatsappNumber.toString().replace(/[^0-9]/g, '')}?text=${whatsappMessage}`}
+                            onClick={handleWhatsApp}
                             className="!bg-green-500 hover:!bg-green-600 text-white"
                         >
                             <Icon name="MessageCircle" className="w-5 h-5" /> واتساب

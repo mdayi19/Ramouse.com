@@ -359,6 +359,8 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                                         listing={listing}
                                                         viewMode={viewMode}
                                                         showToast={showToast}
+                                                        isAuthenticated={isAuthenticated}
+                                                        onLoginClick={onLoginClick}
                                                     />
                                                 </div>
                                             );
@@ -369,6 +371,8 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                                     listing={listing}
                                                     viewMode={viewMode}
                                                     showToast={showToast}
+                                                    isAuthenticated={isAuthenticated}
+                                                    onLoginClick={onLoginClick}
                                                 />
                                             );
                                         }

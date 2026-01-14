@@ -372,6 +372,8 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                                         listing={listing}
                                                         viewMode={viewMode}
                                                         showToast={showToast}
+                                                        isAuthenticated={isAuthenticated}
+                                                        onLoginClick={onLoginClick}
                                                     />
                                                 </div>
                                             );
@@ -382,6 +384,8 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                                     listing={listing}
                                                     viewMode={viewMode}
                                                     showToast={showToast}
+                                                    isAuthenticated={isAuthenticated}
+                                                    onLoginClick={onLoginClick}
                                                 />
                                             );
                                         }

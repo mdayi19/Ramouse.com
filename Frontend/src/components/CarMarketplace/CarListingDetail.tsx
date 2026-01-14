@@ -123,10 +123,21 @@ const SpecItem: React.FC<{ icon: any; label: string; value: string | number | un
     );
 };
 
-const CarListingDetail: React.FC = () => {
+interface CarListingDetailProps {
+    isAuthenticated?: boolean;
+    setShowLogin?: (show: boolean) => void;
+    showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+}
+
+const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const { showToast, isAuthenticated, setShowLogin } = useAppState();
+    const appState = useAppState();
+
+    // Use props if provided, fallback to useAppState
+    const isAuthenticated = props.isAuthenticated ?? appState.isAuthenticated;
+    const setShowLogin = props.setShowLogin ?? appState.setShowLogin;
+    const showToast = props.showToast ?? appState.showToast;
 
     const [listing, setListing] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
@@ -379,6 +390,22 @@ const CarListingDetail: React.FC = () => {
                         videoUrl={listing.video_url || undefined}
                         t={t}
                     />
+
+                    {/* Video Button - Outside Gallery */}
+                    {listing.video_url && (
+                        <button
+                            onClick={() => window.open(listing.video_url!, '_blank', 'noopener,noreferrer')}
+                            className="mt-4 w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-xl flex items-center justify-center gap-3 text-white font-bold transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                        >
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <span>مشاهدة الفيديو</span>
+                            <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
@@ -400,12 +427,6 @@ const CarListingDetail: React.FC = () => {
                                         💎 {t.ui.featured}
                                     </span>
                                 )}
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${listing.listing_type === 'rent'
-                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    }`}>
-                                    {listing.listing_type === 'rent' ? t.ui.rent : t.ui.sale}
-                                </span>
                             </div>
 
                             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight">

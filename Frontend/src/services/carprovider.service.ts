@@ -248,6 +248,29 @@ export class CarProviderService {
         return response.data;
     }
 
+    static async exportAnalytics(days: number = 30, format: 'csv' | 'json' = 'csv') {
+        const response = await api.get('/car-provider/analytics/export', {
+            params: { days, format },
+            responseType: format === 'csv' ? 'blob' : 'json'
+        });
+
+        if (format === 'csv') {
+            // Create download link for CSV
+            const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `analytics_report_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            return { success: true };
+        }
+
+        return response.data;
+    }
+
     static async getProfile() {
         const response = await api.get('/car-provider/profile');
         return response.data.provider;

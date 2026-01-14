@@ -519,6 +519,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/profile', [CarProviderController::class, 'updateProfile']);
         Route::get('/stats', [CarProviderController::class, 'getStats']);
         Route::get('/analytics', [CarProviderController::class, 'getAnalytics']);
+        Route::get('/analytics/export', [CarProviderController::class, 'exportAnalytics']);
 
         // Car Listing Management (Provider)
         Route::get('/listings', [CarProviderController::class, 'getMyListings']);

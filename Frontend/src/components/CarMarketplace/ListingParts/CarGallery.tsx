@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, ZoomIn, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ZoomIn, Maximize2, Play, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../lib/utils';
 import { getImageUrl } from '../../../utils/helpers';
@@ -25,7 +25,6 @@ const CarGallery: React.FC<CarGalleryProps> = ({
 }) => {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [showGalleryModal, setShowGalleryModal] = useState(false);
-    const [showVideoModal, setShowVideoModal] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -49,7 +48,6 @@ const CarGallery: React.FC<CarGalleryProps> = ({
         if (e.key === 'Escape') {
             setShowGalleryModal(false);
             setIsZoomed(false);
-            setShowVideoModal(false);
         }
     };
 
@@ -123,18 +121,7 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                         </>
                     )}
 
-                    {/* Video Button */}
-                    {videoUrl && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowVideoModal(true);
-                            }}
-                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-red-600 hover:text-white transition-all duration-300 group-hover:scale-110 z-20"
-                        >
-                            <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-current border-b-[10px] border-b-transparent ml-1" />
-                        </button>
-                    )}
+
 
                     {/* Controls */}
                     <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
@@ -184,38 +171,7 @@ const CarGallery: React.FC<CarGalleryProps> = ({
                 )}
             </div>
 
-            {/* Video Modal */}
-            <AnimatePresence>
-                {showVideoModal && videoUrl && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
-                        onClick={() => setShowVideoModal(false)}
-                    >
-                        <button
-                            onClick={() => setShowVideoModal(false)}
-                            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors"
-                        >
-                            <X className="w-8 h-8" />
-                        </button>
-                        <div
-                            className="w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <iframe
-                                src={videoUrl.includes('youtube') || videoUrl.includes('youtu.be')
-                                    ? videoUrl.replace('watch?v=', 'embed/').split('&')[0]
-                                    : videoUrl}
-                                className="w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
 
             {/* Enhanced Gallery Modal */}
             <AnimatePresence>
