@@ -268,12 +268,19 @@ export class CarProviderService {
         return response.data;
     }
 
-    static async updateListing(id: number, data: FormData) {
-        data.append('_method', 'PUT');
-        const response = await api.post(`/car-provider/listings/${id}`, data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        return response.data;
+    static async updateListing(id: number, data: FormData | Record<string, any>) {
+        // Handle both FormData and plain objects
+        if (data instanceof FormData) {
+            data.append('_method', 'PUT');
+            const response = await api.post(`/car-provider/listings/${id}`, data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return response.data;
+        } else {
+            // Plain object - send as JSON with PUT method
+            const response = await api.put(`/car-provider/listings/${id}`, data);
+            return response.data;
+        }
     }
 
     static async deleteListing(id: number) {
