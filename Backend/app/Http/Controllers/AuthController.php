@@ -30,9 +30,58 @@ class AuthController extends Controller
             ->first();
 
         if ($user) {
+            // For provider types, verify their actual profile exists and check verification status
+            $actualRole = $user->role;
+
+            // Check for car_provider profile
+            if ($user->role === 'car_provider' || $user->carProvider()->exists()) {
+                $carProvider = $user->carProvider;
+                if ($carProvider && (!$carProvider->is_verified || !$carProvider->is_active)) {
+                    // Unverified/inactive car provider - don't allow any login
+                    return response()->json([
+                        'exists' => true,
+                        'type' => 'car_provider',
+                        'requiresPassword' => false,
+                        'pending_verification' => true,
+                        'message' => 'Your account is pending admin verification. Please wait for approval.',
+                    ]);
+                }
+                $actualRole = 'car_provider';
+            }
+
+            // Check for technician profile
+            if ($user->role === 'technician' || $user->technician()->exists()) {
+                $technician = $user->technician;
+                if ($technician && (!$technician->is_verified || !$technician->is_active)) {
+                    return response()->json([
+                        'exists' => true,
+                        'type' => 'technician',
+                        'requiresPassword' => false,
+                        'pending_verification' => true,
+                        'message' => 'Your account is pending admin verification. Please wait for approval.',
+                    ]);
+                }
+                $actualRole = 'technician';
+            }
+
+            // Check for tow_truck profile
+            if ($user->role === 'tow_truck' || $user->towTruck()->exists()) {
+                $towTruck = $user->towTruck;
+                if ($towTruck && (!$towTruck->is_verified || !$towTruck->is_active)) {
+                    return response()->json([
+                        'exists' => true,
+                        'type' => 'tow_truck',
+                        'requiresPassword' => false,
+                        'pending_verification' => true,
+                        'message' => 'Your account is pending admin verification. Please wait for approval.',
+                    ]);
+                }
+                $actualRole = 'tow_truck';
+            }
+
             return response()->json([
                 'exists' => true,
-                'type' => $user->role,
+                'type' => $actualRole,
                 'requiresPassword' => true,
             ]);
         }
@@ -113,6 +162,14 @@ class AuthController extends Controller
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
         } else {
+            // Safety check: Prevent users with provider profiles but wrong role from logging in as customer
+            if ($user->carProvider()->exists() || $user->technician()->exists() || $user->towTruck()->exists()) {
+                return response()->json([
+                    'message' => __('auth.account_configuration_error'),
+                    'error' => 'Your account has a profile type mismatch. Please contact support.',
+                ], 403);
+            }
+
             // Unknown or unauthorized role for this app login
             return response()->json(['message' => __('auth.unauthorized_role')], 403);
         }
@@ -378,9 +435,11 @@ class AuthController extends Controller
                 'role' => 'car_provider',
                 'is_admin' => false,
             ]);
-            // Explicitly force role save to prevent default 'user' role
-            $user->role = 'car_provider';
-            $user->save();
+
+            // Double-check and force role assignment to prevent database default 'user' role
+            // Use a fresh query to ensure the role is properly saved
+            \App\Models\User::where('id', $user->id)->update(['role' => 'car_provider']);
+            $user->refresh(); // Reload from database to confirm
 
             // Handle Profile Photo (Standard File Upload)
             $profilePhotoPath = null;
