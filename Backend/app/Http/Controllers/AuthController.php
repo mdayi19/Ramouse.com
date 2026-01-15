@@ -390,7 +390,7 @@ class AuthController extends Controller
                 'socials' => $request->socials ?? [],
                 'location' => $request->location ? \Illuminate\Support\Facades\DB::raw("ST_PointFromText('POINT(" . $request->location['longitude'] . " " . $request->location['latitude'] . ")', 4326)") : null,
                 'is_verified' => false, // Requires admin verification
-                'is_active' => true,
+                'is_active' => false, // Requires admin activation
                 'average_rating' => 5.0,
             ]);
 
@@ -654,7 +654,7 @@ class AuthController extends Controller
                 'socials' => $request->socials ?? [],
                 'location' => $request->location ? \Illuminate\Support\Facades\DB::raw("ST_PointFromText('POINT(" . $request->location['longitude'] . " " . $request->location['latitude'] . ")', 4326)") : null,
                 'is_verified' => false, // Requires admin verification
-                'is_active' => true,
+                'is_active' => false, // Requires admin activation
                 'average_rating' => 5.0,
             ]);
 
