@@ -131,6 +131,28 @@ export const providerAPI = {
     }
 };
 
+export const carProviderAPI = {
+    // Profile & Stats
+    getProfile: (forceRefresh = false) => api.get('/car-provider/profile', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    updateProfile: (data: any) => api.put('/car-provider/profile', data),
+    getStats: (forceRefresh = false) => api.get('/car-provider/stats', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    getAnalytics: (days: number = 7, forceRefresh = false) =>
+        api.get('/car-provider/analytics', { params: { days, ...(forceRefresh ? { _t: Date.now() } : {}) } }),
+
+    // Listings Management
+    getMyListings: (forceRefresh = false) => api.get('/car-provider/listings', forceRefresh ? { params: { _t: Date.now() } } : {}),
+
+    // Sponsor Management
+    getSponsorships: (forceRefresh = false) =>
+        api.get('/car-provider/sponsorships', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    calculateSponsorPrice: (days: number) =>
+        api.get('/car-provider/listings/sponsor-price', { params: { days } }),
+    sponsorListing: (listingId: number, days: number) =>
+        api.post(`/car-provider/listings/${listingId}/sponsor`, { days }),
+    unsponsorListing: (listingId: number) =>
+        api.post(`/car-provider/listings/${listingId}/unsponsor`),
+};
+
 export const ordersAPI = {
     getOrders: async (forceRefresh = false) => {
         const response = await api.get('/orders', forceRefresh ? { params: { _t: Date.now() } } : {});
@@ -329,6 +351,16 @@ export const adminAPI = {
             rejection_type,
             rejected_documents
         }),
+
+    // Sponsor Management
+    getSponsorSettings: () => api.get('/admin/sponsor/settings'),
+    updateSponsorSettings: (settings: any) => api.put('/admin/sponsor/settings', settings),
+    adminSponsorListing: (listingId: number, days: number) =>
+        api.post(`/admin/car-listings/${listingId}/sponsor`, { days }),
+    getAllSponsorships: (forceRefresh = false) =>
+        api.get('/admin/sponsor/sponsorships', forceRefresh ? { params: { _t: Date.now() } } : {}),
+    getSponsorshipRevenue: (forceRefresh = false) =>
+        api.get('/admin/sponsor/revenue', forceRefresh ? { params: { _t: Date.now() } } : {}),
 };
 
 export const storeAPI = {

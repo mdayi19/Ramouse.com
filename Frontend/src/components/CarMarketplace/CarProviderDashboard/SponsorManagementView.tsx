@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Calendar, DollarSign, TrendingUp, Clock, RefreshCw, Zap } from 'lucide-react';
 import SponsorListingModal from './SponsorListingModal';
+import { carProviderAPI } from '../../../lib/api';
 
 interface SponsorshipHistory {
     id: number;
@@ -55,13 +56,8 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
 
     const loadSponsorships = async () => {
         try {
-            const response = await fetch('/api/car-provider/sponsorships', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const data = await response.json();
-            setSponsorships(data.data || []);
+            const response = await carProviderAPI.getSponsorships();
+            setSponsorships(response.data.data || []);
         } catch (error) {
             console.error('Failed to load sponsorships:', error);
         }
@@ -69,17 +65,12 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
 
     const loadSettings = async () => {
         try {
-            const response = await fetch('/api/car-provider/listings/sponsor-price?days=1', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const data = await response.json();
-            if (data.breakdown) {
+            const response = await carProviderAPI.calculateSponsorPrice(1);
+            if (response.data.breakdown) {
                 setSettings({
-                    dailyPrice: data.breakdown.daily,
-                    weeklyPrice: data.breakdown.weekly,
-                    monthlyPrice: data.breakdown.monthly,
+                    dailyPrice: response.data.breakdown.daily,
+                    weeklyPrice: response.data.breakdown.weekly,
+                    monthlyPrice: response.data.breakdown.monthly,
                     maxDuration: 90,
                     minDuration: 1,
                     enabled: true
@@ -92,13 +83,8 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
 
     const loadListings = async () => {
         try {
-            const response = await fetch('/api/car-provider/listings', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const data = await response.json();
-            setListings(data.data || data || []);
+            const response = await carProviderAPI.getMyListings();
+            setListings(response.data.data || response.data || []);
         } catch (error) {
             console.error('Failed to load listings:', error);
         }
@@ -108,23 +94,16 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
         if (!confirm('هل تريد إلغاء رعاية هذا الإعلان؟ سيتم استرجاع المبلغ المتبقي.')) return;
 
         try {
-            const response = await fetch(`/api/car-provider/listings/${listingId}/unsponsor`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
+            const response = await carProviderAPI.unsponsorListing(listingId);
 
-            const data = await response.json();
-
-            if (data.success) {
-                showToast(`تم إلغاء الرعاية. استرجاع: ${data.refund_amount} ريال`, 'success');
+            if (response.data.success) {
+                showToast(`تم إلغاء الرعاية. استرجاع: ${response.data.refund_amount} ريال`, 'success');
                 loadData();
             } else {
-                showToast(data.error || 'فشل إلغاء الرعاية', 'error');
+                showToast(response.data.error || 'فشل إلغاء الرعاية', 'error');
             }
-        } catch (error) {
-            showToast('حدث خطأ', 'error');
+        } catch (error: any) {
+            showToast(error.response?.data?.error || 'حدث خطأ', 'error');
         }
     };
 
