@@ -279,7 +279,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                             <div key={listing.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 transition-colors">
                                 <h4 className="font-bold mb-2 line-clamp-1">{listing.title}</h4>
                                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                    {listing.brand} {listing.model} - {listing.year}
+                                    {listing.brand?.name || listing.brand} {listing.model} - {listing.year}
                                 </div>
                                 <button
                                     onClick={() => {
