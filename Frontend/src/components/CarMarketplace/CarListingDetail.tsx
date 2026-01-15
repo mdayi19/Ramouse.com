@@ -21,6 +21,7 @@ import QuickSpecsBar from './ListingParts/QuickSpecsBar';
 import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
 import FeaturesShowcase from './ListingParts/FeaturesShowcase';
+import SponsoredListings from './ListingParts/SponsoredListings';
 import { CarBodyDiagram } from './CarBodyDiagram';
 
 // Helper for translations
@@ -539,10 +540,6 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
                             </div>
                         )}
 
-                        import SponsoredListings from './ListingParts/SponsoredListings';
-                        // ... (imports)
-
-                        // ... (in return statement)
                         {/* Sponsored Listings */}
                         <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
                             <SponsoredListings
