@@ -356,7 +356,9 @@ class CarProviderController extends Controller
                     'views' => $listing->views_count,
                     'contacts' => $contacts,
                     'price' => $listing->price,
-                    'listing_type' => $listing->listing_type
+                    'listing_type' => $listing->listing_type,
+                    'image' => ($listing->photos ?? [])[0] ?? null,
+                    'is_available' => $listing->is_available
                 ];
             });
 
@@ -400,7 +402,8 @@ class CarProviderController extends Controller
                 'growth' => [
                     'views' => $calculateGrowth($currentViews, $previousViews),
                     'contacts' => $calculateGrowth($currentContacts, $previousContacts),
-                    'favorites' => $calculateGrowth($currentFavorites, $previousFavorites)
+                    'favorites' => $calculateGrowth($currentFavorites, $previousFavorites),
+                    'shares' => $calculateGrowth($currentEvents['share'] ?? 0, $previousEvents['share'] ?? 0)
                 ],
                 'conversion_rates' => [
                     'view_to_contact' => $viewToContactRate,
@@ -409,6 +412,51 @@ class CarProviderController extends Controller
                 'events_breakdown' => $eventsBreakdown,
                 'listings_by_type' => $listingsByType
             ]
+        ]);
+    }
+
+    /**
+     * Get detailed analytics for listings (paginated)
+     */
+    public function getDetailedAnalytics(Request $request)
+    {
+        $user = auth('sanctum')->user();
+        $days = (int) ($request->days ?? 30);
+        $perPage = (int) ($request->per_page ?? 10);
+
+        $startDate = now()->subDays($days);
+
+        $listings = CarListing::where('owner_id', $user->id)
+            ->where('seller_type', 'provider')
+            ->with(['category', 'brand'])
+            ->withCount([
+                    'analytics as period_views' => function ($query) use ($startDate) {
+                        $query->where('event_type', 'view')->where('created_at', '>=', $startDate);
+                    },
+                    'analytics as period_unique_visitors' => function ($query) use ($startDate) {
+                        $query->where('event_type', 'view')
+                            ->where('created_at', '>=', $startDate)
+                            ->select(DB::raw('count(distinct user_ip)'));
+                    },
+                    'analytics as period_contact_phone' => function ($query) use ($startDate) {
+                        $query->where('event_type', 'contact_phone')->where('created_at', '>=', $startDate);
+                    },
+                    'analytics as period_contact_whatsapp' => function ($query) use ($startDate) {
+                        $query->where('event_type', 'contact_whatsapp')->where('created_at', '>=', $startDate);
+                    },
+                    'analytics as period_favorites' => function ($query) use ($startDate) {
+                        $query->where('event_type', 'favorite')->where('created_at', '>=', $startDate);
+                    },
+                    'analytics as period_shares' => function ($query) use ($startDate) {
+                        $query->where('event_type', 'share')->where('created_at', '>=', $startDate);
+                    }
+                ])
+            ->orderBy('period_views', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $listings
         ]);
     }
 

@@ -48,11 +48,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
         );
     }
 
-    const dailyData = analytics.daily_data || [];
-    const totalViews = dailyData.reduce((sum: number, day: any) => sum + (day.views || 0), 0);
-    const totalVisitors = dailyData.reduce((sum: number, day: any) => sum + (day.visitors || 0), 0);
-    const totalPhoneClicks = dailyData.reduce((sum: number, day: any) => sum + (day.phone_clicks || 0), 0);
-    const totalFavorites = dailyData.reduce((sum: number, day: any) => sum + (day.favorites || 0), 0);
+    const totalViews = analytics.total_events?.view || 0;
+    const totalVisitors = analytics.unique_visitors || 0;
+    const totalPhoneClicks = analytics.total_events?.contact_phone || 0;
+    const totalFavorites = analytics.total_favorites || 0;
+
+    const viewsHistory = analytics.views_history || [];
 
     return (
         <div className="space-y-6">
@@ -108,28 +109,22 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
             {/* Daily Trend Chart (Simplified) */}
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
                 <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-                    الاتجاه اليومي
+                    سجل المشاهدات اليومي
                 </h4>
-                {dailyData.length > 0 ? (
+                {viewsHistory.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-700">
                                 <tr>
                                     <th className="px-4 py-2 text-right">التاريخ</th>
                                     <th className="px-4 py-2 text-right">المشاهدات</th>
-                                    <th className="px-4 py-2 text-right">الزوار</th>
-                                    <th className="px-4 py-2 text-right">نقرات الهاتف</th>
-                                    <th className="px-4 py-2 text-right">الإعجابات</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                {dailyData.slice(0, 10).map((day: any, index: number) => (
+                                {viewsHistory.map((day: any, index: number) => (
                                     <tr key={index}>
                                         <td className="px-4 py-2">{day.date}</td>
-                                        <td className="px-4 py-2">{day.views || 0}</td>
-                                        <td className="px-4 py-2">{day.visitors || 0}</td>
-                                        <td className="px-4 py-2">{day.phone_clicks || 0}</td>
-                                        <td className="px-4 py-2">{day.favorites || 0}</td>
+                                        <td className="px-4 py-2">{day.value || 0}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -147,9 +142,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
                 <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
                     أداء الإعلانات
                 </h4>
-                {analytics.listings && analytics.listings.length > 0 ? (
+                {analytics.top_performing_listings && analytics.top_performing_listings.length > 0 ? (
                     <div className="space-y-3">
-                        {analytics.listings.map((listing: any) => (
+                        {analytics.top_performing_listings.map((listing: any) => (
                             <div
                                 key={listing.id}
                                 className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700 rounded-lg"
@@ -159,17 +154,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
                                         {listing.title}
                                     </h5>
                                     <p className="text-sm text-slate-500">
-                                        {listing.year} • {listing.mileage} كم
+                                        {listing.price.toLocaleString()} ر.س • {listing.listing_type === 'sale' ? 'بيع' : 'إيجار'}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-6 text-sm">
                                     <div className="text-center">
                                         <Eye className="w-4 h-4 mx-auto mb-1 text-blue-500" />
-                                        <span className="font-bold">{listing.views_count}</span>
+                                        <span className="font-bold">{listing.views}</span>
                                     </div>
                                     <div className="text-center">
-                                        <Heart className="w-4 h-4 mx-auto mb-1 text-red-500" />
-                                        <span className="font-bold">{listing.favorites_count || 0}</span>
+                                        <MousePointerClick className="w-4 h-4 mx-auto mb-1 text-green-500" />
+                                        <span className="font-bold">{listing.contacts || 0}</span>
                                     </div>
                                 </div>
                             </div>

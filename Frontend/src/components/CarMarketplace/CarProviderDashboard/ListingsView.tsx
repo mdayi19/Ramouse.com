@@ -9,6 +9,7 @@ import { CarProviderService } from '../../../services/carprovider.service';
 import { CarListingWizard } from '../CarListingWizard';
 import { AnalyticsCard } from './AnalyticsCard';
 import ProviderDashboardService from '../../../services/providerDashboard.service';
+import { getImageUrl } from '../../../utils/helpers';
 
 // Helper to safely extract all rates
 const getRates = (listing: any) => {
@@ -296,8 +297,10 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
             // Load analytics if not already loaded
             if (!analyticsData[listingId]) {
                 try {
-                    const data = await ProviderDashboardService.getListingAnalytics(listingId);
-                    setAnalyticsData(prev => ({ ...prev, [listingId]: data }));
+                    const response: any = await ProviderDashboardService.getListingAnalytics(listingId);
+                    if (response.success && response.analytics) {
+                        setAnalyticsData(prev => ({ ...prev, [listingId]: response.analytics }));
+                    }
                 } catch (error) {
                     showToast('فشل تحميل الإحصائيات', 'error');
                 }
@@ -530,7 +533,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-20 h-14 rounded-xl overflow-hidden bg-slate-100 relative shadow-sm group-hover:shadow-md transition-shadow">
                                                                 <img
-                                                                    src={listing.photos?.[0] || '/placeholder-car.jpg'}
+                                                                    src={getImageUrl(listing.photos?.[0]) || '/placeholder-car.jpg'}
                                                                     alt={listing.title}
                                                                     loading="lazy"
                                                                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
@@ -755,7 +758,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                         <div className="flex gap-4 mb-4">
                                             <div className="w-28 h-28 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 relative shadow-inner">
                                                 <img
-                                                    src={listing.photos?.[0] || '/placeholder-car.jpg'}
+                                                    src={getImageUrl(listing.photos?.[0]) || '/placeholder-car.jpg'}
                                                     alt={listing.title}
                                                     loading="lazy"
                                                     className="w-full h-full object-cover"

@@ -10,7 +10,7 @@ import Icon from '../../Icon';
 import { OverviewView } from './OverviewView';
 import { ListingsView } from './ListingsView';
 import { SettingsView } from './SettingsView';
-import { AnalyticsView } from '../AnalyticsView';
+import { AnalyticsView } from './AnalyticsView';
 
 // Customer/Shared Views
 import MyOrders from '../../MyOrders';

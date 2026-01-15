@@ -22,6 +22,17 @@ class FavoriteController extends Controller
         // Toggle
         $isFavorited = UserCarFavorite::toggle($user->id, $listingId);
 
+        // Track analytics if added
+        if ($isFavorited) {
+            \App\Models\CarListingAnalytic::create([
+                'car_listing_id' => $listingId,
+                'event_type' => 'favorite',
+                'user_id' => $user->id,
+                'user_ip' => $request->ip(),
+                'metadata' => ['source' => 'toggle_favorite']
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'is_favorited' => $isFavorited,

@@ -248,6 +248,13 @@ export class CarProviderService {
         return response.data;
     }
 
+    static async getDetailedAnalytics(page: number = 1, perPage: number = 10, days: number = 30) {
+        const response = await api.get('/car-provider/analytics/detailed', {
+            params: { page, per_page: perPage, days }
+        });
+        return response.data;
+    }
+
     static async exportAnalytics(days: number = 30, format: 'csv' | 'json' = 'csv') {
         const response = await api.get('/car-provider/analytics/export', {
             params: { days, format },
@@ -372,7 +379,7 @@ export class CarProviderService {
 
     // Listing Analytics
     static async getListingAnalytics(listingId: number, days: number = 30) {
-        const response = await api.get(`/car-analytics/listing/${listingId}`, { params: { days } });
+        const response = await api.get(`/car-provider/listings/${listingId}/analytics`, { params: { days } });
         return response.data;
     }
 

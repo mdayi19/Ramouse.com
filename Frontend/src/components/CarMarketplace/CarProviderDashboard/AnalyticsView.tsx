@@ -1,15 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import {
     BarChart, Calendar, Eye, MousePointerClick,
-    Heart, TrendingUp, ArrowUp, ArrowDown, Activity, RefreshCw, Share2, Phone, MessageCircle, Download
+    Heart, TrendingUp, ArrowUp, ArrowDown, Activity, RefreshCw, Share2, Download,
+    Image as ImageIcon, Phone
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import Icon from '../../Icon';
+import { getImageUrl } from '../../../utils/helpers';
+import { AnalyticsListingsTable } from './AnalyticsListingsTable';
 
 interface AnalyticsViewProps {
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
+
+const AnalyticsSkeleton = () => (
+    <div className="space-y-6 pb-20 animate-pulse">
+        <div className="flex justify-between items-center h-16">
+            <div className="space-y-2">
+                <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+            </div>
+            <div className="flex gap-2">
+                <div className="h-10 w-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                <div className="h-10 w-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+            </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+            ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-96">
+            <div className="lg:col-span-2 h-full bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+            <div className="h-full bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+        </div>
+    </div>
+);
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
     const [period, setPeriod] = useState<number>(30);
@@ -40,7 +67,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
         try {
             const res = await CarProviderService.getProviderAnalytics(period);
 
-            // Map the backend response to the format expected by the component
             const mappedData = {
                 summary: {
                     total_views: res.analytics?.total_events?.view || 0,
@@ -49,15 +75,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
                         (res.analytics?.total_events?.contact_whatsapp || 0),
                     contacts_growth: res.analytics?.growth?.contacts || 0,
                     total_favorites: res.analytics?.total_favorites || 0,
-                    favorites_growth: res.analytics?.growth?.favorites || 0
+                    favorites_growth: res.analytics?.growth?.favorites || 0,
+                    total_shares: res.analytics?.total_events?.share || 0,
+                    shares_growth: res.analytics?.growth?.shares || 0
                 },
-                events_breakdown: res.analytics?.events_breakdown || [
-                    { name: 'مشاهدات', name_en: 'Views', value: 0, color: '#3b82f6' },
-                    { name: 'اتصال هاتف', name_en: 'Phone Calls', value: 0, color: '#22c55e' },
-                    { name: 'واتساب', name_en: 'WhatsApp', value: 0, color: '#25d366' },
-                    { name: 'مفضلة', name_en: 'Favorites', value: 0, color: '#ef4444' },
-                    { name: 'مشاركة', name_en: 'Shares', value: 0, color: '#8b5cf6' },
-                ],
+                events_breakdown: res.analytics?.events_breakdown || [],
                 conversion_rates: res.analytics?.conversion_rates || { view_to_contact: 0, view_to_favorite: 0 },
                 listings_by_type: res.analytics?.listings_by_type || { sale: 0, rent: 0 },
                 views_history: res.analytics?.views_history || [],
@@ -67,46 +89,23 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
             setData(mappedData);
         } catch (error: any) {
             console.error('Failed to load analytics:', error);
-            showToast(error.response?.data?.message || 'فشل تحميل الإحصائيات', 'error');
-            // Set empty data structure instead of mock data
-            setData({
-                summary: { total_views: 0, views_growth: 0, total_contacts: 0, contacts_growth: 0, total_favorites: 0, favorites_growth: 0 },
-                events_breakdown: [],
-                conversion_rates: { view_to_contact: 0, view_to_favorite: 0 },
-                listings_by_type: { sale: 0, rent: 0 },
-                views_history: [],
-                top_listings: []
-            });
+            showToast('فشل تحميل الإحصائيات', 'error');
+            setData(null);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
-    if (loading && !data) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <Icon name="Loader" className="w-10 h-10 animate-spin text-primary" />
-            </div>
-        );
-    }
+    if (loading && !data) return <AnalyticsSkeleton />;
 
-    // Calculate max value for chart scaling
     const maxView = data?.views_history?.reduce((max: number, item: any) => Math.max(max, item.value), 0) || 100;
 
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
+        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
     };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
-    };
+    const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
     return (
         <motion.div
@@ -115,275 +114,373 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
             animate="visible"
             className="space-y-6 pb-20"
         >
-            {/* Header & Controls */}
-            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Header */}
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-1">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">الإحصائيات</h2>
-                    <p className="text-slate-600 dark:text-slate-400 mt-1">تتبع أداء إعلاناتك وتفاعل العملاء</p>
+                    <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300">
+                        الإحصائيات
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                        تحليل أداء إعلاناتك خلال آخر {period} يوم
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={handleExport}
                         disabled={exporting || loading}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all disabled:opacity-50 shadow-sm"
-                        title="تصدير التقرير"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all disabled:opacity-50"
                     >
                         <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
-                        <span className="text-sm font-medium hidden sm:inline">تصدير</span>
+                        <span className="hidden sm:inline">تصدير CSV</span>
                     </motion.button>
 
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => loadAnalytics()}
-                        disabled={loading || refreshing}
-                        className="p-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl transition-all disabled:opacity-50"
-                        title="تحديث البيانات"
-                    >
-                        <RefreshCw className={`w-5 h-5 ${loading || refreshing ? 'animate-spin' : ''}`} />
-                    </motion.button>
+                    <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
-                    <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl w-fit">
-                        {[
-                            { label: '7 أيام', value: 7 },
-                            { label: '30 يوم', value: 30 },
-                            { label: '90 يوم', value: 90 }
-                        ].map((opt) => (
-                            <button
-                                key={opt.value}
-                                onClick={() => setPeriod(opt.value)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === opt.value
-                                    ? 'bg-white dark:bg-slate-600 text-primary shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                                    }`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
+                    {[
+                        { label: '7 أيام', value: 7 },
+                        { label: '30 يوم', value: 30 },
+                        { label: '90 يوم', value: 90 }
+                    ].map((opt) => (
+                        <button
+                            key={opt.value}
+                            onClick={() => setPeriod(opt.value)}
+                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${period === opt.value
+                                ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
                 </div>
             </motion.div>
 
-            {/* Key Metrics Cards */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Metrics Grid */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard
-                    title="الظهور والمشاهدات"
-                    value={data?.summary?.total_views || 0}
+                    title="المشاهدات"
+                    value={data?.summary?.total_views}
                     growth={data?.summary?.views_growth}
                     icon={Eye}
                     color="blue"
                 />
                 <MetricCard
-                    title="نقرات الاتصال"
-                    value={data?.summary?.total_contacts || 0}
+                    title="الاتصالات"
+                    value={data?.summary?.total_contacts}
                     growth={data?.summary?.contacts_growth}
-                    icon={MousePointerClick}
+                    icon={Phone}
                     color="green"
                 />
                 <MetricCard
                     title="المفضلة"
-                    value={data?.summary?.total_favorites || 0}
+                    value={data?.summary?.total_favorites}
                     growth={data?.summary?.favorites_growth}
                     icon={Heart}
                     color="red"
                 />
+                <MetricCard
+                    title="المشاركات"
+                    value={data?.summary?.total_shares}
+                    growth={data?.summary?.shares_growth}
+                    icon={Share2}
+                    color="purple"
+                />
             </motion.div>
 
-            {/* Conversion Rates & Events Breakdown */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Conversion Rates */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-purple-500" />
-                        معدلات التحويل
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-                            <div className="relative inline-flex items-center justify-center w-20 h-20">
-                                <svg className="w-20 h-20 transform -rotate-90">
-                                    <circle cx="40" cy="40" r="35" stroke="#e2e8f0" strokeWidth="6" fill="none" className="dark:stroke-slate-700" />
-                                    <circle
-                                        cx="40" cy="40" r="35"
-                                        stroke="#22c55e"
-                                        strokeWidth="6"
-                                        fill="none"
-                                        strokeDasharray={`${(data?.conversion_rates?.view_to_contact || 0) * 2.2} 220`}
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                                <span className="absolute text-lg font-bold text-green-600">{data?.conversion_rates?.view_to_contact || 0}%</span>
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">مشاهدة → اتصال</p>
-                        </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl">
-                            <div className="relative inline-flex items-center justify-center w-20 h-20">
-                                <svg className="w-20 h-20 transform -rotate-90">
-                                    <circle cx="40" cy="40" r="35" stroke="#e2e8f0" strokeWidth="6" fill="none" className="dark:stroke-slate-700" />
-                                    <circle
-                                        cx="40" cy="40" r="35"
-                                        stroke="#ef4444"
-                                        strokeWidth="6"
-                                        fill="none"
-                                        strokeDasharray={`${(data?.conversion_rates?.view_to_favorite || 0) * 2.2} 220`}
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                                <span className="absolute text-lg font-bold text-red-600">{data?.conversion_rates?.view_to_favorite || 0}%</span>
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">مشاهدة → مفضلة</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Enhanced Views Trend Chart */}
+                <motion.div
+                    variants={itemVariants}
+                    className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group"
+                >
+                    <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-50"></div>
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-blue-500" />
+                                نشاط المشاهدات اليومي
+                            </h3>
+                            <p className="text-sm text-slate-500 mt-1">توزيع المشاهدات على الأيام</p>
                         </div>
                     </div>
-                </div>
 
-                {/* Events Breakdown */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                        <BarChart className="w-5 h-5 text-blue-500" />
-                        توزيع الأحداث
-                    </h3>
-                    <div className="space-y-3">
-                        {data?.events_breakdown?.map((event: any, i: number) => {
-                            const maxValue = Math.max(...(data?.events_breakdown?.map((e: any) => e.value) || [1]));
-                            const percentage = maxValue > 0 ? (event.value / maxValue) * 100 : 0;
+                    <div className="h-72 flex items-end justify-between gap-1 sm:gap-2 px-2">
+                        {data?.views_history?.map((item: any, i: number) => {
+                            const heightPercentage = (item.value / maxView) * 100;
                             return (
-                                <div key={i} className="flex items-center gap-3">
-                                    <span className="w-20 text-xs text-slate-600 dark:text-slate-400 text-right">{event.name}</span>
-                                    <div className="flex-1 h-6 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${percentage}%` }}
-                                            transition={{ duration: 0.5, delay: i * 0.1 }}
-                                            className="h-full rounded-full"
-                                            style={{ backgroundColor: event.color }}
-                                        />
+                                <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar relative h-full justify-end">
+                                    <div className="absolute -top-12 opacity-0 group-hover/bar:opacity-100 transition-all bg-slate-900 text-white text-xs px-2 py-1.5 rounded-lg shadow-xl z-20 whitespace-nowrap -translate-y-2 group-hover/bar:translate-y-0 pointer-events-none">
+                                        <span className="font-bold">{item.value}</span> مشاهدة
+                                        <div className="text-[10px] text-slate-300 mt-0.5">{item.date}</div>
+                                        <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                                     </div>
-                                    <span className="w-12 text-sm font-bold text-slate-900 dark:text-white text-left">{event.value}</span>
+
+                                    <motion.div
+                                        initial={{ height: 0 }}
+                                        animate={{ height: `${Math.max(heightPercentage, 2)}%` }} // Min height 2%
+                                        transition={{ duration: 0.6, delay: i * 0.03, type: 'spring' }}
+                                        className={`w-full max-w-[40px] rounded-t-lg relative overflow-hidden transition-all duration-300
+                                            ${i === data.views_history.length - 1 ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-400 dark:hover:bg-blue-500'}
+                                        `}
+                                    >
+                                        <div className="absolute inset-x-0 bottom-0 top-0 bg-gradient-to-t from-black/5 to-transparent"></div>
+                                    </motion.div>
+
+                                    <span className="text-[10px] sm:text-xs text-slate-400 font-medium rotate-0 group-hover/bar:text-blue-500 transition-colors">
+                                        {item.date.split(' ')[0]}
+                                    </span>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-            </motion.div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Views Chart */}
-                <motion.div variants={itemVariants} className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-blue-500" />
-                            تحليل المشاهدات
-                        </h3>
-                    </div>
-
-                    <div className="h-64 flex items-end justify-between gap-2">
-                        {data?.views_history?.map((item: any, i: number) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                                <div className="relative w-full flex justify-center">
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-xs px-2 py-1 rounded pointer-events-none whitespace-nowrap z-10 shadow-lg">
-                                        {item.value} مشاهدة
-                                    </div>
-                                    {/* Bar */}
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${(item.value / maxView) * 100}%` }}
-                                        transition={{ duration: 0.5, delay: i * 0.05 }}
-                                        className="w-full max-w-[40px] bg-blue-100 dark:bg-blue-900/30 rounded-t-lg transition-colors group-hover:bg-blue-500 overflow-hidden relative"
-                                    >
-                                        <div
-                                            className="absolute bottom-0 left-0 right-0 bg-blue-500/20 w-full h-full"
-                                        ></div>
-                                    </motion.div>
-                                </div>
-                                <span className="text-xs text-slate-500 transform -rotate-45 origin-top-left mt-2 md:rotate-0 md:mt-0 font-medium">
-                                    {item.date}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
                 </motion.div>
 
-                {/* Top Listings */}
-                <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                {/* Top Listings with Images */}
+                <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
                     <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-green-500" />
-                        الأعلى أداءً
+                        <TrendingUp className="w-5 h-5 text-emerald-500" />
+                        الإعلانات الأكثر رواجاً
                     </h3>
 
-                    <div className="space-y-4">
+                    <div className="flex-1 overflow-y-auto space-y-4 pr-1 -mr-1 custom-scrollbar">
                         {data?.top_listings?.map((item: any, i: number) => (
                             <motion.div
                                 key={i}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + (i * 0.1) }}
-                                className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer"
+                                transition={{ delay: 0.1 * i }}
+                                className="group flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:shadow-md transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-600"
                             >
-                                <span className={`
-                                    w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-transform group-hover:scale-110
+                                {/* Ranking Badge */}
+                                <div className={`
+                                    w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
                                     ${i === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                        i === 1 ? 'bg-slate-100 text-slate-700' :
-                                            'bg-orange-100 text-orange-700'}
+                                        i === 1 ? 'bg-slate-200 text-slate-700' :
+                                            i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'}
                                 `}>
                                     {i + 1}
-                                </span>
-                                <div className="flex-1">
-                                    <h4 className="font-medium text-slate-900 dark:text-white text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                                </div>
+
+                                {/* Thumbnail */}
+                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-200 shrink-0">
+                                    {item.image ? (
+                                        <img src={getImageUrl(item.image)} alt={item.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                            <ImageIcon className="w-5 h-5" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors">
                                         {item.title}
                                     </h4>
-                                    <div className="flex gap-3 mt-1 text-xs text-slate-500">
-                                        <span className="flex items-center gap-1">
+                                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                        <span className="flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">
                                             <Eye className="w-3 h-3" /> {item.views}
                                         </span>
                                         <span className="flex items-center gap-1">
-                                            <MousePointerClick className="w-3 h-3" /> {item.contacts}
+                                            {Number(item.price).toLocaleString()} ر.س
                                         </span>
                                     </div>
                                 </div>
                             </motion.div>
                         ))}
-
-                        {(!data?.top_listings || data.top_listings.length === 0) && (
-                            <div className="text-center py-8 text-slate-500 text-sm">
-                                لا توجد بيانات كافية
-                            </div>
-                        )}
                     </div>
                 </motion.div>
             </div>
+
+            {/* Insights Row */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                    <h3 className="font-bold mb-6 flex items-center gap-2 dark:text-white">
+                        <BarChart className="w-5 h-5 text-indigo-500" />
+                        تفاعل المستخدمين
+                    </h3>
+                    <div className="space-y-4">
+                        {data?.events_breakdown?.map((event: any, i: number) => (
+                            <div key={i}>
+                                <div className="flex justify-between text-sm mb-1.5">
+                                    <span className="text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: event.color }}></div>
+                                        {event.name}
+                                    </span>
+                                    <span className="font-bold dark:text-white">{event.value}</span>
+                                </div>
+                                <div className="h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(event.value / Math.max(...data.events_breakdown.map((e: any) => e.value), 1)) * 100}%` }}
+                                        transition={{ duration: 1, delay: i * 0.1 }}
+                                        className="h-full rounded-full"
+                                        style={{ backgroundColor: event.color }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                    <h3 className="font-bold mb-6 flex items-center gap-2 dark:text-white">
+                        <RefreshCw className="w-5 h-5 text-teal-500" />
+                        جودة التحويل
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 h-full content-center">
+                        <div className="relative group p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100/50 dark:from-slate-800 dark:to-emerald-900/20 border border-green-100 dark:border-green-900/30 flex flex-col items-center justify-center text-center">
+                            <div className="text-3xl font-extrabold text-green-600 dark:text-green-400 mb-1">
+                                {data?.conversion_rates?.view_to_contact}%
+                            </div>
+                            <div className="text-sm font-medium text-green-800 dark:text-green-300">مشاهدة ← اتصال</div>
+                        </div>
+                        <div className="relative group p-6 rounded-2xl bg-gradient-to-br from-red-50 to-pink-100/50 dark:from-slate-800 dark:to-pink-900/20 border border-red-100 dark:border-red-900/30 flex flex-col items-center justify-center text-center">
+                            <div className="text-3xl font-extrabold text-red-600 dark:text-red-400 mb-1">
+                                {data?.conversion_rates?.view_to_favorite}%
+                            </div>
+                            <div className="text-sm font-medium text-red-800 dark:text-red-300">مشاهدة ← مفضلة</div>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Detailed Listings Table */}
+            <motion.div variants={itemVariants}>
+                <AnalyticsListingsTable days={period} />
+            </motion.div>
         </motion.div>
     );
 };
 
-// Helper Component for Metrics
+const AreaChart = ({ data, color }: { data: any[], color: string }) => {
+    const max = Math.max(...data.map(d => d.value), 1);
+
+    // Generate optimized points
+    // We'll use a simple polyline strategy effectively as it handles responsiveness well with preserveAspectRatio="none"
+    const points = data.map((d, i) => {
+        const x = (i / (data.length - 1)) * 100;
+        const y = 100 - (d.value / max) * 100;
+        return `${x},${y}`;
+    });
+
+    const areaPath = `M 0,100 ${points.map(p => `L ${p}`).join(' ')} L 100,100 Z`;
+    const linePath = `M ${points[0]} ${points.slice(1).map(p => `L ${p}`).join(' ')}`;
+
+    return (
+        <div className="relative w-full h-full group/chart">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                        <stop offset="100%" stopColor={color} stopOpacity="0" />
+                    </linearGradient>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={color} />
+                        <stop offset="100%" stopColor={color} stopOpacity="0.8" />
+                    </linearGradient>
+                </defs>
+
+                {/* Area Fill */}
+                <motion.path
+                    d={areaPath}
+                    fill="url(#chartGradient)"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8 }}
+                />
+
+                {/* Stroke Line */}
+                <motion.path
+                    d={linePath}
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                />
+            </svg>
+
+            {/* Interactive Overlay & Tooltips */}
+            <div className="absolute inset-0 flex items-end justify-between hover:cursor-crosshair">
+                {data.map((item, i) => (
+                    <div key={i} className="flex-1 h-full relative group/point flex flex-col justify-end items-center">
+                        {/* Hover Indicator Line */}
+                        <div className="absolute top-0 bottom-0 w-px bg-slate-300 dark:bg-slate-600 opacity-0 group-hover/point:opacity-100 transition-opacity border-dashed border-l border-slate-300"></div>
+
+                        {/* Point Dot on the line */}
+                        <div
+                            className="absolute w-3 h-3 bg-white dark:bg-slate-800 border-2 border-blue-500 rounded-full opacity-0 group-hover/point:opacity-100 transition-all shadow-lg z-10"
+                            style={{
+                                bottom: `${(item.value / max) * 100}%`,
+                                transform: 'translateY(50%)'
+                            }}
+                        ></div>
+
+                        {/* Tooltip */}
+                        <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 opacity-0 group-hover/point:opacity-100 transition-all z-20 pointer-events-none min-w-[100px]">
+                            <div className="bg-slate-900/90 backdrop-blur-sm text-white text-xs py-2 px-3 rounded-xl shadow-xl border border-slate-700/50 text-center">
+                                <div className="font-bold text-lg leading-none mb-1">{item.value}</div>
+                                <div className="text-[10px] text-slate-400 font-medium">مشاهدة • {item.date}</div>
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45"></div>
+                            </div>
+                        </div>
+
+                        {/* X-Axis Label (only show some to avoid clutter?) 
+                             Actually we hide them and only show on hover or specific points. 
+                             Or lets scatter them. 
+                             For now, only show first, last, and middle? 
+                         */}
+                        <span className={`text-[10px] text-slate-400 mt-2 font-medium transition-colors group-hover/point:text-blue-500
+                            ${i % Math.ceil(data.length / 5) === 0 ? 'opacity-100' : 'opacity-0 lg:opacity-100'}
+                         `}>
+                            {item.date.split(' ')[0]}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
+};
+
 const MetricCard: React.FC<{
     title: string;
     value: number;
     growth?: number;
     icon: any;
-    color: 'blue' | 'green' | 'red';
+    color: 'blue' | 'green' | 'red' | 'purple';
 }> = ({ title, value, growth, icon: Icon, color }) => {
-    const colors = {
-        blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30',
-        green: 'bg-green-50 text-green-600 dark:bg-green-900/20 group-hover:bg-green-100 dark:group-hover:bg-green-900/30',
-        red: 'bg-red-50 text-red-600 dark:bg-red-900/20 group-hover:bg-red-100 dark:group-hover:bg-red-900/30'
+    const themes = {
+        blue: { bg: 'from-blue-500 to-blue-600', light: 'bg-blue-50 text-blue-600', dark: 'dark:bg-blue-900/20 dark:text-blue-400' },
+        green: { bg: 'from-green-500 to-green-600', light: 'bg-green-50 text-green-600', dark: 'dark:bg-green-900/20 dark:text-green-400' },
+        red: { bg: 'from-red-500 to-red-600', light: 'bg-red-50 text-red-600', dark: 'dark:bg-red-900/20 dark:text-red-400' },
+        purple: { bg: 'from-purple-500 to-purple-600', light: 'bg-purple-50 text-purple-600', dark: 'dark:bg-purple-900/20 dark:text-purple-400' }
     };
 
-    const isPositive = growth && growth >= 0;
+    const isPositive = (growth || 0) >= 0;
+    const theme = themes[color];
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 group hover:shadow-md transition-all duration-300">
+        <motion.div
+            whileHover={{ y: -5 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group"
+        >
+            <div className={`absolute top-0 right-0 w-1 h-full bg-gradient-to-b ${theme.bg}`}></div>
             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl transition-colors ${colors[color]}`}>
+                <div className={`p-3 rounded-xl ${theme.light} ${theme.dark}`}>
                     <Icon className="w-6 h-6" />
                 </div>
                 {growth !== undefined && (
-                    <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${isPositive
-                        ? 'text-green-600 bg-green-100 dark:bg-green-900/20'
-                        : 'text-red-600 bg-red-100 dark:bg-red-900/20'
+                    <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1.5 rounded-lg border ${isPositive
+                        ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+                        : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
                         }`}>
                         {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                         {Math.abs(growth)}%
@@ -394,9 +491,9 @@ const MetricCard: React.FC<{
             <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">
                 {title}
             </h3>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                {value.toLocaleString()}
+            <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                {value?.toLocaleString() || 0}
             </p>
-        </div>
+        </motion.div>
     );
 };
