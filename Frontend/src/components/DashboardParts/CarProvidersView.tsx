@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import {
-    Search, RefreshCw, CheckCircle, XCircle, Shield, Star,
-    Eye, Trash2, MapPin, Globe, Facebook, Instagram,
-    Phone, Mail, Image as ImageIcon, ExternalLink, X
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AdminService } from '../../services/admin.service';
+import { SYRIAN_CITIES } from '../../constants';
+import Modal from '../Modal';
+import Pagination from '../Pagination';
+import EmptyState from '../EmptyState';
+import Icon from '../Icon';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { ViewHeader } from './Shared';
 
 interface CarProvider {
     id: string; // phone
@@ -15,18 +20,12 @@ interface CarProvider {
     address: string;
     business_license?: string;
     description?: string;
-
-    // Status
     is_verified: boolean;
     is_active: boolean;
     is_trusted: boolean;
-
-    // Stats
     total_listings: number;
     created_at: string;
     wallet_balance: number;
-
-    // Media & Location
     profile_photo?: string;
     gallery?: string[];
     socials?: {
@@ -37,8 +36,6 @@ interface CarProvider {
     };
     latitude?: number;
     longitude?: number;
-
-    // Relations
     user?: {
         email?: string;
     };
@@ -51,7 +48,11 @@ interface Props {
 const CarProvidersView: React.FC<Props> = ({ showToast }) => {
     const [providers, setProviders] = useState<CarProvider[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [cityFilter, setCityFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'verified' | 'pending' | 'active' | 'inactive'>('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 6;
 
     // Modal State
     const [selectedProvider, setSelectedProvider] = useState<CarProvider | null>(null);
@@ -72,7 +73,7 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
             const data = await response.json();
             setProviders(data.data || data.data?.data || data);
         } catch (error) {
-            showToast('Failed to load providers', 'error');
+            showToast('فشل تحميل قائمة المزودين', 'error');
         } finally {
             setLoading(false);
         }
@@ -83,450 +84,424 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
             await action();
             showToast(successMsg, 'success');
             loadProviders();
-            // Update selected provider logic if needed, but reloading list is safer
-            if (selectedProvider) {
-                // Ideally verified/updated provider needs to be re-fetched or we close modal. 
-                // For simplicity, we close modal or just let list reload.
-                // let's keep modal open but update local state if possible or just close it?
-                // Closing modal is safest to avoid stale state.
-                setSelectedProvider(null);
-            }
         } catch (error) {
-            showToast('Action failed', 'error');
+            showToast('فشلت العملية', 'error');
         }
     };
 
     const toggleVerification = (provider: CarProvider) => {
         handleAction(
             () => AdminService.verifyCarProvider(provider.id, !provider.is_verified),
-            provider.is_verified ? 'Provider unverified' : 'Provider verified'
+            provider.is_verified ? 'تم إلغاء توثيق المزود' : 'تم توثيق المزود بنجاح'
         );
+        // Optimistic update for modal
+        if (selectedProvider && selectedProvider.id === provider.id) {
+            setSelectedProvider({ ...selectedProvider, is_verified: !provider.is_verified });
+        }
     };
 
     const toggleTrustedStratus = (provider: CarProvider) => {
         handleAction(
             () => AdminService.toggleTrustedCarProvider(provider.id, !provider.is_trusted),
-            !provider.is_trusted ? 'Provider marked as trusted' : 'Provider removed from trusted'
+            !provider.is_trusted ? 'تم تمييز المزود كموثوق' : 'تمت إزالة صفة موثوق من المزود'
         );
+        if (selectedProvider && selectedProvider.id === provider.id) {
+            setSelectedProvider({ ...selectedProvider, is_trusted: !provider.is_trusted });
+        }
     };
 
     const toggleActiveStatus = (provider: CarProvider) => {
         handleAction(
             () => AdminService.updateCarProviderStatus(provider.id, !provider.is_active),
-            !provider.is_active ? 'Provider activated' : 'Provider deactivated'
+            !provider.is_active ? 'تم تفعيل حساب المزود' : 'تم إيقاف تفعيل حساب المزود'
         );
+        if (selectedProvider && selectedProvider.id === provider.id) {
+            setSelectedProvider({ ...selectedProvider, is_active: !provider.is_active });
+        }
     };
 
     const handleDelete = (provider: CarProvider) => {
-        if (!window.confirm('Are you sure you want to delete this provider? This action cannot be undone.')) return;
+        if (!window.confirm('هل أنت متأكد أنك تريد حذف هذا المزود؟ لا يمكن التراجع عن هذا الإجراء.')) return;
         handleAction(
             () => AdminService.deleteCarProvider(provider.id),
-            'Provider deleted successfully'
+            'تم حذف المزود بنجاح'
         );
+        if (selectedProvider && selectedProvider.id === provider.id) {
+            setSelectedProvider(null);
+        }
     };
 
-    const filteredProviders = Array.isArray(providers) ? providers.filter(p =>
-        (p.business_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.phone || '').includes(searchQuery) ||
-        (p.city || '').toLowerCase().includes(searchQuery.toLowerCase())
-    ) : [];
+    const filteredProviders = useMemo(() => {
+        return providers.filter(p => {
+            const searchMatch = (p.business_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (p.phone || '').includes(searchTerm);
 
-    // --- Render Helpers ---
+            const cityMatch = cityFilter === 'all' || p.city === cityFilter;
 
-    const StatusBadge = ({ active, label, color }: { active: boolean, label: string, color: string }) => {
-        if (!active) return null;
-        const colorClasses = {
-            green: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-            purple: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-            blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-            red: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        };
-        return (
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClasses[color as keyof typeof colorClasses]}`}>
-                {label}
-            </span>
-        );
-    };
+            let statusMatch = true;
+            if (statusFilter === 'verified') statusMatch = p.is_verified;
+            if (statusFilter === 'pending') statusMatch = !p.is_verified;
+            if (statusFilter === 'active') statusMatch = p.is_active;
+            if (statusFilter === 'inactive') statusMatch = !p.is_active;
+
+            return searchMatch && cityMatch && statusMatch;
+        });
+    }, [providers, searchTerm, cityFilter, statusFilter]);
+
+    const paginatedProviders = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredProviders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredProviders, currentPage]);
+
+    useEffect(() => { setCurrentPage(1); }, [searchTerm, cityFilter, statusFilter]);
+
+    const StatCard = ({ title, value, icon, colorClass }: { title: string, value: number, icon: any, colorClass: string }) => (
+        <Card className="p-4 flex items-center gap-4">
+            <div className={`p-3 rounded-full ${colorClass} bg-opacity-10 text-opacity-100`}>
+                <Icon name={icon} className={`w-6 h-6 ${colorClass.replace('bg-', 'text-')}`} />
+            </div>
+            <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
+                <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{value}</p>
+            </div>
+        </Card>
+    );
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="bg-white dark:bg-darkcard p-8 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">جاري تحميل المزودين...</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Car Providers</h2>
-                    <p className="text-gray-600 dark:text-gray-400">Manage car provider accounts and verifications</p>
-                </div>
-                <button
-                    onClick={loadProviders}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors self-start sm:self-auto"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    Refresh
-                </button>
+            <ViewHeader title="مزودي السيارات" subtitle="إدارة حسابات معارض ووكالات السيارات، التوثيق، وحالة الحساب." />
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <StatCard title="إجمالي المزودين" value={providers.length} icon="Users" colorClass="bg-blue-500 text-blue-600" />
+                <StatCard title="نشط" value={providers.filter(p => p.is_active).length} icon="CheckCircle" colorClass="bg-green-500 text-green-600" />
+                <StatCard title="بانتظار التوثيق" value={providers.filter(p => !p.is_verified).length} icon="Clock" colorClass="bg-orange-500 text-orange-600" />
+                <StatCard title="موثوق" value={providers.filter(p => p.is_trusted).length} icon="Shield" colorClass="bg-purple-500 text-purple-600" />
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{providers.length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Total Providers</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="text-2xl font-bold text-green-600">{providers.filter(p => p.is_active).length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Active</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="text-2xl font-bold text-orange-500">{providers.filter(p => !p.is_verified).length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Pending Verification</div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="text-2xl font-bold text-purple-600">{providers.filter(p => p.is_trusted).length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Trusted</div>
-                </div>
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type="text"
-                    placeholder="Search by name, phone, city..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+            {/* Filters */}
+            <Card className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-none shadow-sm pb-6">
+                <Input
+                    placeholder="بحث بالاسم أو رقم الهاتف..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="md:col-span-2"
                 />
-            </div>
+                <select
+                    value={cityFilter}
+                    onChange={e => setCityFilter(e.target.value)}
+                    className="w-full h-10 px-3 py-2 text-sm border border-slate-200 dark:border-slate-800 rounded-xl dark:bg-slate-950 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                >
+                    <option value="all">كل المدن</option>
+                    {SYRIAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value as any)}
+                    className="w-full h-10 px-3 py-2 text-sm border border-slate-200 dark:border-slate-800 rounded-xl dark:bg-slate-950 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                >
+                    <option value="all">كل الحالات</option>
+                    <option value="verified">موثق</option>
+                    <option value="pending">بانتظار التوثيق</option>
+                    <option value="active">نشط</option>
+                    <option value="inactive">غير نشط</option>
+                </select>
+            </Card>
 
-            {/* Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Provider</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Business</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stats</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {filteredProviders.map((provider) => (
-                                <tr key={provider.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                    <td className="px-6 py-4">
+            {/* List */}
+            <div className="space-y-4">
+                {paginatedProviders.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {paginatedProviders.map(provider => (
+                            <Card key={provider.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+                                <div className="p-5 flex-1">
+                                    <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3">
                                             {provider.profile_photo ? (
-                                                <img src={provider.profile_photo} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                                <img src={provider.profile_photo} alt={provider.business_name} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                                             ) : (
-                                                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
-                                                    <span className="text-lg font-bold">{provider.business_name.charAt(0)}</span>
+                                                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                                    <Icon name="Briefcase" className="w-6 h-6" />
                                                 </div>
                                             )}
                                             <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">{provider.business_name}</div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">{provider.phone}</div>
+                                                <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1">{provider.business_name}</h3>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{provider.phone}</p>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-sm text-gray-900 dark:text-white">{provider.business_type}</div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">{provider.city}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            <StatusBadge active={provider.is_active} label="Active" color="green" />
-                                            <StatusBadge active={!provider.is_active} label="Inactive" color="red" />
-                                            <StatusBadge active={provider.is_verified} label="Verified" color="blue" />
-                                            <StatusBadge active={provider.is_trusted} label="Trusted" color="purple" />
+                                        <div className="flex flex-col gap-1 items-end">
+                                            {provider.is_active ? <Badge variant="success" className="text-[10px] py-0.5">نشط</Badge> : <Badge variant="destructive" className="text-[10px] py-0.5">غير نشط</Badge>}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-sm text-gray-900 dark:text-white font-medium">{provider.total_listings} Listings</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Registered {new Date(provider.created_at).toLocaleDateString()}
+                                    </div>
+
+                                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="MapPin" className="w-4 h-4 text-slate-400" />
+                                            <span className="truncate">{provider.city}</span>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => setSelectedProvider(provider)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                title="View Details"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(provider)}
-                                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                title="Delete Provider"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="Briefcase" className="w-4 h-4 text-slate-400" />
+                                            <span className="truncate">{provider.business_type}</span>
                                         </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                {filteredProviders.length === 0 && (
-                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                        No providers found matching your search.
+                                        <div className="flex items-center gap-2">
+                                            <Icon name="List" className="w-4 h-4 text-slate-400" />
+                                            <span>{provider.total_listings} إعلان</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {provider.is_verified && <Badge variant="info" className="flex items-center gap-1"><Icon name="CheckCircle" className="w-3 h-3" /> موثق</Badge>}
+                                        {provider.is_trusted && <Badge variant="warning" className="flex items-center gap-1"><Icon name="Shield" className="w-3 h-3" /> موثوق</Badge>}
+                                        {!provider.is_verified && <Badge variant="secondary" className="flex items-center gap-1">غير موثق</Badge>}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                    <Button size="sm" variant="ghost" onClick={() => setSelectedProvider(provider)} className="text-primary hover:bg-primary/10 w-full justify-center">
+                                        عرض التفاصيل
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
                     </div>
+                ) : (
+                    <EmptyState message="لم يتم العثور على مزودين يطابقون بحثك." />
                 )}
             </div>
 
-            {/* Detail Modal */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredProviders.length / ITEMS_PER_PAGE)}
+                onPageChange={setCurrentPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+                totalItems={filteredProviders.length}
+            />
+
+            {/* DETAIL MODAL */}
             {selectedProvider && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-                        {/* Modal Header */}
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    {selectedProvider.business_name}
-                                    {selectedProvider.is_trusted && <Shield className="w-5 h-5 text-purple-600 fill-purple-600" />}
-                                    {selectedProvider.is_verified && <CheckCircle className="w-5 h-5 text-blue-600 fill-blue-600 text-white" />}
-                                </h3>
-                                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
-                                    <span>{selectedProvider.business_type}</span>
-                                    <span>•</span>
-                                    <span>{selectedProvider.city}</span>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedProvider(null)}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                            >
-                                <X className="w-6 h-6 text-gray-500" />
-                            </button>
-                        </div>
+                <Modal
+                    title={selectedProvider.business_name}
+                    onClose={() => setSelectedProvider(null)}
+                    size="3xl"
+                >
+                    <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                        <button
+                            onClick={() => setActiveTab('info')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'info'
+                                ? 'border-primary text-primary dark:text-primary-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                }`}
+                        >
+                            المعلومات
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('media')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'media'
+                                ? 'border-primary text-primary dark:text-primary-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                }`}
+                        >
+                            الوسائط
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('location')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'location'
+                                ? 'border-primary text-primary dark:text-primary-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                }`}
+                        >
+                            الموقع
+                        </button>
+                    </div>
 
-                        {/* Tabs */}
-                        <div className="flex border-b border-gray-200 dark:border-gray-700 px-6">
-                            {(['info', 'media', 'location'] as const).map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize ${activeTab === tab
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                        }`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Modal Content */}
-                        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-
-                            {/* INFO TAB */}
-                            {activeTab === 'info' && (
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
-                                            <h4 className="font-semibold text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">Contact Info</h4>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                                                    <Phone className="w-5 h-5 text-gray-400" />
-                                                    <span dir="ltr">{selectedProvider.phone}</span>
-                                                </div>
-                                                {selectedProvider.user?.email && (
-                                                    <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                                                        <Mail className="w-5 h-5 text-gray-400" />
-                                                        <span>{selectedProvider.user.email}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                                                    <MapPin className="w-5 h-5 text-gray-400" />
-                                                    <span>{selectedProvider.address}, {selectedProvider.city}</span>
-                                                </div>
+                    <div className="min-h-[300px]">
+                        {activeTab === 'info' && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <h4 className="font-semibold text-slate-900 dark:text-white border-b pb-2 dark:border-slate-700">معلومات التواصل</h4>
+                                        <div className="space-y-3 text-sm">
+                                            <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                                                <Icon name="Phone" className="w-4 h-4 text-slate-400" />
+                                                <span dir="ltr">{selectedProvider.phone}</span>
                                             </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <h4 className="font-semibold text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">Socials</h4>
-                                            <div className="space-y-3">
-                                                {selectedProvider.socials?.facebook && (
-                                                    <a href={selectedProvider.socials.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-blue-600 hover:underline">
-                                                        <Facebook className="w-5 h-5" />
-                                                        <span>Facebook</span>
-                                                    </a>
-                                                )}
-                                                {selectedProvider.socials?.instagram && (
-                                                    <a href={selectedProvider.socials.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-pink-600 hover:underline">
-                                                        <Instagram className="w-5 h-5" />
-                                                        <span>Instagram</span>
-                                                    </a>
-                                                )}
-                                                {selectedProvider.socials?.website && (
-                                                    <a href={selectedProvider.socials.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:underline">
-                                                        <Globe className="w-5 h-5" />
-                                                        <span>Website</span>
-                                                    </a>
-                                                )}
-                                                {!selectedProvider.socials?.facebook && !selectedProvider.socials?.instagram && !selectedProvider.socials?.website && (
-                                                    <p className="text-gray-400 italic">No social links provided.</p>
-                                                )}
+                                            {selectedProvider.user?.email && (
+                                                <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                                                    <Icon name="Mail" className="w-4 h-4 text-slate-400" />
+                                                    <span>{selectedProvider.user.email}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                                                <Icon name="MapPin" className="w-4 h-4 text-slate-400" />
+                                                <span>{selectedProvider.address}, {selectedProvider.city}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {selectedProvider.description && (
-                                        <div>
-                                            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">About</h4>
-                                            <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{selectedProvider.description}</p>
-                                        </div>
-                                    )}
-
-                                    {selectedProvider.business_license && (
-                                        <div>
-                                            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Business License</h4>
-                                            <p className="text-gray-600 dark:text-gray-300 font-mono bg-gray-50 dark:bg-gray-900 p-2 rounded border border-gray-200 dark:border-gray-700 inline-block">
-                                                {selectedProvider.business_license}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* MEDIA TAB */}
-                            {activeTab === 'media' && (
-                                <div className="space-y-8">
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                            <ImageIcon className="w-5 h-5" /> Profile Photo
-                                        </h4>
-                                        {selectedProvider.profile_photo ? (
-                                            <div className="w-32 h-32 rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
-                                                <img src={selectedProvider.profile_photo} alt="Profile" className="w-full h-full object-cover" />
-                                            </div>
-                                        ) : (
-                                            <p className="text-gray-400 italic">No profile photo uploaded.</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                            <ImageIcon className="w-5 h-5" /> Gallery
-                                        </h4>
-                                        {selectedProvider.gallery && selectedProvider.gallery.length > 0 ? (
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                {selectedProvider.gallery.map((img, idx) => (
-                                                    <div key={idx} className="aspect-square rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
-                                                        <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-gray-400 italic">No gallery images uploaded.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* LOCATION TAB */}
-                            {activeTab === 'location' && (
-                                <div className="space-y-4">
-                                    {selectedProvider.latitude && selectedProvider.longitude ? (
-                                        <div className="space-y-4">
-                                            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-white">Coordinates</p>
-                                                    <p className="text-sm text-gray-500 font-mono mt-1">
-                                                        {selectedProvider.latitude}, {selectedProvider.longitude}
-                                                    </p>
-                                                </div>
-                                                <a
-                                                    href={`https://www.google.com/maps?q=${selectedProvider.latitude},${selectedProvider.longitude}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                                                >
-                                                    <MapPin className="w-4 h-4" />
-                                                    Open in Google Maps
-                                                    <ExternalLink className="w-3 h-3" />
+                                    <div className="space-y-4">
+                                        <h4 className="font-semibold text-slate-900 dark:text-white border-b pb-2 dark:border-slate-700">وسائل التواصل</h4>
+                                        <div className="space-y-3 text-sm">
+                                            {selectedProvider.socials?.facebook ? (
+                                                <a href={selectedProvider.socials.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-blue-600 hover:underline">
+                                                    <Icon name="Facebook" className="w-4 h-4" />
+                                                    <span>Facebook</span>
                                                 </a>
-                                            </div>
-                                            <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-500">
-                                                Map Preview (Integration requires API Key)
-                                            </div>
+                                            ) : <p className="text-slate-400 text-xs italic">غير متوفر</p>}
+                                            {selectedProvider.socials?.instagram && (
+                                                <a href={selectedProvider.socials.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-pink-600 hover:underline">
+                                                    <Icon name="Instagram" className="w-4 h-4" />
+                                                    <span>Instagram</span>
+                                                </a>
+                                            )}
+                                            {selectedProvider.socials?.website && (
+                                                <a href={selectedProvider.socials.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:underline">
+                                                    <Icon name="Globe" className="w-4 h-4" />
+                                                    <span>الموقع الإلكتروني</span>
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {selectedProvider.description && (
+                                    <div>
+                                        <h4 className="font-semibold text-slate-900 dark:text-white mb-2">نبذة</h4>
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">{selectedProvider.description}</p>
+                                    </div>
+                                )}
+
+                                {selectedProvider.business_license && (
+                                    <div>
+                                        <h4 className="font-semibold text-slate-900 dark:text-white mb-2">الرخصة التجارية</h4>
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 font-mono bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800 inline-block">
+                                            {selectedProvider.business_license}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'media' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h4 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <Icon name="User" className="w-4 h-4" /> الصورة الشخصية
+                                    </h4>
+                                    {selectedProvider.profile_photo ? (
+                                        <div className="w-24 h-24 rounded-xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-700">
+                                            <img src={selectedProvider.profile_photo} alt="Profile" className="w-full h-full object-cover" />
                                         </div>
                                     ) : (
-                                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                                            <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                                            <p>No location coordinates provided.</p>
-                                        </div>
+                                        <p className="text-slate-400 italic text-sm">لم يتم رفع صورة شخصية.</p>
                                     )}
                                 </div>
-                            )}
+                                <div>
+                                    <h4 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <Icon name="Image" className="w-4 h-4" /> المعرض
+                                    </h4>
+                                    {selectedProvider.gallery && selectedProvider.gallery.length > 0 ? (
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {selectedProvider.gallery.map((img, idx) => (
+                                                <div key={idx} className="aspect-square rounded-lg overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 group relative">
+                                                    <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-400 italic text-sm">لم يتم رفع صور.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
-                        </div>
-
-                        {/* Modal Footer / Actions */}
-                        <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-wrap gap-3 justify-end sticky bottom-0">
-
-                            <button
-                                onClick={() => toggleVerification(selectedProvider)}
-                                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${selectedProvider.is_verified
-                                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                        : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'
-                                    }`}
-                            >
-                                <CheckCircle className="w-4 h-4" />
-                                {selectedProvider.is_verified ? 'Revoke Verification' : 'Verify Provider'}
-                            </button>
-
-                            <button
-                                onClick={() => toggleTrustedStratus(selectedProvider)}
-                                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${selectedProvider.is_trusted
-                                        ? 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'
-                                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400'
-                                    }`}
-                            >
-                                <Shield className="w-4 h-4" />
-                                {selectedProvider.is_trusted ? 'Remove Trusted' : 'Mark Trusted'}
-                            </button>
-
-                            <button
-                                onClick={() => toggleActiveStatus(selectedProvider)}
-                                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${selectedProvider.is_active
-                                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400'
-                                        : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'
-                                    }`}
-                            >
-                                {selectedProvider.is_active ? (
-                                    <>
-                                        <XCircle className="w-4 h-4" /> Deactivate
-                                    </>
+                        {activeTab === 'location' && (
+                            <div className="space-y-4">
+                                {selectedProvider.latitude && selectedProvider.longitude ? (
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-900 dark:text-white">الإحداثيات</p>
+                                                <p className="text-sm text-slate-500 font-mono mt-1">
+                                                    {selectedProvider.latitude}, {selectedProvider.longitude}
+                                                </p>
+                                            </div>
+                                            <a
+                                                href={`https://www.google.com/maps?q=${selectedProvider.latitude},${selectedProvider.longitude}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+                                            >
+                                                <Icon name="MapPin" className="w-4 h-4" />
+                                                فتح في خرائط جوجل
+                                            </a>
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <>
-                                        <CheckCircle className="w-4 h-4" /> Activate
-                                    </>
+                                    <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                                        <Icon name="MapPin" className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
+                                        <p>لا تتوافر معلومات الموقع.</p>
+                                    </div>
                                 )}
-                            </button>
-
-                            <div className="w-px h-8 bg-gray-300 dark:bg-gray-600 mx-1 hidden sm:block"></div>
-
-                            <button
-                                onClick={() => handleDelete(selectedProvider)}
-                                className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 rounded-lg font-medium transition-colors flex items-center gap-2"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                            </button>
-                        </div>
+                            </div>
+                        )}
                     </div>
-                </div>
+
+                    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 flex flex-wrap gap-3 justify-end">
+                        <Button
+                            onClick={() => toggleVerification(selectedProvider)}
+                            variant={selectedProvider.is_verified ? 'warning' : 'success'}
+                            className="flex items-center gap-2"
+                        >
+                            <Icon name={selectedProvider.is_verified ? 'X' : 'CheckCircle'} className="w-4 h-4" />
+                            {selectedProvider.is_verified ? 'إلغاء التوثيق' : 'توثيق الحساب'}
+                        </Button>
+
+                        <Button
+                            onClick={() => toggleTrustedStratus(selectedProvider)}
+                            variant={selectedProvider.is_trusted ? 'ghost' : 'primary'}
+                            className="flex items-center gap-2"
+                        >
+                            <Icon name="Shield" className="w-4 h-4" />
+                            {selectedProvider.is_trusted ? 'إزالة الموثوقية' : 'تمييز كموثوق'}
+                        </Button>
+
+                        <Button
+                            onClick={() => toggleActiveStatus(selectedProvider)}
+                            variant={selectedProvider.is_active ? 'danger' : 'success'}
+                            className="flex items-center gap-2"
+                        >
+                            {selectedProvider.is_active ? (
+                                <>
+                                    <Icon name="Power" className="w-4 h-4" /> إيقاف الحساب
+                                </>
+                            ) : (
+                                <>
+                                    <Icon name="Power" className="w-4 h-4" /> تفعيل الحساب
+                                </>
+                            )}
+                        </Button>
+
+                        <div className="w-px h-8 bg-slate-300 dark:bg-slate-600 mx-1 hidden sm:block"></div>
+
+                        <Button
+                            onClick={() => handleDelete(selectedProvider)}
+                            variant="danger"
+                            className="flex items-center gap-2 hover:bg-red-600 text-white"
+                        >
+                            <Icon name="Trash2" className="w-4 h-4" />
+                            حذف
+                        </Button>
+                    </div>
+                </Modal>
             )}
         </div>
     );

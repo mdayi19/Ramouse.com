@@ -394,7 +394,7 @@ class AuthController extends Controller
                 'socials' => $request->socials ?? [],
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
-                'is_active' => true, // Pending admin approval? Or active but not verified? Defaulting to active.
+                'is_active' => false, // requires admin activation
                 'is_verified' => false,
                 'is_trusted' => false,
                 'wallet_balance' => 0.00,
