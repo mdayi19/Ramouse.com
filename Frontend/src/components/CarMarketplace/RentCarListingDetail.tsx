@@ -486,40 +486,6 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                         </div>
                     </div>
 
-                    {/* Sponsored Feature Card */}
-                    {listing.is_sponsored && listing.sponsored_until && (
-                        <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-yellow-50 dark:from-yellow-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-2xl p-6 shadow-lg">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-md">
-                                    <Star className="w-8 h-8 text-white fill-current" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">إعلان مميز</h3>
-                                        <span className="px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-xs font-bold">
-                                            Premium
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-700 dark:text-gray-300 text-sm mb-3">
-                                        هذا الإعلان مرعى ويحصل على أولوية في نتائج البحث وظهور أكبر للمشترين المحتملين
-                                    </p>
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <Calendar className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                                        <span className="text-gray-600 dark:text-gray-400">
-                                            مميز حتى: <span className="font-bold text-gray-900 dark:text-white">
-                                                {new Date(listing.sponsored_until).toLocaleDateString('ar-SA', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Mobile Price Card */}
                     <div className="lg:hidden">
                         <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
@@ -628,6 +594,14 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                             </div>
                         </div>
                     )}
+
+                    {/* Sponsored Listings */}
+                    <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                        <SponsoredListings
+                            currentListingId={listing.id}
+                            t={t}
+                        />
+                    </div>
 
                     {/* Similar Listings */}
                     <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
