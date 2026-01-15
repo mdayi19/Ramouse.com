@@ -129,8 +129,9 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
     };
 
     const activeSponsorships = sponsorships.filter(s => s.status === 'active');
-    const totalSpent = sponsorships.reduce((sum, s) => sum + s.price, 0);
-    const totalRefunded = sponsorships.reduce((sum, s) => sum + (s.refund_amount || 0), 0);
+    const totalSpent = sponsorships.reduce((sum, s) => sum + Number(s.price || 0), 0);
+    const totalRefunded = sponsorships.reduce((sum, s) => sum + Number(s.refund_amount || 0), 0);
+    const walletBalance = Number(provider?.wallet_balance || 0);
 
     if (loading) {
         return (
@@ -192,7 +193,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                         <span className="text-purple-100 text-sm">رصيد المحفظة</span>
                         <DollarSign className="w-5 h-5" />
                     </div>
-                    <div className="text-3xl font-bold">{(provider?.wallet_balance || 0).toFixed(2)} ر.س</div>
+                    <div className="text-3xl font-bold">{walletBalance.toFixed(2)} ر.س</div>
                 </div>
             </div>
 
@@ -324,8 +325,8 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                                     <td className="px-6 py-4 text-sm font-medium">{item.price} ر.س</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-green-100 text-green-800' :
-                                                item.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                                                    'bg-red-100 text-red-800'
+                                            item.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                                                'bg-red-100 text-red-800'
                                             }`}>
                                             {item.status === 'active' ? 'نشط' : item.status === 'expired' ? 'منتهي' : 'ملغي'}
                                         </span>
@@ -342,7 +343,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
             {showSponsorModal && selectedListing && (
                 <SponsorListingModal
                     listing={selectedListing}
-                    walletBalance={provider?.wallet_balance || 0}
+                    walletBalance={walletBalance}
                     onClose={() => {
                         setShowSponsorModal(false);
                         setSelectedListing(null);

@@ -553,6 +553,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/listings/sponsor-price', [CarListingController::class, 'calculateSponsorPrice']);
         Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
         Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
+        Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
     });
 
     // Individual Customer Listings (max 3)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CarListing;
+use App\Models\CarListingSponsorshipHistory;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -509,6 +510,46 @@ class CarListingController extends Controller
             'message' => 'تم إلغاء الرعاية',
             'refund_amount' => $refundAmount,
             'new_balance' => $provider->wallet_balance,
+        ]);
+    }
+
+    /**
+     * Get provider's sponsorship history
+     */
+    public function getSponsorships()
+    {
+        $user = auth('sanctum')->user();
+        $provider = $user->carProvider;
+
+        if (!$provider) {
+            return response()->json(['error' => 'غير مصرح'], 403);
+        }
+
+        $sponsorships = CarListingSponsorshipHistory::whereHas('carListing', function ($query) use ($provider) {
+            $query->where('owner_id', $provider->user_id);
+        })
+            ->with('carListing:id,title')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($history) {
+                return [
+                    'id' => $history->id,
+                    'car_listing_id' => $history->car_listing_id,
+                    'listing_title' => $history->carListing->title ?? 'غير معروف',
+                    'sponsored_from' => $history->sponsored_from,
+                    'sponsored_until' => $history->sponsored_until,
+                    'price' => $history->price,
+                    'duration_days' => $history->duration_days,
+                    'status' => $history->status,
+                    'refund_amount' => $history->refund_amount,
+                    'is_admin_sponsored' => $history->is_admin_sponsored,
+                    'created_at' => $history->created_at,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $sponsorships,
         ]);
     }
 }
