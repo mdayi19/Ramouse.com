@@ -428,12 +428,14 @@ class AuthController extends Controller
             ]));
 
             return response()->json([
-                'message' => __('auth.provider_registered'),
+                'message' => __('auth.provider_registered_waiting_approval'),
                 'user' => $provider,
-                'token' => $user->createToken('auth_token')->plainTextToken,
+                // Token removed to prevent auto-login for inactive account
+                // 'token' => $user->createToken('auth_token')->plainTextToken, 
                 'role' => 'car_provider',
                 'user_type' => 'car_provider',
                 'is_admin' => false,
+                'requires_approval' => true
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

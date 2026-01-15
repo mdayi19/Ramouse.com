@@ -34,5 +34,6 @@ return [
     'otp_expired' => 'انتهت صلاحية رمز التحقق.',
     'password_reset_success' => 'تم تغيير كلمة المرور بنجاح.',
     'profile_updated' => 'تم تحديث الملف الشخصي بنجاح.',
+    'provider_registered_waiting_approval' => 'تم التسجيل بنجاح! حسابك قيد المراجعة، يرجى الانتظار حتى يتم تفعيله من قبل الإدارة.',
 
 ];
