@@ -64,25 +64,37 @@ class AuthController extends Controller
         $profile = null;
         if ($user->role === 'customer') {
             $profile = $user->customer;
+            if (!$profile) {
+                return response()->json(['message' => __('auth.profile_not_found')], 404);
+            }
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
         } elseif ($user->role === 'provider') {
             $profile = $user->provider;
+            if (!$profile) {
+                return response()->json(['message' => __('auth.profile_not_found')], 404);
+            }
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
         } elseif ($user->role === 'car_provider') {
             $profile = $user->carProvider;
-            // Car Providers might need verification
+            if (!$profile) {
+                return response()->json(['message' => __('auth.profile_not_found')], 404);
+            }
+            // Strict checks for Car Providers
             if (!$profile->is_verified) {
                 return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
             }
-            if (!$profile->is_active) { // or is_verified? Frontend says active means approved usually.
+            if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
         } elseif ($user->role === 'technician') {
             $profile = $user->technician;
+            if (!$profile) {
+                return response()->json(['message' => __('auth.profile_not_found')], 404);
+            }
             if (!$profile->is_verified) {
                 return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
             }
@@ -91,12 +103,18 @@ class AuthController extends Controller
             }
         } elseif ($user->role === 'tow_truck') {
             $profile = $user->towTruck;
+            if (!$profile) {
+                return response()->json(['message' => __('auth.profile_not_found')], 404);
+            }
             if (!$profile->is_verified) {
                 return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
             }
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
+        } else {
+            // Unknown or unauthorized role for this app login
+            return response()->json(['message' => __('auth.unauthorized_role')], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -300,10 +318,11 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Technician registered successfully',
                 'user' => $technician,
-                'token' => $user->createToken('auth_token')->plainTextToken,
+                // 'token' => $user->createToken('auth_token')->plainTextToken, // Removed to prevent auto-login
                 'role' => 'technician',
                 'user_type' => 'technician',
                 'is_admin' => false,
+                'requires_approval' => true,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -561,10 +580,11 @@ class AuthController extends Controller
             return response()->json([
                 'message' => __('auth.tow_truck_registered'),
                 'user' => $towTruck,
-                'token' => $user->createToken('auth_token')->plainTextToken,
+                // 'token' => $user->createToken('auth_token')->plainTextToken, // Removed to prevent auto-login
                 'role' => 'tow_truck',
                 'user_type' => 'tow_truck',
                 'is_admin' => false,
+                'requires_approval' => true,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
