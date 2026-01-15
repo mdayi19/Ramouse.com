@@ -62,6 +62,8 @@ class AuthController extends Controller
 
         // Load profile based on role
         $profile = null;
+        $roleVerified = false;
+
         if ($user->role === 'customer') {
             $profile = $user->customer;
             if (!$profile) {
@@ -70,6 +72,7 @@ class AuthController extends Controller
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
+            $roleVerified = true;
         } elseif ($user->role === 'provider') {
             $profile = $user->provider;
             if (!$profile) {
@@ -78,6 +81,7 @@ class AuthController extends Controller
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
+            $roleVerified = true;
         } elseif ($user->role === 'car_provider') {
             $profile = $user->carProvider;
             if (!$profile) {
@@ -90,6 +94,7 @@ class AuthController extends Controller
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
+            $roleVerified = true;
         } elseif ($user->role === 'technician') {
             $profile = $user->technician;
             if (!$profile) {
@@ -101,6 +106,7 @@ class AuthController extends Controller
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
+            $roleVerified = true;
         } elseif ($user->role === 'tow_truck') {
             $profile = $user->towTruck;
             if (!$profile) {
@@ -112,6 +118,21 @@ class AuthController extends Controller
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
+            $roleVerified = true;
+        } else {
+            // Helper for admin or unexpected roles?
+            // If admin, they might not have a profile, but usually admins use a separate login or 'customer' role with is_admin=true.
+            // If this user is an admin (is_admin=true), we might allow them, but let's be safe.
+            // Assuming admins login via /admin/login usually, but if they use this endpoint:
+            if ($user->is_admin) {
+                $roleVerified = true;
+            } else {
+                return response()->json(['message' => __('auth.role_not_authorized'), 'role' => $user->role], 403);
+            }
+        }
+
+        if (!$roleVerified) {
+            return response()->json(['message' => __('auth.role_not_authorized')], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
