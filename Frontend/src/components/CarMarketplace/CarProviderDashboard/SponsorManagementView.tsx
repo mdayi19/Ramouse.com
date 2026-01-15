@@ -58,10 +58,20 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
         try {
             console.log('📊 Fetching sponsorships...');
             const response = await carProviderAPI.getSponsorships();
-            console.log('📊 Sponsorships response:', response.data);
-            setSponsorships(response.data.data || []);
+            console.log('📊 Full response:', response);
+            console.log('📊 Response.data:', response.data);
+            console.log('📊 Response.data.data:', response.data.data);
+            console.log('📊 Response.data.success:', response.data.success);
+
+            const data = response.data.data || [];
+            console.log('📊 Extracted sponsorships:', data);
+            console.log('📊 Sponsorships count:', data.length);
+            console.log('📊 Sponsorships array:', JSON.stringify(data, null, 2));
+
+            setSponsorships(data);
         } catch (error) {
             console.error('❌ Failed to load sponsorships:', error);
+            console.error('❌ Error details:', JSON.stringify(error, null, 2));
         }
     };
 
