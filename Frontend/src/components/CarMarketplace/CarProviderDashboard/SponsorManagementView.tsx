@@ -90,9 +90,10 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
             console.log('🚗 Fetching car listings...');
             const response = await carProviderAPI.getMyListings();
             console.log('🚗 Listings response:', response.data);
-            const data = response.data.data || response.data || [];
-            console.log('🚗 Extracted data:', data, 'Is array:', Array.isArray(data));
-            setListings(Array.isArray(data) ? data : []);
+            // API returns { listings: [...], total: X }
+            const listingsData = response.data.listings || [];
+            console.log('🚗 Extracted listings:', listingsData, 'Count:', listingsData.length);
+            setListings(Array.isArray(listingsData) ? listingsData : []);
         } catch (error) {
             console.error('❌ Failed to load listings:', error);
             setListings([]);
