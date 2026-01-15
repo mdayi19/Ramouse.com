@@ -48,7 +48,7 @@ export interface CarListing {
     seats_count?: number;
     engine_size?: string;
     horsepower?: number;
-    body_condition?: string;
+    body_condition?: string | { [key: string]: 'pristine' | 'scratched' | 'dented' | 'painted' | 'replaced' };
     warranty?: string;
     contact_phone?: string;
     contact_whatsapp?: string;

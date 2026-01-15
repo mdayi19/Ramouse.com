@@ -12,7 +12,7 @@ import type { CarListing, RentalTerms } from '../../services/carprovider.service
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../../hooks/useAppState';
 import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
-import SEO from '../SEO';
+
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
 import SimilarListings from './ListingParts/SimilarListings';
@@ -677,9 +677,8 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                     </div>
                 </div>
             </div>
-        </div>
 
-            {/* Mobile Sticky Footer */ }
+            {/* Mobile Sticky Footer */}
             <motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
