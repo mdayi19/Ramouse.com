@@ -157,13 +157,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     try {
       const checkResult = await AuthService.checkPhone(fullPhoneNumber);
 
-      // Check if account is pending verification (car_provider, technician, tow_truck)
-      if (checkResult.pending_verification) {
-        setError(checkResult.message || 'حسابك قيد المراجعة. يرجى الانتظار حتى يتم تفعيله من قبل المسؤول.');
-        setLoading(false);
-        return;
-      }
-
       if (checkResult.exists) {
         setLoginMode('loginWithPassword');
         setIsNewUser(false);

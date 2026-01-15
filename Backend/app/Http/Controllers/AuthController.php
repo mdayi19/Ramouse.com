@@ -30,58 +30,9 @@ class AuthController extends Controller
             ->first();
 
         if ($user) {
-            // For provider types, verify their actual profile exists and check verification status
-            $actualRole = $user->role;
-
-            // Check for car_provider profile
-            if ($user->role === 'car_provider' || $user->carProvider()->exists()) {
-                $carProvider = $user->carProvider;
-                if ($carProvider && (!$carProvider->is_verified || !$carProvider->is_active)) {
-                    // Unverified/inactive car provider - don't allow any login
-                    return response()->json([
-                        'exists' => true,
-                        'type' => 'car_provider',
-                        'requiresPassword' => false,
-                        'pending_verification' => true,
-                        'message' => 'Your account is pending admin verification. Please wait for approval.',
-                    ]);
-                }
-                $actualRole = 'car_provider';
-            }
-
-            // Check for technician profile
-            if ($user->role === 'technician' || $user->technician()->exists()) {
-                $technician = $user->technician;
-                if ($technician && (!$technician->is_verified || !$technician->is_active)) {
-                    return response()->json([
-                        'exists' => true,
-                        'type' => 'technician',
-                        'requiresPassword' => false,
-                        'pending_verification' => true,
-                        'message' => 'Your account is pending admin verification. Please wait for approval.',
-                    ]);
-                }
-                $actualRole = 'technician';
-            }
-
-            // Check for tow_truck profile
-            if ($user->role === 'tow_truck' || $user->towTruck()->exists()) {
-                $towTruck = $user->towTruck;
-                if ($towTruck && (!$towTruck->is_verified || !$towTruck->is_active)) {
-                    return response()->json([
-                        'exists' => true,
-                        'type' => 'tow_truck',
-                        'requiresPassword' => false,
-                        'pending_verification' => true,
-                        'message' => 'Your account is pending admin verification. Please wait for approval.',
-                    ]);
-                }
-                $actualRole = 'tow_truck';
-            }
-
             return response()->json([
                 'exists' => true,
-                'type' => $actualRole,
+                'type' => $user->role,
                 'requiresPassword' => true,
             ]);
         }
@@ -161,57 +112,6 @@ class AuthController extends Controller
             if (!$profile->is_active) {
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
-        } else {
-            // Safety check: Prevent users with provider profiles but wrong role from logging in
-            // Also block inactive/unverified provider profiles from logging in as any other role
-            $carProvider = $user->carProvider;
-            if ($carProvider) {
-                if (!$carProvider->is_verified || !$carProvider->is_active) {
-                    return response()->json([
-                        'message' => __('auth.account_not_verified'),
-                        'pending_verification' => true,
-                        'error' => 'Your car provider account is pending admin verification. Please wait for approval.',
-                    ], 403);
-                }
-                // Has active car_provider profile but wrong user.role - configuration error
-                return response()->json([
-                    'message' => __('auth.account_configuration_error'),
-                    'error' => 'Your account has a profile type mismatch. Please contact support.',
-                ], 403);
-            }
-
-            $technician = $user->technician;
-            if ($technician) {
-                if (!$technician->is_verified || !$technician->is_active) {
-                    return response()->json([
-                        'message' => __('auth.account_not_verified'),
-                        'pending_verification' => true,
-                        'error' => 'Your technician account is pending admin verification. Please wait for approval.',
-                    ], 403);
-                }
-                return response()->json([
-                    'message' => __('auth.account_configuration_error'),
-                    'error' => 'Your account has a profile type mismatch. Please contact support.',
-                ], 403);
-            }
-
-            $towTruck = $user->towTruck;
-            if ($towTruck) {
-                if (!$towTruck->is_verified || !$towTruck->is_active) {
-                    return response()->json([
-                        'message' => __('auth.account_not_verified'),
-                        'pending_verification' => true,
-                        'error' => 'Your tow truck account is pending admin verification. Please wait for approval.',
-                    ], 403);
-                }
-                return response()->json([
-                    'message' => __('auth.account_configuration_error'),
-                    'error' => 'Your account has a profile type mismatch. Please contact support.',
-                ], 403);
-            }
-
-            // Unknown or unauthorized role for this app login
-            return response()->json(['message' => __('auth.unauthorized_role')], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -390,7 +290,7 @@ class AuthController extends Controller
                 'socials' => $request->socials ?? [],
                 'location' => $request->location ? \Illuminate\Support\Facades\DB::raw("ST_PointFromText('POINT(" . $request->location['longitude'] . " " . $request->location['latitude'] . ")', 4326)") : null,
                 'is_verified' => false, // Requires admin verification
-                'is_active' => false, // Requires admin activation
+                'is_active' => true,
                 'average_rating' => 5.0,
             ]);
 
@@ -654,7 +554,7 @@ class AuthController extends Controller
                 'socials' => $request->socials ?? [],
                 'location' => $request->location ? \Illuminate\Support\Facades\DB::raw("ST_PointFromText('POINT(" . $request->location['longitude'] . " " . $request->location['latitude'] . ")', 4326)") : null,
                 'is_verified' => false, // Requires admin verification
-                'is_active' => false, // Requires admin activation
+                'is_active' => true,
                 'average_rating' => 5.0,
             ]);
 
