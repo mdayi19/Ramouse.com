@@ -1,538 +1,581 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    User, Lock, Building, MapPin, Upload, CheckCircle,
-    ChevronLeft, ChevronRight, Phone, Mail, Eye, EyeOff
-} from 'lucide-react';
+import { CarProvider, Settings, Notification, NotificationType, GalleryItem } from '../../types';
+import { SYRIAN_CITIES } from '../../constants';
+import { COUNTRY_CODES } from '../../constants/countries';
 import Icon from '../Icon';
+import { AuthService } from '../../services/auth.service';
 import { CarProviderService } from '../../services/carprovider.service';
+import ImageUpload from '../ImageUpload';
+import MediaUpload from '../MediaUpload';
 
-interface RegistrationProps {
+interface CarProviderRegistrationProps {
     onComplete: () => void;
     onCancel: () => void;
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+    settings: Settings; // Now passed from App
+    addNotificationForUser: (userPhone: string, notification: Omit<Notification, 'id' | 'timestamp' | 'read'>, type: NotificationType) => void; // Now passed from App
 }
 
-const CarProviderRegistration: React.FC<RegistrationProps> = ({
+// Step icons
+const StepIcon: React.FC<{ icon: React.ReactNode, title: string, description?: string }> = ({ icon, title, description }) => (
+    <div className="mb-6">
+        <div className="flex items-center gap-4 mb-2">
+            <div className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center shadow-md border bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary-900/40 dark:to-primary-900/20 text-primary border-primary/10`}>
+                {icon}
+            </div>
+            <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h3>
+                {description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>}
+            </div>
+        </div>
+    </div>
+);
+
+const UserCircleIcon = () => <Icon name="User" className="w-8 h-8" />;
+const BuildingIcon = () => <Icon name="Building2" className="w-8 h-8" />; // Building2 usually maps to a building
+const MapIcon = () => <Icon name="MapPin" className="w-8 h-8" />;
+const CameraIcon = () => <Icon name="Camera" className="w-8 h-8" />;
+const LinkIcon = () => <Icon name="Link" className="w-8 h-8" />;
+const CheckIcon = () => <Icon name="CheckCircle" className="w-8 h-8" />;
+
+const TOTAL_STEPS = 6;
+
+const CarProviderRegistration: React.FC<CarProviderRegistrationProps> = ({
     onComplete,
     onCancel,
-    showToast
+    showToast,
+    settings,
+    addNotificationForUser
 }) => {
     const [currentStep, setCurrentStep] = useState(1);
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
+    // Phone state
+    const [countryCode, setCountryCode] = useState('+963');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
+    // Form Data
     const [formData, setFormData] = useState({
-        phone: '',
+        phone: '', // Full phone
         password: '',
         confirmPassword: '',
         business_name: '',
         business_type: 'individual' as 'dealership' | 'individual' | 'rental_agency',
         business_license: '',
-        city: '',
+        email: '',
+        city: 'دمشق',
         address: '',
         description: '',
-        email: '',
-        profile_photo: null as File | null,
-        gallery: [] as File[]
+        socials: { facebook: '', instagram: '', whatsapp: '' },
+        location: undefined as { latitude: number; longitude: number } | undefined,
     });
 
-    const totalSteps = 5;
-    const stepTitles = [
-        'معلومات الحساب',
-        'معلومات العمل',
-        'الموقع',
-        'الصور',
-        'المراجعة'
-    ];
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Files
+    const [profilePhoto, setProfilePhoto] = useState<File[]>([]);
+    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+    // Helpers
+    const validatePhoneNumber = (code: string, number: string): boolean => {
+        const country = COUNTRY_CODES.find(c => c.code === code);
+        if (!country) return false;
+        return country.pattern.test(number);
+    };
+
+    const handlePhoneChange = (value: string) => {
+        const cleaned = value.replace(/\D/g, '');
+        setPhoneNumber(cleaned);
+
+        const fullPhone = countryCode + cleaned;
+        const whatsappNumber = countryCode.replace('+', '') + cleaned;
+
+        setFormData(p => ({
+            ...p,
+            phone: fullPhone,
+            socials: { ...p.socials, whatsapp: whatsappNumber }
+        }));
+
+        if (cleaned.length > 0) {
+            if (validatePhoneNumber(countryCode, cleaned)) {
+                setPhoneError('');
+            } else {
+                const country = COUNTRY_CODES.find(c => c.code === countryCode);
+                setPhoneError(`الرقم غير صحيح لـ ${country?.name}`);
+            }
+        } else {
+            setPhoneError('');
+        }
+    };
+
+    const handleCountryCodeChange = (code: string) => {
+        setCountryCode(code);
+        const fullPhone = code + phoneNumber;
+        const whatsappNumber = code.replace('+', '') + phoneNumber;
+
+        setFormData(p => ({
+            ...p,
+            phone: fullPhone,
+            socials: { ...p.socials, whatsapp: whatsappNumber }
+        }));
+        setShowCountryDropdown(false);
+
+        if (phoneNumber.length > 0) {
+            if (!validatePhoneNumber(code, phoneNumber)) {
+                const country = COUNTRY_CODES.find(c => c.code === code);
+                setPhoneError(`الرقم غير صحيح لـ ${country?.name}`);
+            } else {
+                setPhoneError('');
+            }
+        }
+    };
+
+    const handleGetLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setFormData(p => ({ ...p, location: { latitude, longitude } }));
+                    showToast('تم تحديد الموقع بنجاح!', 'success');
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    showToast('لم نتمكن من الحصول على موقعك. تأكد من منح الإذن.', 'error');
+                }
+            );
+        } else {
+            showToast('متصفحك لا يدعم تحديد المواقع.', 'error');
+        }
+    };
 
     const updateField = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const validateStep = (step: number): boolean => {
-        switch (step) {
-            case 1:
-                if (!formData.phone || !formData.password) {
-                    showToast('الرجاء إدخال رقم الهاتف وكلمة المرور', 'error');
+    const validateStep = async () => {
+        setError('');
+        setIsLoading(true);
+
+        try {
+            if (currentStep === 1) {
+                if (!phoneNumber) {
+                    setError('يرجى إدخال رقم الهاتف.');
+                    setIsLoading(false);
                     return false;
                 }
+                if (!validatePhoneNumber(countryCode, phoneNumber)) {
+                    setError('رقم الهاتف غير صحيح.');
+                    setIsLoading(false);
+                    return false;
+                }
+
+                // Server check
+                try {
+                    const response = await AuthService.checkPhone(formData.phone);
+                    if (response.exists) {
+                        setError('رقم الهاتف هذا مسجل بالفعل.');
+                        setIsLoading(false);
+                        return false;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+
+                if (!formData.password || formData.password.length < 6) {
+                    setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
+                    setIsLoading(false);
+                    return false;
+                }
+
                 if (formData.password !== formData.confirmPassword) {
-                    showToast('كلمات المرور غير متطابقة', 'error');
+                    setError('كلمات المرور غير متطابقة.');
+                    setIsLoading(false);
                     return false;
                 }
-                if (formData.password.length < 6) {
-                    showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
-                    return false;
-                }
-                return true;
-            case 2:
+            }
+
+            if (currentStep === 2) {
                 if (!formData.business_name) {
-                    showToast('الرجاء إدخال اسم العمل', 'error');
+                    setError('يرجى إدخال اسم العمل.');
+                    setIsLoading(false);
                     return false;
                 }
-                return true;
-            case 3:
+            }
+
+            if (currentStep === 3) {
                 if (!formData.city || !formData.address) {
-                    showToast('الرجاء إدخال المدينة والعنوان', 'error');
+                    setError('يرجى إدخال المدينة والعنوان.');
+                    setIsLoading(false);
                     return false;
                 }
-                return true;
-            default:
-                return true;
+            }
+
+            if (currentStep === 6) { // Review step
+                if (!acceptedTerms) {
+                    setError('يرجى الموافقة على الشروط والأحكام.');
+                    setIsLoading(false);
+                    return false;
+                }
+            }
+
+            setCurrentStep(prev => prev + 1);
+        } catch (e: any) {
+            console.error(e);
+            setError('حدث خطأ غير متوقع');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const nextStep = () => {
-        if (validateStep(currentStep)) {
-            setCurrentStep(prev => Math.min(prev + 1, totalSteps));
-        }
-    };
-
-    const prevStep = () => {
-        setCurrentStep(prev => Math.max(prev - 1, 1));
-    };
+    const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
     const handleSubmit = async () => {
+        setIsLoading(true);
+        setError('');
+
         try {
-            setLoading(true);
             const data = new FormData();
 
-            Object.keys(formData).forEach(key => {
-                if (key === 'profile_photo' && formData.profile_photo) {
-                    data.append('profile_photo', formData.profile_photo);
-                } else if (key === 'gallery' && formData.gallery.length > 0) {
-                    formData.gallery.forEach(file => data.append('gallery[]', file));
-                } else if (key !== 'confirmPassword' && key !== 'profile_photo' && key !== 'gallery') {
-                    data.append(key, (formData as any)[key]);
-                }
-            });
+            // Append basic fields
+            data.append('phone', formData.phone);
+            data.append('password', formData.password);
+            data.append('business_name', formData.business_name);
+            data.append('business_type', formData.business_type);
+            data.append('city', formData.city);
+            data.append('address', formData.address);
+
+            // Optional fields
+            if (formData.business_license) data.append('business_license', formData.business_license);
+            if (formData.email) data.append('email', formData.email);
+            if (formData.description) data.append('description', formData.description);
+
+            // Socials
+            if (formData.socials.facebook) data.append('socials[facebook]', formData.socials.facebook);
+            if (formData.socials.instagram) data.append('socials[instagram]', formData.socials.instagram);
+            if (formData.socials.whatsapp) data.append('socials[whatsapp]', formData.socials.whatsapp);
+
+            // Location
+            if (formData.location) {
+                data.append('latitude', formData.location.latitude.toString());
+                data.append('longitude', formData.location.longitude.toString());
+            }
+
+            // Files
+            if (profilePhoto.length > 0) {
+                data.append('profile_photo', profilePhoto[0]);
+            }
+
+            if (galleryFiles.length > 0) {
+                galleryFiles.forEach((file) => {
+                    data.append('gallery[]', file);
+                });
+            }
 
             await CarProviderService.registerProvider(data);
+
+            // Notify Admin
+            const adminPhone = settings.adminPhone || '963900000000'; // Fallback if missing
+            addNotificationForUser(adminPhone, {
+                title: 'طلب انضمام معرض جديد',
+                message: `سجل ${formData.business_name} (${formData.phone}) وينتظر المراجعة.`,
+                type: 'NEW_CAR_PROVIDER_REQUEST',
+                link: { view: 'adminDashboard', params: { adminView: 'providers' } } // Adjust params as needed
+            }, 'NEW_CAR_PROVIDER_REQUEST');
+
             showToast('تم التسجيل بنجاح! في انتظار الموافقة', 'success');
             onComplete();
+
         } catch (error: any) {
-            showToast(error.response?.data?.message || 'فشل التسجيل', 'error');
+            console.error("Registration error", error);
+            setError(error.response?.data?.message || 'فشل التسجيل');
+            showToast('فشل في التسجيل', 'error');
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean = false) => {
-        const files = e.target.files;
-        if (!files) return;
-
-        if (isGallery) {
-            updateField('gallery', [...formData.gallery, ...Array.from(files)]);
-        } else {
-            updateField('profile_photo', files[0]);
-        }
-    };
+    const inputClasses = "block w-full px-4 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200 text-slate-900 dark:text-white placeholder:text-slate-400";
+    const labelClasses = "block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2";
+    const fadeClass = "animate-slide-up";
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden"
-            >
-                {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-                    <h2 className="text-2xl font-bold flex items-center gap-3">
-                        <Building className="w-8 h-8" />
-                        تسجيل مزود سيارات
-                    </h2>
-                    <p className="text-white/80 mt-2">
-                        الخطوة {currentStep} من {totalSteps}: {stepTitles[currentStep - 1]}
-                    </p>
-
-                    {/* Progress Bar */}
-                    <div className="mt-4 bg-white/20 rounded-full h-2">
-                        <div
-                            className="bg-white rounded-full h-2 transition-all duration-300"
-                            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                        />
+        <div className="w-full max-w-2xl bg-white dark:bg-darkcard rounded-2xl shadow-xl overflow-hidden">
+            {/* Progress Header */}
+            {currentStep <= TOTAL_STEPS && (
+                <div className="p-8 pb-0">
+                    <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-2xl font-bold text-primary dark:text-primary-400">تسجيل معرض سيارات</h2>
+                        <span className="text-sm font-semibold text-slate-500">الخطوة {currentStep} من {TOTAL_STEPS}</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5 dark:bg-slate-700">
+                        <div className="bg-primary h-2.5 rounded-full transition-all duration-300" style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}></div>
                     </div>
                 </div>
+            )}
 
-                {/* Content */}
-                <div className="p-6">
-                    <AnimatePresence mode="wait">
-                        {currentStep === 1 && (
-                            <Step1Account
-                                formData={formData}
-                                updateField={updateField}
-                                showPassword={showPassword}
-                                setShowPassword={setShowPassword}
-                            />
-                        )}
-                        {currentStep === 2 && (
-                            <Step2Business formData={formData} updateField={updateField} />
-                        )}
-                        {currentStep === 3 && (
-                            <Step3Location formData={formData} updateField={updateField} />
-                        )}
-                        {currentStep === 4 && (
-                            <Step4Photos
-                                formData={formData}
-                                updateField={updateField}
-                                handleFileChange={handleFileChange}
-                            />
-                        )}
-                        {currentStep === 5 && (
-                            <Step5Review formData={formData} />
-                        )}
-                    </AnimatePresence>
-                </div>
+            <div className="p-8">
+                {error && <p className="text-center text-red-500 text-sm mb-6 bg-red-50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">{error}</p>}
 
-                {/* Footer */}
-                <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between bg-gray-50 dark:bg-gray-900">
+                {/* Step 1: Account */}
+                {currentStep === 1 && (
+                    <div className={`space-y-6 ${fadeClass}`}>
+                        <StepIcon icon={<UserCircleIcon />} title="معلومات الحساب" description="أنشئ حسابك الجديد للبدء" />
+
+                        <div>
+                            <label className={labelClasses}>رقم الهاتف <span className="text-red-500">*</span></label>
+                            <div className="flex gap-2" dir="ltr">
+                                <div className="relative w-32">
+                                    <button type="button" onClick={() => setShowCountryDropdown(!showCountryDropdown)} className="w-full px-3 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-between gap-2">
+                                        <span className="text-lg">{COUNTRY_CODES.find(c => c.code === countryCode)?.flag}</span>
+                                        <span className="text-sm font-semibold">{countryCode}</span>
+                                        <Icon name="ChevronDown" className="w-4 h-4 text-slate-400" />
+                                    </button>
+                                    {showCountryDropdown && (
+                                        <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto">
+                                            {COUNTRY_CODES.map(country => (
+                                                <button key={country.code} type="button" onClick={() => handleCountryCodeChange(country.code)} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-right">
+                                                    <span className="text-xl">{country.flag}</span>
+                                                    <div className="flex-1">
+                                                        <div className="text-sm font-semibold">{country.name}</div>
+                                                        <div className="text-xs text-slate-500">{country.code}</div>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 relative">
+                                    <input type="tel" value={phoneNumber} onChange={e => handlePhoneChange(e.target.value)} className={`${inputClasses} pr-11`} placeholder="9xxxxxxxx" dir="ltr" />
+                                    <Icon name="Phone" className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                </div>
+                            </div>
+                            {phoneError && <p className="mt-2 text-sm text-red-600">{phoneError}</p>}
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>كلمة المرور <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input type={showPassword ? "text" : "password"} value={formData.password} onChange={e => updateField('password', e.target.value)} className={`${inputClasses} font-mono pr-12`} dir="ltr" placeholder="••••••••" />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                    <Icon name={showPassword ? "EyeOff" : "Eye"} className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>تأكيد كلمة المرور <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} className={`${inputClasses} font-mono pr-12`} dir="ltr" placeholder="••••••••" />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                    <Icon name={showConfirmPassword ? "EyeOff" : "Eye"} className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 2: Business Info */}
+                {currentStep === 2 && (
+                    <div className={`space-y-6 ${fadeClass}`}>
+                        <StepIcon icon={<BuildingIcon />} title="معلومات العمل" description="تفاصيل المعرض والنشاط التجاري" />
+
+                        <div>
+                            <label className={labelClasses}>اسم العمل (المعرض) <span className="text-red-500">*</span></label>
+                            <input type="text" value={formData.business_name} onChange={(e) => updateField('business_name', e.target.value)} placeholder="مثال: معرض الشام للسيارات" className={inputClasses} required />
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>نوع العمل <span className="text-red-500">*</span></label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { value: 'dealership', label: 'معرض' },
+                                    { value: 'individual', label: 'فردي' },
+                                    { value: 'rental_agency', label: 'تأجير' }
+                                ].map(type => (
+                                    <button
+                                        key={type.value}
+                                        type="button"
+                                        onClick={() => updateField('business_type', type.value)}
+                                        className={`p-3 rounded-xl border-2 transition-all ${formData.business_type === type.value
+                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                                            }`}
+                                    >
+                                        <div className="font-bold text-sm text-slate-900 dark:text-white">{type.label}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>رقم الترخيص <span className="text-slate-400 text-xs">(اختياري)</span></label>
+                            <input type="text" value={formData.business_license} onChange={(e) => updateField('business_license', e.target.value)} placeholder="رقم السجل التجاري" className={inputClasses} />
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>البريد الإلكتروني <span className="text-slate-400 text-xs">(اختياري)</span></label>
+                            <div className="relative">
+                                <Icon name="Mail" className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} placeholder="example@domain.com" className={`${inputClasses} pr-11`} dir="ltr" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 3: Location */}
+                {currentStep === 3 && (
+                    <div className={`space-y-6 ${fadeClass}`}>
+                        <StepIcon icon={<MapIcon />} title="الموقع والتفاصيل" description="أين يقع المعرض؟" />
+
+                        <div>
+                            <label className={labelClasses}>المدينة <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <select value={formData.city} onChange={e => updateField('city', e.target.value)} className={`${inputClasses} appearance-none cursor-pointer`}>
+                                    {SYRIAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                <Icon name="ChevronDown" className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>العنوان بالتفصيل <span className="text-red-500">*</span></label>
+                            <textarea value={formData.address} onChange={e => updateField('address', e.target.value)} placeholder="مثال: دمشق - المزة - جانب..." rows={2} className={inputClasses} />
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>تحديد الموقع على الخريطة <span className="text-slate-400 text-xs">(اختياري)</span></label>
+                            <button
+                                type="button"
+                                onClick={handleGetLocation}
+                                className={`mt-1 w-full flex items-center justify-center gap-3 px-4 py-3.5 border-2 border-dashed rounded-xl transition-all ${formData.location
+                                    ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                                    : 'border-primary/30 dark:border-primary/20 text-primary bg-primary/5 hover:bg-primary/10'
+                                    }`}
+                            >
+                                <Icon name={formData.location ? "CheckCircle2" : "MapPin"} className="w-5 h-5" />
+                                <span className="font-semibold">{formData.location ? 'تم تحديد الموقع بنجاح!' : 'تحديد الموقع الحالي'}</span>
+                            </button>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>نبذة تعريفية <span className="text-slate-400 text-xs">(اختياري)</span></label>
+                            <textarea value={formData.description} onChange={e => updateField('description', e.target.value)} rows={3} className={inputClasses} placeholder="اكتب نبذة عن المعرض..." />
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 4: Socials */}
+                {currentStep === 4 && (
+                    <div className={`space-y-6 ${fadeClass}`}>
+                        <StepIcon icon={<LinkIcon />} title="روابط التواصل" description="سهل الوصول إليك عبر السوشيال ميديا" />
+
+                        <div>
+                            <label className={labelClasses}><span className="flex items-center gap-2"><Icon name="Facebook" className="w-4 h-4 text-blue-600" /> فيسبوك <span className="text-slate-400 text-xs">(اختياري)</span></span></label>
+                            <div className="relative">
+                                <input type="url" value={formData.socials.facebook} onChange={e => setFormData(p => ({ ...p, socials: { ...p.socials, facebook: e.target.value } }))} className={`${inputClasses} pr-11`} dir="ltr" placeholder="https://facebook.com/..." />
+                                <Icon name="Link" className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}><span className="flex items-center gap-2"><Icon name="Instagram" className="w-4 h-4 text-pink-500" /> انستغرام <span className="text-slate-400 text-xs">(اختياري)</span></span></label>
+                            <div className="relative">
+                                <input type="text" value={formData.socials.instagram} onChange={e => setFormData(p => ({ ...p, socials: { ...p.socials, instagram: e.target.value } }))} className={`${inputClasses} pl-8`} dir="ltr" placeholder="username" />
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">@</span>
+                            </div>
+                        </div>
+
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                            <p className="text-sm text-blue-800 dark:text-blue-200">
+                                رقم الواتساب سيكون نفس رقم هاتفك المسجل ({formData.phone}).
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 5: Media */}
+                {currentStep === 5 && (
+                    <div className={`space-y-6 ${fadeClass}`}>
+                        <StepIcon icon={<CameraIcon />} title="الصور والوسائط" description="أضف شعار المعرض وصور للمعرض" />
+
+                        <div className="p-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                            <label className={labelClasses}>شعار المعرض (صورة البروفايل) <span className="text-slate-400 text-xs">(اختياري)</span></label>
+                            <ImageUpload files={profilePhoto} setFiles={setProfilePhoto} maxFiles={1} />
+                        </div>
+
+                        <div className="p-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                            <label className={labelClasses}>صور المعرض <span className="text-slate-400 text-xs">(اختياري)</span></label>
+                            <MediaUpload files={galleryFiles} setFiles={setGalleryFiles} maxFiles={5} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 6: Review */}
+                {currentStep === 6 && (
+                    <div className={`space-y-6 ${fadeClass}`}>
+                        <StepIcon icon={<CheckIcon />} title="المراجعة النهائية" description="تأكد من صحة بياناتك" />
+
+                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700 space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div><span className="text-slate-500">اسم العمل:</span> <span className="font-semibold block">{formData.business_name}</span></div>
+                                <div><span className="text-slate-500">نوع العمل:</span> <span className="font-semibold block">{formData.business_type}</span></div>
+                                <div><span className="text-slate-500">رقم الهاتف:</span> <span className="font-semibold block" dir="ltr">{formData.phone}</span></div>
+                                <div><span className="text-slate-500">المدينة:</span> <span className="font-semibold block">{formData.city}</span></div>
+                            </div>
+                            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <span className="text-slate-500 block mb-1">العنوان:</span>
+                                <span className="font-semibold block">{formData.address}</span>
+                            </div>
+                        </div>
+
+                        <label className="flex items-start gap-3 p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                            <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" />
+                            <div className="text-sm">
+                                <span className="font-semibold text-slate-900 dark:text-white">أوافق على الشروط والأحكام</span>
+                                <p className="text-slate-500 mt-1">أتعهد بأن جميع البيانات المدخلة صحيحة وأتحمل المسؤولية القانونية عنها.</p>
+                            </div>
+                        </label>
+                    </div>
+                )}
+
+                {/* Navigation Buttons */}
+                <div className="flex justify-between mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
                     <button
-                        onClick={onCancel}
-                        className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                        onClick={currentStep === 1 ? onCancel : prevStep}
+                        className="px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-medium"
                     >
-                        إلغاء
+                        {currentStep === 1 ? 'إلغاء' : 'السابق'}
                     </button>
 
-                    <div className="flex gap-3">
-                        {currentStep > 1 && (
-                            <button
-                                onClick={prevStep}
-                                className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                                السابق
-                            </button>
-                        )}
-
-                        {currentStep < totalSteps ? (
-                            <button
-                                onClick={nextStep}
-                                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2"
-                            >
-                                التالي
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                disabled={loading}
-                                className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2 font-bold disabled:opacity-50"
-                            >
-                                {loading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                        جار التسجيل...
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle className="w-5 h-5" />
-                                        إرسال الطلب
-                                    </>
-                                )}
-                            </button>
-                        )}
-                    </div>
+                    {currentStep < TOTAL_STEPS ? (
+                        <button
+                            onClick={validateStep}
+                            disabled={isLoading}
+                            className="bg-primary hover:bg-primary-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2"
+                        >
+                            {isLoading ? 'جاري التحقق...' : 'التالي'}
+                            <Icon name="ChevronLeft" className="w-5 h-5" />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isLoading || !acceptedTerms}
+                            className={`bg-green-600 hover:bg-green-700 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:shadow-green-600/20 transition-all flex items-center gap-2 ${(!acceptedTerms || isLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoading ? 'جاري الإرسال...' : 'إرسال الطلب'}
+                            <Icon name="Check" className="w-5 h-5" />
+                        </button>
+                    )}
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };
-
-// Step Components
-const Step1Account: React.FC<any> = ({ formData, updateField, showPassword, setShowPassword }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6"
-    >
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                رقم الهاتف *
-            </label>
-            <div className="relative">
-                <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => updateField('phone', e.target.value)}
-                    placeholder="09xxxxxxxx"
-                    className="w-full pr-12 pl-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                />
-            </div>
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                كلمة المرور *
-            </label>
-            <div className="relative">
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => updateField('password', e.target.value)}
-                    placeholder="6 أحرف على الأقل"
-                    className="w-full pr-12 pl-12 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                />
-                <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-            </div>
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                تأكيد كلمة المرور *
-            </label>
-            <div className="relative">
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={(e) => updateField('confirmPassword', e.target.value)}
-                    placeholder="أعد إدخال كلمة المرور"
-                    className="w-full pr-12 pl-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                />
-            </div>
-        </div>
-    </motion.div>
-);
-
-const Step2Business: React.FC<any> = ({ formData, updateField }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6"
-    >
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                اسم العمل *
-            </label>
-            <input
-                type="text"
-                value={formData.business_name}
-                onChange={(e) => updateField('business_name', e.target.value)}
-                placeholder="مثال: معرض الشام للسيارات"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-            />
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                نوع العمل *
-            </label>
-            <div className="grid grid-cols-3 gap-4">
-                {[
-                    { value: 'dealership', label: 'معرض' },
-                    { value: 'individual', label: 'فردي' },
-                    { value: 'rental_agency', label: 'تأجير' }
-                ].map(type => (
-                    <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => updateField('business_type', type.value)}
-                        className={`p-4 rounded-xl border-2 transition-all ${formData.business_type === type.value
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
-                            }`}
-                    >
-                        <div className="font-bold text-gray-900 dark:text-white">{type.label}</div>
-                    </button>
-                ))}
-            </div>
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                رقم الترخيص (اختياري)
-            </label>
-            <input
-                type="text"
-                value={formData.business_license}
-                onChange={(e) => updateField('business_license', e.target.value)}
-                placeholder="رقم السجل التجاري"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                البريد الإلكتروني (اختياري)
-            </label>
-            <div className="relative">
-                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                    placeholder="example@domain.com"
-                    className="w-full pr-12 pl-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-            </div>
-        </div>
-    </motion.div>
-);
-
-const Step3Location: React.FC<any> = ({ formData, updateField }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6"
-    >
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                المدينة *
-            </label>
-            <input
-                type="text"
-                value={formData.city}
-                onChange={(e) => updateField('city', e.target.value)}
-                placeholder="دمشق"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-            />
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                العنوان بالتفصيل *
-            </label>
-            <div className="relative">
-                <MapPin className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
-                <textarea
-                    value={formData.address}
-                    onChange={(e) => updateField('address', e.target.value)}
-                    placeholder="مثال: شارع بغداد - بناء السلام"
-                    rows={3}
-                    className="w-full pr-12 pl-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                    required
-                />
-            </div>
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                وصف النشاط (اختياري)
-            </label>
-            <textarea
-                value={formData.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="أخبرنا عن عملك..."
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-            />
-        </div>
-    </motion.div>
-);
-
-const Step4Photos: React.FC<any> = ({ formData, handleFileChange }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6"
-    >
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                صورة الملف الشخصي (اختياري)
-            </label>
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
-                <input
-                    type="file"
-                    id="profile-photo"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, false)}
-                    className="hidden"
-                />
-                <label htmlFor="profile-photo" className="cursor-pointer flex flex-col items-center gap-3">
-                    <Upload className="w-12 h-12 text-gray-400" />
-                    <p className="text-gray-600 dark:text-gray-400">
-                        {formData.profile_photo ? formData.profile_photo.name : 'اضغط لرفع صورة'}
-                    </p>
-                </label>
-            </div>
-        </div>
-
-        <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                معرض الصور (اختياري)
-            </label>
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
-                <input
-                    type="file"
-                    id="gallery"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleFileChange(e, true)}
-                    className="hidden"
-                />
-                <label htmlFor="gallery" className="cursor-pointer flex flex-col items-center gap-3">
-                    <Upload className="w-12 h-12 text-gray-400" />
-                    <p className="text-gray-600 dark:text-gray-400">
-                        {formData.gallery.length > 0
-                            ? `${formData.gallery.length} صور محملة`
-                            : 'اضغط لرفع الصور'}
-                    </p>
-                </label>
-            </div>
-        </div>
-    </motion.div>
-);
-
-const Step5Review: React.FC<any> = ({ formData }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6"
-    >
-        <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">مراجعة البيانات</h3>
-            <div className="space-y-3 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">رقم الهاتف:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formData.phone}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">اسم العمل:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formData.business_name}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">نوع العمل:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                        {formData.business_type === 'dealership' ? 'معرض' :
-                            formData.business_type === 'individual' ? 'فردي' : 'تأجير'}
-                    </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">المدينة:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formData.city}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">العنوان:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formData.address}</span>
-                </div>
-            </div>
-        </div>
-
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-                سيتم مراجعة طلبك من قبل الإدارة خلال 24-48 ساعة
-            </p>
-        </div>
-    </motion.div>
-);
 
 export default CarProviderRegistration;

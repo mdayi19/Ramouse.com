@@ -1804,13 +1804,45 @@ class AdminController extends Controller
 
     public function verifyCarProvider(Request $request, $id)
     {
+        $request->validate(['is_verified' => 'required|boolean']);
         $provider = \App\Models\CarProvider::findOrFail($id);
-        $provider->update([
-            'is_verified' => true,
-            'verified_at' => now(),
-            'verified_by' => auth()->id()
-        ]);
-        return response()->json(['success' => true, 'message' => 'Car provider verified']);
+
+        $data = [
+            'is_verified' => $request->is_verified,
+        ];
+
+        if ($request->is_verified) {
+            $data['verified_at'] = now();
+            $data['verified_by'] = auth()->id();
+        }
+
+        $provider->update($data);
+        return response()->json(['success' => true, 'message' => 'Car provider verification updated']);
+    }
+
+    public function toggleCarProviderStatus(Request $request, $id)
+    {
+        $request->validate(['is_active' => 'required|boolean']);
+        $provider = \App\Models\CarProvider::findOrFail($id);
+        $provider->update(['is_active' => $request->is_active]);
+        return response()->json(['success' => true, 'message' => 'Car provider status updated']);
+    }
+
+    public function deleteCarProvider($id)
+    {
+        $provider = \App\Models\CarProvider::findOrFail($id);
+
+        // Delete related User if needed, or just the profile
+        // Usually we want to delete the user account too if the phone is the ID
+        $user = \App\Models\User::where('phone', $provider->id)->first();
+
+        $provider->delete();
+
+        if ($user) {
+            $user->delete();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Car provider deleted']);
     }
 
     public function toggleTrustedProvider(Request $request, $id)

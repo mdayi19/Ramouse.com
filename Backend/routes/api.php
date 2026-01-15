@@ -421,6 +421,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [AdminController::class, 'listCarProviders']);
             Route::patch('/{id}/verify', [AdminController::class, 'verifyCarProvider']);
             Route::patch('/{id}/trusted', [AdminController::class, 'toggleTrustedProvider']);
+            Route::patch('/{id}/status', [AdminController::class, 'toggleCarProviderStatus']);
+            Route::delete('/{id}', [AdminController::class, 'deleteCarProvider']);
         });
 
         Route::prefix('car-listings')->group(function () {

@@ -75,6 +75,9 @@ class AuthController extends Controller
         } elseif ($user->role === 'car_provider') {
             $profile = $user->carProvider;
             // Car Providers might need verification
+            if (!$profile->is_verified) {
+                return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
+            }
             if (!$profile->is_active) { // or is_verified? Frontend says active means approved usually.
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
@@ -324,6 +327,9 @@ class AuthController extends Controller
             'profile_photo' => 'nullable|image|max:10240', // 10MB
             'gallery' => 'nullable|array',
             'gallery.*' => 'image|max:10240',
+            'socials' => 'nullable|array',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         // Check if user already exists
@@ -385,6 +391,9 @@ class AuthController extends Controller
                 'description' => $request->description,
                 'profile_photo' => $profilePhotoPath,
                 'gallery' => $galleryPaths,
+                'socials' => $request->socials ?? [],
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
                 'is_active' => true, // Pending admin approval? Or active but not verified? Defaulting to active.
                 'is_verified' => false,
                 'is_trusted' => false,

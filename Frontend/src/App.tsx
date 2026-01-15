@@ -889,6 +889,8 @@ const App: React.FC = () => {
                                     onComplete={() => handleNavigate('welcome')}
                                     onCancel={() => handleNavigate('welcome')}
                                     showToast={showToast}
+                                    settings={settings}
+                                    addNotificationForUser={addNotificationForUser}
                                 />
                             } />
 
@@ -935,6 +937,7 @@ const App: React.FC = () => {
                             showToast={showToast}
                             onGoToTechnicianRegistration={() => { handleNavigate('technicianRegistration'); handleCloseLogin(); }}
                             onGoToTowTruckRegistration={() => { handleNavigate('towTruckRegistration'); handleCloseLogin(); }}
+                            onGoToCarProviderRegistration={() => { handleNavigate('carProviderRegistration'); handleCloseLogin(); }}
                         />
                     </div>
                 )}

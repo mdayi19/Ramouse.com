@@ -202,4 +202,14 @@ export const AdminService = {
         const response = await api.patch(`/admin/car-providers/${id}/trusted`, { is_trusted });
         return response.data;
     },
+
+    updateCarProviderStatus: async (id: string, is_active: boolean) => {
+        const response = await api.patch(`/admin/car-providers/${id}/status`, { is_active });
+        return response.data;
+    },
+
+    deleteCarProvider: async (id: string) => {
+        const response = await api.delete(`/admin/car-providers/${id}`);
+        return response.data;
+    },
 };

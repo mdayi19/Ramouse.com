@@ -14,6 +14,7 @@ interface LoginScreenProps {
   onClose: () => void;
   onGoToTechnicianRegistration: () => void;
   onGoToTowTruckRegistration: () => void;
+  onGoToCarProviderRegistration: () => void;
   settings: Settings;
   sendMessage: (type: 'verification' | 'notification', to: string, message: string) => Promise<{ success: boolean; error?: string }>;
   addNotificationForUser: (userPhone: string, notification: Omit<Notification, 'id' | 'timestamp' | 'read'>, type: NotificationType) => void;
@@ -98,7 +99,7 @@ const OtpInputGroup: React.FC<OtpInputGroupProps> = ({ otp, setOtp }) => {
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({
-  onLoginSuccess, onClose, onGoToTechnicianRegistration, onGoToTowTruckRegistration,
+  onLoginSuccess, onClose, onGoToTechnicianRegistration, onGoToTowTruckRegistration, onGoToCarProviderRegistration,
   settings, showToast, isClosing
 }) => {
   const [loginMode, setLoginMode] = useState<LoginMode>('enterPhone');
@@ -378,16 +379,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
               <button
                 type="button"
                 onClick={onGoToTechnicianRegistration}
-                className="block w-full text-center text-sm font-medium text-slate-500 hover:text-primary transition-colors py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                className="block w-full text-center text-sm font-medium text-slate-500 hover:text-primary transition-colors py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
               >
                 هل أنت فني؟ <span className="underline">سجل من هنا</span>
               </button>
               <button
                 type="button"
                 onClick={onGoToTowTruckRegistration}
-                className="block w-full text-center text-sm font-medium text-slate-500 hover:text-primary transition-colors py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                className="block w-full text-center text-sm font-medium text-slate-500 hover:text-primary transition-colors py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
               >
                 هل أنت سائق سطحة؟ <span className="underline">سجل من هنا</span>
+              </button>
+              <button
+                type="button"
+                onClick={onGoToCarProviderRegistration}
+                className="block w-full text-center text-sm font-medium text-slate-500 hover:text-primary transition-colors py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+              >
+                هل أنت معرض سيارات؟ <span className="underline">سجل من هنا</span>
               </button>
             </div>
           </form>

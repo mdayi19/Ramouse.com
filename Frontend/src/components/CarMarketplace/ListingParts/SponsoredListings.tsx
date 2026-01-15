@@ -34,6 +34,9 @@ const SponsoredListings: React.FC<SponsoredListingsProps> = ({
     // Use provided listings or fetched ones
     const displayListings = providedListings || fetchedListings;
 
+    // Create duplicated listings for infinite loop
+    const infiniteListings = [...displayListings, ...displayListings];
+
     // Auto-Scroll Logic
     useEffect(() => {
         if (loading || isHovered || displayListings.length === 0) return;
@@ -41,18 +44,26 @@ const SponsoredListings: React.FC<SponsoredListingsProps> = ({
         const interval = setInterval(() => {
             if (scrollContainerRef.current) {
                 const container = scrollContainerRef.current;
-                const { scrollLeft, scrollWidth, clientWidth } = container;
 
-                // Calculate exact card width including gap from the first child
+                // Calculate exact card width including gap dynamically
                 const firstCard = container.firstElementChild as HTMLElement;
-                const cardWidth = firstCard ? firstCard.offsetWidth + 24 : 320; // 24px is gap-6
+                const style = window.getComputedStyle(container);
+                const gap = parseInt(style.gap || '0', 10);
 
-                // If we're near the end, scroll back to start
-                if (scrollLeft + clientWidth >= scrollWidth - 50) {
-                    container.scrollTo({ left: 0, behavior: 'smooth' });
-                } else {
-                    container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+                if (!firstCard) return;
+
+                const cardWidth = firstCard.offsetWidth + gap;
+                const singleSetWidth = cardWidth * displayListings.length;
+
+                // Check if we need to snap back to the start
+                // If we've scrolled past the first set, reset position instantly
+                // We use a small threshold (10px) to ensure we don't snap prematurely due to rounding
+                if (container.scrollLeft >= singleSetWidth) {
+                    container.scrollLeft -= singleSetWidth;
                 }
+
+                // Scroll to the next card
+                container.scrollBy({ left: cardWidth, behavior: 'smooth' });
             }
         }, 3000); // Scroll every 3 seconds
 
@@ -176,9 +187,9 @@ const SponsoredListings: React.FC<SponsoredListingsProps> = ({
                         className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar -mx-2 px-2 scroll-smooth"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                        {displayListings.map(item => (
+                        {infiniteListings.map((item, index) => (
                             <div
-                                key={item.id}
+                                key={`${item.id}-${index}`}
                                 className="snap-center w-[85vw] sm:w-[340px] flex-shrink-0"
                             >
                                 {renderCard(item)}
@@ -192,13 +203,7 @@ const SponsoredListings: React.FC<SponsoredListingsProps> = ({
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-orange-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            {/* DEBUG OVERLAY - REMOVE AFTER FIXING */}
-            <div className="absolute top-0 left-0 bg-black/80 text-white text-xs p-2 z-50 pointer-events-none">
-                DEBUG: Raw={fetchedListings.length} |
-                Type={listingType} |
-                Loading={loading ? 'Yes' : 'No'} |
-                Provided={providedListings ? 'Yes' : 'No'}
-            </div>
+
         </div>
     );
 };

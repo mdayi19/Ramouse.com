@@ -159,6 +159,7 @@ export const useAppState = () => {
       case 'towTruckRegistration': path = '/register-tow-truck'; break;
       case 'towTruckDashboard': path = '/tow-truck-dashboard'; break;
       case 'carProviderDashboard': path = '/car-provider-dashboard'; break;
+      case 'carProviderRegistration': path = '/register-car-provider'; break;
       case 'blog': path = '/blog'; break;
       case 'blogPost': path = params?.slug ? `/blog/${params.slug}` : '/blog'; break;
       case 'faq': path = '/faq'; break;
