@@ -20,7 +20,7 @@ import ReportListingModal from './ListingParts/ReportListingModal';
 import QuickSpecsBar from './ListingParts/QuickSpecsBar';
 import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
-import FeaturesShowcase from './ListingParts/FeaturesShowcase';
+
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { CarBodyDiagram } from './CarBodyDiagram';
 
@@ -209,100 +209,7 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
         }
     }, [listing]);
 
-    const handleShare = async () => {
-        if (!listing) return;
 
-        CarProviderService.trackAnalytics(listing.id, 'share').catch(console.error);
-        const url = window.location.href;
-
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: listing.title,
-                    text: `Check out this rental car: ${listing.title}`,
-                    url: url,
-                });
-            } catch (err) {
-                console.log('Share cancelled');
-            }
-        } else {
-            navigator.clipboard.writeText(url);
-            showToast('تم نسخ الرابط', 'success');
-        }
-    };
-
-    const handleFavoriteToggle = async () => {
-        if (!isAuthenticated) {
-            showToast('الرجاء تسجيل الدخول للإضافة للمفضلة', 'info');
-            if (setShowLogin) {
-                setShowLogin(true);
-            } else {
-                setTimeout(() => navigate('/'), 1000);
-            }
-            return;
-        }
-        if (!listing) return;
-
-        try {
-            await CarProviderService.toggleFavorite(listing.id);
-            setIsFavorited(!isFavorited);
-            showToast(isFavorited ? 'تم الإزالة من المفضلة' : 'تم الإضافة للمفضلة', 'success');
-        } catch (error) {
-            showToast('حدث خطأ ما', 'error');
-        }
-    };
-
-    const handleContact = async (type: 'phone' | 'email' | 'whatsapp') => {
-        if (!isAuthenticated) {
-            showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
-            if (setShowLogin) {
-                setShowLogin(true);
-            } else {
-                setTimeout(() => navigate('/'), 1000);
-            }
-            return;
-        }
-
-        if (!listing) return;
-
-        const phone = listing.contact_phone || (listing.provider || listing.owner?.car_provider)?.phone;
-        const email = (listing.provider || listing.owner?.car_provider)?.email;
-        const whatsapp = listing.contact_whatsapp || phone;
-
-        if (type === 'phone') {
-            if (!phone) {
-                showToast('رقم الهاتف غير متوفر', 'error');
-                return;
-            }
-            CarProviderService.trackAnalytics(listing.id, 'contact_phone').catch(console.error);
-            window.location.href = `tel:${phone}`;
-        } else if (type === 'whatsapp') {
-            if (!whatsapp) {
-                showToast('رقم الواتساب غير متوفر', 'error');
-                return;
-            }
-            CarProviderService.trackAnalytics(listing.id, 'contact_whatsapp').catch(console.error);
-
-            const message = encodeURIComponent(
-                `مرحباً، أنا مهتم بسيارتك ${listing.title}\n` +
-                `السعر: ${dailyRate ? safePrice(dailyRate) : 'اتصل'} (يومي)\n` +
-                `الرابط: ${window.location.href}`
-            );
-
-            const whatsappUrl = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${message}`;
-            window.open(whatsappUrl, '_blank');
-        }
-    };
-
-    const handleReportSubmit = async (reason: string, details: string) => {
-        if (!listing) return;
-        try {
-            await CarProviderService.reportListing(listing.id, { reason, details });
-            showToast('تم إرسال البلاغ بنجاح', 'success');
-        } catch (error) {
-            showToast('فشل إرسال البلاغ', 'error');
-        }
-    };
 
     if (loading) {
         return (
@@ -352,6 +259,95 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
     const hasConditions = termsList.length > 0 || !!structuredTerms.custom_terms;
 
 
+    const handleShare = async () => {
+        CarProviderService.trackAnalytics(listing.id, 'share').catch(console.error);
+        const url = window.location.href;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: listing.title,
+                    text: `Check out this rental car: ${listing.title}`,
+                    url: url,
+                });
+            } catch (err) {
+                console.log('Share cancelled');
+            }
+        } else {
+            navigator.clipboard.writeText(url);
+            showToast('تم نسخ الرابط', 'success');
+        }
+    };
+
+    const handleFavoriteToggle = async () => {
+        if (!isAuthenticated) {
+            showToast('الرجاء تسجيل الدخول للإضافة للمفضلة', 'info');
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                setTimeout(() => navigate('/'), 1000);
+            }
+            return;
+        }
+
+        try {
+            await CarProviderService.toggleFavorite(listing.id);
+            setIsFavorited(!isFavorited);
+            showToast(isFavorited ? 'تم الإزالة من المفضلة' : 'تم الإضافة للمفضلة', 'success');
+        } catch (error) {
+            showToast('حدث خطأ ما', 'error');
+        }
+    };
+
+    const handleContact = async (type: 'phone' | 'email' | 'whatsapp') => {
+        if (!isAuthenticated) {
+            showToast('الرجاء تسجيل الدخول للتواصل مع البائع', 'info');
+            if (setShowLogin) {
+                setShowLogin(true);
+            } else {
+                setTimeout(() => navigate('/'), 1000);
+            }
+            return;
+        }
+
+        const phone = listing.contact_phone || (listing.provider || listing.owner?.car_provider)?.phone;
+        const email = (listing.provider || listing.owner?.car_provider)?.email;
+        const whatsapp = listing.contact_whatsapp || phone;
+
+        if (type === 'phone') {
+            if (!phone) {
+                showToast('رقم الهاتف غير متوفر', 'error');
+                return;
+            }
+            CarProviderService.trackAnalytics(listing.id, 'contact_phone').catch(console.error);
+            window.location.href = `tel:${phone}`;
+        } else if (type === 'whatsapp') {
+            if (!whatsapp) {
+                showToast('رقم الواتساب غير متوفر', 'error');
+                return;
+            }
+            CarProviderService.trackAnalytics(listing.id, 'contact_whatsapp').catch(console.error);
+
+            const message = encodeURIComponent(
+                `مرحباً، أنا مهتم بسيارتك ${listing.title}\n` +
+                `السعر: ${dailyRate ? safePrice(dailyRate) : 'اتصل'} (يومي)\n` +
+                `الرابط: ${window.location.href}`
+            );
+
+            const whatsappUrl = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${message}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    };
+
+    const handleReportSubmit = async (reason: string, details: string) => {
+        try {
+            await CarProviderService.reportListing(listing.id, { reason, details });
+            showToast('تم إرسال البلاغ بنجاح', 'success');
+        } catch (error) {
+            showToast('فشل إرسال البلاغ', 'error');
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -398,7 +394,7 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                         isSponsored={listing.is_sponsored}
                         isFeatured={listing.is_featured}
                         isRent={listing.listing_type === 'rent'}
-                        videoUrl={listing.video_url}
+                        videoUrl={listing.video_url || undefined}
                         t={t}
                     />
 
@@ -425,12 +421,26 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
 
                         {/* Title Section */}
                         <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {listing.is_sponsored && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-bold">
+                                        <Star className="w-3 h-3 fill-current" />
+                                        {t.ui.sponsored}
+                                    </span>
+                                )}
+                                {listing.is_featured && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-full text-xs font-bold">
+                                        💎 {t.ui.featured}
+                                    </span>
+                                )}
+                            </div>
+
                             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                                 {listing.title}
                             </h1>
 
                             {/* Brand & Model Badges */}
-                            {(listing.brand || listing.model || listing.year || listing.mileage || listing.transmission || listing.fuel_type) && (
+                            {(listing.brand || listing.model || listing.year || listing.mileage || listing.transmission || listing.fuel_type || listing.horsepower) && (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {listing.brand && (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 rounded-md font-semibold text-xs border border-blue-100 dark:border-blue-800">
@@ -448,6 +458,11 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                                             {listing.year}
                                         </span>
                                     )}
+                                    {listing.mileage && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 rounded-md font-semibold text-xs border border-emerald-100 dark:border-emerald-800">
+                                            {Number(listing.mileage).toLocaleString()} كم
+                                        </span>
+                                    )}
                                     {listing.transmission && (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-300 rounded-md font-semibold text-xs border border-teal-100 dark:border-teal-800">
                                             {translateValue(listing.transmission)}
@@ -456,6 +471,11 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                                     {listing.fuel_type && (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-300 rounded-md font-semibold text-xs border border-rose-100 dark:border-rose-800">
                                             {translateValue(listing.fuel_type)}
+                                        </span>
+                                    )}
+                                    {listing.horsepower && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 rounded-md font-semibold text-xs border border-indigo-100 dark:border-indigo-800">
+                                            {listing.horsepower} حصان
                                         </span>
                                     )}
                                 </div>
@@ -485,196 +505,203 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                                 </span>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Mobile Price Card */}
-                    <div className="lg:hidden">
-                        <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
-                    </div>
+                        {/* Mobile Price Card */}
+                        <div className="lg:hidden">
+                            <PriceCard listing={listing} className="shadow-sm border-0 bg-transparent p-0" />
+                        </div>
 
-                    {/* Detailed Specs Tabs */}
-                    <SpecificationsTabs listing={listing} />
+                        {/* Detailed Specs Tabs */}
+                        <SpecificationsTabs listing={listing} />
 
-                    {/* Rental Terms / Conditions - Enhanced */}
-                    {hasConditions && (
-                        <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-2xl p-6 sm:p-8 shadow-sm border-2 border-teal-200 dark:border-teal-800">
-                            <h2 className="text-2xl font-bold text-teal-900 dark:text-teal-100 mb-6 flex items-center gap-3">
-                                <div className="p-2 bg-teal-600 dark:bg-teal-700 rounded-xl">
-                                    <CheckCircle className="w-6 h-6 text-white" />
-                                </div>
-                                شروط الإيجار
-                            </h2>
-
-                            {termsList.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                                    {termsList.map((term, idx) => (
-                                        <div key={idx} className="flex items-start gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/50 hover:shadow-md transition-shadow">
-                                            <div className="mt-0.5 w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
-                                                <CheckCircle className="w-4 h-4" />
-                                            </div>
-                                            <span className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">{translateRentalTerm(term)}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {structuredTerms.custom_terms && (
-                                <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border-2 border-amber-200 dark:border-amber-800/50 shadow-sm">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                                            <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="font-bold text-amber-900 dark:text-amber-100 text-base">شروط إضافية</h3>
+                        {/* Rental Terms / Conditions - Enhanced */}
+                        {hasConditions && (
+                            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-2xl p-6 sm:p-8 shadow-sm border-2 border-teal-200 dark:border-teal-800">
+                                <h2 className="text-2xl font-bold text-teal-900 dark:text-teal-100 mb-6 flex items-center gap-3">
+                                    <div className="p-2 bg-teal-600 dark:bg-teal-700 rounded-xl">
+                                        <CheckCircle className="w-6 h-6 text-white" />
                                     </div>
-                                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                                        {structuredTerms.custom_terms}
+                                    شروط الإيجار
+                                </h2>
+
+                                {termsList.length > 0 && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                                        {termsList.map((term, idx) => (
+                                            <div key={idx} className="flex items-start gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/50 hover:shadow-md transition-shadow">
+                                                <div className="mt-0.5 w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
+                                                    <CheckCircle className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">{translateRentalTerm(term)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {structuredTerms.custom_terms && (
+                                    <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border-2 border-amber-200 dark:border-amber-800/50 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <h3 className="font-bold text-amber-900 dark:text-amber-100 text-base">شروط إضافية</h3>
+                                        </div>
+                                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                                            {structuredTerms.custom_terms}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Car Body Diagram */}
+                        {listing.body_condition && typeof listing.body_condition === 'object' && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
+                                <CarBodyDiagram
+                                    value={listing.body_condition}
+                                    onChange={() => { }}
+                                    readOnly={true}
+                                />
+                            </div>
+                        )}
+
+                        {/* Rental Requirements */}
+                        {hasRequirements && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-orange-100 dark:border-orange-900/30">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <AlertCircle className="w-6 h-6 text-orange-600" />
+                                    متطلبات الأيجار
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {structuredTerms.security_deposit && (
+                                        <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                                            <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
+                                                <Shield className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">مبلغ التأمين</p>
+                                                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                                    {safePrice(structuredTerms.security_deposit)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {(structuredTerms.min_renter_age || structuredTerms.min_license_age) && (
+                                        <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                                            <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
+                                                <Users className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الحد الأدنى للعمر / الرخصة</p>
+                                                <div className="flex gap-4">
+                                                    {structuredTerms.min_renter_age && (
+                                                        <span className="font-bold text-gray-900 dark:text-white">
+                                                            {structuredTerms.min_renter_age} سنة (عمر)
+                                                        </span>
+                                                    )}
+                                                    {structuredTerms.min_license_age && (
+                                                        <span className="font-bold text-gray-900 dark:text-white border-r border-gray-300 dark:border-gray-600 pr-4 mr-1">
+                                                            {structuredTerms.min_license_age} سنة (رخصة)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+
+
+                    </div>
+
+                    {/* Sidebar Column (4 cols) */}
+                    <div className="lg:col-span-4">
+                        <div className="sticky top-24 space-y-6">
+
+                            {/* Price Card (Desktop) */}
+                            <div className="hidden lg:block">
+                                <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
+                            </div>
+
+                            {/* Contact Buttons */}
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => handleContact('phone')}
+                                    className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                >
+                                    <Phone className="w-5 h-5" />
+                                    {t.ui.call}
+                                </button>
+                                {hasWhatsapp && (
+                                    <button
+                                        onClick={() => handleContact('whatsapp')}
+                                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <MessageCircle className="w-5 h-5" />
+                                        {t.ui.whatsapp}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Safety Box */}
+                            <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
+                                <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                                <div>
+                                    <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">سلامة المعاملة</h4>
+                                    <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                        لا تقم بأي تحويلات مالية قبل معاينة السيارة وتوقيع العقد.
                                     </p>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                            </div>
 
-                    {/* Car Body Diagram */}
-                    {listing.body_condition && typeof listing.body_condition === 'object' && (
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t.specs.body_condition}</h2>
-                            <CarBodyDiagram
-                                value={listing.body_condition}
-                                onChange={() => { }}
-                                readOnly={true}
+                            {/* Provider Info */}
+                            <ProviderSidebar
+                                provider={provider}
+                                listing={listing}
+                                t={t}
+                                onContact={handleContact}
+                                onReport={() => setShowReportModal(true)}
                             />
-                        </div>
-                    )}
 
-                    {/* Rental Requirements */}
-                    {hasRequirements && (
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-orange-100 dark:border-orange-900/30">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                <AlertCircle className="w-6 h-6 text-orange-600" />
-                                متطلبات الأيجار
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {structuredTerms.security_deposit && (
-                                    <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
-                                        <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
-                                            <Shield className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">مبلغ التأمين</p>
-                                            <p className="text-lg font-bold text-gray-900 dark:text-white">
-                                                {safePrice(structuredTerms.security_deposit)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(structuredTerms.min_renter_age || structuredTerms.min_license_age) && (
-                                    <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-100 dark:border-orange-800/50">
-                                        <div className="p-2.5 bg-white dark:bg-gray-800 rounded-full text-orange-600 shadow-sm">
-                                            <Users className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الحد الأدنى للعمر / الرخصة</p>
-                                            <div className="flex gap-4">
-                                                {structuredTerms.min_renter_age && (
-                                                    <span className="font-bold text-gray-900 dark:text-white">
-                                                        {structuredTerms.min_renter_age} سنة (عمر)
-                                                    </span>
-                                                )}
-                                                {structuredTerms.min_license_age && (
-                                                    <span className="font-bold text-gray-900 dark:text-white border-r border-gray-300 dark:border-gray-600 pr-4 mr-1">
-                                                        {structuredTerms.min_license_age} سنة (رخصة)
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Sponsored Listings */}
-                    <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
-                        <SponsoredListings
-                            currentListingId={listing.id}
-                            t={t}
-                        />
-                    </div>
-
-                    {/* Similar Listings */}
-                    <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
-                        <SimilarListings
-                            currentListingId={listing.id}
-                            categoryId={listing.category?.id}
-                            brandId={listing.brand?.id}
-                            t={t}
-                        />
-                    </div>
-
-                </div>
-
-                {/* Sidebar Column (4 cols) */}
-                <div className="lg:col-span-4">
-                    <div className="sticky top-24 space-y-6">
-
-                        {/* Price Card (Desktop) */}
-                        <div className="hidden lg:block">
-                            <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
-                        </div>
-
-                        {/* Contact Buttons */}
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => handleContact('phone')}
-                                className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
-                            >
-                                <Phone className="w-5 h-5" />
-                                {t.ui.call}
-                            </button>
-                            {hasWhatsapp && (
+                            <div className="text-center">
                                 <button
-                                    onClick={() => handleContact('whatsapp')}
-                                    className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                    onClick={() => setShowReportModal(true)}
+                                    className="text-sm text-gray-400 hover:text-red-500 underline decoration-dotted transition-colors"
                                 >
-                                    <MessageCircle className="w-5 h-5" />
-                                    {t.ui.whatsapp}
+                                    {t.ui.report}
                                 </button>
-                            )}
-                        </div>
-
-                        {/* Safety Box */}
-                        <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
-                            <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
-                            <div>
-                                <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">سلامة المعاملة</h4>
-                                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                                    لا تقم بأي تحويلات مالية قبل معاينة السيارة وتوقيع العقد.
-                                </p>
                             </div>
+
                         </div>
-
-                        {/* Provider Info */}
-                        <ProviderSidebar
-                            provider={provider}
-                            listing={listing}
-                            t={t}
-                            onContact={handleContact}
-                            onReport={() => setShowReportModal(true)}
-                        />
-
-                        <div className="text-center">
-                            <button
-                                onClick={() => setShowReportModal(true)}
-                                className="text-sm text-gray-400 hover:text-red-500 underline decoration-dotted transition-colors"
-                            >
-                                {t.ui.report}
-                            </button>
-                        </div>
-
                     </div>
+                </div>
+            </div>
+
+            {/* Full Width Sections */}
+            <div className="w-full px-2 md:px-8 sm:px-6 py-8 space-y-12 max-w-7xl mx-auto">
+                {/* Sponsored Listings */}
+                <SponsoredListings
+                    currentListingId={listing.id}
+                    t={t}
+                    listingType="rent"
+                    showToast={showToast}
+                    isAuthenticated={isAuthenticated}
+                    onLoginClick={() => setShowLogin && setShowLogin(true)}
+                />
+
+                {/* Similar Listings */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+                    <SimilarListings
+                        currentListingId={listing.id}
+                        categoryId={listing.category?.id}
+                        brandId={listing.brand?.id}
+                        t={t}
+                    />
                 </div>
             </div>
 

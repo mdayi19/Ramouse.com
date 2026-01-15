@@ -15,6 +15,7 @@ interface CarListingCardProps {
     showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
     isAuthenticated?: boolean;
     onLoginClick?: () => void;
+    isSponsoredInjection?: boolean;
 }
 
 // --- Helper: Translations ---
@@ -105,7 +106,14 @@ const SpecsRow = ({ listing }: { listing: CarListing }) => {
 };
 
 // --- Main Component ---
-export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMode, showToast, isAuthenticated, onLoginClick }) => {
+export const CarListingCard: React.FC<CarListingCardProps> = ({
+    listing,
+    viewMode,
+    showToast,
+    isAuthenticated,
+    onLoginClick,
+    isSponsoredInjection
+}) => {
     const navigate = useNavigate();
     const { addItem, removeItem, isInComparison, items } = useComparison();
     const [isFavorited, setIsFavorited] = useState(false);
@@ -181,7 +189,7 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
 
             {/* Badges */}
             <div className="absolute top-2 left-2 flex gap-1 z-10">
-                {listing.is_sponsored && (
+                {(listing.is_sponsored || isSponsoredInjection) && (
                     <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded-full shadow-sm flex items-center gap-1">
                         <Star className="w-3 h-3 fill-current" /> مميز
                     </span>
@@ -241,11 +249,22 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({ listing, viewMod
             <motion.article
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group flex flex-col bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 h-full cursor-pointer"
+                className={cn(
+                    "group flex flex-col bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 h-full cursor-pointer relative",
+                    isSponsoredInjection
+                        ? "border-yellow-400 dark:border-yellow-600 shadow-md ring-1 ring-yellow-400/30"
+                        : "border-slate-200 dark:border-slate-700"
+                )}
                 onClick={handleView}
             >
+                {/* Optional "Sponsored" Label overlay for injected cards specifically if needed, 
+                    but the image badge usually suffices. Let's add a subtle background tint for injection. */}
+                {isSponsoredInjection && (
+                    <div className="absolute inset-0 bg-yellow-50/30 dark:bg-yellow-900/10 pointer-events-none z-0" />
+                )}
+
                 {/* Image Area - Aspect 16:10 */}
-                <ListingImage className="w-full aspect-[16/10]" />
+                <ListingImage className="w-full aspect-[16/10] z-10" />
 
                 {/* Content Area */}
                 <div className="flex flex-col flex-1 p-4 gap-3">

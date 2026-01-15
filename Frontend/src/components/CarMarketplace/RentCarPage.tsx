@@ -8,6 +8,8 @@ import { RentFilters } from './MarketplaceParts/RentFilters';
 import { ListingSkeleton } from './MarketplaceParts/ListingSkeleton';
 import { ErrorState } from './MarketplaceParts/ErrorState';
 import Icon from '../Icon';
+import SponsoredListings from './ListingParts/SponsoredListings';
+import { api } from '../../lib/api';
 
 interface RentCarPageProps {
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -33,6 +35,11 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // Sponsored Pool State
+    const [sponsoredPool, setSponsoredPool] = useState<CarListing[]>([]);
+    const [topSponsored, setTopSponsored] = useState<CarListing[]>([]);
+    const [injectedSponsored, setInjectedSponsored] = useState<CarListing[]>([]);
+
     // Infinite Scroll Ref
     const observer = useRef<IntersectionObserver | null>(null);
     const lastListingElementRef = useCallback((node: HTMLDivElement) => {
@@ -48,10 +55,35 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
         if (node) observer.current.observe(node);
     }, [loading, loadingMore, pagination.current_page, pagination.last_page]);
 
-    // Initial Load
     useEffect(() => {
         loadCategories();
+        fetchSponsoredPool();
     }, []);
+
+    const fetchSponsoredPool = async () => {
+        try {
+            const params = {
+                is_sponsored: 1,
+                limit: 20,
+                listing_type: 'rent'
+            };
+            const response = await api.get('/car-listings', { params });
+            // Shuffle client-side
+            const responseData = response.data;
+            const rawListings = responseData.listings?.data || responseData.data || [];
+            // Strictly filter for is_sponsored
+            const allSponsored = rawListings
+                .filter((item: any) => item.is_sponsored && item.listing_type === 'rent')
+                .sort(() => 0.5 - Math.random());
+
+            // Split into Top Carousel (4) and Injection Pool (rest)
+            setTopSponsored(allSponsored.slice(0, 4));
+            setInjectedSponsored(allSponsored.slice(4));
+            setSponsoredPool(allSponsored);
+        } catch (err) {
+            console.error('Failed to fetch sponsored pool', err);
+        }
+    };
 
     // Load listings when filters change
     useEffect(() => {
@@ -279,6 +311,20 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
 
             {/* 2. Main Content Area */}
             <div className="w-full px-0 md:px-8 py-6 -mt-8 relative z-20">
+                {/* Top Sponsored Carousel */}
+                {topSponsored.length > 0 && (
+                    <div className="mb-8 px-4 md:px-0">
+                        <SponsoredListings
+                            t={(k: string) => k}
+                            listingType="rent"
+                            listings={topSponsored}
+                            showToast={showToast}
+                            isAuthenticated={isAuthenticated}
+                            onLoginClick={onLoginClick}
+                        />
+                    </div>
+                )}
+
                 <div className="flex flex-col lg:flex-row gap-8">
 
                     {/* Filters Sidebar (Desktop) */}
@@ -389,7 +435,32 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                                 />
                                             );
                                         }
-                                    })}
+                                    }).reduce((acc: any[], curr, idx) => {
+                                        // Standard item
+                                        acc.push(curr);
+
+                                        // Injection Logic: Inject after every 6 items
+                                        if ((idx + 1) % 6 === 0) {
+                                            const injectionIndex = Math.floor((idx + 1) / 6) - 1;
+                                            const sponsoredItem = injectedSponsored[injectionIndex % injectedSponsored.length];
+
+                                            if (sponsoredItem) {
+                                                acc.push(
+                                                    <div key={`sponsored-inject-${idx}`} className={viewMode === 'list' ? "w-full" : ""}>
+                                                        <RentListingCard
+                                                            listing={sponsoredItem}
+                                                            viewMode={viewMode}
+                                                            showToast={showToast}
+                                                            isAuthenticated={isAuthenticated}
+                                                            onLoginClick={onLoginClick}
+                                                            isSponsoredInjection={true}
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                        return acc;
+                                    }, [])}
 
                                     {loadingMore && [1, 2, 3].map((i) => (
                                         <ListingSkeleton key={`more-${i}`} viewMode={viewMode} />

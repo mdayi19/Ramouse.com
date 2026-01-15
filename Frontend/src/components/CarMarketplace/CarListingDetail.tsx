@@ -20,7 +20,7 @@ import ReportListingModal from './ListingParts/ReportListingModal';
 import QuickSpecsBar from './ListingParts/QuickSpecsBar';
 import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
-import FeaturesShowcase from './ListingParts/FeaturesShowcase';
+
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { CarBodyDiagram } from './CarBodyDiagram';
 
@@ -545,6 +545,10 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
                             <SponsoredListings
                                 currentListingId={listing.id}
                                 t={t}
+                                listingType="sale"
+                                showToast={showToast}
+                                isAuthenticated={isAuthenticated}
+                                onLoginClick={() => setShowLogin(true)}
                             />
                         </div>
 
