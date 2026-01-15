@@ -263,7 +263,12 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
             {/* Available Listings to Sponsor */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6">
                 <h3 className="text-xl font-bold mb-4">إعلانات متاحة للرعاية</h3>
-                {listings.filter(l => !l.is_sponsored).length === 0 ? (
+                {listings.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                        <p>لا توجد إعلانات</p>
+                        <p className="text-sm mt-2">قم بإنشاء إعلان أولاً</p>
+                    </div>
+                ) : listings.filter(l => !l.is_sponsored).length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                         <p>جميع إعلاناتك ممولة حالياً!</p>
                     </div>
