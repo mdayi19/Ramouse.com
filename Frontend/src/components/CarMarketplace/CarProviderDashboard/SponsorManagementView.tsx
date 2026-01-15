@@ -84,9 +84,11 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
     const loadListings = async () => {
         try {
             const response = await carProviderAPI.getMyListings();
-            setListings(response.data.data || response.data || []);
+            const data = response.data.data || response.data || [];
+            setListings(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to load listings:', error);
+            setListings([]);
         }
     };
 
