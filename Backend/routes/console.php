@@ -98,3 +98,14 @@ Schedule::command('analytics:aggregate')
         Log::error('[Scheduler] Failed to aggregate car analytics');
     });
 
+// Expire sponsored listings daily at 1:00 AM
+Schedule::command('sponsorships:expire')
+    ->dailyAt('01:00')
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('[Scheduler] Sponsorship expiry check completed successfully');
+    })
+    ->onFailure(function () {
+        Log::error('[Scheduler] Failed to expire sponsorships');
+    });
+

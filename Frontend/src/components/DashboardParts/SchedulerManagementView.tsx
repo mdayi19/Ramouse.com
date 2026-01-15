@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ViewHeader } from './Shared';
+import { ViewHeader, StatCard } from './Shared';
+import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import Icon from '../Icon';
@@ -115,17 +116,17 @@ const SchedulerManagementView: React.FC<{
         }
     };
 
-    const getLevelColor = (level: string) => {
+    const getLevelBadgeVariant = (level: string) => {
         if (level.includes('ERROR') || level.includes('CRITICAL')) {
-            return 'text-red-600 dark:text-red-400';
+            return 'destructive';
         }
         if (level.includes('WARNING')) {
-            return 'text-yellow-600 dark:text-yellow-400';
+            return 'warning';
         }
         if (level.includes('INFO')) {
-            return 'text-blue-600 dark:text-blue-400';
+            return 'info';
         }
-        return 'text-slate-600 dark:text-slate-400';
+        return 'secondary';
     };
 
     if (loading) {
@@ -208,41 +209,33 @@ const SchedulerManagementView: React.FC<{
                     {/* Statistics Cards */}
                     {stats && (
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
-                                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                    {stats.total_tasks}
-                                </div>
-                                <div className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                                    إجمالي المهام
-                                </div>
-                            </Card>
+                            <StatCard
+                                title="إجمالي المهام"
+                                value={stats.total_tasks}
+                                icon={<Icon name="List" className="w-6 h-6 text-blue-600 dark:text-blue-400" />}
+                                iconClassName="bg-blue-100 dark:bg-blue-900/30"
+                            />
 
-                            <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
-                                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                    {stats.successful_runs_today}
-                                </div>
-                                <div className="text-sm text-green-700 dark:text-green-300 mt-1">
-                                    تنفيذات ناجحة اليوم
-                                </div>
-                            </Card>
+                            <StatCard
+                                title="تنفيذات ناجحة اليوم"
+                                value={stats.successful_runs_today}
+                                icon={<Icon name="CheckCircle" className="w-6 h-6 text-green-600 dark:text-green-400" />}
+                                iconClassName="bg-green-100 dark:bg-green-900/30"
+                            />
 
-                            <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
-                                <div className="text-3xl font-bold text-red-600 dark:text-red-400">
-                                    {stats.failed_runs_today}
-                                </div>
-                                <div className="text-sm text-red-700 dark:text-red-300 mt-1">
-                                    تنفيذات فاشلة اليوم
-                                </div>
-                            </Card>
+                            <StatCard
+                                title="تنفيذات فاشلة اليوم"
+                                value={stats.failed_runs_today}
+                                icon={<Icon name="XCircle" className="w-6 h-6 text-red-600 dark:text-red-400" />}
+                                iconClassName="bg-red-100 dark:bg-red-900/30"
+                            />
 
-                            <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
-                                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                                    {stats.uptime_percentage}%
-                                </div>
-                                <div className="text-sm text-purple-700 dark:text-purple-300 mt-1">
-                                    معدل النجاح
-                                </div>
-                            </Card>
+                            <StatCard
+                                title="معدل النجاح"
+                                value={`${stats.uptime_percentage}%`}
+                                icon={<Icon name="Activity" className="w-6 h-6 text-purple-600 dark:text-purple-400" />}
+                                iconClassName="bg-purple-100 dark:bg-purple-900/30"
+                            />
                         </div>
                     )}
 
@@ -298,23 +291,23 @@ const SchedulerManagementView: React.FC<{
                                             )}
 
                                             <div className="flex flex-wrap gap-2 text-xs">
-                                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                                                <Badge variant="info" className="px-2 py-1">
                                                     {task.human_readable}
-                                                </span>
+                                                </Badge>
                                                 {task.without_overlapping && (
-                                                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+                                                    <Badge variant="purple" className="px-2 py-1">
                                                         بدون تداخل
-                                                    </span>
+                                                    </Badge>
                                                 )}
                                                 {task.run_in_background && (
-                                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
+                                                    <Badge variant="success" className="px-2 py-1">
                                                         في الخلفية
-                                                    </span>
+                                                    </Badge>
                                                 )}
                                                 {task.next_run && (
-                                                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded">
+                                                    <Badge variant="secondary" className="px-2 py-1">
                                                         التشغيل القادم: {new Date(task.next_run).toLocaleString('ar-EG')}
-                                                    </span>
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </div>
@@ -380,9 +373,9 @@ const SchedulerManagementView: React.FC<{
                                             <span className="text-slate-500 dark:text-slate-400 flex-shrink-0">
                                                 {log.timestamp}
                                             </span>
-                                            <span className={`font-bold flex-shrink-0 ${getLevelColor(log.level)}`}>
+                                            <Badge variant={getLevelBadgeVariant(log.level)} className="flex-shrink-0">
                                                 {log.level}
-                                            </span>
+                                            </Badge>
                                             <span className="text-slate-700 dark:text-slate-300 break-all">
                                                 {log.message}
                                             </span>

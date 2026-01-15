@@ -10,6 +10,7 @@ import { CarListingWizard } from '../CarListingWizard';
 import { AnalyticsCard } from './AnalyticsCard';
 import ProviderDashboardService from '../../../services/providerDashboard.service';
 import { getImageUrl } from '../../../utils/helpers';
+import SponsorListingModal from './SponsorListingModal';
 
 // Helper to safely extract all rates
 const getRates = (listing: any) => {
@@ -92,6 +93,9 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
     const [expandedAnalytics, setExpandedAnalytics] = useState<Set<number>>(new Set());
     const [analyticsData, setAnalyticsData] = useState<Record<number, any>>({});
 
+    // Sponsor Modal State
+    const [sponsorModal, setSponsorModal] = useState<{ open: boolean; listing: any | null }>({ open: false, listing: null });
+
     useEffect(() => {
         loadListings();
     }, []);
@@ -133,6 +137,30 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
             setListings(prev => prev.filter(l => l.id !== listingId));
         } catch (error) {
             showToast('فشل حذف الإعلان', 'error');
+        }
+    };
+
+    const handleUnsponsor = async (listingId: number) => {
+        if (!confirm('هل تريد إلغاء رعاية هذا الإعلان؟ سيتم استرجاع المبلغ المتبقي.')) return;
+
+        try {
+            const response = await fetch(`/api/car-provider/listings/${listingId}/unsponsor`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast(`تم إلغاء الرعاية. استرجاع: ${data.refund_amount} ريال`, 'success');
+                loadListings();
+            } else {
+                showToast(data.error || 'فشل إلغاء الرعاية', 'error');
+            }
+        } catch (error) {
+            showToast('حدث خطأ', 'error');
         }
     };
 
@@ -685,6 +713,24 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                             >
                                                                 <Trash2 className="w-4.5 h-4.5" />
                                                             </button>
+                                                            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                                            {!(listing as any).is_sponsored ? (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setSponsorModal({ open: true, listing }); }}
+                                                                    className="p-2 text-yellow-500 hover:text-white hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 rounded-xl transition-all shadow-sm hover:shadow-yellow-500/30"
+                                                                    title="رعاية الإعلان"
+                                                                >
+                                                                    <span className="text-lg">⭐</span>
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleUnsponsor(listing.id); }}
+                                                                    className="p-2 text-purple-500 hover:text-white hover:bg-purple-500 rounded-xl transition-all shadow-sm hover:shadow-purple-500/30"
+                                                                    title="إلغاء الرعاية"
+                                                                >
+                                                                    <span className="text-lg">🌟</span>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 align-middle">
@@ -1077,6 +1123,19 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                     />
                 )
             }
+
+            {/* Sponsor Modal */}
+            {sponsorModal.open && sponsorModal.listing && (
+                <SponsorListingModal
+                    listing={sponsorModal.listing}
+                    walletBalance={provider.wallet_balance || 0}
+                    onClose={() => setSponsorModal({ open: false, listing: null })}
+                    onSuccess={() => {
+                        loadListings();
+                    }}
+                    showToast={showToast}
+                />
+            )}
         </motion.div >
     );
 };

@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -141,6 +142,139 @@ class AdminController extends Controller
     public function updateWithdrawal(Request $request, $id)
     {
         return response()->json(['message' => 'Withdrawal updated']);
+    }
+
+    /**
+     * Get sponsor settings
+     */
+    public function getSponsorSettings()
+    {
+        $settings = \App\Models\SystemSetting::getSetting('sponsorSettings');
+
+        if (!$settings) {
+            $settings = [
+                'dailyPrice' => 10,
+                'weeklyPrice' => 60,
+                'monthlyPrice' => 200,
+                'maxDuration' => 90,
+                'minDuration' => 1,
+                'enabled' => true,
+            ];
+        }
+
+        return response()->json(['settings' => $settings]);
+    }
+
+    /**
+     * Update sponsor settings
+     */
+    public function updateSponsorSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'dailyPrice' => 'required|numeric|min:0',
+            'weeklyPrice' => 'required|numeric|min:0',
+            'monthlyPrice' => 'required|numeric|min:0',
+            'maxDuration' => 'required|integer|min:1|max:365',
+            'minDuration' => 'required|integer|min:1',
+            'enabled' => 'required|boolean',
+        ]);
+
+        \App\Models\SystemSetting::updateOrCreate(
+            ['key' => 'sponsorSettings'],
+            ['value' => json_encode($validated)]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث إعدادات الرعاية بنجاح'
+        ]);
+    }
+
+    /**
+     * Admin sponsor listing (FREE)
+     */
+    public function adminSponsorListing(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'duration_days' => 'required|integer|min:1|max:365'
+        ]);
+
+        $listing = \App\Models\CarListing::findOrFail($id);
+
+        DB::transaction(function () use ($listing, $validated, $request) {
+            $sponsoredUntil = now()->addDays($validated['duration_days']);
+
+            // Cancel any existing active sponsorship
+            $listing->sponsorshipHistories()
+                ->where('status', 'active')
+                ->update(['status' => 'cancelled']);
+
+            $listing->update([
+                'is_sponsored' => true,
+                'sponsored_until' => $sponsoredUntil,
+            ]);
+
+            \App\Models\CarListingSponsorshipHistory::create([
+                'car_listing_id' => $listing->id,
+                'sponsored_by_user_id' => $request->user()->id,
+                'sponsored_from' => now(),
+                'sponsored_until' => $sponsoredUntil,
+                'price' => 0, // Free for admin
+                'duration_days' => $validated['duration_days'],
+                'status' => 'active',
+                'is_admin_sponsored' => true,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تفعيل الرعاية بنجاح'
+        ]);
+    }
+
+    /**
+     * Get all sponsorships (history)
+     */
+    public function getAllSponsorships(Request $request)
+    {
+        $sponsorships = \App\Models\CarListingSponsorshipHistory::with([
+            'listing:id,title,price',
+            'sponsoredBy:id,name'
+        ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($sponsorships);
+    }
+
+    /**
+     * Get sponsorship revenue analytics
+     */
+    public function getSponsorshipRevenue(Request $request)
+    {
+        // Total revenue (exclude admin-sponsored)
+        $totalRevenue = \App\Models\CarListingSponsorshipHistory::where('is_admin_sponsored', false)
+            ->sum('price');
+
+        // Monthly revenue
+        $monthlyRevenue = \App\Models\CarListingSponsorshipHistory::where('is_admin_sponsored', false)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum('price');
+
+        // Active sponsorships count
+        $activeSponsorships = \App\Models\CarListingSponsorshipHistory::where('status', 'active')->count();
+
+        // This week revenue
+        $weeklyRevenue = \App\Models\CarListingSponsorshipHistory::where('is_admin_sponsored', false)
+            ->where('created_at', '>=', now()->startOfWeek())
+            ->sum('price');
+
+        return response()->json([
+            'totalRevenue' => (float) $totalRevenue,
+            'monthlyRevenue' => (float) $monthlyRevenue,
+            'weeklyRevenue' => (float) $weeklyRevenue,
+            'activeSponsorships' => $activeSponsorships,
+        ]);
     }
 
     public function getSettings()

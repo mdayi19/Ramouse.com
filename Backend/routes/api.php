@@ -427,8 +427,16 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [AdminController::class, 'listCarListings']);
             Route::patch('/{id}/hide', [AdminController::class, 'toggleHideListing']);
             Route::post('/{id}/feature', [AdminController::class, 'featureListing']);
-            Route::post('/{id}/sponsor', [AdminController::class, 'sponsorListing']);
+            Route::post('/{id}/sponsor', [AdminController::class, 'adminSponsorListing']);
             Route::delete('/{id}/force', [AdminController::class, 'deleteCarListing']);
+        });
+
+        // Sponsor Management
+        Route::prefix('sponsor')->group(function () {
+            Route::get('/settings', [AdminController::class, 'getSponsorSettings']);
+            Route::put('/settings', [AdminController::class, 'updateSponsorSettings']);
+            Route::get('/sponsorships', [AdminController::class, 'getAllSponsorships']);
+            Route::get('/revenue', [AdminController::class, 'getSponsorshipRevenue']);
         });
 
         Route::prefix('car-listing-categories')->group(function () {
@@ -540,6 +548,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Quick Edit & Duplication
         Route::patch('/listings/{id}/quick-edit', [CarProviderController::class, 'quickEdit']);
         Route::post('/listings/{id}/duplicate', [CarProviderController::class, 'duplicateListing']);
+
+        // Sponsor Listing
+        Route::get('/listings/sponsor-price', [CarListingController::class, 'calculateSponsorPrice']);
+        Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
+        Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
     });
 
     // Individual Customer Listings (max 3)

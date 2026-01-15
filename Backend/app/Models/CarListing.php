@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class CarListing extends Model
@@ -87,6 +88,8 @@ class CarListing extends Model
     protected $appends = ['is_active_sponsor', 'is_active_featured'];
 
     // Boot
+
+    // Boot
     protected static function boot()
     {
         parent::boot();
@@ -127,6 +130,18 @@ class CarListing extends Model
     public function favorites(): HasMany
     {
         return $this->hasMany(UserCarFavorite::class, 'car_listing_id');
+    }
+
+    public function sponsorshipHistories(): HasMany
+    {
+        return $this->hasMany(CarListingSponsorshipHistory::class);
+    }
+
+    public function activeSponsorship(): HasOne
+    {
+        return $this->hasOne(CarListingSponsorshipHistory::class)
+            ->where('status', 'active')
+            ->latest();
     }
 
     // Scopes

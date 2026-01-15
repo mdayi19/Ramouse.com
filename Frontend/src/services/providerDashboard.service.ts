@@ -48,8 +48,8 @@ export const ProviderDashboardService = {
      * Get analytics for a specific listing
      */
     async getListingAnalytics(listingId: number, days: number = 30): Promise<ListingAnalytics> {
-        const response = await api.get(`/car-analytics/listing/${listingId}?days=${days}`);
-        return response.data.analytics;
+        const response = await api.get(`/car-provider/listings/${listingId}/analytics?days=${days}`);
+        return response.data;
     },
 
     /**

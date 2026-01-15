@@ -332,4 +332,183 @@ class CarListingController extends Controller
             'is_hidden' => $listing->is_hidden
         ]);
     }
+
+    /**
+     * Calculate sponsor price based on duration
+     */
+    public function calculateSponsorPrice(Request $request)
+    {
+        $validated = $request->validate(['days' => 'required|integer|min:1|max:90']);
+        $days = $validated['days'];
+
+        $settings = \App\Models\SystemSettings::getSetting('sponsorSettings');
+        if (!$settings || !($settings['enabled'] ?? true)) {
+            return response()->json(['error' => 'Sponsorship is currently disabled'], 400);
+        }
+
+        $pricing = [
+            'daily' => $settings['dailyPrice'] ?? 10,
+            'weekly' => $settings['weeklyPrice'] ?? 60,
+            'monthly' => $settings['monthlyPrice'] ?? 200,
+        ];
+
+        if ($days >= 30) {
+            $price = $pricing['monthly'] * ceil($days / 30);
+            $tier = 'monthly';
+        } elseif ($days >= 7) {
+            $price = $pricing['weekly'] * ceil($days / 7);
+            $tier = 'weekly';
+        } else {
+            $price = $pricing['daily'] * $days;
+            $tier = 'daily';
+        }
+
+        return response()->json([
+            'price' => $price,
+            'days' => $days,
+            'tier' => $tier,
+            'breakdown' => $pricing
+        ]);
+    }
+
+    /**
+     * Sponsor a listing (Provider pays from wallet)
+     */
+    public function sponsorListing(Request $request, $id)
+    {
+        $validated = $request->validate(['duration_days' => 'required|integer|min:1|max:90']);
+        $listing = CarListing::findOrFail($id);
+        $user = auth('sanctum')->user();
+
+        if ($listing->owner_id !== $user->id) {
+            return response()->json(['error' => 'غير مصرح لك برعاية هذا الإعلان'], 403);
+        }
+
+        if ($listing->is_sponsored && $listing->sponsored_until && $listing->sponsored_until->isFuture()) {
+            return response()->json(['error' => 'الإعلان مرعي بالفعل حتى ' . $listing->sponsored_until->format('Y-m-d')], 400);
+        }
+
+        $provider = $user->carProvider;
+        if (!$provider) {
+            return response()->json(['error' => 'حساب مزود السيارات غير موجود'], 404);
+        }
+
+        $priceResponse = $this->calculateSponsorPrice(new Request(['days' => $validated['duration_days']]));
+        $priceData = json_decode($priceResponse->getContent(), true);
+
+        if (isset($priceData['error'])) {
+            return response()->json($priceData, 400);
+        }
+
+        $price = $priceData['price'];
+
+        if ($provider->wallet_balance < $price) {
+            return response()->json([
+                'error' => 'رصيد المحفظة غير كافٍ',
+                'required' => $price,
+                'current_balance' => $provider->wallet_balance,
+            ], 400);
+        }
+
+        DB::transaction(function () use ($listing, $provider, $price, $validated, $user) {
+            $provider->decrement('wallet_balance', $price);
+            $provider->refresh();
+
+            \App\Models\UserTransaction::create([
+                'user_id' => $user->id,
+                'user_type' => 'car_provider',
+                'type' => 'payment',
+                'amount' => -$price,
+                'description' => "رعاية إعلان: {$listing->title} لمدة {$validated['duration_days']} يوم",
+                'balance_after' => $provider->wallet_balance,
+                'reference_type' => 'car_listing_sponsorship',
+                'reference_id' => $listing->id,
+            ]);
+
+            $sponsoredUntil = now()->addDays($validated['duration_days']);
+            $listing->update(['is_sponsored' => true, 'sponsored_until' => $sponsoredUntil]);
+
+            \App\Models\CarListingSponsorshipHistory::create([
+                'car_listing_id' => $listing->id,
+                'sponsored_by_user_id' => $user->id,
+                'sponsored_from' => now(),
+                'sponsored_until' => $sponsoredUntil,
+                'price' => $price,
+                'duration_days' => $validated['duration_days'],
+                'status' => 'active',
+                'is_admin_sponsored' => false,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تفعيل الرعاية بنجاح',
+            'listing' => $listing->fresh(),
+            'new_balance' => $provider->wallet_balance,
+            'amount_paid' => $price,
+        ]);
+    }
+
+    /**
+     * Unsponsor a listing with pro-rated refund
+     */
+    public function unsponsorListing($id)
+    {
+        $listing = CarListing::findOrFail($id);
+        $user = auth('sanctum')->user();
+
+        if ($listing->owner_id !== $user->id) {
+            return response()->json(['error' => 'غير مصرح'], 403);
+        }
+
+        if (!$listing->is_sponsored) {
+            return response()->json(['error' => 'الإعلان غير مرعي'], 400);
+        }
+
+        $provider = $user->carProvider;
+        $history = $listing->sponsorshipHistories()->where('status', 'active')->first();
+
+        if (!$history) {
+            return response()->json(['error' => 'لا توجد رعاية نشطة'], 404);
+        }
+
+        if ($history->is_admin_sponsored) {
+            return response()->json(['error' => 'لا يمكن إلغاء الرعاية الإدارية'], 400);
+        }
+
+        $remainingDays = now()->diffInDays($listing->sponsored_until, false);
+        $refundAmount = 0;
+
+        if ($remainingDays > 0 && $history->price > 0) {
+            $refundAmount = round(($history->price / $history->duration_days) * $remainingDays, 2);
+        }
+
+        DB::transaction(function () use ($listing, $provider, $history, $refundAmount, $user) {
+            if ($refundAmount > 0) {
+                $provider->increment('wallet_balance', $refundAmount);
+                $provider->refresh();
+
+                \App\Models\UserTransaction::create([
+                    'user_id' => $user->id,
+                    'user_type' => 'car_provider',
+                    'type' => 'refund',
+                    'amount' => $refundAmount,
+                    'description' => "استرجاع رعاية: {$listing->title}",
+                    'balance_after' => $provider->wallet_balance,
+                    'reference_type' => 'car_listing_sponsorship',
+                    'reference_id' => $listing->id,
+                ]);
+            }
+
+            $listing->update(['is_sponsored' => false, 'sponsored_until' => null]);
+            $history->update(['status' => 'cancelled', 'refund_amount' => $refundAmount, 'refunded_at' => now()]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إلغاء الرعاية',
+            'refund_amount' => $refundAmount,
+            'new_balance' => $provider->wallet_balance,
+        ]);
+    }
 }

@@ -11,6 +11,7 @@ import { OverviewView } from './OverviewView';
 import { ListingsView } from './ListingsView';
 import { SettingsView } from './SettingsView';
 import { AnalyticsView } from './AnalyticsView';
+import SponsorManagementView from './SponsorManagementView';
 
 // Customer/Shared Views
 import MyOrders from '../../MyOrders';
@@ -87,6 +88,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
         // Provider Specific
         { id: 'overview', label: 'نظرة عامة', icon: 'LayoutGrid', onClick: () => handleSidebarNavClick('overview'), isActive: activeView === 'overview' },
         { id: 'listings', label: 'إدارة السيارات', icon: 'Car', onClick: () => handleSidebarNavClick('listings'), isActive: activeView === 'listings' },
+        { id: 'sponsorManagement', label: 'الإعلانات الممولة', icon: 'Star', onClick: () => handleSidebarNavClick('sponsorManagement'), isActive: activeView === 'sponsorManagement' },
         { id: 'analytics', label: 'التحليلات', icon: 'TrendingUp', onClick: () => handleSidebarNavClick('analytics'), isActive: activeView === 'analytics' },
 
         // Customer Features
@@ -154,6 +156,7 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
                         <Route index element={<OverviewView provider={carProvider} showToast={props.showToast} />} />
                         <Route path="overview" element={<OverviewView provider={carProvider} showToast={props.showToast} />} />
                         <Route path="listings" element={<ListingsView showToast={props.showToast} userPhone={userPhone} provider={carProvider} settings={props.settings} />} />
+                        <Route path="sponsorManagement" element={<SponsorManagementView showToast={props.showToast} provider={carProvider} />} />
                         <Route path="analytics" element={<AnalyticsView showToast={props.showToast} />} />
                         <Route path="settings" element={<SettingsView
                             provider={carProvider}
