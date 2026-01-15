@@ -593,92 +593,93 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                                     </div>
                                 )}
                             </div>
+                        </div>
                     )}
 
-                            {/* Sponsored Listings */}
-                            <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
-                                <SponsoredListings
-                                    currentListingId={listing.id}
-                                    t={t}
-                                />
-                            </div>
+                    {/* Sponsored Listings */}
+                    <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                        <SponsoredListings
+                            currentListingId={listing.id}
+                            t={t}
+                        />
+                    </div>
 
-                            {/* Similar Listings */}
-                            <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
-                                <SimilarListings
-                                    currentListingId={listing.id}
-                                    categoryId={listing.category?.id}
-                                    brandId={listing.brand?.id}
-                                    t={t}
-                                />
-                            </div>
+                    {/* Similar Listings */}
+                    <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                        <SimilarListings
+                            currentListingId={listing.id}
+                            categoryId={listing.category?.id}
+                            brandId={listing.brand?.id}
+                            t={t}
+                        />
+                    </div>
 
-                        </div>
+                </div>
 
                 {/* Sidebar Column (4 cols) */}
-                    <div className="lg:col-span-4">
-                        <div className="sticky top-24 space-y-6">
+                <div className="lg:col-span-4">
+                    <div className="sticky top-24 space-y-6">
 
-                            {/* Price Card (Desktop) */}
-                            <div className="hidden lg:block">
-                                <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
-                            </div>
-
-                            {/* Contact Buttons */}
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={() => handleContact('phone')}
-                                    className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
-                                >
-                                    <Phone className="w-5 h-5" />
-                                    {t.ui.call}
-                                </button>
-                                {hasWhatsapp && (
-                                    <button
-                                        onClick={() => handleContact('whatsapp')}
-                                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
-                                    >
-                                        <MessageCircle className="w-5 h-5" />
-                                        {t.ui.whatsapp}
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Safety Box */}
-                            <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
-                                <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
-                                <div>
-                                    <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">سلامة المعاملة</h4>
-                                    <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                                        لا تقم بأي تحويلات مالية قبل معاينة السيارة وتوقيع العقد.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Provider Info */}
-                            <ProviderSidebar
-                                provider={provider}
-                                listing={listing}
-                                t={t}
-                                onContact={handleContact}
-                                onReport={() => setShowReportModal(true)}
-                            />
-
-                            <div className="text-center">
-                                <button
-                                    onClick={() => setShowReportModal(true)}
-                                    className="text-sm text-gray-400 hover:text-red-500 underline decoration-dotted transition-colors"
-                                >
-                                    {t.ui.report}
-                                </button>
-                            </div>
-
+                        {/* Price Card (Desktop) */}
+                        <div className="hidden lg:block">
+                            <PriceCard listing={listing} className="shadow-xl ring-1 ring-black/5" />
                         </div>
+
+                        {/* Contact Buttons */}
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => handleContact('phone')}
+                                className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                            >
+                                <Phone className="w-5 h-5" />
+                                {t.ui.call}
+                            </button>
+                            {hasWhatsapp && (
+                                <button
+                                    onClick={() => handleContact('whatsapp')}
+                                    className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    {t.ui.whatsapp}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Safety Box */}
+                        <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
+                            <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                            <div>
+                                <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">سلامة المعاملة</h4>
+                                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                    لا تقم بأي تحويلات مالية قبل معاينة السيارة وتوقيع العقد.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Provider Info */}
+                        <ProviderSidebar
+                            provider={provider}
+                            listing={listing}
+                            t={t}
+                            onContact={handleContact}
+                            onReport={() => setShowReportModal(true)}
+                        />
+
+                        <div className="text-center">
+                            <button
+                                onClick={() => setShowReportModal(true)}
+                                className="text-sm text-gray-400 hover:text-red-500 underline decoration-dotted transition-colors"
+                            >
+                                {t.ui.report}
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             </div>
+        </div>
 
-            {/* Mobile Sticky Footer */}
+            {/* Mobile Sticky Footer */ }
             <motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
