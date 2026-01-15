@@ -162,8 +162,48 @@ class AuthController extends Controller
                 return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
             }
         } else {
-            // Safety check: Prevent users with provider profiles but wrong role from logging in as customer
-            if ($user->carProvider()->exists() || $user->technician()->exists() || $user->towTruck()->exists()) {
+            // Safety check: Prevent users with provider profiles but wrong role from logging in
+            // Also block inactive/unverified provider profiles from logging in as any other role
+            $carProvider = $user->carProvider;
+            if ($carProvider) {
+                if (!$carProvider->is_verified || !$carProvider->is_active) {
+                    return response()->json([
+                        'message' => __('auth.account_not_verified'),
+                        'pending_verification' => true,
+                        'error' => 'Your car provider account is pending admin verification. Please wait for approval.',
+                    ], 403);
+                }
+                // Has active car_provider profile but wrong user.role - configuration error
+                return response()->json([
+                    'message' => __('auth.account_configuration_error'),
+                    'error' => 'Your account has a profile type mismatch. Please contact support.',
+                ], 403);
+            }
+
+            $technician = $user->technician;
+            if ($technician) {
+                if (!$technician->is_verified || !$technician->is_active) {
+                    return response()->json([
+                        'message' => __('auth.account_not_verified'),
+                        'pending_verification' => true,
+                        'error' => 'Your technician account is pending admin verification. Please wait for approval.',
+                    ], 403);
+                }
+                return response()->json([
+                    'message' => __('auth.account_configuration_error'),
+                    'error' => 'Your account has a profile type mismatch. Please contact support.',
+                ], 403);
+            }
+
+            $towTruck = $user->towTruck;
+            if ($towTruck) {
+                if (!$towTruck->is_verified || !$towTruck->is_active) {
+                    return response()->json([
+                        'message' => __('auth.account_not_verified'),
+                        'pending_verification' => true,
+                        'error' => 'Your tow truck account is pending admin verification. Please wait for approval.',
+                    ], 403);
+                }
                 return response()->json([
                     'message' => __('auth.account_configuration_error'),
                     'error' => 'Your account has a profile type mismatch. Please contact support.',
