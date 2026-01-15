@@ -20,6 +20,7 @@ export interface CarListing {
     photos: string[];
     images?: string[];
     is_sponsored: boolean;
+    sponsored_until?: string | null;
     is_featured: boolean;
     is_negotiable?: boolean;
     views_count: number;
