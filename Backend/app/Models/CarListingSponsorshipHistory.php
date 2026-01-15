@@ -34,6 +34,11 @@ class CarListingSponsorshipHistory extends Model
         return $this->belongsTo(CarListing::class, 'car_listing_id');
     }
 
+    public function carListing(): BelongsTo
+    {
+        return $this->belongsTo(CarListing::class, 'car_listing_id');
+    }
+
     public function sponsoredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sponsored_by_user_id');
