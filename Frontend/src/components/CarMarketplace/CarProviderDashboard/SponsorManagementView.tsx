@@ -56,16 +56,20 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
 
     const loadSponsorships = async () => {
         try {
+            console.log('📊 Fetching sponsorships...');
             const response = await carProviderAPI.getSponsorships();
+            console.log('📊 Sponsorships response:', response.data);
             setSponsorships(response.data.data || []);
         } catch (error) {
-            console.error('Failed to load sponsorships:', error);
+            console.error('❌ Failed to load sponsorships:', error);
         }
     };
 
     const loadSettings = async () => {
         try {
+            console.log('💰 Fetching sponsor pricing...');
             const response = await carProviderAPI.calculateSponsorPrice(1);
+            console.log('💰 Pricing response:', response.data);
             if (response.data.breakdown) {
                 setSettings({
                     dailyPrice: response.data.breakdown.daily,
@@ -77,17 +81,20 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                 });
             }
         } catch (error) {
-            console.error('Failed to load settings:', error);
+            console.error('❌ Failed to load settings:', error);
         }
     };
 
     const loadListings = async () => {
         try {
+            console.log('🚗 Fetching car listings...');
             const response = await carProviderAPI.getMyListings();
+            console.log('🚗 Listings response:', response.data);
             const data = response.data.data || response.data || [];
+            console.log('🚗 Extracted data:', data, 'Is array:', Array.isArray(data));
             setListings(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error('Failed to load listings:', error);
+            console.error('❌ Failed to load listings:', error);
             setListings([]);
         }
     };
