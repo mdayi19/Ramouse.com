@@ -359,6 +359,9 @@ class AuthController extends Controller
                 'role' => 'car_provider',
                 'is_admin' => false,
             ]);
+            // Explicitly force role save to prevent default 'user' role
+            $user->role = 'car_provider';
+            $user->save();
 
             // Handle Profile Photo (Standard File Upload)
             $profilePhotoPath = null;
