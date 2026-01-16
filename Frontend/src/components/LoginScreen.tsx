@@ -188,6 +188,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     setSuccessMessage('');
     try {
       const response = await AuthService.login(fullPhoneNumber, password);
+
+      // CRITICAL: Check if response contains error (nginx converts 403 to 200)
+      // If there's an error message but no token, treat as login failure
+      if (!response.token && (response.error || response.message)) {
+        setLoading(false);
+        setError(response.message || response.error || 'فشل تسجيل الدخول');
+        return;
+      }
+
+      // Validate token exists before proceeding
+      if (!response.token) {
+        setLoading(false);
+        setError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
+        return;
+      }
+
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       localStorage.setItem('userType', response.role);

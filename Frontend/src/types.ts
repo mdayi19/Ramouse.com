@@ -987,6 +987,9 @@ export interface AuthResponse {
   is_admin?: boolean;
   user_type?: string;
   user_id?: number | string;
+  // Optional fields for error handling (nginx converts 403 to 200 workaround)
+  error?: string;
+  message?: string;
 }
 
 export interface ApiResponse<T = any> {
