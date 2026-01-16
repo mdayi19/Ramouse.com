@@ -46,14 +46,9 @@ class CheckAccountStatus
         }
 
         // If profile doesn't exist, block access
+        // If profile doesn't exist, block access
         if (!$profile) {
-            Log::warning('API access blocked: Profile not found', [
-                'user_id' => $user->id,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'ip' => $request->ip(),
-                'endpoint' => $request->path(),
-            ]);
+            // Log::warning removed for safety
 
             return response()->json([
                 'message' => __('auth.profile_not_found'),
@@ -63,13 +58,7 @@ class CheckAccountStatus
 
         // Check is_active status (applies to ALL user types)
         if (!$profile->is_active) {
-            Log::warning('API access blocked: Account inactive', [
-                'user_id' => $user->id,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'ip' => $request->ip(),
-                'endpoint' => $request->path(),
-            ]);
+            // Log::warning removed for safety
 
             // Revoke the current token since account is deactivated
             $request->user()->currentAccessToken()->delete();
@@ -84,13 +73,7 @@ class CheckAccountStatus
         // Check is_verified for provider types (technician, tow_truck, car_provider)
         if (in_array($user->role, ['technician', 'tow_truck', 'car_provider'])) {
             if (!$profile->is_verified) {
-                Log::warning('API access blocked: Account not verified', [
-                    'user_id' => $user->id,
-                    'phone' => $user->phone,
-                    'role' => $user->role,
-                    'ip' => $request->ip(),
-                    'endpoint' => $request->path(),
-                ]);
+                // Log::warning removed for safety
 
                 // Revoke the token for unverified providers
                 $request->user()->currentAccessToken()->delete();
