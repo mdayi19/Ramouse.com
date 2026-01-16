@@ -49,11 +49,12 @@ interface TowTruckDashboardProps {
     currentView: string;
     unreadCount: number;
     storeCategories: StoreCategory[];
+    onShowServices: () => void;
 }
 
 // Main Dashboard Component
 const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
-    const { towTruck, onBack, showToast, updateTowTruckData, settings, onStartNewOrder, addNotificationForUser, isSidebarOpen, setIsSidebarOpen, onLogout, userPhone, onNavigate, currentView, unreadCount, storeCategories } = props;
+    const { towTruck, onBack, showToast, updateTowTruckData, settings, onStartNewOrder, addNotificationForUser, isSidebarOpen, setIsSidebarOpen, onLogout, userPhone, onNavigate, currentView, unreadCount, storeCategories, onShowServices } = props;
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -79,6 +80,10 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
     };
 
     const handleBottomNavClick = (id: string) => {
+        if (id === 'services-popup') {
+            onShowServices();
+            return;
+        }
         navigationHandlers.handleBottomNavClick(id, props.onStartNewOrder);
     };
 
@@ -101,7 +106,7 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
     const bottomNavItems = [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
         { id: 'store', label: 'المتجر', icon: <Icon name="Store" /> },
-        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
+        { id: 'services-popup', label: 'الخدمات', icon: <img src={settings.logoUrl || '/logo.png'} alt="الخدمات" className="w-full h-full object-contain p-1" />, isSpecial: true },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ];

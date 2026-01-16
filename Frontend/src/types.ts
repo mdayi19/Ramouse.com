@@ -1282,4 +1282,5 @@ export interface CarProviderDashboardProps {
   allBrands: Brand[];
   isLoading: boolean;
   onUpdateCarProvider?: (data: Partial<CarProvider>) => void;
+  onShowServices: () => void;
 }

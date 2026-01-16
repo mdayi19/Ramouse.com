@@ -49,10 +49,11 @@ interface ProviderDashboardProps {
     unreadCount: number;
     userPhone: string;
     storeCategories: StoreCategory[];
+    onShowServices: () => void;
 }
 
 const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
-    const { provider, allOrders, updateAllOrders, onBack, showToast, settings, addNotificationForUser, navigationParams, onNavigationConsumed, isSidebarOpen, setIsSidebarOpen, onLogout, onNavigate, currentView, unreadCount, userPhone, storeCategories } = props;
+    const { provider, allOrders, updateAllOrders, onBack, showToast, settings, addNotificationForUser, navigationParams, onNavigationConsumed, isSidebarOpen, setIsSidebarOpen, onLogout, onNavigate, currentView, unreadCount, userPhone, storeCategories, onShowServices } = props;
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -285,6 +286,10 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
     };
 
     const handleBottomNavClick = (id: string) => {
+        if (id === 'services-popup') {
+            onShowServices();
+            return;
+        }
         navigationHandlers.handleBottomNavClick(id);
     };
 
@@ -311,7 +316,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = (props) => {
     const bottomNavItems = [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
         { id: 'openOrders', label: 'الطلبات', icon: <Icon name="Search" /> },
-        { id: 'store', label: 'المتجر', icon: <Icon name="Store" /> },
+        { id: 'services-popup', label: 'الخدمات', icon: <img src={settings.logoUrl || '/logo.png'} alt="الخدمات" className="w-full h-full object-contain p-1" />, isSpecial: true },
         { id: 'notifications', label: 'الإشعارات', icon: <Icon name="Bell" />, notificationCount: unreadCount },
         { id: 'settings', label: 'الإعدادات', icon: <Icon name="Settings" /> },
     ];

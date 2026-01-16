@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { TowTruck } from '../types';
-import { DEFAULT_TOW_TRUCK_TYPES } from '../constants';
+import { DEFAULT_TOW_TRUCK_TYPES, SYRIAN_CITIES } from '../constants';
 import { DirectoryService } from '../services/directory.service';
 import { getImageUrl } from '../utils/helpers';
 import EmptyState from './EmptyState';
@@ -123,6 +124,7 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
     const [activeFilters, setActiveFilters] = useState(false);
 
     const topRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     // Fetch tow trucks from API on mount
     useEffect(() => {
@@ -134,7 +136,6 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
             } catch (error) {
                 console.error('Failed to fetch tow trucks:', error);
                 showToast('فشل تحميل السطحات. يرجى المحاولة مرة أخرى.', 'error');
-                setAllTowTrucks([]);
             } finally {
                 setIsLoadingData(false);
             }
@@ -143,10 +144,8 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
         fetchTowTrucks();
     }, [showToast]);
 
-    const availableCities = useMemo(() => {
-        const cities = new Set(allTowTrucks.filter(t => t.isVerified && t.isActive).map(t => t.city));
-        return ['الكل', ...Array.from(cities)];
-    }, [allTowTrucks]);
+    // Use constant cities list
+    const availableCities = ['الكل', ...SYRIAN_CITIES];
 
     const handleFindNearest = () => {
         setIsLocating(true);
@@ -238,6 +237,33 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
         return filteredAndSortedTowTrucks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
     }, [filteredAndSortedTowTrucks, currentPage]);
 
+    const NearestButton: React.FC = () => (
+        <>
+            {sortBy === 'distance' ? (
+                <button
+                    onClick={clearDistanceSort}
+                    className="w-full flex items-center justify-center gap-3 p-4 bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200 rounded-2xl text-base font-black shadow-md active:scale-95 transition-transform"
+                >
+                    <span className="text-xl">✖️</span>
+                    <span>إلغاء الترتيب</span>
+                </button>
+            ) : (
+                <button
+                    onClick={handleFindNearest}
+                    disabled={isLocating}
+                    className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-2xl text-base font-black shadow-lg shadow-primary/30 active:scale-95 transition-transform disabled:opacity-50"
+                >
+                    {isLocating ? (
+                        <Icon name="Loader" className="animate-spin w-6 h-6" />
+                    ) : (
+                        <span className="text-2xl animate-pulse">📍</span>
+                    )}
+                    <span>الترتيب حسب الأقرب</span>
+                </button>
+            )}
+        </>
+    );
+
     const FiltersContent = () => (
         <>
             <div>
@@ -308,9 +334,31 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
                 <button onClick={onBack} className="flex items-center gap-2 text-base font-bold p-4 text-slate-600 dark:text-slate-300 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><span>العودة 🏠</span></button>
             </div>
 
+            {/* Mobile Controls - Sticky */}
+            <div className="sticky top-20 z-20 md:hidden mb-4 space-y-3">
+                <div className="relative">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl pointer-events-none">🔍</span>
+                    <input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="ابحث..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full pr-12 pl-4 py-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary text-base font-bold"
+                        style={{ fontSize: '16px' }} // Prevents zoom on iOS
+                    />
+                    {searchTerm && (
+                        <button onClick={() => setSearchTerm('')} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                            <Icon name="XCircle" className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
+                <NearestButton />
+            </div>
+
             {/* Desktop Filters and Search Bar */}
             <div className="hidden md:block sticky top-20 z-10 bg-slate-50/80 dark:bg-darkbg/80 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 mb-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div className="relative md:col-span-2 lg:col-span-2">
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none">🔍</span>
                         <input
@@ -326,15 +374,11 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
                             </button>
                         )}
                     </div>
-                    <div className="hidden md:block relative z-20"><FiltersContent /></div>
+                    <FiltersContent />
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleFindNearest}
-                            disabled={isLocating}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-black rounded-xl transition-all bg-primary hover:bg-primary-700 text-white disabled:bg-slate-400 shadow-lg shadow-primary/20 hover:scale-105"
-                        >
-                            {isLocating ? <Icon name="Loader" className="animate-spin" /> : <span className="text-xl animate-pulse">📍</span>} <span>الأقرب مني</span>
-                        </button>
+                        <div className="w-full">
+                            <NearestButton />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -380,8 +424,8 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
                 />
             )}
 
-            {activeFilters && (
-                <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={toggleFilters}>
+            {activeFilters && createPortal(
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden" onClick={toggleFilters}>
                     <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-[2.5rem] p-8 pb-safe animate-modal-in" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-center mb-8 relative">
                             <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full"></div>
@@ -393,7 +437,8 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
                         </h4>
                         <div className="space-y-6"><FiltersContent /></div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

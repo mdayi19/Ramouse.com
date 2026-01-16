@@ -7,9 +7,9 @@ interface FilterPreset {
     name: string;
     icon: React.ReactNode;
     filters: {
-        price_min?: number;
-        price_max?: number;
-        year_min?: number;
+        min_price?: number;
+        max_price?: number;
+        min_year?: number;
         features?: string[];
         category?: string;
     };
@@ -21,8 +21,8 @@ const FILTER_PRESETS: FilterPreset[] = [
         name: 'سيارات فاخرة',
         icon: <Crown className="w-4 h-4" />,
         filters: {
-            price_min: 50000000,
-            year_min: 2020,
+            min_price: 50000000,
+            min_year: 2020,
             features: ['مقاعد جلد', 'فتحة سقف', 'نظام صوتي فاخر']
         }
     },
@@ -31,7 +31,7 @@ const FILTER_PRESETS: FilterPreset[] = [
         name: 'اقتصادية',
         icon: <DollarSign className="w-4 h-4" />,
         filters: {
-            price_max: 20000000,
+            max_price: 20000000,
             features: ['موفر للوقود']
         }
     },
@@ -40,7 +40,7 @@ const FILTER_PRESETS: FilterPreset[] = [
         name: 'موديلات حديثة',
         icon: <Sparkles className="w-4 h-4" />,
         filters: {
-            year_min: new Date().getFullYear() - 2
+            min_year: new Date().getFullYear() - 2
         }
     },
     {
@@ -56,9 +56,9 @@ const FILTER_PRESETS: FilterPreset[] = [
         name: 'الأكثر طلباً',
         icon: <TrendingUp className="w-4 h-4" />,
         filters: {
-            year_min: 2019,
-            price_min: 20000000,
-            price_max: 50000000
+            min_year: 2019,
+            min_price: 20000000,
+            max_price: 50000000
         }
     }
 ];

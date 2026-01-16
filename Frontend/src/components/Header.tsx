@@ -145,8 +145,8 @@ const Header: React.FC<HeaderProps> = ({
         <>
             <header
                 className={`sticky top-0 z-50 w-full transition-all duration-500 border-b ${isScrolled
-                    ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/50 dark:border-slate-700/50 shadow-sm py-2'
-                    : 'bg-transparent border-transparent py-4'
+                    ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/50 dark:border-slate-700/50 shadow-sm py-1.5'
+                    : 'bg-transparent border-transparent py-2.5'
                     }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -154,21 +154,21 @@ const Header: React.FC<HeaderProps> = ({
 
                         {/* Logo */}
                         <div
-                            className="flex items-center gap-3 cursor-pointer group relative z-20"
+                            className="flex items-center gap-2 cursor-pointer group relative z-20"
                             onClick={() => onNavigate('welcome')}
                         >
                             <img
                                 src={settings.logoUrl || "/logo without name.svg"}
                                 alt={settings.appName || 'Ramouse'}
-                                className="relative z-10 w-12 h-12 md:w-14 md:h-14 object-contain transition-all duration-500 group-hover:scale-105 drop-shadow-lg"
+                                className="relative z-10 w-10 h-10 md:w-12 md:h-12 object-contain transition-all duration-500 group-hover:scale-105 drop-shadow-lg"
                             />
 
                             <div className="flex flex-col">
-                                <span className="text-2xl md:text-3xl font-black text-primary dark:text-white tracking-tighter leading-none">
+                                <span className="text-xl md:text-2xl font-black text-primary dark:text-white tracking-tighter leading-none">
                                     {settings.appName || 'راموسة'}
                                     <span className="text-secondary inline-block animate-pulse ml-0.5">.</span>
                                 </span>
-                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase mt-0.5 group-hover:text-secondary transition-colors duration-300">
+                                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tracking-[0.18em] uppercase group-hover:text-secondary transition-colors duration-300">
                                     Auto Parts
                                 </span>
                             </div>

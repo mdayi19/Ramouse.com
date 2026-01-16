@@ -51,6 +51,7 @@ interface CustomerDashboardProps {
     unreadCount: number;
     storeCategories: StoreCategory[];
     customer: Customer | null;
+    onShowServices?: () => void;
 }
 
 const AISuggestionsWrapper = () => {
@@ -97,6 +98,10 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
     };
 
     const handleBottomNavClick = (id: string) => {
+        if (id === 'services-popup' && props.onShowServices) {
+            props.onShowServices();
+            return;
+        }
         navigationHandlers.handleBottomNavClick(id, props.onStartNewOrder);
     };
 
@@ -120,7 +125,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
     const bottomNavItems = useMemo(() => [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
         { id: 'store', label: 'المتجر', icon: <Icon name="ShoppingBag" /> },
-        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
+        { id: 'services-popup', label: 'الخدمات', icon: <img src={props.settings.logoUrl || '/logo.png'} alt="الخدمات" className="w-full h-full object-contain p-1" />, isSpecial: true },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ], []);

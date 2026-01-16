@@ -5,6 +5,7 @@ import { Car, Grid, List, Search, SlidersHorizontal, ArrowLeft, ArrowRight, X, R
 import { motion, AnimatePresence } from 'framer-motion';
 import { CarListingCard } from './MarketplaceParts/CarListingCard';
 import { MarketplaceFilters } from './MarketplaceParts/MarketplaceFilters';
+import { RentFilters } from './MarketplaceParts/RentFilters';
 import { ListingSkeleton } from './MarketplaceParts/ListingSkeleton';
 import { ErrorState } from './MarketplaceParts/ErrorState';
 import Icon from '../Icon';
@@ -32,6 +33,15 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [filters, setFilters] = useState<FilterType>({ listing_type: listingType, page: 1 });
     const [categories, setCategories] = useState<any[]>([]);
+    const [brands, setBrands] = useState<any[]>([]);
+    const [countries, setCountries] = useState<any[]>([]);
+    const [models, setModels] = useState<Record<string, any[]>>({});
+    const [facetCounts, setFacetCounts] = useState<{
+        originCounts: Record<string | number, number>;
+        brandCounts: Record<string | number, number>;
+        modelCounts: Record<string, number>;
+    }>({ originCounts: {}, brandCounts: {}, modelCounts: {} });
+
     const [searchQuery, setSearchQuery] = useState('');
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -58,9 +68,37 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 
     // Initial Load
     useEffect(() => {
-        loadCategories();
+        loadFilterData();
         fetchSponsoredPool();
     }, []);
+
+    const loadFilterData = async () => {
+        try {
+            const [categoriesRes, brandsRes, countriesRes, countsRes] = await Promise.all([
+                CarProviderService.getCategories(),
+                CarProviderService.getBrands(),
+                CarProviderService.getCountries(),
+                CarProviderService.getListingCounts(listingType)
+            ]);
+
+            setCategories(categoriesRes.categories || []);
+            setBrands(brandsRes.brands || []);
+            // Use dynamically collected models if available, otherwise fallback to static
+            setModels(countsRes.modelsByBrand && Object.keys(countsRes.modelsByBrand).length > 0
+                ? countsRes.modelsByBrand
+                : brandsRes.models || {});
+            setCountries(countriesRes.countries || []);
+            setFacetCounts(countsRes);
+
+            console.log('DEBUG: Filter Data Loaded', {
+                categories: categoriesRes.categories,
+                brands: brandsRes.brands,
+                counts: countsRes
+            });
+        } catch (error) {
+            console.error('Failed to load filter data:', error);
+        }
+    };
 
     const fetchSponsoredPool = async () => {
         try {
@@ -98,14 +136,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         }
     }, [filters]);
 
-    const loadCategories = async () => {
-        try {
-            const response = await CarProviderService.getCategories();
-            setCategories(response.categories || []);
-        } catch (error) {
-            console.error('Failed to load categories:', error);
-        }
-    };
+
 
     const loadListings = async (isReset: boolean) => {
         if (isReset) {
@@ -319,12 +350,29 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                     {/* Filters Sidebar (Desktop) */}
                     <div className="hidden lg:block w-72 flex-shrink-0">
                         <div className="sticky top-24">
-                            <MarketplaceFilters
-                                filters={filters}
-                                onFilterChange={handleFilterChange}
-                                categories={categories}
-                                onReset={handleResetFilters}
-                            />
+                            {listingType === 'rent' ? (
+                                <RentFilters
+                                    filters={filters}
+                                    onFilterChange={handleFilterChange}
+                                    categories={categories}
+                                    brands={brands}
+                                    models={models}
+                                    countries={countries}
+                                    onReset={handleResetFilters}
+                                    facetCounts={facetCounts}
+                                />
+                            ) : (
+                                <MarketplaceFilters
+                                    filters={filters}
+                                    onFilterChange={handleFilterChange}
+                                    categories={categories}
+                                    brands={brands}
+                                    models={models}
+                                    countries={countries}
+                                    onReset={handleResetFilters}
+                                    facetCounts={facetCounts}
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -498,13 +546,31 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                 </button>
                             </div>
                             <div className="p-4">
-                                <MarketplaceFilters
-                                    filters={filters}
-                                    onFilterChange={handleFilterChange}
-                                    categories={categories}
-                                    onReset={handleResetFilters}
-                                    className="shadow-none border-0 p-0"
-                                />
+                                {listingType === 'rent' ? (
+                                    <RentFilters
+                                        filters={filters}
+                                        onFilterChange={handleFilterChange}
+                                        categories={categories}
+                                        brands={brands}
+                                        models={models}
+                                        countries={countries}
+                                        onReset={handleResetFilters}
+                                        className="shadow-none border-0 p-0"
+                                        facetCounts={facetCounts}
+                                    />
+                                ) : (
+                                    <MarketplaceFilters
+                                        filters={filters}
+                                        onFilterChange={handleFilterChange}
+                                        categories={categories}
+                                        brands={brands}
+                                        models={models}
+                                        countries={countries}
+                                        onReset={handleResetFilters}
+                                        className="shadow-none border-0 p-0"
+                                        facetCounts={facetCounts}
+                                    />
+                                )}
                                 <button
                                     onClick={() => setShowMobileFilters(false)}
                                     className="w-full mt-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"

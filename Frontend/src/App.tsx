@@ -16,6 +16,8 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ToastContainer from './components/Toast';
 import PublicMobileMenu from './components/PublicMobileMenu';
+import GuestServicesPopup from './components/GuestServicesPopup';
+import BottomNavBar from './components/BottomNavBar';
 import Icon from './components/Icon';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Customer, Technician, TowTruck, CarProvider, Settings } from './types';
@@ -156,6 +158,7 @@ const App: React.FC = () => {
     const navigate = useNavigate();
     const [showSplash, setShowSplash] = useState(true);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
+    const [showServicesPopup, setShowServicesPopup] = useState(false);
 
     const handleSplashFinish = useCallback(() => {
         setShowSplash(false);
@@ -648,7 +651,7 @@ const App: React.FC = () => {
     };
 
     const showBottomNav = ['customerDashboard', 'providerDashboard', 'technicianDashboard', 'towTruckDashboard', 'notificationCenter'].includes(currentView);
-    const isPublicView = ['welcome', 'store', 'technicianDirectory', 'technicianProfile', 'technicianRegistration', 'blog', 'blogPost', 'faq', 'privacyPolicy', 'termsOfUse', 'contact', 'towTruckDirectory', 'towTruckProfile', 'towTruckRegistration'].includes(currentView);
+    const isPublicView = ['welcome', 'store', 'technicianDirectory', 'technicianProfile', 'technicianRegistration', 'blog', 'blogPost', 'faq', 'privacyPolicy', 'termsOfUse', 'contact', 'towTruckDirectory', 'towTruckProfile', 'towTruckRegistration', 'car-listings', 'rent-car', 'announcements', 'auctions', 'car-providers', 'carProviderRegistration'].includes(currentView);
     const isDashboardView = ['adminDashboard', 'providerDashboard', 'customerDashboard', 'technicianDashboard', 'towTruckDashboard', 'carProviderDashboard'].includes(currentView);
 
     if (isLoading) {
@@ -707,7 +710,7 @@ const App: React.FC = () => {
                 }}
             />
 
-            <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car') || location.pathname.startsWith('/car-providers') || location.pathname.startsWith('/car-provider-dashboard')
+            <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname === '/' || location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car') || location.pathname.startsWith('/car-providers') || location.pathname.startsWith('/car-provider-dashboard')
                 ? 'p-0'
                 : 'px-4 sm:px-6 py-8'
                 }`}>
@@ -789,17 +792,17 @@ const App: React.FC = () => {
                             <Route path="/store" element={<StoreView customer={loggedInCustomer} provider={loggedInProvider} technician={loggedInTechnician} towTruck={loggedInTowTruck} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} onLoginRequest={() => { setPostLoginAction(() => () => { }); setShowLogin(true); }} storeCategories={storeCategories} />} />
                             <Route path="/store/product/:productId" element={<StoreView customer={loggedInCustomer} provider={loggedInProvider} technician={loggedInTechnician} towTruck={loggedInTowTruck} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} onLoginRequest={() => { setPostLoginAction(() => () => { }); setShowLogin(true); }} storeCategories={storeCategories} />} />
                             <Route path="/admin/*" element={isAdmin ? <AdminDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} onBack={handleLogout} addNotificationForUser={addNotificationForUser} settings={settings} updateSettings={updateSettings} announcements={announcements} publishAnnouncement={async (post) => { publishAnnouncement(post); }} deleteAnnouncement={deleteAnnouncement} isLoading={isLoading} showToast={showToast} carCategories={carCategories} updateCarCategories={setCarCategories} allBrands={allBrands} updateAllBrands={setAllBrands} brandModels={brandModels} updateBrandModels={setBrandModels} partTypes={partTypes} updatePartTypes={setPartTypes} allTechnicians={allTechnicians} updateAllTechnicians={updateAllTechnicians} allTowTrucks={allTowTrucks} updateAllTowTrucks={updateAllTowTrucks} technicianSpecialties={technicianSpecialties} updateTechnicianSpecialties={setTechnicianSpecialties} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} sendTelegramNotification={sendTelegramNotification} cacheVersion={CACHE_VERSION} storeCategories={storeCategories} updateStoreCategories={updateStoreCategories} allModels={allModels} /> : <Navigate to="/" replace />} />
-                            <Route path="/provider/*" element={isProvider ? (loggedInProvider ? <ProviderDashboard provider={loggedInProvider} allOrders={allOrders} updateAllOrders={updateAllOrders} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <PageLoader />) : <Navigate to="/" replace />} />
-                            <Route path="/dashboard/*" element={isAuthenticated ? <CustomerDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} showToast={showToast} settings={settings} addNotificationForUser={addNotificationForUser} isLoading={isLoading} onStartNewOrder={handleStartNewOrder} onBack={() => handleNavigate('welcome')} onUpdateCustomer={onUpdateCustomer} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} allBrands={allBrands} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} customer={loggedInCustomer} /> : <Navigate to="/" replace />} />
+                            <Route path="/provider/*" element={isProvider ? (loggedInProvider ? <ProviderDashboard provider={loggedInProvider} allOrders={allOrders} updateAllOrders={updateAllOrders} onBack={() => handleNavigate('welcome')} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} showToast={showToast} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} onShowServices={() => setShowServicesPopup(true)} /> : <PageLoader />) : <Navigate to="/" replace />} />
+                            <Route path="/dashboard/*" element={isAuthenticated ? <CustomerDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} userPhone={userPhone} showToast={showToast} settings={settings} addNotificationForUser={addNotificationForUser} isLoading={isLoading} onStartNewOrder={handleStartNewOrder} onBack={() => handleNavigate('welcome')} onUpdateCustomer={onUpdateCustomer} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} allBrands={allBrands} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} customer={loggedInCustomer} onShowServices={() => setShowServicesPopup(true)} /> : <Navigate to="/" replace />} />
                             <Route path="/notifications" element={isAuthenticated ? <NotificationCenter notifications={notifications} setNotifications={setNotifications} onNavigate={handleNavigate} onBack={() => handleNavigate(isAdmin ? 'adminDashboard' : isProvider ? 'providerDashboard' : isTechnician ? 'technicianDashboard' : isTowTruck ? 'towTruckDashboard' : 'customerDashboard')} onDeleteNotification={onDeleteNotification} onClearAllNotifications={onClearAllNotifications} /> : <Navigate to="/" replace />} />
-                            <Route path="/technician/*" element={isTechnician ? (loggedInTechnician ? <TechnicianDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} technician={loggedInTechnician} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTechnicianData={onUpdateTechnician} onStartNewOrder={handleStartNewOrder} userPhone={userPhone} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} technicianSpecialties={technicianSpecialties} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <PageLoader />) : <Navigate to="/" replace />} />
+                            <Route path="/technician/*" element={isTechnician ? (loggedInTechnician ? <TechnicianDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} technician={loggedInTechnician} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTechnicianData={onUpdateTechnician} onStartNewOrder={handleStartNewOrder} userPhone={userPhone} addNotificationForUser={addNotificationForUser} settings={settings} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} technicianSpecialties={technicianSpecialties} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} onShowServices={() => setShowServicesPopup(true)} /> : <PageLoader />) : <Navigate to="/" replace />} />
                             <Route path="/technicians" element={<TechnicianDirectory allTechnicians={allTechnicians} onBack={() => handleNavigate('welcome')} onViewProfile={(technicianId) => handleNavigate('technicianProfile', { technicianId })} technicianSpecialties={technicianSpecialties} showToast={showToast} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} />} />
                             <Route path="/technicians/:technicianId" element={<TechnicianProfileRouteWrapper handleNavigate={handleNavigate} userPhone={userPhone} isCustomer={!isAdmin && !isProvider && !isTechnician && !isTowTruck} allCustomers={allCustomers} updateAllTechnicians={updateAllTechnicians} showToast={showToast} isAuthenticated={isAuthenticated} onLoginClick={handleLoginClick} technicianSpecialties={technicianSpecialties} />} />
                             <Route path="/register-technician" element={<TechnicianRegistration allTechnicians={allTechnicians} onRegisterTechnician={(tech) => updateAllTechnicians([...allTechnicians, tech])} onBack={() => handleNavigate('welcome')} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} technicianSpecialties={technicianSpecialties} />} />
                             <Route path="/tow-trucks" element={<TowTruckDirectory onBack={() => handleNavigate('welcome')} onViewProfile={(towTruckId: string) => handleNavigate('towTruckProfile', { towTruckId })} showToast={showToast} />} />
                             <Route path="/tow-trucks/:towTruckId" element={<TowTruckProfileRouteWrapper handleNavigate={handleNavigate} userPhone={userPhone} isCustomer={!isAdmin && !isProvider && !isTechnician && !isTowTruck} allCustomers={allCustomers} updateAllTowTrucks={updateAllTowTrucks} showToast={showToast} isAuthenticated={isAuthenticated} onLoginClick={handleLoginClick} />} />
                             <Route path="/register-tow-truck" element={<TowTruckRegistration onBack={() => handleNavigate('welcome')} showToast={showToast} addNotificationForUser={addNotificationForUser} settings={settings} />} />
-                            <Route path="/tow-truck-dashboard/*" element={isTowTruck ? (loggedInTowTruck ? <TowTruckDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} towTruck={loggedInTowTruck} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTowTruckData={onUpdateTowTruck} settings={settings} onStartNewOrder={handleStartNewOrder} addNotificationForUser={addNotificationForUser} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} /> : <PageLoader />) : <Navigate to="/" replace />} />
+                            <Route path="/tow-truck-dashboard/*" element={isTowTruck ? (loggedInTowTruck ? <TowTruckDashboard allOrders={allOrders} updateAllOrders={updateAllOrders} towTruck={loggedInTowTruck} onBack={() => handleNavigate('welcome')} showToast={showToast} updateTowTruckData={onUpdateTowTruck} settings={settings} onStartNewOrder={handleStartNewOrder} addNotificationForUser={addNotificationForUser} isLoading={isLoading} navigationParams={navigationParams} onNavigationConsumed={handleNavigationConsumed} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onLogout={handleLogout} userPhone={userPhone} onNavigate={handleNavigate} currentView={currentView} unreadCount={unreadCount} storeCategories={storeCategories} onShowServices={() => setShowServicesPopup(true)} /> : <PageLoader />) : <Navigate to="/" replace />} />
                             <Route path="/blog" element={<BlogScreen onReadMore={(slug) => handleNavigate('blogPost', { slug })} onBack={() => handleNavigate('welcome')} />} />
                             <Route path="/blog/:slug" element={<BlogPostRoute />} />
                             <Route path="/blog/:identifier" element={<BlogPostScreen slug="" onBack={() => handleNavigate('blog')} />} />
@@ -837,6 +840,7 @@ const App: React.FC = () => {
                                             currentView={currentView}
                                             unreadCount={unreadCount}
                                             isLoading={isLoading}
+                                            onShowServices={() => setShowServicesPopup(true)}
                                         />
                                     </Suspense>
                                 ) : (
@@ -945,13 +949,73 @@ const App: React.FC = () => {
                 )}
             </Suspense>
 
+            {/* Guest Mobile Bottom Navigation */}
+            {!isAuthenticated && isPublicView && (
+                <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+                    {/* Main Bar with Header-like Styling */}
+                    <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
+                        <div className="relative flex items-center justify-between px-6 h-12 pb-[env(safe-area-inset-bottom)]">
+                            {/* Logo Circle Button - Center (Elevated) */}
+                            <div className="absolute left-1/2 -translate-x-1/2 -top-5">
+                                <div className="relative">
+                                    {/* Outer Glow - Pulsing */}
+                                    <div className="absolute inset-0 rounded-full bg-secondary/20 blur-xl animate-pulse" />
+
+                                    {/* Rotating Ring */}
+                                    <div className="absolute inset-[-4px] rounded-full border border-secondary/20 animate-spin-slow" style={{ animationDuration: '8s' }} />
+
+                                    <button
+                                        onClick={() => setShowServicesPopup(true)}
+                                        className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.2)] hover:shadow-[0_12px_45px_rgba(0,0,0,0.25)] active:scale-95 transition-all duration-300 group border-[3px] border-white/90 hover:border-white"
+                                        style={{ backgroundColor: '#f3efe4' }}
+                                        aria-label="الخدمات"
+                                    >
+                                        {/* Inner Glow */}
+                                        <div className="absolute inset-[3px] rounded-full bg-gradient-to-b from-white/30 to-transparent opacity-50" />
+
+                                        {/* Shine Effect */}
+                                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                        {/* Hover Ring */}
+                                        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                        <img
+                                            src={settings.logoUrl || "/logo without name.svg"}
+                                            alt="Logo"
+                                            className="w-10 h-10 object-contain relative z-10 drop-shadow-md group-hover:scale-110 group-hover:rotate-12 transition-all duration-500"
+                                        />
+
+                                        {/* Pulse on Hover */}
+                                        <div className="absolute inset-0 rounded-full bg-secondary/20 animate-ping opacity-0 group-hover:opacity-75 pointer-events-none" />
+                                    </button>
+
+                                    {/* Badge - Services Count with Animation */}
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-secondary to-orange-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce-subtle">
+                                        <span className="text-[10px] font-black text-primary-900">10</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <GuestServicesPopup
+                isOpen={showServicesPopup}
+                onClose={() => setShowServicesPopup(false)}
+                onNavigate={handleNavigate}
+                onLoginClick={handleLoginClick}
+                onOrderNow={handleStartNewOrder}
+                isAuthenticated={isAuthenticated}
+            />
+
             <NotificationPermissionModal
                 isOpen={showNotificationModal}
                 onClose={() => setShowNotificationModal(false)}
                 onPermissionGranted={() => setShowNotificationModal(false)}
             />
             <ToastContainer messages={toastMessages} setMessages={setToastMessages} />
-        </div>
+        </div >
     );
 }
 

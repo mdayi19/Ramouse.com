@@ -83,7 +83,9 @@ export interface RentalTerms {
 export interface MarketplaceFilters {
     listing_type?: 'sale' | 'rent';
     category_id?: number;
+    car_category_id?: number | string; // Origin (e.g. American, Japanese via Country ID)
     brand_id?: number;
+    model?: string;
     min_price?: number;
     max_price?: number;
     min_year?: number;
@@ -103,6 +105,8 @@ export interface MarketplaceFilters {
     max_deposit?: number;
     min_renter_age?: number;
     min_license_age?: number;
+    min_mileage?: number;
+    max_mileage?: number;
 }
 
 export class CarProviderService {
@@ -165,15 +169,42 @@ export class CarProviderService {
     static async getBrands() {
         try {
             const response = await api.get('/vehicle/data');
+            // Check both direct and nested data structures
+            const data = response.data.data || response.data;
+            let brands = data.brands || [];
+            const models = data.models || {};
+            const categories = data.categories || [];
+
+            // Enrich brands with country (origin) ID by matching logic
+            // This mirrors the logic in Step2CountryBrandModel.tsx
+            if (categories.length > 0) {
+                brands = brands.map((brand: any) => {
+                    // Find which category (Original) this brand belongs to
+                    const origin = categories.find((cat: any) => {
+                        const catBrandNames = cat.brands || [];
+                        return catBrandNames.includes(brand.name) ||
+                            catBrandNames.includes(brand.name_ar) ||
+                            catBrandNames.some((cb: string) => brand.name.includes(cb) || brand.name_ar?.includes(cb));
+                    });
+
+                    return {
+                        ...brand,
+                        country: origin ? origin.id : brand.country // Fallback to existing if any
+                    };
+                });
+            }
+
+            console.log('DEBUG: getBrands extracted', { brandsCount: brands.length, modelsCount: Object.keys(models).length });
+
             return {
                 success: true,
-                brands: response.data.brands || [],
-                models: response.data.models || {}
+                brands: brands,
+                models: models
             };
         } catch (error) {
             console.error('Failed to fetch brands:', error);
             return {
-                success: true,
+                success: false,
                 brands: [],
                 models: {}
             };
@@ -182,30 +213,115 @@ export class CarProviderService {
 
     static async getCountries() {
         try {
+            // Optimally we should cache this response or pass it from getBrands to avoid second call
             const response = await api.get('/vehicle/data');
-            const brands = response.data.brands || [];
+            const data = response.data.data || response.data;
 
-            // Extract unique countries from brands
-            const countries = brands
-                .map((brand: any) => ({
-                    id: brand.country,
-                    name: brand.country_ar || brand.country,
-                    code: brand.country
-                }))
-                .filter((country: any, index: number, self: any[]) =>
-                    index === self.findIndex((c) => c.id === country.id)
-                )
-                .filter((country: any) => country.id); // Filter out undefined countries
+            // In the Wizard, 'categories' are used as Origins (German, Japanese, etc.)
+            // We should use these as the 'countries' list for the filter.
+            const categories = data.categories || [];
+            const brands = data.brands || [];
+
+            // If categories have counts, great. If not, we can try to aggregate from brands
+            // using the same matching logic
+            const countries = categories.map((cat: any) => {
+                let count = cat.listings_count ?? cat.count ?? 0;
+
+                // If count is 0, try to sum from brands
+                // Match brands to this category
+                const catBrandNames = cat.brands || [];
+                const brandsInCat = brands.filter((brand: any) =>
+                    catBrandNames.includes(brand.name) ||
+                    catBrandNames.includes(brand.name_ar) ||
+                    catBrandNames.some((cb: string) => brand.name.includes(cb) || brand.name_ar?.includes(cb))
+                );
+
+                if (count === 0 && brandsInCat.length > 0) {
+                    const brandsCount = brandsInCat.reduce((sum: number, b: any) => sum + (b.listings_count ?? b.count ?? 0), 0);
+                    count = Math.max(count, brandsCount);
+                }
+
+                return {
+                    id: cat.id,
+                    name: cat.name_ar || cat.name,
+                    // Keep original object props just in case
+                    ...cat,
+                    count: count
+                };
+            });
 
             return {
                 success: true,
-                countries
+                countries: countries
             };
         } catch (error) {
-            console.error('Failed to fetch countries:', error);
+            console.error('Failed to fetch countries/origins:', error);
+            // Fallback to empty
             return {
-                success: true,
+                success: false,
                 countries: []
+            };
+        }
+    }
+
+    static async getListingCounts(listingType: 'sale' | 'rent' = 'sale') {
+        try {
+            // Fetch all listings to calculate counts
+            const response = await api.get('/car-listings', {
+                params: {
+                    listing_type: listingType,
+                    limit: 500 // Fetch up to 500 to aggregate
+                }
+            });
+
+            const listings = response.data.listings?.data || response.data.data || [];
+
+            const originCounts: Record<string | number, number> = {};
+            const brandCounts: Record<string | number, number> = {};
+            const modelCounts: Record<string, number> = {};
+            const modelsByBrand: Record<string | number, string[]> = {};
+
+            listings.forEach((car: any) => {
+                // Count Origins
+                if (car.car_category_id) {
+                    originCounts[car.car_category_id] = (originCounts[car.car_category_id] || 0) + 1;
+                }
+
+                // Count Brands
+                if (car.brand_id) {
+                    brandCounts[car.brand_id] = (brandCounts[car.brand_id] || 0) + 1;
+
+                    // Collect Models
+                    if (car.model) {
+                        const modelName = car.model.trim();
+                        if (!modelsByBrand[car.brand_id]) {
+                            modelsByBrand[car.brand_id] = [];
+                        }
+                        if (!modelsByBrand[car.brand_id].includes(modelName)) {
+                            modelsByBrand[car.brand_id].push(modelName);
+                        }
+                    }
+                }
+
+                // Count Models
+                if (car.model) {
+                    const modelName = car.model.trim();
+                    modelCounts[modelName] = (modelCounts[modelName] || 0) + 1;
+                }
+            });
+
+            return {
+                originCounts,
+                brandCounts,
+                modelCounts,
+                modelsByBrand
+            };
+        } catch (error) {
+            console.error('Failed to calculate listing counts:', error);
+            return {
+                originCounts: {},
+                brandCounts: {},
+                modelCounts: {}
             };
         }
     }

@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Technician, TechnicianSpecialty } from '../types';
 import EmptyState from './EmptyState';
 import Icon from './Icon';
@@ -7,6 +8,7 @@ import Skeleton from './Skeleton';
 import Rating from './Rating';
 import Pagination from './Pagination';
 import { DirectoryService } from '../services/directory.service';
+import { DEFAULT_TECHNICIAN_SPECIALTIES, SYRIAN_CITIES } from '../constants';
 import { BASE_URL } from '../lib/api';
 import DirectoryCardSkeleton from './DirectoryCardSkeleton';
 
@@ -53,11 +55,8 @@ export const TechnicianDirectory: React.FC<TechnicianDirectoryProps> = ({
     const searchInputRef = useRef<HTMLInputElement>(null);
     const topRef = useRef<HTMLDivElement>(null);
 
-    // Use initial data for city list only
-    const availableCities = useMemo(() => {
-        const cities = new Set(initialTechnicians.filter(t => t.isVerified && t.isActive).map(t => t.city));
-        return ['الكل', ...Array.from(cities)];
-    }, [initialTechnicians]);
+    // Use constant cities list
+    const availableCities = ['الكل', ...SYRIAN_CITIES];
 
     const fetchTechnicians = async () => {
         setIsLoading(true);
@@ -458,10 +457,10 @@ export const TechnicianDirectory: React.FC<TechnicianDirectoryProps> = ({
             </div>
 
             {/* Mobile Filters Panel (Bottom Sheet) */}
-            {activeFilters && (
-                <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={toggleFilters} aria-hidden="true">
+            {activeFilters && createPortal(
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden" onClick={toggleFilters}>
                     <div
-                        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-[2.5rem] p-8 max-h-[85vh] overflow-y-auto animate-modal-in"
+                        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-[2.5rem] p-8 max-h-[85vh] overflow-y-auto animate-modal-in pb-safe"
                         style={{ animationDuration: '0.3s' }}
                         onClick={e => e.stopPropagation()}
                         role="dialog"
@@ -480,7 +479,8 @@ export const TechnicianDirectory: React.FC<TechnicianDirectoryProps> = ({
                         </h4>
                         <div className="space-y-8"><FiltersContent showNearestButton={false} /></div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Desktop Filters and Search Bar */}

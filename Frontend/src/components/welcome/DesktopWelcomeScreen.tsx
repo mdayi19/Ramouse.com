@@ -193,6 +193,87 @@ export const DesktopWelcomeScreen: React.FC<DesktopWelcomeScreenProps> = ({
 
             {/* Services Grid */}
             <section className="container mx-auto px-6 lg:px-12 py-20">
+                {/* Car Marketplace - Big Buttons */}
+                <div className="mb-20">
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">سوق السيارات</h2>
+                        <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+                            تصفح، اشترِ، أو استأجر سيارتك المثالية من منصة واحدة متكاملة.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                        {/* Car Listings - Big Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.03, y: -5 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => onNavigate?.('car-listings')}
+                            className="relative overflow-hidden group rounded-3xl p-8 bg-gradient-to-br from-emerald-500 to-teal-500 shadow-2xl shadow-emerald-500/30 text-right"
+                        >
+                            <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                            <div className="relative">
+                                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                                    <Icon name="Car" className="w-8 h-8 text-white" />
+                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2">سوق السيارات</h3>
+                                <p className="text-emerald-50 leading-relaxed mb-4">
+                                    تصفح واشترِ سيارات جديدة ومستعملة من موردين موثوقين
+                                </p>
+                                <div className="flex items-center text-white font-bold">
+                                    <span>تصفح الآن</span>
+                                    <Icon name="ArrowLeft" className="w-5 h-5 mr-2 rotate-180" />
+                                </div>
+                            </div>
+                        </motion.button>
+
+                        {/* Rent Car - Big Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.03, y: -5 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => onNavigate?.('rent-car')}
+                            className="relative overflow-hidden group rounded-3xl p-8 bg-gradient-to-br from-purple-500 to-pink-500 shadow-2xl shadow-purple-500/30 text-right"
+                        >
+                            <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                            <div className="relative">
+                                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                                    <Icon name="Key" className="w-8 h-8 text-white" />
+                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2">تأجير السيارات</h3>
+                                <p className="text-purple-50 leading-relaxed mb-4">
+                                    استأجر سيارتك المثالية بأسعار تنافسية وخيارات مرنة
+                                </p>
+                                <div className="flex items-center text-white font-bold">
+                                    <span>عرض السيارات</span>
+                                    <Icon name="ArrowLeft" className="w-5 h-5 mr-2 rotate-180" />
+                                </div>
+                            </div>
+                        </motion.button>
+
+                        {/* Car Auction - Big Button - Coming Soon */}
+                        <motion.div
+                            whileHover={{ scale: 1.01, y: -3 }}
+                            className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-amber-500 to-orange-500 shadow-2xl shadow-amber-500/20 text-right opacity-75 cursor-not-allowed"
+                        >
+                            <div className="absolute top-4 left-4 bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 text-sm font-bold px-4 py-2 rounded-full border-2 border-amber-200 dark:border-amber-800 shadow-lg">
+                                قريباً
+                            </div>
+                            <div className="relative">
+                                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                                    <Icon name="Gavel" className="w-8 h-8 text-white" />
+                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2">مزاد السيارات</h3>
+                                <p className="text-amber-50 leading-relaxed mb-4">
+                                    مزادات حية للسيارات بأسعار تنافسية وعروض استثنائية
+                                </p>
+                                <div className="flex items-center text-white/70 font-bold">
+                                    <span>قريباً جداً</span>
+                                    <Icon name="ArrowLeft" className="w-5 h-5 mr-2 rotate-180 opacity-50" />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+
                 <div className="text-center mb-16">
                     <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">خدماتنا</h2>
                     <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">

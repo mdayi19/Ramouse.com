@@ -50,10 +50,11 @@ interface TechnicianDashboardProps {
     currentView: string;
     unreadCount: number;
     storeCategories: StoreCategory[];
+    onShowServices: () => void;
 }
 
 const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
-    const { technician, onBack, userPhone, isSidebarOpen, setIsSidebarOpen, onLogout, onNavigate, currentView, unreadCount, storeCategories } = props;
+    const { technician, onBack, userPhone, isSidebarOpen, setIsSidebarOpen, onLogout, onNavigate, currentView, unreadCount, storeCategories, onShowServices } = props;
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -99,6 +100,10 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
     };
 
     const handleBottomNavClick = (id: string) => {
+        if (id === 'services-popup') {
+            onShowServices();
+            return;
+        }
         navigationHandlers.handleBottomNavClick(id, props.onStartNewOrder);
     };
 
@@ -121,7 +126,7 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
     const bottomNavItems = [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
         { id: 'store', label: 'المتجر', icon: <Icon name="Store" /> },
-        { id: 'add-order', label: 'طلب جديد', icon: <Icon name="Plus" className="w-7 h-7" />, isSpecial: true },
+        { id: 'services-popup', label: 'الخدمات', icon: <img src={props.settings.logoUrl || '/logo.png'} alt="الخدمات" className="w-full h-full object-contain p-1" />, isSpecial: true },
         { id: 'orders', label: 'طلباتي', icon: <Icon name="ClipboardList" /> },
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ];

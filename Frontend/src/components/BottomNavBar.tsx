@@ -33,7 +33,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ items, activeItem, onItemCl
                                 <div className="absolute inset-0 bg-white dark:bg-slate-900 rounded-full scale-110 -z-10" />
                                 <button
                                     onClick={() => onItemClick(item.id)}
-                                    className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/40 hover:scale-105 hover:shadow-blue-600/50 active:scale-95 transition-all duration-300 ring-4 ring-white dark:ring-slate-900"
+                                    className="flex items-center justify-center w-14 h-14 rounded-full bg-[#f3efe4] text-slate-900 shadow-lg shadow-slate-400/30 hover:scale-105 hover:shadow-slate-400/40 active:scale-95 transition-all duration-300 ring-4 ring-white dark:ring-slate-900"
                                     aria-label={item.label}
                                 >
                                     {item.icon}

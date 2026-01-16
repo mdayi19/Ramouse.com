@@ -229,6 +229,86 @@ export const MobileWelcomeScreen: React.FC<MobileWelcomeScreenProps> = ({
                     </div>
                 </motion.section>
 
+                {/* Car Marketplace - Big Buttons */}
+                <motion.section
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.4 }}
+                    className="px-4 mb-4"
+                >
+                    <div className="backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 rounded-[2rem] p-6 shadow-xl border border-white/20 dark:border-white/5">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 pr-2 border-r-4 border-emerald-500 rounded-sm">سوق السيارات</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                            {/* Car Listings - Big Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => onNavigate?.('car-listings')}
+                                className="relative overflow-hidden group rounded-2xl p-6 bg-gradient-to-br from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30"
+                            >
+                                <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                                <div className="relative flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                            <Icon name="Car" className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div className="text-right">
+                                            <h4 className="text-xl font-black text-white mb-1">سوق السيارات</h4>
+                                            <p className="text-sm text-emerald-50">تصفح واشترِ سيارات جديدة ومستعملة</p>
+                                        </div>
+                                    </div>
+                                    <Icon name="ArrowLeft" className="w-6 h-6 text-white rotate-180" />
+                                </div>
+                            </motion.button>
+
+                            {/* Rent Car - Big Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => onNavigate?.('rent-car')}
+                                className="relative overflow-hidden group rounded-2xl p-6 bg-gradient-to-br from-purple-500 to-pink-500 shadow-xl shadow-purple-500/30"
+                            >
+                                <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                                <div className="relative flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                            <Icon name="Key" className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div className="text-right">
+                                            <h4 className="text-xl font-black text-white mb-1">تأجير السيارات</h4>
+                                            <p className="text-sm text-purple-50">استأجر سيارتك بأفضل الأسعار</p>
+                                        </div>
+                                    </div>
+                                    <Icon name="ArrowLeft" className="w-6 h-6 text-white rotate-180" />
+                                </div>
+                            </motion.button>
+
+                            {/* Car Auction - Big Button - Coming Soon */}
+                            <motion.div
+                                whileTap={{ scale: 0.98 }}
+                                className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-amber-500 to-orange-500 shadow-xl shadow-amber-500/20 opacity-75"
+                            >
+                                <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 text-amber-600 dark:text-amber-400 text-xs font-bold px-3 py-1.5 rounded-full border-2 border-amber-200 dark:border-amber-800 shadow-lg">
+                                    قريباً
+                                </div>
+                                <div className="relative flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                            <Icon name="Gavel" className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div className="text-right">
+                                            <h4 className="text-xl font-black text-white mb-1">مزاد السيارات</h4>
+                                            <p className="text-sm text-amber-50">مزادات حية وعروض استثنائية</p>
+                                        </div>
+                                    </div>
+                                    <Icon name="ArrowLeft" className="w-6 h-6 text-white/50 rotate-180" />
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </motion.section>
+
                 {/* Professional Services */}
                 <section className="px-4 mb-4 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,6 +387,123 @@ export const MobileWelcomeScreen: React.FC<MobileWelcomeScreenProps> = ({
                                         className="w-10 h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                     >
                                         <Icon name="ArrowLeft" className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Car Listings */}
+                        <motion.div
+                            initial={mounted ? { opacity: 0, x: 50 } : false}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="relative overflow-hidden group rounded-[2.5rem] p-1"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+                            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.3rem] p-6 border border-white/40 dark:border-white/10 shadow-lg h-full flex flex-col min-h-[240px]">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                                        <Icon name="Car" className="w-6 h-6" />
+                                    </div>
+                                    <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                        جديد
+                                    </div>
+                                </div>
+                                <h4 className="text-xl font-black text-slate-800 dark:text-white mb-2">سوق السيارات</h4>
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed flex-grow">
+                                    تصفح واشترِ سيارات جديدة ومستعملة من موردين موثوقين.
+                                </p>
+                                <div className="flex gap-2 mt-auto">
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 shadow-lg"
+                                        onClick={() => onNavigate?.('car-listings')}
+                                    >
+                                        تصفح العروض
+                                    </Button>
+                                    <button
+                                        onClick={() => onNavigate?.('car-listings')}
+                                        className="w-10 h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                    >
+                                        <Icon name="ArrowLeft" className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Rent Car */}
+                        <motion.div
+                            initial={mounted ? { opacity: 0, x: -50 } : false}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="relative overflow-hidden group rounded-[2.5rem] p-1"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+                            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.3rem] p-6 border border-white/40 dark:border-white/10 shadow-lg h-full flex flex-col min-h-[240px]">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                                        <Icon name="Key" className="w-6 h-6" />
+                                    </div>
+                                    <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] font-bold px-2 py-1 rounded-full border border-purple-200 dark:border-purple-800">
+                                        مميز
+                                    </div>
+                                </div>
+                                <h4 className="text-xl font-black text-slate-800 dark:text-white mb-2">تأجير السيارات</h4>
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed flex-grow">
+                                    استأجر سيارتك المثالية بأسعار تنافسية وخيارات مرنة.
+                                </p>
+                                <div className="flex gap-2 mt-auto">
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 shadow-lg"
+                                        onClick={() => onNavigate?.('rent-car')}
+                                    >
+                                        عرض السيارات
+                                    </Button>
+                                    <button
+                                        onClick={() => onNavigate?.('rent-car')}
+                                        className="w-10 h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                    >
+                                        <Icon name="ArrowLeft" className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Car Auction - Coming Soon */}
+                        <motion.div
+                            initial={mounted ? { opacity: 0, x: 50 } : false}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="relative overflow-hidden rounded-[2.5rem] p-1 opacity-75"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 opacity-10" />
+                            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.3rem] p-6 border border-white/40 dark:border-white/10 shadow-lg h-full flex flex-col min-h-[240px]">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
+                                        <Icon name="Gavel" className="w-6 h-6" />
+                                    </div>
+                                    <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-1 rounded-full border border-amber-200 dark:border-amber-800">
+                                        قريباً
+                                    </div>
+                                </div>
+                                <h4 className="text-xl font-black text-slate-800 dark:text-white mb-2">مزاد السيارات</h4>
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed flex-grow">
+                                    مزادات حية للسيارات بأسعار تنافسية وعروض استثنائية.
+                                </p>
+                                <div className="flex gap-2 mt-auto">
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 rounded-xl bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed shadow-lg"
+                                        disabled
+                                    >
+                                        قريباً
+                                    </Button>
+                                    <button
+                                        disabled
+                                        className="w-10 h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 opacity-50 cursor-not-allowed"
+                                    >
+                                        <Icon name="ArrowLeft" className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                                     </button>
                                 </div>
                             </div>
