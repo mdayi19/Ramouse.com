@@ -98,7 +98,6 @@ class AuthController extends Controller
         // For technician, tow_truck, car_provider: check is_verified
         if (in_array($user->role, ['technician', 'tow_truck', 'car_provider'])) {
             if (!$profile->is_verified) {
-            if (!$profile->is_verified) {
                 // Log::warning removed to prevent potential permission crashes on server
                 return response()->json([
                     'message' => __('auth.account_under_review'),
