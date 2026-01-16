@@ -46,7 +46,6 @@ class CheckAccountStatus
         }
 
         // If profile doesn't exist, block access
-        // If profile doesn't exist, block access
         if (!$profile) {
             // Log::warning removed for safety
 
