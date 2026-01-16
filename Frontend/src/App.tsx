@@ -15,6 +15,7 @@ import { CarProviderDashboardProps } from './types';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ToastContainer from './components/Toast';
+import FloatingServicesButton from './components/FloatingServicesButton';
 import PublicMobileMenu from './components/PublicMobileMenu';
 import GuestServicesPopup from './components/GuestServicesPopup';
 import BottomNavBar from './components/BottomNavBar';
@@ -949,55 +950,12 @@ const App: React.FC = () => {
                 )}
             </Suspense>
 
-            {/* Guest Mobile Bottom Navigation */}
+            {/* Floating Services Button (Guest Mobile) */}
             {!isAuthenticated && isPublicView && (
-                <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
-                    {/* Main Bar with Header-like Styling */}
-                    <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
-                        <div className="relative flex items-center justify-between px-6 h-12 pb-[env(safe-area-inset-bottom)]">
-                            {/* Logo Circle Button - Center (Elevated) */}
-                            <div className="absolute left-1/2 -translate-x-1/2 -top-5">
-                                <div className="relative">
-                                    {/* Outer Glow - Pulsing */}
-                                    <div className="absolute inset-0 rounded-full bg-secondary/20 blur-xl animate-pulse" />
-
-                                    {/* Rotating Ring */}
-                                    <div className="absolute inset-[-4px] rounded-full border border-secondary/20 animate-spin-slow" style={{ animationDuration: '8s' }} />
-
-                                    <button
-                                        onClick={() => setShowServicesPopup(true)}
-                                        className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.2)] hover:shadow-[0_12px_45px_rgba(0,0,0,0.25)] active:scale-95 transition-all duration-300 group border-[3px] border-white/90 hover:border-white"
-                                        style={{ backgroundColor: '#f3efe4' }}
-                                        aria-label="الخدمات"
-                                    >
-                                        {/* Inner Glow */}
-                                        <div className="absolute inset-[3px] rounded-full bg-gradient-to-b from-white/30 to-transparent opacity-50" />
-
-                                        {/* Shine Effect */}
-                                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                                        {/* Hover Ring */}
-                                        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                                        <img
-                                            src={settings.logoUrl || "/logo without name.svg"}
-                                            alt="Logo"
-                                            className="w-10 h-10 object-contain relative z-10 drop-shadow-md group-hover:scale-110 group-hover:rotate-12 transition-all duration-500"
-                                        />
-
-                                        {/* Pulse on Hover */}
-                                        <div className="absolute inset-0 rounded-full bg-secondary/20 animate-ping opacity-0 group-hover:opacity-75 pointer-events-none" />
-                                    </button>
-
-                                    {/* Badge - Services Count with Animation */}
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-secondary to-orange-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce-subtle">
-                                        <span className="text-[10px] font-black text-primary-900">10</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <FloatingServicesButton
+                    onClick={() => setShowServicesPopup(true)}
+                    logoUrl={settings.logoUrl}
+                />
             )}
 
             <GuestServicesPopup
