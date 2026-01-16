@@ -56,85 +56,62 @@ class AuthController extends Controller
             ->orWhere('phone', str_replace('+', '', $phone))
             ->first();
 
+        // Step 1: Check if user exists and password is correct
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => __('auth.invalid_credentials')], 401);
         }
 
-        // Load profile based on role
+        // Step 2: Load profile based on role
         $profile = null;
-        $roleVerified = false;
 
         if ($user->role === 'customer') {
             $profile = $user->customer;
-            if (!$profile) {
-                return response()->json(['message' => __('auth.profile_not_found')], 404);
-            }
-            if (!$profile->is_active) {
-                return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
-            }
-            $roleVerified = true;
         } elseif ($user->role === 'provider') {
             $profile = $user->provider;
-            if (!$profile) {
-                return response()->json(['message' => __('auth.profile_not_found')], 404);
-            }
-            if (!$profile->is_active) {
-                return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
-            }
-            $roleVerified = true;
         } elseif ($user->role === 'car_provider') {
             $profile = $user->carProvider;
-            if (!$profile) {
-                return response()->json(['message' => __('auth.profile_not_found')], 404);
-            }
-            // Strict checks for Car Providers
-            if (!$profile->is_verified) {
-                return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
-            }
-            if (!$profile->is_active) {
-                return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
-            }
-            $roleVerified = true;
         } elseif ($user->role === 'technician') {
             $profile = $user->technician;
-            if (!$profile) {
-                return response()->json(['message' => __('auth.profile_not_found')], 404);
-            }
-            if (!$profile->is_verified) {
-                return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
-            }
-            if (!$profile->is_active) {
-                return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
-            }
-            $roleVerified = true;
         } elseif ($user->role === 'tow_truck') {
             $profile = $user->towTruck;
-            if (!$profile) {
-                return response()->json(['message' => __('auth.profile_not_found')], 404);
-            }
-            if (!$profile->is_verified) {
-                return response()->json(['message' => __('auth.account_not_verified'), 'error' => __('auth.account_not_verified')], 403);
-            }
-            if (!$profile->is_active) {
-                return response()->json(['message' => __('auth.account_inactive'), 'error' => __('auth.account_inactive')], 403);
-            }
-            $roleVerified = true;
+        } elseif ($user->is_admin) {
+            // Admin users may not have a profile
+            $profile = null;
         } else {
-            // Helper for admin or unexpected roles?
-            // If admin, they might not have a profile, but usually admins use a separate login or 'customer' role with is_admin=true.
-            // If this user is an admin (is_admin=true), we might allow them, but let's be safe.
-            // Assuming admins login via /admin/login usually, but if they use this endpoint:
-            if ($user->is_admin) {
-                $roleVerified = true;
-            } else {
-                return response()->json(['message' => __('auth.role_not_authorized'), 'role' => $user->role], 403);
+            return response()->json(['message' => __('auth.role_not_authorized'), 'role' => $user->role], 403);
+        }
+
+        // Check if profile exists (except for admins)
+        if (!$user->is_admin && !$profile) {
+            return response()->json(['message' => __('auth.profile_not_found')], 404);
+        }
+
+        // Step 3: Check is_active status FIRST (applies to all users with profiles)
+        if ($profile && !$profile->is_active) {
+            return response()->json([
+                'message' => __('auth.account_blocked'),
+                'error' => __('auth.account_blocked')
+            ], 403);
+        }
+
+        // Step 4: Role-specific checks
+        // For technician, tow_truck, car_provider: check is_verified
+        if (in_array($user->role, ['technician', 'tow_truck', 'car_provider'])) {
+            if (!$profile->is_verified) {
+                \Illuminate\Support\Facades\Log::warning("Unverified {$user->role} login attempt blocked", [
+                    'phone' => $phone,
+                    'user_id' => $user->id,
+                    'profile_id' => $profile->id,
+                    'role' => $user->role,
+                ]);
+                return response()->json([
+                    'message' => __('auth.account_under_review'),
+                    'error' => __('auth.account_under_review')
+                ], 403);
             }
         }
 
-        if (!$roleVerified) {
-            return response()->json(['message' => __('auth.role_not_authorized')], 403);
-        }
-
+        // Step 5: All checks passed - create token and return user data
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -436,7 +413,7 @@ class AuthController extends Controller
                 'socials' => $request->socials ?? [],
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
-                'is_active' => false, // requires admin activation
+                'is_active' => true, // active by default, only verification required
                 'is_verified' => false,
                 'is_trusted' => false,
                 'wallet_balance' => 0.00,
