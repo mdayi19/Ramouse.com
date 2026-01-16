@@ -97,13 +97,9 @@ class AuthController extends Controller
         // Step 4: Role-specific checks
         // For technician, tow_truck, car_provider: check is_verified
         if (in_array($user->role, ['technician', 'tow_truck', 'car_provider'])) {
-            if ($profile && !$profile->is_verified) {
-                \Illuminate\Support\Facades\Log::warning("Unverified {$user->role} login attempt blocked", [
-                    'phone' => $phone,
-                    'user_id' => $user->id,
-                    'profile_id' => $profile->id,
-                    'role' => $user->role,
-                ]);
+            if (!$profile->is_verified) {
+            if (!$profile->is_verified) {
+                // Log::warning removed to prevent potential permission crashes on server
                 return response()->json([
                     'message' => __('auth.account_under_review'),
                     'error' => __('auth.account_under_review')
