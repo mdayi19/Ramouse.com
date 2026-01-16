@@ -101,6 +101,27 @@ api.interceptors.response.use(
                 window.location.href = '/';
             }
         }
+
+        // Handle 403 with token revocation (account blocked/unverified)
+        if (error.response?.status === 403 && error.response?.data?.token_revoked) {
+            console.log('🚫 403 Token Revoked - account blocked or unverified');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('userPhone');
+            localStorage.removeItem('isAdmin');
+
+            // Store error message to show on login page
+            const errorMessage = error.response?.data?.message || 'Your account access has been revoked';
+            localStorage.setItem('loginError', errorMessage);
+
+            if (window.location.pathname !== '/') {
+                console.log('🔀 Redirecting to / due to token revocation');
+                window.location.href = '/';
+            }
+        }
+
         return Promise.reject(error);
     }
 );

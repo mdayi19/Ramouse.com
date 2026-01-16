@@ -132,6 +132,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       }
       setRememberMe(true);
     }
+
+    // Check for login error from token revocation (middleware)
+    const storedError = localStorage.getItem('loginError');
+    if (storedError) {
+      setError(storedError);
+      localStorage.removeItem('loginError');
+    }
   }, []);
 
   const resetToPhoneInput = () => {
