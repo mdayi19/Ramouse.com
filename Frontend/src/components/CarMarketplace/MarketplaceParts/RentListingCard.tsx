@@ -263,24 +263,29 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({
         </div>
     );
 
-    // Shared Actions Component
-    const ActionButtons = ({ className }: { className?: string }) => (
+    // Shared Actions Component - Mobile Optimized
+    const ActionButtons = ({ className, isMobile = false }: { className?: string; isMobile?: boolean }) => (
         <div className={cn("flex items-center gap-2", className)}>
             <button
                 onClick={handleFavorite}
                 className={cn(
-                    "p-2 rounded-full transition-all border",
+                    "rounded-full transition-all border touch-manipulation active:scale-95",
+                    isMobile ? "p-2.5 min-w-[44px] min-h-[44px]" : "p-2.5",
                     isFavorited ? "bg-red-50 border-red-200 text-red-500" : "border-slate-200 text-slate-400 hover:text-red-500 hover:bg-slate-50 bg-white dark:bg-slate-800 dark:border-slate-700"
                 )}
+                aria-label="مفضلة"
             >
-                <Heart className={cn("w-4 h-4", isFavorited && "fill-current")} />
+                <Heart className={cn(isMobile ? "w-5 h-5" : "w-4 h-4", isFavorited && "fill-current")} />
             </button>
-            <button
-                onClick={handleShare}
-                className="p-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-teal-600 hover:bg-slate-50 bg-white dark:bg-slate-800 transition-all"
-            >
-                <Share2 className="w-4 h-4" />
-            </button>
+            {!isMobile && (
+                <button
+                    onClick={handleShare}
+                    className="p-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-teal-600 hover:bg-slate-50 bg-white dark:bg-slate-800 transition-all touch-manipulation active:scale-95"
+                    aria-label="مشاركة"
+                >
+                    <Share2 className="w-4 h-4" />
+                </button>
+            )}
         </div>
     );
 
@@ -291,7 +296,7 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                    "group flex flex-col bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 h-full cursor-pointer relative",
+                    "group flex flex-col bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 h-full cursor-pointer relative touch-manipulation",
                     isSponsoredInjection
                         ? "border-teal-400 dark:border-teal-600 shadow-md ring-1 ring-teal-400/30"
                         : "border-slate-200 dark:border-slate-700"
@@ -344,8 +349,8 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({
             className="group flex flex-row bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer w-full mb-3"
             onClick={handleView}
         >
-            {/* Image Area - Fixed Width */}
-            <ListingImage className="w-32 sm:w-64 flex-shrink-0" />
+            {/* Image Area - Optimized Width for Mobile */}
+            <ListingImage className="w-40 sm:w-64 flex-shrink-0 aspect-[4/3]" />
 
             {/* Content Area */}
             <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2 sm:gap-3 min-w-0">
@@ -389,10 +394,13 @@ export const RentListingCard: React.FC<RentListingCardProps> = ({
                     </div>
                 )}
 
-                {/* Mobile Footer */}
+                {/* Mobile Footer - Touch Optimized */}
                 <div className="flex sm:hidden items-center justify-between mt-auto pt-2 border-t border-slate-50 dark:border-slate-800/50">
-                    <ActionButtons className="gap-1 scale-90 origin-right" />
-                    <button className="px-3 py-1 bg-teal-600 text-white text-[10px] font-bold rounded-lg shadow-sm">
+                    <ActionButtons isMobile className="gap-2" />
+                    <button
+                        onClick={(e) => { e.stopPropagation(); handleView(); }}
+                        className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold rounded-xl shadow-sm touch-manipulation active:scale-95 transition-all min-h-[44px]"
+                    >
                         التفاصيل
                     </button>
                 </div>

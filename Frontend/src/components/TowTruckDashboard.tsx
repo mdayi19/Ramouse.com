@@ -17,6 +17,15 @@ import UserWalletView from './UserWalletView';
 
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
 import Sidebar, { SidebarItemType, SidebarUser } from './DashboardParts/Sidebar';
+import {
+    getDashboardActiveView,
+    createNavigationHandlers,
+    createSidebarUser,
+    COMMON_MENU_ITEMS,
+    buildSidebarItem,
+    buildExternalNavItem,
+    buildCustomSidebarItem
+} from './DashboardParts/Shared';
 
 
 interface TowTruckDashboardProps {
@@ -49,56 +58,45 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Derive active view from URL
-    const activeView = useMemo(() => {
-        const path = location.pathname.split('/').pop();
-        if (location.pathname === '/tow-truck-dashboard' || location.pathname === '/tow-truck-dashboard/') return 'overview';
-        return (path as TowTruckView) || 'overview';
-    }, [location.pathname]);
+    // Derive active view from URL using shared utility
+    const activeView = useMemo(() =>
+        getDashboardActiveView(location.pathname, '/tow-truck-dashboard') as TowTruckView,
+        [location.pathname]
+    );
+
+    // Create navigation handlers using shared utility
+    const navigationHandlers = useMemo(() =>
+        createNavigationHandlers(navigate, onNavigate, '/tow-truck-dashboard', setIsSidebarOpen),
+        [navigate, onNavigate, setIsSidebarOpen]
+    );
 
     const handleSetView = (view: TowTruckView) => {
-        if (view === 'overview') {
-            navigate('/tow-truck-dashboard');
-        } else {
-            navigate(`/tow-truck-dashboard/${view}`);
-        }
+        navigationHandlers.handleViewChange(view);
     };
 
     const handleSidebarNavClick = (view: TowTruckView | 'notifications') => {
-        if (view === 'notifications') {
-            onNavigate('notificationCenter');
-        } else {
-            handleSetView(view);
-        }
-        if (window.innerWidth < 768) {
-            setIsSidebarOpen(false);
-        }
+        navigationHandlers.handleSidebarNavClick(view);
     };
 
     const handleBottomNavClick = (id: string) => {
-        if (id === 'notifications') {
-            props.onNavigate('notificationCenter');
-        } else if (id === 'add-order') {
-            props.onStartNewOrder();
-        } else {
-            handleSetView(id as TowTruckView);
-        }
+        navigationHandlers.handleBottomNavClick(id, props.onStartNewOrder);
     };
 
+    // Build sidebar items using shared utilities for consistency
     const sidebarItems: SidebarItemType[] = useMemo(() => [
-        { id: 'overview', label: 'نظرة عامة', icon: 'LayoutGrid', onClick: () => handleSidebarNavClick('overview'), isActive: activeView === 'overview' },
-        { id: 'profile', label: 'ملفي الشخصي', icon: 'User', onClick: () => handleSidebarNavClick('profile'), isActive: activeView === 'profile' },
-        { id: 'reviews', label: 'التقييمات', icon: 'Star', onClick: () => handleSidebarNavClick('reviews'), isActive: activeView === 'reviews' },
-        { id: 'wallet', label: 'المحفظة', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
-        { id: 'car-listings', label: 'سوق السيارات', icon: 'Car', onClick: () => onNavigate('car-listings'), isActive: false },
-        { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin', onClick: () => onNavigate('rent-car'), isActive: false },
-        { id: 'store', label: 'المتجر', icon: 'Store', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },
-        { id: 'orders', label: 'طلباتي للقطع', icon: 'ClipboardList', onClick: () => handleSidebarNavClick('orders'), isActive: activeView === 'orders' },
-        { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap', onClick: () => handleSidebarNavClick('flashProducts'), isActive: activeView === 'flashProducts' },
-        { id: 'internationalLicense', label: 'الرخصة الدولية', icon: 'Globe', onClick: () => handleSidebarNavClick('internationalLicense'), isActive: activeView === 'internationalLicense' },
-        { id: 'settings', label: 'الإعدادات', icon: 'Settings', onClick: () => handleSidebarNavClick('settings'), isActive: activeView === 'settings' },
-        { id: 'notifications', label: 'الإشعارات', icon: 'Bell', onClick: () => handleSidebarNavClick('notifications'), isActive: currentView === 'notificationCenter', badge: unreadCount },
-    ], [activeView, currentView, unreadCount]);
+        buildSidebarItem(COMMON_MENU_ITEMS.overview, activeView, () => handleSidebarNavClick('overview')),
+        buildSidebarItem(COMMON_MENU_ITEMS.profile, activeView, () => handleSidebarNavClick('profile')),
+        buildSidebarItem(COMMON_MENU_ITEMS.reviews, activeView, () => handleSidebarNavClick('reviews')),
+        buildSidebarItem(COMMON_MENU_ITEMS.wallet, activeView, () => handleSidebarNavClick('wallet')),
+        buildExternalNavItem(COMMON_MENU_ITEMS.carListings, onNavigate),
+        buildExternalNavItem(COMMON_MENU_ITEMS.rentCar, onNavigate),
+        buildSidebarItem(COMMON_MENU_ITEMS.store, activeView, () => handleSidebarNavClick('store')),
+        buildCustomSidebarItem('orders', 'طلباتي للقطع', 'ClipboardList', activeView, () => handleSidebarNavClick('orders')),
+        buildSidebarItem(COMMON_MENU_ITEMS.flashProducts, activeView, () => handleSidebarNavClick('flashProducts')),
+        buildSidebarItem(COMMON_MENU_ITEMS.internationalLicense, activeView, () => handleSidebarNavClick('internationalLicense')),
+        buildSidebarItem(COMMON_MENU_ITEMS.settings, activeView, () => handleSidebarNavClick('settings')),
+        buildSidebarItem(COMMON_MENU_ITEMS.notifications, activeView, () => handleSidebarNavClick('notifications'), unreadCount),
+    ], [activeView, currentView, unreadCount, handleSidebarNavClick, onNavigate]);
 
     const bottomNavItems = [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
@@ -108,12 +106,11 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ];
 
-    const sidebarUser: SidebarUser = {
-        name: towTruck.name,
-        phone: userPhone,
-        roleLabel: 'سيارة ونش',
-        avatarChar: towTruck.name.charAt(0)
-    };
+    // Create sidebar user object using shared utility
+    const sidebarUser = useMemo(() =>
+        createSidebarUser(towTruck.name, userPhone, 'سيارة ونش', towTruck.name.charAt(0)),
+        [towTruck, userPhone]
+    );
 
     return (
         <div className="w-full max-w-[1920px] mx-auto flex flex-col md:flex-row bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 md:rounded-2xl md:shadow-2xl min-h-[calc(100vh-8rem)] md:my-4 overflow-hidden">

@@ -679,6 +679,7 @@ const App: React.FC = () => {
                 isProvider={isProvider}
                 isTechnician={isTechnician}
                 isTowTruck={isTowTruck}
+                isCarProvider={isCarProvider}
                 onLogout={handleLogout}
                 userPhone={userPhone}
                 userName={userName}
@@ -687,6 +688,7 @@ const App: React.FC = () => {
                 onGoToProvider={() => handleNavigate('providerDashboard')}
                 onGoToTechnician={() => handleNavigate('technicianDashboard')}
                 onGoToTowTruck={() => handleNavigate('towTruckDashboard')}
+                onGoToCarProvider={() => handleNavigate('carProviderDashboard')}
                 onGoToAnnouncements={() => handleNavigate('announcements')}
                 onGoToNotifications={() => handleNavigate('notificationCenter')}
                 onLoginClick={handleLoginClick}

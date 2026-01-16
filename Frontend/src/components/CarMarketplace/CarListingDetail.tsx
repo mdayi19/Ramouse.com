@@ -625,27 +625,45 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
                 </div>
             </div>
 
-            {/* Mobile Sticky Bar - Only visible on small screens */}
+            {/* Mobile Sticky Bar - Touch Optimized */}
             <motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
-                className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40"
+                className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40"
+                style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
             >
-                <div className="flex gap-3">
+                <div className="flex gap-2">
+                    {/* Favorite Button */}
+                    <button
+                        onClick={handleFavoriteToggle}
+                        className={cn(
+                            "p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 min-h-[48px] min-w-[48px] flex items-center justify-center",
+                            isFavorited
+                                ? "bg-red-50 border-red-300 text-red-500"
+                                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+                        )}
+                        aria-label="مفضلة"
+                    >
+                        <Heart className={cn("w-5 h-5", isFavorited && "fill-current")} />
+                    </button>
+
+                    {/* Phone Button */}
                     <button
                         onClick={() => handleContact('phone')}
-                        className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3.5 rounded-xl font-bold"
+                        className="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-white py-3 rounded-xl font-bold touch-manipulation active:scale-[0.98] transition-all min-h-[48px]"
                     >
                         <Phone className="w-5 h-5" />
-                        {t.ui.call}
+                        <span className="text-sm sm:text-base">{t.ui.call}</span>
                     </button>
+
+                    {/* WhatsApp Button */}
                     {hasWhatsapp && (
                         <button
                             onClick={() => handleContact('whatsapp')}
-                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-3.5 rounded-xl font-bold"
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold touch-manipulation active:scale-[0.98] transition-all min-h-[48px]"
                         >
                             <MessageCircle className="w-5 h-5" />
-                            {t.ui.whatsapp}
+                            <span className="text-sm sm:text-base">{t.ui.whatsapp}</span>
                         </button>
                     )}
                 </div>

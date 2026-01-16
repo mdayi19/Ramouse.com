@@ -7,6 +7,7 @@ import { TowTruckView } from './types';
 import { api } from '../../lib/api';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { MarketplaceQuickAccess } from '../DashboardParts/Shared';
 
 interface TowTruckStats {
     averageRating: number | string;
@@ -247,6 +248,9 @@ const OverviewView: React.FC<{
                             <QuickBtn onClick={() => onNavigate('settings')} emoji="⚙️" label="الإعدادات" color="text-slate-500" />
                         </div>
                     </Card>
+
+                    {/* Marketplace Quick Access */}
+                    <MarketplaceQuickAccess onNavigate={handleGlobalNavigate} />
 
                     {/* Public Services Section */}
                     <div className="mb-6">

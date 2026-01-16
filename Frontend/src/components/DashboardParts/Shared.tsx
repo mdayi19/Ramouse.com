@@ -245,3 +245,221 @@ export { Icon };
 export const EditIcon: React.FC<{ className?: string }> = ({ className }) => <Icon name="Pencil" className={className} />;
 export const DeleteIcon: React.FC<{ className?: string }> = ({ className }) => <Icon name="Trash2" className={className} />;
 export const WrenchScrewdriverIcon: React.FC<{ className?: string }> = ({ className }) => <Icon name="Wrench" className={className} />;
+
+// ============================================================================
+// DASHBOARD SHARED UTILITIES
+// ============================================================================
+
+import { SidebarItemType, SidebarUser } from './Sidebar';
+
+/**
+ * Common menu items shared across all user types
+ * Use these to ensure consistent labels and icons
+ */
+export const COMMON_MENU_ITEMS = {
+    overview: { id: 'overview', label: 'نظرة عامة', icon: 'LayoutGrid' },
+    store: { id: 'store', label: 'المتجر', icon: 'ShoppingBag' },
+    carListings: { id: 'car-listings', label: 'سوق السيارات', icon: 'Car' },
+    rentCar: { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin' },
+    wallet: { id: 'wallet', label: 'المحفظة', icon: 'Wallet' },
+    flashProducts: { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap' },
+    internationalLicense: { id: 'internationalLicense', label: 'الرخصة الدولية', icon: 'Globe' },
+    settings: { id: 'settings', label: 'الإعدادات', icon: 'Settings' },
+    notifications: { id: 'notifications', label: 'الإشعارات', icon: 'Bell' },
+    orders: { id: 'orders', label: 'طلباتي', icon: 'ClipboardList' },
+    profile: { id: 'profile', label: 'ملفي الشخصي', icon: 'User' },
+    reviews: { id: 'reviews', label: 'التقييمات', icon: 'Star' },
+    garage: { id: 'garage', label: 'مرآبي', icon: 'Warehouse' },
+    auctions: { id: 'auctions', label: 'المزادات', icon: 'Gavel' },
+    suggestions: { id: 'suggestions', label: 'المساعد الذكي', icon: 'Sparkles' },
+} as const;
+
+/**
+ * Derives the active view from the current pathname
+ * @param pathname - Current location pathname
+ * @param basePath - Dashboard base path (e.g., '/dashboard', '/technician')
+ * @returns Active view name
+ */
+export const getDashboardActiveView = (pathname: string, basePath: string): string => {
+    const path = pathname.split('/').pop();
+    if (pathname === basePath || pathname === `${basePath}/`) {
+        return 'overview';
+    }
+    return path || 'overview';
+};
+
+/**
+ * Creates a standardized SidebarUser object
+ * @param name - User's display name
+ * @param phone - User's phone number
+ * @param roleLabel - Role label in Arabic (e.g., 'عميل', 'فني')
+ * @param avatarChar - Optional avatar character (defaults to first char of name)
+ * @returns SidebarUser object
+ */
+export const createSidebarUser = (
+    name: string,
+    phone: string,
+    roleLabel: string,
+    avatarChar?: string
+): SidebarUser => ({
+    name,
+    phone,
+    roleLabel,
+    avatarChar: avatarChar || name.charAt(0)
+});
+
+/**
+ * Creates standard navigation handlers for dashboards
+ * Reduces boilerplate across all dashboard components
+ */
+export const createNavigationHandlers = (
+    navigate: any,
+    onNavigate: Function,
+    basePath: string,
+    setIsSidebarOpen?: (open: boolean) => void
+) => {
+    const handleViewChange = (view: string, params?: any) => {
+        if (view === 'overview') {
+            navigate(basePath);
+        } else {
+            navigate(`${basePath}/${view}`, { state: params });
+        }
+    };
+
+    const handleSidebarNavClick = (view: string) => {
+        if (view === 'notifications') {
+            onNavigate('notificationCenter');
+        } else {
+            handleViewChange(view);
+        }
+        if (setIsSidebarOpen && window.innerWidth < 768) {
+            setIsSidebarOpen(false);
+        }
+    };
+
+    const handleBottomNavClick = (id: string, onStartNewOrder?: Function) => {
+        if (id === 'notifications') {
+            onNavigate('notificationCenter');
+        } else if (id === 'add-order' || id === 'new-order') {
+            onStartNewOrder?.();
+        } else {
+            handleViewChange(id);
+        }
+    };
+
+    return { handleViewChange, handleSidebarNavClick, handleBottomNavClick };
+};
+
+/**
+ * Builds a sidebar menu item with consistent structure
+ * @param menuItem - Menu item definition from COMMON_MENU_ITEMS
+ * @param activeView - Currently active view
+ * @param onClick - Click handler
+ * @param badge - Optional badge count
+ * @returns SidebarItemType
+ */
+export const buildSidebarItem = (
+    menuItem: typeof COMMON_MENU_ITEMS[keyof typeof COMMON_MENU_ITEMS],
+    activeView: string,
+    onClick: () => void,
+    badge?: number
+): SidebarItemType => ({
+    ...menuItem,
+    onClick,
+    isActive: activeView === menuItem.id,
+    badge
+});
+
+/**
+ * Builds an external navigation item (navigates outside dashboard)
+ * @param menuItem - Menu item definition
+ * @param onNavigate - Global navigation function
+ * @returns SidebarItemType
+ */
+export const buildExternalNavItem = (
+    menuItem: typeof COMMON_MENU_ITEMS[keyof typeof COMMON_MENU_ITEMS],
+    onNavigate: Function
+): SidebarItemType => ({
+    ...menuItem,
+    onClick: () => onNavigate(menuItem.id),
+    isActive: false
+});
+
+/**
+ * Builds a custom sidebar item (not in COMMON_MENU_ITEMS)
+ * @param id - Unique identifier
+ * @param label - Display label (Arabic)
+ * @param icon - Icon name from lucide-react
+ * @param activeView - Currently active view
+ * @param onClick - Click handler
+ * @param badge - Optional badge count
+ * @returns SidebarItemType
+ */
+export const buildCustomSidebarItem = (
+    id: string,
+    label: string,
+    icon: string,
+    activeView: string,
+    onClick: () => void,
+    badge?: number
+): SidebarItemType => ({
+    id,
+    label,
+    icon,
+    onClick,
+    isActive: activeView === id,
+    badge
+});
+
+// ============================================================================
+// QUICK ACCESS CARDS FOR DASHBOARD OVERVIEWS
+// ============================================================================
+
+interface QuickAccessCardProps {
+    title: string;
+    description: string;
+    emoji: string;
+    onClick: () => void;
+    gradient: string;
+}
+
+const QuickAccessCard: React.FC<QuickAccessCardProps> = ({ title, description, emoji, onClick, gradient }) => (
+    <button
+        onClick={onClick}
+        className={`group relative overflow-hidden rounded-3xl p-5 text-white text-right w-full active:scale-95 transition-all shadow-lg hover:shadow-xl ${gradient}`}
+    >
+        <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+        <div className="relative z-10 flex flex-col h-full justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-2 backdrop-blur-sm self-start">
+                <span className="text-2xl">{emoji}</span>
+            </div>
+            <div>
+                <h4 className="font-black text-lg mb-1">{title}</h4>
+                <p className="text-sm opacity-90 font-medium">{description}</p>
+            </div>
+        </div>
+    </button>
+);
+
+/**
+ * Quick access cards for Car Listings and Rent Car
+ * Display in dashboard overviews for easy access
+ */
+export const MarketplaceQuickAccess: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => (
+    <div className="grid grid-cols-2 gap-4 mb-8">
+        <QuickAccessCard
+            title={COMMON_MENU_ITEMS.carListings.label}
+            description="تصفح السيارات المعروضة للبيع"
+            emoji="🚗"
+            onClick={() => onNavigate('car-listings')}
+            gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+        />
+        <QuickAccessCard
+            title={COMMON_MENU_ITEMS.rentCar.label}
+            description="استأجر سيارة لفترة قصيرة أو طويلة"
+            emoji="🗺️"
+            onClick={() => onNavigate('rent-car')}
+            gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
+        />
+    </div>
+);

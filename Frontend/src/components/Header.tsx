@@ -4,6 +4,7 @@ import Icon from './Icon';
 import NotificationDropdown from './NotificationDropdown';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
+import { COMMON_MENU_ITEMS } from './DashboardParts/Shared';
 
 interface HeaderProps {
     isDarkMode: boolean;
@@ -13,6 +14,7 @@ interface HeaderProps {
     isProvider: boolean;
     isTechnician: boolean;
     isTowTruck: boolean;
+    isCarProvider: boolean;
     onLogout: () => void;
     userPhone: string;
     userName?: string;
@@ -21,6 +23,7 @@ interface HeaderProps {
     onGoToProvider: () => void;
     onGoToTechnician: () => void;
     onGoToTowTruck: () => void;
+    onGoToCarProvider: () => void;
     onGoToAnnouncements: () => void;
     onGoToNotifications: () => void;
     onLoginClick: () => void;
@@ -39,8 +42,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-    isDarkMode, setIsDarkMode, isAuthenticated, isAdmin, isProvider, isTechnician, isTowTruck, onLogout, userPhone,
-    userName, onGoToOrders, onGoToAdmin, onGoToProvider, onGoToTechnician, onGoToTowTruck, onGoToAnnouncements, onGoToNotifications, onLoginClick,
+    isDarkMode, setIsDarkMode, isAuthenticated, isAdmin, isProvider, isTechnician, isTowTruck, isCarProvider, onLogout, userPhone,
+    userName, onGoToOrders, onGoToAdmin, onGoToProvider, onGoToTechnician, onGoToTowTruck, onGoToCarProvider, onGoToAnnouncements, onGoToNotifications, onLoginClick,
     notifications, unreadCount, markNotificationsAsRead,
     settings,
     onStartNewOrder,
@@ -108,6 +111,7 @@ const Header: React.FC<HeaderProps> = ({
         if (isProvider) return onGoToProvider;
         if (isTechnician) return onGoToTechnician;
         if (isTowTruck) return onGoToTowTruck;
+        if (isCarProvider) return onGoToCarProvider;
         return onGoToOrders;
     };
 
@@ -116,6 +120,7 @@ const Header: React.FC<HeaderProps> = ({
         if (isProvider) return "مزود خدمة";
         if (isTechnician) return "فني";
         if (isTowTruck) return "خدمة سطحات";
+        if (isCarProvider) return "معرض سيارات";
         return "عميل";
     };
 
@@ -173,7 +178,7 @@ const Header: React.FC<HeaderProps> = ({
                         <div className="hidden lg:flex items-center mx-4">
                             <nav className="flex items-center p-1.5 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-full border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
                                 <NavLink label="الرئيسية" onClick={() => onNavigate('welcome')} />
-                                <NavLink label="المتجر" icon="ShoppingBag" onClick={() => onNavigate('store')} />
+                                <NavLink label={COMMON_MENU_ITEMS.store.label} icon="ShoppingBag" onClick={() => onNavigate('store')} />
                                 <NavLink label="المدونة" onClick={() => onNavigate('blog')} />
 
                                 {isAuthenticated && (

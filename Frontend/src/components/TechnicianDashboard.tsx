@@ -18,6 +18,15 @@ import SettingsView from './TechnicianDashboardParts/SettingsView';
 import UserWalletView from './UserWalletView';
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
 import Sidebar, { SidebarItemType, SidebarUser } from './DashboardParts/Sidebar';
+import {
+    getDashboardActiveView,
+    createNavigationHandlers,
+    createSidebarUser,
+    COMMON_MENU_ITEMS,
+    buildSidebarItem,
+    buildExternalNavItem,
+    buildCustomSidebarItem
+} from './DashboardParts/Shared';
 
 interface TechnicianDashboardProps {
     allOrders: Order[];
@@ -49,12 +58,11 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Derive active view from URL
-    const activeView = useMemo(() => {
-        const path = location.pathname.split('/').pop();
-        if (location.pathname === '/technician' || location.pathname === '/technician/') return 'overview';
-        return (path as TechnicianView) || 'overview';
-    }, [location.pathname]);
+    // Derive active view from URL using shared utility
+    const activeView = useMemo(() =>
+        getDashboardActiveView(location.pathname, '/technician') as TechnicianView,
+        [location.pathname]
+    );
 
     const [technicianOrders, setTechnicianOrders] = useState<Order[]>([]);
     const [myRequests, setMyRequests] = useState<FlashProductBuyerRequest[]>([]);
@@ -76,49 +84,39 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
         }
     }, [userPhone]);
 
+    // Create navigation handlers using shared utility
+    const navigationHandlers = useMemo(() =>
+        createNavigationHandlers(navigate, onNavigate, '/technician', setIsSidebarOpen),
+        [navigate, onNavigate, setIsSidebarOpen]
+    );
+
     const handleSetView = (view: TechnicianView) => {
-        if (view === 'overview') {
-            navigate('/technician');
-        } else {
-            navigate(`/technician/${view}`);
-        }
+        navigationHandlers.handleViewChange(view);
     };
 
     const handleSidebarNavClick = (view: TechnicianView | 'notifications') => {
-        if (view === 'notifications') {
-            onNavigate('notificationCenter');
-        } else {
-            handleSetView(view);
-        }
-        if (window.innerWidth < 768) {
-            setIsSidebarOpen(false);
-        }
+        navigationHandlers.handleSidebarNavClick(view);
     };
 
     const handleBottomNavClick = (id: string) => {
-        if (id === 'notifications') {
-            props.onNavigate('notificationCenter');
-        } else if (id === 'add-order') {
-            props.onStartNewOrder();
-        } else {
-            handleSetView(id as TechnicianView);
-        }
+        navigationHandlers.handleBottomNavClick(id, props.onStartNewOrder);
     };
 
+    // Build sidebar items using shared utilities for consistency
     const sidebarItems: SidebarItemType[] = useMemo(() => [
-        { id: 'overview', label: 'نظرة عامة', icon: 'LayoutGrid', onClick: () => handleSidebarNavClick('overview'), isActive: activeView === 'overview' },
-        { id: 'profile', label: 'ملفي الشخصي', icon: 'User', onClick: () => handleSidebarNavClick('profile'), isActive: activeView === 'profile' },
-        { id: 'reviews', label: 'التقييمات', icon: 'Star', onClick: () => handleSidebarNavClick('reviews'), isActive: activeView === 'reviews' },
-        { id: 'wallet', label: 'المحفظة', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
-        { id: 'car-listings', label: 'سوق السيارات', icon: 'Car', onClick: () => onNavigate('car-listings'), isActive: false },
-        { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin', onClick: () => onNavigate('rent-car'), isActive: false },
-        { id: 'store', label: 'المتجر', icon: 'Store', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },
-        { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap', onClick: () => handleSidebarNavClick('flashProducts'), isActive: activeView === 'flashProducts' },
-        { id: 'orders', label: 'طلباتي للقطع', icon: 'ClipboardList', onClick: () => handleSidebarNavClick('orders'), isActive: activeView === 'orders' },
-        { id: 'internationalLicense', label: 'الرخصة الدولية', icon: 'Globe', onClick: () => handleSidebarNavClick('internationalLicense'), isActive: activeView === 'internationalLicense' },
-        { id: 'settings', label: 'الإعدادات', icon: 'Settings', onClick: () => handleSidebarNavClick('settings'), isActive: activeView === 'settings' },
-        { id: 'notifications', label: 'الإشعارات', icon: 'Bell', onClick: () => handleSidebarNavClick('notifications'), isActive: currentView === 'notificationCenter', badge: unreadCount },
-    ], [activeView, currentView, unreadCount]);
+        buildSidebarItem(COMMON_MENU_ITEMS.overview, activeView, () => handleSidebarNavClick('overview')),
+        buildSidebarItem(COMMON_MENU_ITEMS.profile, activeView, () => handleSidebarNavClick('profile')),
+        buildSidebarItem(COMMON_MENU_ITEMS.reviews, activeView, () => handleSidebarNavClick('reviews')),
+        buildSidebarItem(COMMON_MENU_ITEMS.wallet, activeView, () => handleSidebarNavClick('wallet')),
+        buildExternalNavItem(COMMON_MENU_ITEMS.carListings, onNavigate),
+        buildExternalNavItem(COMMON_MENU_ITEMS.rentCar, onNavigate),
+        buildSidebarItem(COMMON_MENU_ITEMS.store, activeView, () => handleSidebarNavClick('store')),
+        buildSidebarItem(COMMON_MENU_ITEMS.flashProducts, activeView, () => handleSidebarNavClick('flashProducts')),
+        buildCustomSidebarItem('orders', 'طلباتي للقطع', 'ClipboardList', activeView, () => handleSidebarNavClick('orders')),
+        buildSidebarItem(COMMON_MENU_ITEMS.internationalLicense, activeView, () => handleSidebarNavClick('internationalLicense')),
+        buildSidebarItem(COMMON_MENU_ITEMS.settings, activeView, () => handleSidebarNavClick('settings')),
+        buildSidebarItem(COMMON_MENU_ITEMS.notifications, activeView, () => handleSidebarNavClick('notifications'), unreadCount),
+    ], [activeView, currentView, unreadCount, handleSidebarNavClick, onNavigate]);
 
     const bottomNavItems = [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
@@ -128,12 +126,11 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
         { id: 'profile', label: 'ملفي', icon: <Icon name="User" /> },
     ];
 
-    const sidebarUser: SidebarUser = {
-        name: technician.name,
-        phone: userPhone,
-        roleLabel: technician.specialty || 'فني',
-        avatarChar: technician.name.charAt(0)
-    };
+    // Create sidebar user object using shared utility
+    const sidebarUser = useMemo(() =>
+        createSidebarUser(technician.name, userPhone, technician.specialty || 'فني', technician.name.charAt(0)),
+        [technician, userPhone]
+    );
 
     return (
         <div className="w-full max-w-[1920px] mx-auto flex flex-col md:flex-row bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 md:rounded-2xl md:shadow-2xl min-h-[calc(100vh-8rem)] md:my-4 overflow-hidden">

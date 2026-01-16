@@ -4,6 +4,7 @@ import Icon from '../Icon';
 import EmptyState from '../EmptyState';
 import { ProviderView } from './types';
 import { LineChart, BarChart } from '../DataCharts';
+import { MarketplaceQuickAccess } from '../DashboardParts/Shared';
 
 interface ProviderOverviewViewProps {
     provider: Provider;
@@ -299,6 +300,9 @@ const ProviderOverviewView: React.FC<ProviderOverviewViewProps> = ({ provider, o
                             </div>
                         )}
                     </div>
+
+                    {/* Marketplace Quick Access */}
+                    <MarketplaceQuickAccess onNavigate={(view) => window.location.href = `/${view}`} />
 
                     {/* Public Services Section */}
                     <div className="mt-6">

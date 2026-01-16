@@ -5,6 +5,15 @@ import { CarProvider, Settings, Order, StoreCategory, Notification, Notification
 import Sidebar, { SidebarItemType, SidebarUser } from '../../DashboardParts/Sidebar';
 import BottomNavBar from '../../BottomNavBar';
 import Icon from '../../Icon';
+import {
+    getDashboardActiveView,
+    createNavigationHandlers,
+    createSidebarUser,
+    COMMON_MENU_ITEMS,
+    buildSidebarItem,
+    buildExternalNavItem,
+    buildCustomSidebarItem
+} from '../../DashboardParts/Shared';
 
 // Provider Views
 import { OverviewView } from './OverviewView';
@@ -45,68 +54,54 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Derive active view from URL
-    const activeView = useMemo(() => {
-        const path = location.pathname.split('/').pop();
-        if (location.pathname.includes('/car-provider-dashboard') && (path === 'car-provider-dashboard' || path === '')) return 'overview';
-        return path || 'overview';
-    }, [location.pathname]);
+    // Derive active view from URL using shared utility
+    const activeView = useMemo(() =>
+        getDashboardActiveView(location.pathname, '/car-provider-dashboard'),
+        [location.pathname]
+    );
+
+    // Create navigation handlers using shared utility
+    const navigationHandlers = useMemo(() =>
+        createNavigationHandlers(navigate, onNavigate, '/car-provider-dashboard', setIsSidebarOpen),
+        [navigate, onNavigate, setIsSidebarOpen]
+    );
 
     const handleViewChange = (view: string) => {
-        if (view === 'overview') {
-            navigate('/car-provider-dashboard');
-        } else {
-            navigate(`/car-provider-dashboard/${view}`);
-        }
+        navigationHandlers.handleViewChange(view);
     };
 
     const handleSidebarNavClick = (view: string) => {
-        if (view === 'notifications') {
-            onNavigate('notificationCenter');
-        } else {
-            handleViewChange(view);
-        }
-        if (window.innerWidth < 768) {
-            setIsSidebarOpen(false);
-        }
+        navigationHandlers.handleSidebarNavClick(view);
     };
 
     const handleBottomNavClick = (id: string) => {
-        if (id === 'notifications') {
-            onNavigate('notificationCenter');
-        } else if (id === 'new-order') {
-            // Trigger new order form
-            if (props.onStartNewOrder) {
-                props.onStartNewOrder();
-            }
-        } else {
-            handleViewChange(id);
-        }
+        navigationHandlers.handleBottomNavClick(id, props.onStartNewOrder);
     };
 
+    // Build sidebar items using shared utilities for consistency
     const sidebarItems: SidebarItemType[] = useMemo(() => [
         // Provider Specific
-        { id: 'overview', label: 'نظرة عامة', icon: 'LayoutGrid', onClick: () => handleSidebarNavClick('overview'), isActive: activeView === 'overview' },
-        { id: 'listings', label: 'إدارة السيارات', icon: 'Car', onClick: () => handleSidebarNavClick('listings'), isActive: activeView === 'listings' },
-        { id: 'sponsorManagement', label: 'الإعلانات الممولة', icon: 'Star', onClick: () => handleSidebarNavClick('sponsorManagement'), isActive: activeView === 'sponsorManagement' },
-        { id: 'analytics', label: 'التحليلات', icon: 'TrendingUp', onClick: () => handleSidebarNavClick('analytics'), isActive: activeView === 'analytics' },
+        buildSidebarItem(COMMON_MENU_ITEMS.overview, activeView, () => handleSidebarNavClick('overview')),
+        buildCustomSidebarItem('listings', 'إدارة السيارات', 'Car', activeView, () => handleSidebarNavClick('listings')),
+        buildCustomSidebarItem('sponsorManagement', 'الإعلانات الممولة', 'Star', activeView, () => handleSidebarNavClick('sponsorManagement')),
+        buildCustomSidebarItem('analytics', 'التحليلات', 'TrendingUp', activeView, () => handleSidebarNavClick('analytics')),
 
         // Customer Features
-        { id: 'orders', label: 'طلباتي (قطع غيار)', icon: 'ClipboardList', onClick: () => handleSidebarNavClick('orders'), isActive: activeView === 'orders' },
-        { id: 'car-listings', label: 'سوق السيارات', icon: 'Car', onClick: () => onNavigate('car-listings'), isActive: false },
-        { id: 'rent-car', label: 'استئجار سيارة', icon: 'MapPin', onClick: () => onNavigate('rent-car'), isActive: false },
-        { id: 'store', label: 'المتجر', icon: 'ShoppingBag', onClick: () => handleSidebarNavClick('store'), isActive: activeView === 'store' },
-        { id: 'wallet', label: 'المحفظة', icon: 'Wallet', onClick: () => handleSidebarNavClick('wallet'), isActive: activeView === 'wallet' },
-        { id: 'auctions', label: 'المزادات', icon: 'Gavel', onClick: () => handleSidebarNavClick('auctions'), isActive: activeView === 'auctions' },
-        { id: 'garage', label: 'مرآبي', icon: 'Warehouse', onClick: () => handleSidebarNavClick('garage'), isActive: activeView === 'garage' },
-        { id: 'flashProducts', label: 'العروض الفورية', icon: 'Zap', onClick: () => handleSidebarNavClick('flashProducts'), isActive: activeView === 'flashProducts' },
-        { id: 'internationalLicense', label: 'الرخصة الدولية', icon: 'Globe', onClick: () => handleSidebarNavClick('internationalLicense'), isActive: activeView === 'internationalLicense' },
-        { id: 'suggestions', label: 'المساعد الذكي', icon: 'Sparkles', onClick: () => handleSidebarNavClick('suggestions'), isActive: activeView === 'suggestions' },
+        buildCustomSidebarItem('orders', 'طلباتي (قطع غيار)', 'ClipboardList', activeView, () => handleSidebarNavClick('orders')),
+        buildExternalNavItem(COMMON_MENU_ITEMS.carListings, onNavigate),
+        buildExternalNavItem(COMMON_MENU_ITEMS.rentCar, onNavigate),
+        buildSidebarItem(COMMON_MENU_ITEMS.store, activeView, () => handleSidebarNavClick('store')),
+        buildSidebarItem(COMMON_MENU_ITEMS.wallet, activeView, () => handleSidebarNavClick('wallet')),
+        buildSidebarItem(COMMON_MENU_ITEMS.auctions, activeView, () => handleSidebarNavClick('auctions')),
+        buildSidebarItem(COMMON_MENU_ITEMS.garage, activeView, () => handleSidebarNavClick('garage')),
+        buildSidebarItem(COMMON_MENU_ITEMS.flashProducts, activeView, () => handleSidebarNavClick('flashProducts')),
+        buildSidebarItem(COMMON_MENU_ITEMS.internationalLicense, activeView, () => handleSidebarNavClick('internationalLicense')),
+        buildSidebarItem(COMMON_MENU_ITEMS.suggestions, activeView, () => handleSidebarNavClick('suggestions')),
 
         // Settings
-        { id: 'settings', label: 'الإعدادات', icon: 'Settings', onClick: () => handleSidebarNavClick('settings'), isActive: activeView === 'settings' },
-        { id: 'notifications', label: 'الإشعارات', icon: 'Bell', onClick: () => handleSidebarNavClick('notifications'), isActive: currentView === 'notificationCenter', badge: unreadCount },
-    ], [activeView, currentView, unreadCount]);
+        buildSidebarItem(COMMON_MENU_ITEMS.settings, activeView, () => handleSidebarNavClick('settings')),
+        buildSidebarItem(COMMON_MENU_ITEMS.notifications, activeView, () => handleSidebarNavClick('notifications'), unreadCount),
+    ], [activeView, currentView, unreadCount, handleSidebarNavClick, onNavigate]);
 
     const bottomNavItems = useMemo(() => [
         { id: 'overview', label: 'الرئيسية', icon: <Icon name="House" /> },
@@ -116,12 +111,16 @@ export const CarProviderDashboard: React.FC<CarProviderDashboardProps> = (props)
         { id: 'store', label: 'المتجر', icon: <Icon name="ShoppingBag" /> },
     ], []);
 
-    const sidebarUser: SidebarUser = {
-        name: carProvider?.name || 'معرض السيارات',
-        phone: userPhone,
-        roleLabel: 'معرض سيارات',
-        avatarChar: carProvider?.name?.charAt(0) || 'P'
-    };
+    // Create sidebar user object using shared utility
+    const sidebarUser = useMemo(() =>
+        createSidebarUser(
+            carProvider?.name || 'معرض السيارات',
+            userPhone,
+            'معرض سيارات',
+            carProvider?.name?.charAt(0) || 'P'
+        ),
+        [carProvider, userPhone]
+    );
 
     if (!carProvider) return <div>جاري التحميل...</div>;
 

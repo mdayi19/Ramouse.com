@@ -81,7 +81,7 @@ const SimilarListings: React.FC<SimilarListingsProps> = ({
                     ))}
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 sm:overflow-visible">
                     {listings.map(item => (
                         <div
                             key={item.id}
@@ -89,13 +89,14 @@ const SimilarListings: React.FC<SimilarListingsProps> = ({
                                 navigate(`/car-listings/${item.slug}`);
                                 window.scrollTo(0, 0);
                             }}
-                            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-100 dark:border-gray-700 group"
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-100 dark:border-gray-700 group min-w-[280px] sm:min-w-0 snap-center"
                         >
                             <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-700 overflow-hidden">
                                 <img
                                     src={item.photos?.[0] || item.images?.[0] || '/placeholder-car.jpg'}
                                     alt={item.title}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy"
                                 />
                                 <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded-md backdrop-blur-sm">
                                     {safePrice(item.price)}

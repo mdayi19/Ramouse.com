@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Technician, Order, FlashProductBuyerRequest } from '../../types';
 import EmptyState from '../EmptyState';
 import Icon from '../Icon';
-import { StatusBadge } from '../DashboardParts/Shared';
+import { StatusBadge, MarketplaceQuickAccess } from '../DashboardParts/Shared';
 import { TechnicianView } from './types';
 import { api } from '../../lib/api';
 import { Button } from '../ui/Button';
@@ -237,6 +237,9 @@ const OverviewView: React.FC<{
                             <QuickBtn onClick={() => onNavigate('settings')} emoji="⚙️" label="الإعدادات" color="text-slate-500" />
                         </div>
                     </Card>
+
+                    {/* Marketplace Quick Access */}
+                    <MarketplaceQuickAccess onNavigate={onGlobalNavigate} />
 
                     {/* Public Services Section */}
                     <div className="mb-6">

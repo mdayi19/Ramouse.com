@@ -156,7 +156,8 @@ const SpecificationsTabs: React.FC<SpecificationsTabsProps> = ({ listing, classN
                         {listing.description.length > 300 && (
                             <button
                                 onClick={() => setShowFullDescription(!showFullDescription)}
-                                className="mt-3 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold text-sm flex items-center gap-1 transition-colors"
+                                className="mt-3 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold text-sm flex items-center gap-1 transition-colors touch-manipulation active:scale-95 min-h-[44px] py-2"
+                                aria-label={showFullDescription ? "عرض أقل" : "عرض المزيد"}
                             >
                                 {showFullDescription ? (
                                     <>
@@ -181,7 +182,7 @@ const SpecificationsTabs: React.FC<SpecificationsTabsProps> = ({ listing, classN
 
             {/* Tabs Section */}
             <div className={cn('bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700', className)}>
-                {/* Tabs */}
+                {/* Tabs - Mobile Optimized */}
                 <div className="flex border-b-2 border-slate-200 dark:border-slate-700 overflow-x-auto hide-scrollbar bg-slate-50 dark:bg-slate-900/50">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
@@ -190,11 +191,12 @@ const SpecificationsTabs: React.FC<SpecificationsTabsProps> = ({ listing, classN
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    'flex items-center gap-2.5 px-5 sm:px-8 py-4 font-bold text-sm sm:text-base whitespace-nowrap transition-all duration-200 flex-1 sm:flex-none relative',
+                                    'flex items-center gap-2.5 px-5 sm:px-8 py-3.5 font-bold text-sm sm:text-base whitespace-nowrap transition-all duration-200 flex-1 sm:flex-none relative touch-manipulation active:scale-95 min-h-[48px]',
                                     activeTab === tab.id
                                         ? 'text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50'
                                 )}
+                                aria-label={tab.label}
                             >
                                 {activeTab === tab.id && (
                                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>

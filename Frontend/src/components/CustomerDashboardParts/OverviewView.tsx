@@ -8,6 +8,7 @@ import { CustomerView } from './types';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
+import { MarketplaceQuickAccess } from '../DashboardParts/Shared';
 
 const GenericCarLogo: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16.5V8" /><path d="M10 16.5V8" /><path d="M2 12h20" /><path d="M5 12v-5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5" /><path d="M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6H2Z" /></svg>
@@ -144,6 +145,9 @@ const CustomerOverview: React.FC<{
                         <QuickActionBtn onClick={() => onNavigate('wallet')} emoji="💰" label="المحفظة" bgColor="bg-emerald-100 dark:bg-emerald-900/30" />
                         <QuickActionBtn onClick={() => onNavigate('flashProducts')} emoji="⚡" label="العروض" bgColor="bg-orange-100 dark:bg-orange-900/30" />
                     </div>
+
+                    {/* Marketplace Quick Access */}
+                    <MarketplaceQuickAccess onNavigate={onGlobalNavigate} />
 
                     {/* Public Services Section */}
                     <div className="mb-8">

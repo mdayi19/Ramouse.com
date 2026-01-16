@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarProvider } from '../../../types';
 import { useRealtime, useWalletUpdates } from '../../../hooks/useRealtime';
+import { MarketplaceQuickAccess } from '../../DashboardParts/Shared';
 
 interface OverviewViewProps {
     provider: CarProvider;
@@ -19,6 +20,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
     const [stats, setStats] = useState<any>(null);
     const [analyticsData, setAnalyticsData] = useState<any>(null);
     const [recentListings, setRecentListings] = useState<any[]>([]);
+    const [sponsoredListings, setSponsoredListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
@@ -48,7 +50,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                 setBalance(statsRes.stats.wallet_balance);
             }
             setAnalyticsData(analyticsRes);
-            setRecentListings((listingsRes.listings || []).slice(0, 5));
+            const allListings = listingsRes.listings || [];
+            setRecentListings(allListings.slice(0, 5));
+            const sponsored = allListings.filter((listing: any) => listing.is_sponsored && !listing.is_hidden);
+            setSponsoredListings(sponsored.slice(0, 4));
 
             if (isRefresh) {
                 showToast('تم تحديث البيانات بنجاح', 'success');
@@ -234,7 +239,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                     </div>
 
                     {/* Quick Actions Grid */}
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 mb-8 px-1">
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 mb-6 px-1">
                         <QuickActionBtn onClick={() => navigate('/car-provider-dashboard/listings')} emoji="🚗" label="سياراتي" bgColor="bg-blue-100 dark:bg-blue-900/30" />
                         <QuickActionBtn onClick={() => navigate('/car-provider-dashboard/orders')} emoji="📦" label="الطلبات" bgColor="bg-orange-100 dark:bg-orange-900/30" />
                         <QuickActionBtn onClick={() => navigate('/car-provider-dashboard/wallet')} emoji="💰" label="المحفظة" bgColor="bg-emerald-100 dark:bg-emerald-900/30" />
@@ -242,6 +247,37 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                         <QuickActionBtn onClick={() => navigate('/car-provider-dashboard/settings')} emoji="⚙️" label="الإعدادات" bgColor="bg-slate-100 dark:bg-slate-700/30" />
                         <QuickActionBtn onClick={() => navigate('/car-provider-dashboard/store')} emoji="🛍️" label="المتجر" bgColor="bg-pink-100 dark:bg-pink-900/30" />
                     </div>
+
+                    {/* Sponsored Cars CTA */}
+                    {sponsoredListings.length > 0 && (
+                        <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate('/car-provider-dashboard/sponsorManagement')}
+                            className="mb-6 cursor-pointer"
+                        >
+                            <div className="bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                                <div className="relative z-10 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                            <span className="text-3xl animate-pulse">⭐</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-xl mb-1">لديك {sponsoredListings.length} سيارات مميزة</h3>
+                                            <p className="text-sm text-white/90 font-medium">انقر لإدارة السيارات المميزة وتعزيز مبيعاتك</p>
+                                        </div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                        <ChevronLeft className="w-6 h-6 text-white rtl:rotate-180" />
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Marketplace Quick Access */}
+                    <MarketplaceQuickAccess onNavigate={(view) => window.location.href = `/${view}`} />
 
                     {/* Public Services Section */}
                     <div className="mb-8">
@@ -431,7 +467,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                         </motion.div>
                                     )}
 
-                                    {/* Recent Listings */}
+
                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
