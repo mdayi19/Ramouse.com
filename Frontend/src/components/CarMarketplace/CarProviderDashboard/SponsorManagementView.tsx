@@ -117,7 +117,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
             const response = await carProviderAPI.unsponsorListing(listingId);
 
             if (response.data.success) {
-                showToast(`تم إلغاء الرعاية. استرجاع: ${response.data.refund_amount} ريال`, 'success');
+                showToast(`تم إلغاء الرعاية. استرجاع: ${response.data.refund_amount} $`, 'success');
                 loadData();
             } else {
                 showToast(response.data.error || 'فشل إلغاء الرعاية', 'error');
@@ -176,7 +176,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                         <span className="text-blue-100 text-sm">إجمالي الإنفاق</span>
                         <DollarSign className="w-5 h-5" />
                     </div>
-                    <div className="text-3xl font-bold">{totalSpent.toFixed(2)} ر.س</div>
+                    <div className="text-3xl font-bold">{totalSpent.toFixed(2)} $</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
@@ -184,7 +184,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                         <span className="text-green-100 text-sm">المسترجع</span>
                         <TrendingUp className="w-5 h-5" />
                     </div>
-                    <div className="text-3xl font-bold">{totalRefunded.toFixed(2)} ر.س</div>
+                    <div className="text-3xl font-bold">{totalRefunded.toFixed(2)} $</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
@@ -192,7 +192,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                         <span className="text-purple-100 text-sm">رصيد المحفظة</span>
                         <DollarSign className="w-5 h-5" />
                     </div>
-                    <div className="text-3xl font-bold">{walletBalance.toFixed(2)} ر.س</div>
+                    <div className="text-3xl font-bold">{walletBalance.toFixed(2)} $</div>
                 </div>
             </div>
 
@@ -206,17 +206,17 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">يومي</div>
-                            <div className="text-2xl font-bold text-yellow-600">{settings.dailyPrice} ر.س</div>
+                            <div className="text-2xl font-bold text-yellow-600">{settings.dailyPrice} $</div>
                             <div className="text-xs text-gray-500 mt-1">لكل يوم</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">أسبوعي</div>
-                            <div className="text-2xl font-bold text-blue-600">{settings.weeklyPrice} ر.س</div>
+                            <div className="text-2xl font-bold text-blue-600">{settings.weeklyPrice} $</div>
                             <div className="text-xs text-gray-500 mt-1">لكل أسبوع (وفر {Math.round((1 - settings.weeklyPrice / (settings.dailyPrice * 7)) * 100)}%)</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">شهري</div>
-                            <div className="text-2xl font-bold text-purple-600">{settings.monthlyPrice} ر.س</div>
+                            <div className="text-2xl font-bold text-purple-600">{settings.monthlyPrice} $</div>
                             <div className="text-xs text-gray-500 mt-1">لكل شهر (وفر {Math.round((1 - settings.monthlyPrice / (settings.dailyPrice * 30)) * 100)}%)</div>
                         </div>
                     </div>
@@ -254,7 +254,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                                             </div>
                                             <div>
                                                 <span className="text-gray-500">المبلغ:</span>
-                                                <div className="font-medium text-blue-600">{sponsorship.price} ر.س</div>
+                                                <div className="font-medium text-blue-600">{sponsorship.price} $</div>
                                             </div>
                                         </div>
                                     </div>
@@ -326,7 +326,7 @@ const SponsorManagementView: React.FC<Props> = ({ showToast, provider }) => {
                                 <tr key={item.id}>
                                     <td className="px-6 py-4 text-sm">{item.listing_title}</td>
                                     <td className="px-6 py-4 text-sm">{item.duration_days} يوم</td>
-                                    <td className="px-6 py-4 text-sm font-medium">{item.price} ر.س</td>
+                                    <td className="px-6 py-4 text-sm font-medium">{item.price} $</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-green-100 text-green-800' :
                                             item.status === 'expired' ? 'bg-gray-100 text-gray-800' :

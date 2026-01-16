@@ -154,7 +154,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
             const data = await response.json();
 
             if (data.success) {
-                showToast(`تم إلغاء الرعاية. استرجاع: ${data.refund_amount} ريال`, 'success');
+                showToast(`تم إلغاء الرعاية. استرجاع: ${data.refund_amount} $`, 'success');
                 loadListings();
             } else {
                 showToast(data.error || 'فشل إلغاء الرعاية', 'error');
@@ -650,7 +650,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                             <div className="flex items-start gap-2 group/price cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors -ml-2" onClick={() => startPriceEdit(listing)}>
                                                                 {listing.listing_type?.toLowerCase() === 'rent' ? (
                                                                     <div className="flex flex-col gap-1">
-                                                                        <div className="font-black text-blue-600 text-base">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-medium text-slate-400">ل.س / يوم</span></div>
+                                                                        <div className="font-black text-blue-600 text-base">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-medium text-slate-400">$ / يوم</span></div>
                                                                         <div className="flex gap-3 text-xs text-slate-500">
                                                                             <span>{getRates(listing)?.weekly?.toLocaleString() || 0} <span className="text-[10px]">أسبوعي</span></span>
                                                                             <span className="text-slate-300">•</span>
@@ -658,7 +658,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <span className="font-black text-slate-800 dark:text-slate-200 text-lg">{Number(listing.price).toLocaleString()} <span className="text-xs font-bold text-slate-400">ل.س</span></span>
+                                                                    <span className="font-black text-slate-800 dark:text-slate-200 text-lg">{Number(listing.price).toLocaleString()} <span className="text-xs font-bold text-slate-400">$</span></span>
                                                                 )}
                                                                 <Edit3 className="w-3.5 h-3.5 text-blue-400 opacity-0 group-hover/price:opacity-100 transition-all translate-x-1 group-hover/price:translate-x-0 mt-1.5" />
                                                             </div>
@@ -905,7 +905,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                         >
                                                             {listing.listing_type?.toLowerCase() === 'rent' ? (
                                                                 <>
-                                                                    <span className="font-black text-blue-600 text-lg leading-none">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-bold text-slate-400">ل.س/يوم</span></span>
+                                                                    <span className="font-black text-blue-600 text-lg leading-none">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-bold text-slate-400">$/يوم</span></span>
                                                                     <div className="flex gap-2 text-[10px] text-slate-400 font-medium mt-1">
                                                                         <span>{getRates(listing)?.weekly?.toLocaleString() || 0} أسبوعي</span>
                                                                         <span>•</span>
@@ -914,7 +914,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <span className="font-black text-slate-900 dark:text-white text-lg leading-none">{Number(listing.price).toLocaleString()} <span className="text-xs font-bold text-slate-400">ل.س</span></span>
+                                                                    <span className="font-black text-slate-900 dark:text-white text-lg leading-none">{Number(listing.price).toLocaleString()} <span className="text-xs font-bold text-slate-400">$</span></span>
                                                                     <div className="flex items-center gap-1 text-[10px] text-blue-500 font-medium mt-0.5">
                                                                         <Edit3 className="w-3 h-3" />
                                                                         تعديل السعر

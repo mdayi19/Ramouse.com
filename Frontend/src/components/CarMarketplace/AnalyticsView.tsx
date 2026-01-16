@@ -154,7 +154,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
                                         {listing.title}
                                     </h5>
                                     <p className="text-sm text-slate-500">
-                                        {listing.price.toLocaleString()} ر.س • {listing.listing_type === 'sale' ? 'بيع' : 'إيجار'}
+                                        {listing.price.toLocaleString()} $ • {listing.listing_type === 'sale' ? 'بيع' : 'إيجار'}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-6 text-sm">

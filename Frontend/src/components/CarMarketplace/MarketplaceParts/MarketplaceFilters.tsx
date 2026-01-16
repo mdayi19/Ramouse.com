@@ -118,12 +118,10 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
     };
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('ar-SY', {
-            style: 'currency',
-            currency: 'SYP',
+        return new Intl.NumberFormat('en-US', {
             maximumFractionDigits: 0,
             notation: 'compact'
-        }).format(value);
+        }).format(value) + ' $';
     };
 
     const formatMileage = (value: number) => {
@@ -327,7 +325,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
             )}
 
             {/* 5. Price Range with Slider */}
-            <FilterSection id="price" title="السعر (ل.س)" icon={Banknote}>
+            <FilterSection id="price" title="السعر ($)" icon={Banknote}>
                 <RangeSlider
                     min={0}
                     max={100000000}

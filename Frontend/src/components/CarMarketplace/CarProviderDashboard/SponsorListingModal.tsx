@@ -97,8 +97,8 @@ const SponsorListingModal: React.FC<Props> = ({ listing, walletBalance, onClose,
                                 key={preset.days}
                                 onClick={() => setDuration(preset.days)}
                                 className={`px-4 py-2 rounded-lg border-2 transition-colors ${duration === preset.days
-                                        ? 'border-primary bg-primary text-white'
-                                        : 'border-gray-300 dark:border-gray-600 hover:border-primary'
+                                    ? 'border-primary bg-primary text-white'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-primary'
                                     }`}
                             >
                                 {preset.label}
@@ -136,7 +136,7 @@ const SponsorListingModal: React.FC<Props> = ({ listing, walletBalance, onClose,
                         <div className="flex justify-between items-center text-lg">
                             <span className="font-bold">السعر:</span>
                             <span className="font-bold text-primary">
-                                {calculating ? '...' : `${price} ريال`}
+                                {calculating ? '...' : `${price} $`}
                             </span>
                         </div>
                     </div>
@@ -146,12 +146,12 @@ const SponsorListingModal: React.FC<Props> = ({ listing, walletBalance, onClose,
                 <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                         <span>الرصيد الحالي:</span>
-                        <span className="font-medium">{walletBalance} ريال</span>
+                        <span className="font-medium">{walletBalance} $</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span>الرصيد بعد الخصم:</span>
                         <span className={`font-medium ${walletBalance - price < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                            {walletBalance - price} ريال
+                            {walletBalance - price} $
                         </span>
                     </div>
                 </div>

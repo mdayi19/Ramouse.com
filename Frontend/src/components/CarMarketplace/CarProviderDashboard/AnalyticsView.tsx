@@ -284,7 +284,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ showToast }) => {
                                             <Eye className="w-3 h-3" /> {item.views}
                                         </span>
                                         <span className="flex items-center gap-1">
-                                            {Number(item.price).toLocaleString()} ر.س
+                                            {Number(item.price).toLocaleString()} $
                                         </span>
                                     </div>
                                 </div>

@@ -60,9 +60,9 @@ const PriceCard: React.FC<PriceCardProps> = ({ listing, className }) => {
     const formatPrice = (price: number | undefined): string => {
         if (price === undefined) return '';
         try {
-            return new Intl.NumberFormat('en-US').format(price) + ' ل.س';
+            return new Intl.NumberFormat('en-US').format(price) + ' $';
         } catch (e) {
-            return `${price.toLocaleString('en-US')} ل.س`;
+            return `${price.toLocaleString('en-US')} $`;
         }
     };
 

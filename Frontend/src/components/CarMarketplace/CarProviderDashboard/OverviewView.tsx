@@ -224,7 +224,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                                 {balance?.toLocaleString() || 0}
                                             </motion.span>
                                         </AnimatePresence>
-                                        <span className="text-sm font-medium opacity-70 mr-1">ل.س</span>
+                                        <span className="text-sm font-medium opacity-70 mr-1">$</span>
                                     </h3>
                                 </div>
                             </div>
@@ -512,7 +512,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                                                 <span>{listing.year}</span>
                                                                 <span>•</span>
                                                                 <span className="font-medium text-slate-700 dark:text-slate-300">
-                                                                    {Number(listing.price).toLocaleString()} ل.س
+                                                                    {Number(listing.price).toLocaleString()} $
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -567,7 +567,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ provider, showToast 
                                                             {balance?.toLocaleString() || 0}
                                                         </motion.span>
                                                     </AnimatePresence>
-                                                    <span className="text-xl font-medium opacity-70 mr-2">ل.س</span>
+                                                    <span className="text-xl font-medium opacity-70 mr-2">$</span>
                                                 </h3>
                                             </div>
 

@@ -60,11 +60,7 @@ export const ComparisonBar: React.FC = () => {
                                     {item.title}
                                 </p>
                                 <p className="text-xs text-primary font-bold">
-                                    {new Intl.NumberFormat('ar-SY', {
-                                        style: 'currency',
-                                        currency: 'SYP',
-                                        maximumFractionDigits: 0
-                                    }).format(item.price || item.daily_rate || 0)}
+                                    {new Intl.NumberFormat('en-US').format(item.price || item.daily_rate || 0) + ' $'}
                                 </p>
                             </motion.div>
                         ))}

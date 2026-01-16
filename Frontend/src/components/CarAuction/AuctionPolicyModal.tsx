@@ -72,7 +72,7 @@ export const AuctionPolicyModal: React.FC<AuctionPolicyModalProps> = ({
                                                 تحذير هام - سياسة التأمين
                                             </h3>
                                             <p className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
-                                                <strong className="text-amber-900 dark:text-amber-100">إذا فزت بالمزاد ولم تكمل عملية الشراء، لن يتم إرجاع مبلغ التأمين البالغ {depositAmount.toLocaleString('ar-SA')} ريال.</strong> يرجى التأكد من جديتك في الشراء قبل التسجيل.
+                                                <strong className="text-amber-900 dark:text-amber-100">إذا فزت بالمزاد ولم تكمل عملية الشراء، لن يتم إرجاع مبلغ التأمين البالغ {depositAmount.toLocaleString('ar-SA')} $.</strong> يرجى التأكد من جديتك في الشراء قبل التسجيل.
                                             </p>
                                         </div>
                                     </div>
@@ -86,7 +86,7 @@ export const AuctionPolicyModal: React.FC<AuctionPolicyModalProps> = ({
                                         <PolicyItem
                                             icon="lock"
                                             title="حجز مبلغ التأمين"
-                                            description={`سيتم حجز مبلغ ${depositAmount.toLocaleString('ar-SA')} ريال من محفظتك كتأمين للمشاركة في المزاد. هذا المبلغ سيبقى محجوزاً حتى نهاية المزاد.`}
+                                            description={`سيتم حجز مبلغ ${depositAmount.toLocaleString('ar-SA')} $ من محفظتك كتأمين للمشاركة في المزاد. هذا المبلغ سيبقى محجوزاً حتى نهاية المزاد.`}
                                         />
 
                                         <PolicyItem

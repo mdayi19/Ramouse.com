@@ -1238,7 +1238,7 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                     <div className="flex items-center gap-3">
                         <DollarSign className="w-5 h-5 text-primary" />
                         <span className="font-bold">السعر:</span>
-                        <span>{formData.price} ل.س</span>
+                        <span>{formData.price} $</span>
                     </div>
                 )}
                 <div className="flex items-center gap-3">
@@ -1310,7 +1310,7 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                     <div className="grid grid-cols-3 gap-3">
                         <div>
                             <label className="block text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
-                                يومي (ل.س)
+                                يومي ($)
                             </label>
                             <input
                                 type="number"
@@ -1322,7 +1322,7 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
-                                أسبوعي (ل.س)
+                                أسبوعي ($)
                             </label>
                             <input
                                 type="number"
@@ -1334,7 +1334,7 @@ const Step6Review: React.FC<any> = ({ formData, brands, categories, updateField 
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
-                                شهري (ل.س)
+                                شهري ($)
                             </label>
                             <input
                                 type="number"

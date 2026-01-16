@@ -226,7 +226,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
                                         <DollarSign className="w-6 h-6 text-blue-200" />
                                     </div>
                                     <div className="text-4xl font-bold mb-2">{revenue.totalRevenue.toLocaleString()}</div>
-                                    <div className="text-blue-100 text-sm">ريال سعودي</div>
+                                    <div className="text-blue-100 text-sm">$</div>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
@@ -235,7 +235,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
                                         <Calendar className="w-6 h-6 text-green-200" />
                                     </div>
                                     <div className="text-4xl font-bold mb-2">{revenue.monthlyRevenue.toLocaleString()}</div>
-                                    <div className="text-green-100 text-sm">ريال سعودي</div>
+                                    <div className="text-green-100 text-sm">$</div>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
@@ -244,7 +244,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
                                         <TrendingUp className="w-6 h-6 text-purple-200" />
                                     </div>
                                     <div className="text-4xl font-bold mb-2">{revenue.weeklyRevenue.toLocaleString()}</div>
-                                    <div className="text-purple-100 text-sm">ريال سعودي</div>
+                                    <div className="text-purple-100 text-sm">$</div>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
@@ -330,7 +330,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
                                             <tr key={listing.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                                 <td className="px-6 py-4">
                                                     <div className="font-medium text-gray-900 dark:text-white">{listing.title}</div>
-                                                    <div className="text-sm text-gray-500">{listing.price.toLocaleString()} ر.س</div>
+                                                    <div className="text-sm text-gray-500">{listing.price.toLocaleString()} $</div>
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{listing.provider_name}</td>
                                                 <td className="px-6 py-4">
@@ -395,7 +395,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        السعر اليومي (ريال)
+                                        السعر اليومي ($)
                                     </label>
                                     <input
                                         type="number"
@@ -407,7 +407,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        السعر الأسبوعي (ريال)
+                                        السعر الأسبوعي ($)
                                     </label>
                                     <input
                                         type="number"
@@ -422,7 +422,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        السعر الشهري (ريال)
+                                        السعر الشهري ($)
                                     </label>
                                     <input
                                         type="number"
@@ -526,7 +526,7 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{item.sponsored_by_name}</td>
                                                 <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{item.duration_days} يوم</td>
-                                                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{item.price} ر.س</td>
+                                                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{item.price} $</td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
                                                         item.status === 'expired' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :

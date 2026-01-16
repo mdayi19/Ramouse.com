@@ -45,11 +45,7 @@ const translateSpec = (term: string | undefined): string => {
 // --- Helper: Price Formatting ---
 const formatPrice = (price: number | undefined): string => {
     if (!price) return 'اتصل';
-    return new Intl.NumberFormat('ar-SY', {
-        style: 'currency',
-        currency: 'SYP',
-        maximumFractionDigits: 0
-    }).format(price);
+    return new Intl.NumberFormat('en-US').format(price) + ' $';
 };
 
 // --- Sub-Component: Specs Row ---

@@ -149,12 +149,10 @@ export const RentFilters: React.FC<RentFiltersProps> = ({
     };
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('ar-SY', {
-            style: 'currency',
-            currency: 'SYP',
+        return new Intl.NumberFormat('en-US', {
             maximumFractionDigits: 0,
             notation: 'compact'
-        }).format(value);
+        }).format(value) + ' $';
     };
 
     const formatMileage = (value: number) => {
@@ -389,7 +387,7 @@ export const RentFilters: React.FC<RentFiltersProps> = ({
             )}
 
             {/* Daily Rate Range */}
-            <FilterSection id="price" title="التعرفة اليومية (ل.س)" icon={Banknote}>
+            <FilterSection id="price" title="التعرفة اليومية ($)" icon={Banknote}>
                 <RangeSlider
                     min={0}
                     max={5000000}
@@ -489,7 +487,7 @@ export const RentFilters: React.FC<RentFiltersProps> = ({
             </FilterSection>
 
             {/* Security Deposit Range */}
-            <FilterSection id="deposit" title="مبلغ التأمين (ل.س)" icon={ShieldCheck}>
+            <FilterSection id="deposit" title="مبلغ التأمين ($)" icon={ShieldCheck}>
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="text-xs text-slate-500 mb-1 block">من</label>

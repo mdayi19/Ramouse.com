@@ -88,7 +88,7 @@ const Step6RentalConditions: React.FC<Step6RentalConditionsProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                            يومي (ل.س)
+                            يومي ($)
                         </label>
                         <input
                             type="number"
@@ -101,7 +101,7 @@ const Step6RentalConditions: React.FC<Step6RentalConditionsProps> = ({
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                            أسبوعي (ل.س)
+                            أسبوعي ($)
                         </label>
                         <input
                             type="number"
@@ -114,7 +114,7 @@ const Step6RentalConditions: React.FC<Step6RentalConditionsProps> = ({
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                            شهري (ل.س)
+                            شهري ($)
                         </label>
                         <input
                             type="number"

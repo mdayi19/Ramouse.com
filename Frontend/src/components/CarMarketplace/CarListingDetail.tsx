@@ -103,9 +103,9 @@ const safeDate = (dateString: string | undefined) => {
 const safePrice = (price: number | undefined) => {
     if (typeof price !== 'number') return '';
     try {
-        return new Intl.NumberFormat('ar-SY', { style: 'currency', currency: 'SYP', maximumFractionDigits: 0 }).format(price);
+        return new Intl.NumberFormat('en-US').format(price) + ' $';
     } catch (e) {
-        return `${price} SYP`;
+        return `${price} $`;
     }
 };
 

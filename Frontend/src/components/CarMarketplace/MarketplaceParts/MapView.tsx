@@ -63,11 +63,10 @@ export const MapView: React.FC<MapViewProps> = ({
     }, []);
 
     const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('ar-SY', {
-            style: 'currency',
-            currency: 'SYP',
-            notation: 'compact'
-        }).format(price);
+        return new Intl.NumberFormat('en-US', {
+            notation: 'compact',
+            maximumFractionDigits: 0
+        }).format(price) + ' $';
     };
 
     const selected = listings.find(l => l.id === selectedListing);

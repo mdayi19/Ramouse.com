@@ -131,7 +131,7 @@ export const QuickEditPrice: React.FC<QuickEditProps> = ({
                             autoFocus
                         />
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">
-                            ل.س
+                            $
                         </span>
                     </div>
                 </div>

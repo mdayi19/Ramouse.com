@@ -18,7 +18,7 @@ export const useSEO = ({
     url,
     type = 'website',
     price,
-    currency = 'SYP',
+    currency = 'USD',
     availability
 }: SEOProps) => {
     useEffect(() => {
@@ -82,7 +82,7 @@ export const generateStructuredData = (listing: any) => {
     const offers: any = {
         '@type': 'Offer',
         'price': listing.price || listing.daily_rate,
-        'priceCurrency': 'SYP',
+        'priceCurrency': 'USD',
         'availability': 'https://schema.org/InStock',
         'seller': {
             '@type': listing.listing_type === 'rent' ? 'Organization' : 'Person',
@@ -94,7 +94,7 @@ export const generateStructuredData = (listing: any) => {
         offers.priceSpecification = {
             '@type': 'UnitPriceSpecification',
             'price': listing.daily_rate,
-            'priceCurrency': 'SYP',
+            'priceCurrency': 'USD',
             'unitCode': 'DAY'
         };
     }
