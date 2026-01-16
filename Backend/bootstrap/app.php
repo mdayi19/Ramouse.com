@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'rate.limit.api' => \App\Http\Middleware\RateLimitApi::class,
             'log.requests' => \App\Http\Middleware\LogRequests::class,
+            'check.account.status' => \App\Http\Middleware\CheckAccountStatus::class,
+        ]);
+
+        // Apply account status check to all sanctum-protected routes
+        $middleware->appendToGroup('sanctum', [
+            \App\Http\Middleware\CheckAccountStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
