@@ -31,6 +31,12 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     // Initialize with rent type
     const [filters, setFilters] = useState<FilterType>({ listing_type: 'rent', page: 1 });
     const [categories, setCategories] = useState<any[]>([]);
+    const [facetCounts, setFacetCounts] = useState<{
+        originCounts: Record<string | number, number>;
+        brandCounts: Record<string | number, number>;
+        modelCounts: Record<string, number>;
+        cityCounts: Record<string, number>;
+    }>({ originCounts: {}, brandCounts: {}, modelCounts: {}, cityCounts: {} });
     const [searchQuery, setSearchQuery] = useState('');
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -56,9 +62,22 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     }, [loading, loadingMore, pagination.current_page, pagination.last_page]);
 
     useEffect(() => {
-        loadCategories();
+        loadData();
         fetchSponsoredPool();
     }, []);
+
+    const loadData = async () => {
+        try {
+            const [categoriesRes, countsRes] = await Promise.all([
+                CarProviderService.getCategories(),
+                CarProviderService.getListingCounts('rent')
+            ]);
+            setCategories(categoriesRes.categories || []);
+            setFacetCounts(countsRes);
+        } catch (error) {
+            console.error('Failed to load filter data:', error);
+        }
+    };
 
     const fetchSponsoredPool = async () => {
         try {
@@ -95,15 +114,6 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
         }
     }, [filters]);
 
-    const loadCategories = async () => {
-        try {
-            const response = await CarProviderService.getCategories();
-            setCategories(response.categories || []);
-        } catch (error) {
-            console.error('Failed to load categories:', error);
-        }
-    };
-
     const loadListings = async (isReset: boolean) => {
         if (isReset) {
             setLoading(true);
@@ -115,15 +125,17 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
         try {
             let response;
             if (searchQuery.trim()) {
-                // Search might need 'rent' param if API supports mixed search, but usually search is global
-                // We'll trust the search functionality or filter by type if possible after search
+                // Search Logic
                 response = await CarProviderService.searchListings(searchQuery);
                 const results = response.results || {};
 
-                // Filter client-side for rent if API doesn't support scoped search yet (Assumption)
-                // Ideally API should accept type param for search.
                 let data = results.data || [];
                 data = data.filter((item: CarListing) => item.listing_type === 'rent');
+
+                // Apply City Filter to Search Results too
+                if (filters.city) {
+                    data = data.filter((item: CarListing) => item.city === filters.city);
+                }
 
                 if (isReset) {
                     setListings(data);
@@ -137,21 +149,47 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                     total: data.length
                 });
             } else {
-                response = await CarProviderService.getRentCars(filters);
+                // Browsing Logic
+                // Prepare API filters
+                const apiFilters: any = { ...filters };
+                const cityFilter = apiFilters.city;
 
-                const data = response.listings?.data || [];
+                // If city filter is active, fetch ALL to filter client-side
+                if (cityFilter) {
+                    delete apiFilters.city;
+                    apiFilters.limit = 1000;
+                    apiFilters.per_page = 1000; // Try both standard params
+                    apiFilters.page = 1;
+                }
+
+                response = await CarProviderService.getRentCars(apiFilters);
+
+                let data = response.listings?.data || [];
                 const meta = response.listings;
+
+                // Client-side cleaning/filtering
+                if (cityFilter) {
+                    data = data.filter((item: CarListing) => item.city === cityFilter);
+                }
 
                 if (isReset) {
                     setListings(data);
                 } else {
-                    setListings(prev => [...prev, ...data]);
+                    // Start of workaround:
+                    // If city filter is active, we fetched EVERYTHING in page 1 request.
+                    // So 'loading more' shouldn't append duplicates if we are just paging logically.
+                    // But technically setFilters increments page.
+                    // If we have cityFilter, we treat it as single-page mode.
+                    if (!cityFilter) {
+                        setListings(prev => [...prev, ...data]);
+                    }
                 }
 
                 setPagination({
                     current_page: meta?.current_page || 1,
-                    last_page: meta?.last_page || 1,
-                    total: meta?.total || 0
+                    // If city filter, force last_page 1 since we fetched all
+                    last_page: cityFilter ? 1 : (meta?.last_page || 1),
+                    total: cityFilter ? data.length : (meta?.total || 0)
                 });
             }
 
@@ -335,6 +373,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                 onFilterChange={handleFilterChange}
                                 categories={categories}
                                 onReset={handleResetFilters}
+                                facetCounts={facetCounts}
                             />
                         </div>
                     </div>
@@ -495,9 +534,9 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-slate-800 shadow-2xl z-50 lg:hidden overflow-y-auto"
+                            className="fixed inset-0 w-full bg-white dark:bg-slate-800 shadow-2xl z-50 lg:hidden flex flex-col"
                         >
-                            <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
+                            <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 shrink-0 bg-white dark:bg-slate-800">
                                 <h3 className="font-bold text-lg">تصفية عروض الإيجار</h3>
                                 <button
                                     onClick={() => setShowMobileFilters(false)}
@@ -506,19 +545,24 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
-                            <div className="p-4">
+
+                            <div className="flex-1 overflow-y-auto p-4">
                                 <RentFilters
                                     filters={filters}
                                     onFilterChange={handleFilterChange}
                                     categories={categories}
                                     onReset={handleResetFilters}
                                     className="shadow-none border-0 p-0"
+                                    facetCounts={facetCounts}
                                 />
+                            </div>
+
+                            <div className="p-4 shrink-0 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
                                 <button
                                     onClick={() => setShowMobileFilters(false)}
-                                    className="w-full mt-6 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20"
+                                    className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20"
                                 >
-                                    عرض {pagination.total} عرض
+                                    عرض {pagination.total} نتيجة
                                 </button>
                             </div>
                         </motion.div>

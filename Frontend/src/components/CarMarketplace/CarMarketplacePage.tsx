@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarProviderService, CarListing, MarketplaceFilters as FilterType } from '../../services/carprovider.service';
 import { Car, Grid, List, Search, SlidersHorizontal, ArrowLeft, ArrowRight, X, RotateCcw } from 'lucide-react';
@@ -40,11 +40,13 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         originCounts: Record<string | number, number>;
         brandCounts: Record<string | number, number>;
         modelCounts: Record<string, number>;
-    }>({ originCounts: {}, brandCounts: {}, modelCounts: {} });
+        cityCounts: Record<string, number>;
+    }>({ originCounts: {}, brandCounts: {}, modelCounts: {}, cityCounts: {} });
 
     const [searchQuery, setSearchQuery] = useState('');
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    const [sortBy, setSortBy] = useState<string>(''); // Sort: price_asc, price_desc, year_desc, year_asc, mileage_asc, date_desc
 
     // Sponsored Pool State
     const [sponsoredPool, setSponsoredPool] = useState<CarListing[]>([]);
@@ -136,6 +138,34 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         }
     }, [filters]);
 
+    // Apply sorting when sortBy changes
+    useEffect(() => {
+        if (!sortBy || listings.length === 0) return;
+
+        const sorted = [...listings].sort((a, b) => {
+            switch (sortBy) {
+                case 'price_asc':
+                    return (a.price || 0) - (b.price || 0);
+                case 'price_desc':
+                    return (b.price || 0) - (a.price || 0);
+                case 'year_desc':
+                    return (b.year || 0) - (a.year || 0);
+                case 'year_asc':
+                    return (a.year || 0) - (b.year || 0);
+                case 'mileage_asc':
+                    return (a.mileage || 0) - (b.mileage || 0);
+                case 'mileage_desc':
+                    return (b.mileage || 0) - (a.mileage || 0);
+                case 'date_desc':
+                    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+                default:
+                    return 0;
+            }
+        });
+
+        setListings(sorted);
+    }, [sortBy]);
+
 
 
     const loadListings = async (isReset: boolean) => {
@@ -185,6 +215,9 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                 });
             }
 
+            // Apply client-side sorting if sort option is selected
+            // This happens after data is loaded from API
+
         } catch (err) {
             console.error('Failed to load listings:', err);
             const errorMessage = err instanceof Error ? err.message : 'فشل تحميل السيارات';
@@ -198,18 +231,18 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
         }
     };
 
-    const handleSearch = () => {
+    const handleSearch = useCallback(() => {
         setFilters(prev => ({ ...prev, page: 1 }));
-    };
+    }, []);
 
-    const handleFilterChange = (key: string, value: any) => {
+    const handleFilterChange = useCallback((key: string, value: any) => {
         setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
-    };
+    }, []);
 
-    const handleResetFilters = () => {
+    const handleResetFilters = useCallback(() => {
         setFilters({ listing_type: listingType, page: 1 });
         setSearchQuery('');
-    };
+    }, [listingType]);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
@@ -297,6 +330,22 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                 </div>
 
                                 <div className="flex items-center gap-2">
+                                    {/* Sort Dropdown */}
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value)}
+                                        className="hidden md:flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm cursor-pointer outline-none"
+                                        aria-label="ترتيب النتائج"
+                                    >
+                                        <option value="" className="bg-slate-800 text-white">ترتيب حسب</option>
+                                        <option value="price_asc" className="bg-slate-800 text-white">السعر: من الأقل للأعلى</option>
+                                        <option value="price_desc" className="bg-slate-800 text-white">السعر: من الأعلى للأقل</option>
+                                        <option value="year_desc" className="bg-slate-800 text-white">الأحدث أولاً</option>
+                                        <option value="year_asc" className="bg-slate-800 text-white">الأقدم أولاً</option>
+                                        <option value="mileage_asc" className="bg-slate-800 text-white">المسافة: الأقل أولاً</option>
+                                        <option value="date_desc" className="bg-slate-800 text-white">الأحدث إضافة</option>
+                                    </select>
+
                                     {/* Mobile Filter */}
                                     <button
                                         onClick={() => setShowMobileFilters(true)}
@@ -533,19 +582,25 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-slate-800 shadow-2xl z-50 lg:hidden overflow-y-auto"
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="fixed inset-0 w-screen bg-white dark:bg-slate-800 shadow-2xl z-50 lg:hidden flex flex-col"
                         >
-                            <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
+                            {/* Drag Handle */}
+                            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
+
+                            {/* Header */}
+                            <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-primary/5 to-transparent shrink-0">
                                 <h3 className="font-bold text-lg">تصفية النتائج</h3>
                                 <button
                                     onClick={() => setShowMobileFilters(false)}
-                                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                                 >
-                                    <X className="w-6 h-6" />
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                            <div className="p-4">
+
+                            {/* Scrollable content */}
+                            <div className="flex-1 overflow-y-auto">
                                 {listingType === 'rent' ? (
                                     <RentFilters
                                         filters={filters}
@@ -555,7 +610,6 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                         models={models}
                                         countries={countries}
                                         onReset={handleResetFilters}
-                                        className="shadow-none border-0 p-0"
                                         facetCounts={facetCounts}
                                     />
                                 ) : (
@@ -567,13 +621,14 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                         models={models}
                                         countries={countries}
                                         onReset={handleResetFilters}
-                                        className="shadow-none border-0 p-0"
                                         facetCounts={facetCounts}
                                     />
                                 )}
+                            </div>
+                            <div className="p-4 shrink-0">
                                 <button
                                     onClick={() => setShowMobileFilters(false)}
-                                    className="w-full mt-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                                    className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                                 >
                                     عرض {pagination.total} سيارة
                                 </button>

@@ -116,7 +116,7 @@ export class CarProviderService {
     }
 
     static async getRentCars(filters: MarketplaceFilters = {}) {
-        const response = await api.get('/rent-car', { params: { ...filters, listing_type: 'rent' } });
+        const response = await api.get('/car-listings', { params: { ...filters, listing_type: 'rent' } });
         return response.data;
     }
 
@@ -266,11 +266,12 @@ export class CarProviderService {
 
     static async getListingCounts(listingType: 'sale' | 'rent' = 'sale') {
         try {
+            const endpoint = listingType === 'rent' ? '/rent-car' : '/car-listings';
             // Fetch all listings to calculate counts
-            const response = await api.get('/car-listings', {
+            const response = await api.get(endpoint, {
                 params: {
                     listing_type: listingType,
-                    limit: 500 // Fetch up to 500 to aggregate
+                    limit: 1000
                 }
             });
 
@@ -279,6 +280,7 @@ export class CarProviderService {
             const originCounts: Record<string | number, number> = {};
             const brandCounts: Record<string | number, number> = {};
             const modelCounts: Record<string, number> = {};
+            const cityCounts: Record<string, number> = {};
             const modelsByBrand: Record<string | number, string[]> = {};
 
             listings.forEach((car: any) => {
@@ -308,12 +310,18 @@ export class CarProviderService {
                     const modelName = car.model.trim();
                     modelCounts[modelName] = (modelCounts[modelName] || 0) + 1;
                 }
+
+                // Count Cities
+                if (car.city) {
+                    cityCounts[car.city] = (cityCounts[car.city] || 0) + 1;
+                }
             });
 
             return {
                 originCounts,
                 brandCounts,
                 modelCounts,
+                cityCounts,
                 modelsByBrand
             };
         } catch (error) {
@@ -321,7 +329,8 @@ export class CarProviderService {
             return {
                 originCounts: {},
                 brandCounts: {},
-                modelCounts: {}
+                modelCounts: {},
+                cityCounts: {}
             };
         }
     }
