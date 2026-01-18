@@ -509,6 +509,17 @@ export class CarProviderService {
         return response.data;
     }
 
+    // User Listings (for customers, technicians, tow_trucks)
+    static async getUserListingStats(apiPrefix: string) {
+        const response = await api.get(`${apiPrefix}/stats`);
+        return response.data;
+    }
+
+    static async getUserListings(apiPrefix: string) {
+        const response = await api.get(`${apiPrefix}/listings`);
+        return response.data;
+    }
+
     // Reporting
     static async reportListing(id: number, data: { reason: string; details: string }) {
         const response = await api.post(`/car-listings/${id}/report`, data);

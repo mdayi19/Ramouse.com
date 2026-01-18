@@ -491,6 +491,7 @@ Route::middleware(['auth:sanctum', 'throttle:30,1'])->prefix('auctions')->group(
 use App\Http\Controllers\Api\CarListingController;
 use App\Http\Controllers\Api\CarListingCategoryController;
 use App\Http\Controllers\Api\CarProviderController;
+use App\Http\Controllers\Api\UserListingController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\CarAnalyticsController;
 
@@ -560,9 +561,65 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Individual Customer Listings (max 3)
     Route::prefix('customer')->group(function () {
+        Route::get('/listings', [UserListingController::class, 'getMyListings']);
         Route::post('/listings', [CarListingController::class, 'store']);
         Route::put('/listings/{id}', [CarListingController::class, 'update']);
         Route::delete('/listings/{id}', [CarListingController::class, 'destroy']);
+        Route::patch('/listings/{id}/toggle', [CarListingController::class, 'toggleAvailability']);
+
+        // Stats & Analytics
+        Route::get('/stats', [UserListingController::class, 'getStats']);
+        Route::get('/analytics', [UserListingController::class, 'getAnalytics']);
+        Route::get('/analytics/detailed', [UserListingController::class, 'getDetailedAnalytics']);
+        Route::get('/analytics/export', [UserListingController::class, 'exportAnalytics']);
+
+        // Sponsorship
+        Route::get('/listings/sponsor-price', [CarListingController::class, 'calculateSponsorPrice']);
+        Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
+        Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
+        Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
+    });
+
+    // Technician Listings (sale only, max 3)
+    Route::prefix('technician')->group(function () {
+        Route::get('/listings', [UserListingController::class, 'getMyListings']);
+        Route::post('/listings', [CarListingController::class, 'store']);
+        Route::put('/listings/{id}', [CarListingController::class, 'update']);
+        Route::delete('/listings/{id}', [CarListingController::class, 'destroy']);
+        Route::patch('/listings/{id}/toggle', [CarListingController::class, 'toggleAvailability']);
+
+        // Stats & Analytics
+        Route::get('/stats', [UserListingController::class, 'getStats']);
+        Route::get('/analytics', [UserListingController::class, 'getAnalytics']);
+        Route::get('/analytics/detailed', [UserListingController::class, 'getDetailedAnalytics']);
+        Route::get('/analytics/export', [UserListingController::class, 'exportAnalytics']);
+
+        // Sponsorship
+        Route::get('/listings/sponsor-price', [CarListingController::class, 'calculateSponsorPrice']);
+        Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
+        Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
+        Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
+    });
+
+    // Tow Truck Listings (sale only, max 3)
+    Route::prefix('tow-truck')->group(function () {
+        Route::get('/listings', [UserListingController::class, 'getMyListings']);
+        Route::post('/listings', [CarListingController::class, 'store']);
+        Route::put('/listings/{id}', [CarListingController::class, 'update']);
+        Route::delete('/listings/{id}', [CarListingController::class, 'destroy']);
+        Route::patch('/listings/{id}/toggle', [CarListingController::class, 'toggleAvailability']);
+
+        // Stats & Analytics
+        Route::get('/stats', [UserListingController::class, 'getStats']);
+        Route::get('/analytics', [UserListingController::class, 'getAnalytics']);
+        Route::get('/analytics/detailed', [UserListingController::class, 'getDetailedAnalytics']);
+        Route::get('/analytics/export', [UserListingController::class, 'exportAnalytics']);
+
+        // Sponsorship
+        Route::get('/listings/sponsor-price', [CarListingController::class, 'calculateSponsorPrice']);
+        Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
+        Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
+        Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
     });
 
     // Favorites

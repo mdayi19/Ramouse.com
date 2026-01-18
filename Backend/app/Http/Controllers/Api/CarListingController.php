@@ -143,14 +143,33 @@ class CarListingController extends Controller
     }
 
     /**
-     * Create listing (AUTHENTICATED - Individual or Provider)
+     * Create listing (AUTHENTICATED - All user types can create SALE listings)
+     * Only car_provider can create RENT listings
      */
     public function store(Request $request)
     {
         $user = auth('sanctum')->user();
 
-        // Check individual limit (max 3)
-        if ($user->role === 'customer') {
+        // Check if user role is allowed
+        $allowedRoles = ['customer', 'technician', 'tow_truck', 'car_provider'];
+        if (!in_array($user->role, $allowedRoles)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account type is not allowed to create car listings.'
+            ], 403);
+        }
+
+        // Validate listing type - only car_provider can create rent listings
+        $listingType = $request->input('listing_type');
+        if ($listingType === 'rent' && $user->role !== 'car_provider') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Car Providers can create rent listings. Please select "sale" as listing type.'
+            ], 403);
+        }
+
+        // Check listing limit for non-providers (max 3)
+        if ($user->role !== 'car_provider') {
             $count = CarListing::where('owner_id', $user->id)
                 ->where('seller_type', 'individual')
                 ->count();
@@ -158,7 +177,7 @@ class CarListingController extends Controller
             if ($count >= 3) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have reached the maximum limit of 3 listings. Upgrade to Car Provider for unlimited listings.'
+                    'message' => 'You have reached the maximum limit of 3 listings. To create unlimited listings, upgrade to a Car Provider account.'
                 ], 403);
             }
         }
@@ -373,7 +392,7 @@ class CarListingController extends Controller
     }
 
     /**
-     * Sponsor a listing (Provider pays from wallet)
+     * Sponsor a listing (All authenticated users with listings can sponsor)
      */
     public function sponsorListing(Request $request, $id)
     {
@@ -389,9 +408,33 @@ class CarListingController extends Controller
             return response()->json(['error' => 'الإعلان مرعي بالفعل حتى ' . $listing->sponsored_until->format('Y-m-d')], 400);
         }
 
-        $provider = $user->carProvider;
-        if (!$provider) {
-            return response()->json(['error' => 'حساب مزود السيارات غير موجود'], 404);
+        // Get user's wallet model based on role
+        $walletOwner = null;
+        $userType = null;
+
+        switch ($user->role) {
+            case 'car_provider':
+                $walletOwner = $user->carProvider;
+                $userType = 'car_provider';
+                break;
+            case 'customer':
+                $walletOwner = $user->customer;
+                $userType = 'customer';
+                break;
+            case 'technician':
+                $walletOwner = $user->technician;
+                $userType = 'technician';
+                break;
+            case 'tow_truck':
+                $walletOwner = $user->towTruck;
+                $userType = 'tow_truck';
+                break;
+            default:
+                return response()->json(['error' => 'نوع الحساب غير مسموح برعاية الإعلانات'], 403);
+        }
+
+        if (!$walletOwner) {
+            return response()->json(['error' => 'حساب المستخدم غير موجود'], 404);
         }
 
         $priceResponse = $this->calculateSponsorPrice(new Request(['days' => $validated['duration_days']]));
@@ -403,25 +446,25 @@ class CarListingController extends Controller
 
         $price = $priceData['price'];
 
-        if ($provider->wallet_balance < $price) {
+        if ($walletOwner->wallet_balance < $price) {
             return response()->json([
                 'error' => 'رصيد المحفظة غير كافٍ',
                 'required' => $price,
-                'current_balance' => $provider->wallet_balance,
+                'current_balance' => $walletOwner->wallet_balance,
             ], 400);
         }
 
-        DB::transaction(function () use ($listing, $provider, $price, $validated, $user) {
-            $provider->decrement('wallet_balance', $price);
-            $provider->refresh();
+        DB::transaction(function () use ($listing, $walletOwner, $price, $validated, $user, $userType) {
+            $walletOwner->decrement('wallet_balance', $price);
+            $walletOwner->refresh();
 
             \App\Models\UserTransaction::create([
                 'user_id' => $user->id,
-                'user_type' => 'car_provider',
+                'user_type' => $userType,
                 'type' => 'payment',
                 'amount' => -$price,
                 'description' => "رعاية إعلان: {$listing->title} لمدة {$validated['duration_days']} يوم",
-                'balance_after' => $provider->wallet_balance,
+                'balance_after' => $walletOwner->wallet_balance,
                 'reference_type' => 'car_listing_sponsorship',
                 'reference_id' => $listing->id,
             ]);
@@ -445,13 +488,13 @@ class CarListingController extends Controller
             'success' => true,
             'message' => 'تم تفعيل الرعاية بنجاح',
             'listing' => $listing->fresh(),
-            'new_balance' => $provider->wallet_balance,
+            'new_balance' => $walletOwner->wallet_balance,
             'amount_paid' => $price,
         ]);
     }
 
     /**
-     * Unsponsor a listing with pro-rated refund
+     * Unsponsor a listing with pro-rated refund (All user types)
      */
     public function unsponsorListing($id)
     {
@@ -466,7 +509,31 @@ class CarListingController extends Controller
             return response()->json(['error' => 'الإعلان غير مرعي'], 400);
         }
 
-        $provider = $user->carProvider;
+        // Get user's wallet model based on role
+        $walletOwner = null;
+        $userType = null;
+
+        switch ($user->role) {
+            case 'car_provider':
+                $walletOwner = $user->carProvider;
+                $userType = 'car_provider';
+                break;
+            case 'customer':
+                $walletOwner = $user->customer;
+                $userType = 'customer';
+                break;
+            case 'technician':
+                $walletOwner = $user->technician;
+                $userType = 'technician';
+                break;
+            case 'tow_truck':
+                $walletOwner = $user->towTruck;
+                $userType = 'tow_truck';
+                break;
+            default:
+                return response()->json(['error' => 'نوع الحساب غير مسموح'], 403);
+        }
+
         $history = $listing->sponsorshipHistories()->where('status', 'active')->first();
 
         if (!$history) {
@@ -484,18 +551,18 @@ class CarListingController extends Controller
             $refundAmount = round(($history->price / $history->duration_days) * $remainingDays, 2);
         }
 
-        DB::transaction(function () use ($listing, $provider, $history, $refundAmount, $user) {
+        DB::transaction(function () use ($listing, $walletOwner, $history, $refundAmount, $user, $userType) {
             if ($refundAmount > 0) {
-                $provider->increment('wallet_balance', $refundAmount);
-                $provider->refresh();
+                $walletOwner->increment('wallet_balance', $refundAmount);
+                $walletOwner->refresh();
 
                 \App\Models\UserTransaction::create([
                     'user_id' => $user->id,
-                    'user_type' => 'car_provider',
+                    'user_type' => $userType,
                     'type' => 'refund',
                     'amount' => $refundAmount,
                     'description' => "استرجاع رعاية: {$listing->title}",
-                    'balance_after' => $provider->wallet_balance,
+                    'balance_after' => $walletOwner->wallet_balance,
                     'reference_type' => 'car_listing_sponsorship',
                     'reference_id' => $listing->id,
                 ]);
@@ -509,7 +576,7 @@ class CarListingController extends Controller
             'success' => true,
             'message' => 'تم إلغاء الرعاية',
             'refund_amount' => $refundAmount,
-            'new_balance' => $provider->wallet_balance,
+            'new_balance' => $walletOwner->wallet_balance,
         ]);
     }
 

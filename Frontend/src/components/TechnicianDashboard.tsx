@@ -17,6 +17,7 @@ import { FlashProductsView } from './TechnicianDashboardParts/FlashProductsView'
 import SettingsView from './TechnicianDashboardParts/SettingsView';
 import UserWalletView from './UserWalletView';
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
+import { MyCarListingsView } from './CarMarketplace/SharedCarListings/MyCarListingsView';
 import Sidebar, { SidebarItemType, SidebarUser } from './DashboardParts/Sidebar';
 import {
     getDashboardActiveView,
@@ -112,6 +113,7 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
         buildSidebarItem(COMMON_MENU_ITEMS.overview, activeView, () => handleSidebarNavClick('overview')),
         buildSidebarItem(COMMON_MENU_ITEMS.profile, activeView, () => handleSidebarNavClick('profile')),
         buildSidebarItem(COMMON_MENU_ITEMS.reviews, activeView, () => handleSidebarNavClick('reviews')),
+        buildCustomSidebarItem('myCarListings', 'إدارة سياراتي للبيع', 'Car', activeView, () => handleSidebarNavClick('myCarListings')),
         buildSidebarItem(COMMON_MENU_ITEMS.wallet, activeView, () => handleSidebarNavClick('wallet')),
         buildExternalNavItem(COMMON_MENU_ITEMS.carListings, onNavigate),
         buildExternalNavItem(COMMON_MENU_ITEMS.rentCar, onNavigate),
@@ -157,6 +159,7 @@ const TechnicianDashboard: React.FC<TechnicianDashboardProps> = (props) => {
                         <Route index element={<OverviewView technician={props.technician} onStartNewOrder={props.onStartNewOrder} onNavigate={handleSetView} onGlobalNavigate={props.onNavigate} orders={technicianOrders} myRequests={myRequests} />} />
                         <Route path="overview" element={<OverviewView technician={props.technician} onStartNewOrder={props.onStartNewOrder} onNavigate={handleSetView} onGlobalNavigate={props.onNavigate} orders={technicianOrders} myRequests={myRequests} />} />
                         <Route path="profile" element={<ProfileView {...props} onLogout={onLogout} />} />
+                        <Route path="myCarListings" element={<MyCarListingsView showToast={props.showToast} userRole="technician" />} />
                         <Route path="reviews" element={<ReviewsView technician={props.technician} showToast={props.showToast} />} />
                         <Route path="store" element={<StoreView technician={technician} showToast={props.showToast} addNotificationForUser={props.addNotificationForUser} settings={props.settings} storeCategories={storeCategories} />} />
                         <Route path="store/product/:productId" element={<StoreView technician={technician} showToast={props.showToast} addNotificationForUser={props.addNotificationForUser} settings={props.settings} storeCategories={storeCategories} />} />

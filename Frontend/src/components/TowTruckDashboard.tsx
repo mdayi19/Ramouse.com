@@ -14,6 +14,7 @@ import ReviewsView from './TowTruckDashboardParts/ReviewsView';
 import SettingsView from './TowTruckDashboardParts/SettingsView';
 import { FlashProductsView } from './TowTruckDashboardParts/FlashProductsView';
 import UserWalletView from './UserWalletView';
+import { MyCarListingsView } from './CarMarketplace/SharedCarListings/MyCarListingsView';
 
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
 import Sidebar, { SidebarItemType, SidebarUser } from './DashboardParts/Sidebar';
@@ -92,6 +93,7 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
         buildSidebarItem(COMMON_MENU_ITEMS.overview, activeView, () => handleSidebarNavClick('overview')),
         buildSidebarItem(COMMON_MENU_ITEMS.profile, activeView, () => handleSidebarNavClick('profile')),
         buildSidebarItem(COMMON_MENU_ITEMS.reviews, activeView, () => handleSidebarNavClick('reviews')),
+        buildCustomSidebarItem('myCarListings', 'إدارة سياراتي للبيع', 'Car', activeView, () => handleSidebarNavClick('myCarListings')),
         buildSidebarItem(COMMON_MENU_ITEMS.wallet, activeView, () => handleSidebarNavClick('wallet')),
         buildExternalNavItem(COMMON_MENU_ITEMS.carListings, onNavigate),
         buildExternalNavItem(COMMON_MENU_ITEMS.rentCar, onNavigate),
@@ -137,6 +139,7 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
                         <Route index element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} />} />
                         <Route path="overview" element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} />} />
                         <Route path="profile" element={<ProfileView towTruck={towTruck} updateTowTruckData={updateTowTruckData} showToast={showToast} settings={settings} onLogout={onLogout} />} />
+                        <Route path="myCarListings" element={<MyCarListingsView showToast={showToast} userRole="tow_truck" />} />
                         <Route path="reviews" element={<ReviewsView towTruck={towTruck} showToast={showToast} />} />
                         <Route path="store" element={<StoreView towTruck={towTruck} showToast={showToast} addNotificationForUser={props.addNotificationForUser} settings={settings} storeCategories={storeCategories} />} />
                         <Route path="store/product/:productId" element={<StoreView towTruck={towTruck} showToast={showToast} addNotificationForUser={props.addNotificationForUser} settings={settings} storeCategories={storeCategories} />} />

@@ -27,6 +27,7 @@ import { CustomerView } from './CustomerDashboardParts/types';
 import UserWalletView from './UserWalletView';
 import UserInternationalLicenseView from './DashboardParts/UserInternationalLicenseView';
 import { UserAuctionsView } from './CustomerDashboardParts/UserAuctionsView';
+import { MyCarListingsView } from './CarMarketplace/SharedCarListings/MyCarListingsView';
 
 
 interface CustomerDashboardProps {
@@ -109,6 +110,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
     const sidebarItems: SidebarItemType[] = useMemo(() => [
         buildSidebarItem(COMMON_MENU_ITEMS.overview, activeView, () => handleSidebarNavClick('overview')),
         buildSidebarItem(COMMON_MENU_ITEMS.orders, activeView, () => handleSidebarNavClick('orders')),
+        buildCustomSidebarItem('myCarListings', 'إدارة سياراتي للبيع', 'Car', activeView, () => handleSidebarNavClick('myCarListings')),
         buildExternalNavItem(COMMON_MENU_ITEMS.carListings, onNavigate),
         buildExternalNavItem(COMMON_MENU_ITEMS.rentCar, onNavigate),
         buildSidebarItem(COMMON_MENU_ITEMS.store, activeView, () => handleSidebarNavClick('store')),
@@ -161,6 +163,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
                         <Route index element={<CustomerOverview onStartNewOrder={props.onStartNewOrder} userPhone={props.userPhone} onNavigate={handleViewChange} onGlobalNavigate={props.onNavigate} allBrands={props.allBrands} />} />
                         <Route path="overview" element={<CustomerOverview onStartNewOrder={props.onStartNewOrder} userPhone={props.userPhone} onNavigate={handleViewChange} onGlobalNavigate={props.onNavigate} allBrands={props.allBrands} />} />
                         <Route path="orders" element={<MyOrders {...props} isDashboardView={true} currentUser={customer || undefined} />} />
+                        <Route path="myCarListings" element={<MyCarListingsView showToast={props.showToast} userRole="customer" />} />
                         <Route path="store" element={customer ? <StoreView customer={customer} showToast={props.showToast} addNotificationForUser={props.addNotificationForUser} settings={props.settings} storeCategories={storeCategories} /> : <SkeletonLoader />} />
                         <Route path="store/product/:productId" element={customer ? <StoreView customer={customer} showToast={props.showToast} addNotificationForUser={props.addNotificationForUser} settings={props.settings} storeCategories={storeCategories} /> : <SkeletonLoader />} />
                         <Route path="profile" element={<CustomerSettings userPhone={props.userPhone} showToast={props.showToast} onUpdateCustomer={(data, pass) => props.onUpdateCustomer(props.userPhone, data, pass)} settings={props.settings} onLogout={onLogout} />} />
