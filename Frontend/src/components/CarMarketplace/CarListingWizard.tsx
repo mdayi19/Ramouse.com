@@ -25,6 +25,7 @@ interface CarListingWizardProps {
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
     userPhone: string;
     editingListing?: any;
+    onlySale?: boolean; // True for customers/technicians/tow_trucks
 }
 
 export const CarListingWizard: React.FC<CarListingWizardProps> = ({
@@ -32,7 +33,8 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
     onCancel,
     showToast,
     userPhone,
-    editingListing
+    editingListing,
+    onlySale = false
 }) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const [currentStep, setCurrentStep] = useState(1);
@@ -73,8 +75,8 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
         description: '',
         city: '',
         address: '',
-        contact_phone: '',
-        contact_whatsapp: '',
+        contact_phone: userPhone,
+        contact_whatsapp: userPhone,
         negotiable: true,
         daily_rate: '',
         weekly_rate: '',
@@ -514,6 +516,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                                 formData={formData}
                                 updateField={updateField}
                                 listingType={formData.listing_type}
+                                onlySale={onlySale}
                             />
                         )}
                         {currentStep === 2 && (
@@ -624,7 +627,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 };
 
 // Step 1: Basic Info with IconCards
-const Step1BasicInfo: React.FC<any> = ({ formData, updateField }) => (
+const Step1BasicInfo: React.FC<any> = ({ formData, updateField, onlySale }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -657,13 +660,15 @@ const Step1BasicInfo: React.FC<any> = ({ formData, updateField }) => (
                     selected={formData.listing_type === 'sale'}
                     onClick={() => updateField('listing_type', 'sale')}
                 />
-                <IconCard
-                    icon={RefreshCw}
-                    label="للإيجار"
-                    subtitle="تأجير السيارة"
-                    selected={formData.listing_type === 'rent'}
-                    onClick={() => updateField('listing_type', 'rent')}
-                />
+                {!onlySale && (
+                    <IconCard
+                        icon={RefreshCw}
+                        label="للإيجار"
+                        subtitle="تأجير السيارة"
+                        selected={formData.listing_type === 'rent'}
+                        onClick={() => updateField('listing_type', 'rent')}
+                    />
+                )}
             </div>
         </div>
 

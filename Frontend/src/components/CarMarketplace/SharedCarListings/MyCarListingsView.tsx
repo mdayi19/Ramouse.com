@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Car, TrendingUp, Eye, Star } from 'lucide-react';
 import { CarProviderService } from '../../../services/carprovider.service';
+import { CarListingWizard } from '../CarListingWizard';
+import { AnimatePresence } from 'framer-motion';
 
 interface MyCarListingsViewProps {
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
     userRole: 'customer' | 'technician' | 'tow_truck';
+    userPhone?: string;
 }
 
 interface Stats {
@@ -31,11 +34,12 @@ interface Listing {
     photos: string[];
 }
 
-export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast, userRole }) => {
+export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast, userRole, userPhone = '' }) => {
     const [stats, setStats] = useState<Stats | null>(null);
     const [listings, setListings] = useState<Listing[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'listings' | 'analytics'>('listings');
+    const [showWizard, setShowWizard] = useState(false);
 
     // Determine API prefix based on user role
     const apiPrefix = userRole === 'customer' ? '/customer'
@@ -145,7 +149,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
             <div className="flex gap-3">
                 {(stats?.remaining_listings || 0) > 0 && (
                     <button
-                        onClick={() => window.location.href = '/car-marketplace'}
+                        onClick={() => setShowWizard(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
                     >
                         <Car className="w-5 h-5" />
@@ -196,7 +200,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
                                 ابدأ بإضافة أول إعلان بيع سيارة الآن
                             </p>
                             <button
-                                onClick={() => window.location.href = '/car-marketplace'}
+                                onClick={() => setShowWizard(true)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
                             >
                                 <Car className="w-5 h-5" />
@@ -288,6 +292,23 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
                     </p>
                 </div>
             )}
+
+            {/* Listing Wizard Modal */}
+            <AnimatePresence>
+                {showWizard && (
+                    <CarListingWizard
+                        onComplete={() => {
+                            setShowWizard(false);
+                            loadData(); // Reload listings after creation
+                            showToast('تم إضافة الإعلان بنجاح', 'success');
+                        }}
+                        onCancel={() => setShowWizard(false)}
+                        showToast={showToast}
+                        userPhone={userPhone}
+                        onlySale={true}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

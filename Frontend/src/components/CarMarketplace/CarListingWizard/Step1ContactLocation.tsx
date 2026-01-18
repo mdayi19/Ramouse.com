@@ -8,12 +8,14 @@ interface Step1ContactLocationProps {
     formData: any;
     updateField: (field: string, value: any) => void;
     listingType: 'sale' | 'rent';
+    onlySale?: boolean;
 }
 
 const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
     formData,
     updateField,
-    listingType
+    listingType,
+    onlySale = false
 }) => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [loading, setLoading] = useState(true);
@@ -23,6 +25,13 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
 
     // Popular cities for quick select - matching Step5Details pattern
     const popularCities = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس'];
+
+    // Auto-set listing type to 'sale' when onlySale is true
+    useEffect(() => {
+        if (onlySale && formData.listing_type !== 'sale') {
+            updateField('listing_type', 'sale');
+        }
+    }, [onlySale]);
 
     // Auto-fill phone numbers on mount
     useEffect(() => {
@@ -108,45 +117,49 @@ const Step1ContactLocation: React.FC<Step1ContactLocationProps> = ({
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
         >
-            {/* Listing Type Selector - ALWAYS FIRST */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white dark:bg-slate-800 rounded-3xl p-5 border-2 border-slate-200 dark:border-slate-700"
-            >
-                <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">📋</span>
-                    <h4 className="text-lg font-bold text-slate-800 dark:text-white">
-                        نوع الإعلان <span className="text-red-500">*</span>
-                    </h4>
-                </div>
+            {/* Listing Type Selector - Hidden for sale-only users */}
+            {!onlySale && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white dark:bg-slate-800 rounded-3xl p-5 border-2 border-slate-200 dark:border-slate-700"
+                >
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">📋</span>
+                        <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                            نوع الإعلان <span className="text-red-500">*</span>
+                        </h4>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                    <button
-                        type="button"
-                        onClick={() => updateField('listing_type', 'sale')}
-                        className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.listing_type === 'sale'
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => updateField('listing_type', 'sale')}
+                            className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.listing_type === 'sale'
                                 ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
                                 : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                            }`}
-                    >
-                        <span className="text-3xl">💰</span>
-                        <span className="text-sm">للبيع</span>
-                    </button>
+                                }`}
+                        >
+                            <span className="text-3xl">💰</span>
+                            <span className="text-sm">للبيع</span>
+                        </button>
 
-                    <button
-                        type="button"
-                        onClick={() => updateField('listing_type', 'rent')}
-                        className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.listing_type === 'rent'
-                                ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
-                                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                            }`}
-                    >
-                        <span className="text-3xl">🔄</span>
-                        <span className="text-sm">للإيجار</span>
-                    </button>
-                </div>
-            </motion.div>
+                        {!onlySale && (
+                            <button
+                                type="button"
+                                onClick={() => updateField('listing_type', 'rent')}
+                                className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all ${formData.listing_type === 'rent'
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                                    }`}
+                            >
+                                <span className="text-3xl">🔄</span>
+                                <span className="text-sm">للإيجار</span>
+                            </button>
+                        )}
+                    </div>
+                </motion.div>
+            )}
 
             {/* Condition Selector - Only for Sale */}
             {formData.listing_type === 'sale' && (
