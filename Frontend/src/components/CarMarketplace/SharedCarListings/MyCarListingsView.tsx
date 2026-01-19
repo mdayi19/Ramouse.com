@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Loader, LayoutList, BarChart3, Star, Download, Printer, X } from 'lucide-react';
+import { Loader, LayoutList, BarChart3, Star, Download, Printer, X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarListingWizard } from '../CarListingWizard';
 import UserSponsorListingModal from './UserSponsorListingModal';
-import PrintableSaleCar from '../CarProviderDashboard/PrintableSaleCar';
-import PrintableRentCar from '../CarProviderDashboard/PrintableRentCar';
+import UserPrintableSaleCar from './UserPrintableSaleCar';
+import UserPrintableRentCar from './UserPrintableRentCar';
 import { MyCarListingsList } from './MyCarListingsList';
 import { MyCarListingsAnalytics } from './MyCarListingsAnalytics';
 import { MyCarListingsSponsorship } from './MyCarListingsSponsorship';
@@ -194,37 +194,49 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
     return (
         <>
             <div className="space-y-6 p-4 md:p-1">
-                {/* Tabs Header */}
-                <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full md:w-fit">
+                {/* Tabs Header & Actions */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full md:w-fit">
+                        <button
+                            onClick={() => setActiveTab('listings')}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'listings'
+                                ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                }`}
+                        >
+                            <LayoutList className="w-4 h-4" />
+                            الإعلانات
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('analytics')}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'analytics'
+                                ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                }`}
+                        >
+                            <BarChart3 className="w-4 h-4" />
+                            الإحصائيات
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('sponsorship')}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'sponsorship'
+                                ? 'bg-white dark:bg-slate-700 text-amber-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                }`}
+                        >
+                            <Star className="w-4 h-4" />
+                            الرعاية والتمييز
+                        </button>
+                    </div>
+
+                    {/* Refresh Button */}
                     <button
-                        onClick={() => setActiveTab('listings')}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'listings'
-                            ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                            }`}
+                        onClick={loadData}
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 font-medium disabled:opacity-50"
                     >
-                        <LayoutList className="w-4 h-4" />
-                        الإعلانات
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('analytics')}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'analytics'
-                            ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                            }`}
-                    >
-                        <BarChart3 className="w-4 h-4" />
-                        الإحصائيات
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('sponsorship')}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'sponsorship'
-                            ? 'bg-white dark:bg-slate-700 text-amber-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                            }`}
-                    >
-                        <Star className="w-4 h-4" />
-                        الرعاية والتمييز
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">تحديث البيانات</span>
                     </button>
                 </div>
 
@@ -366,7 +378,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
                             <div className="printable-area w-full flex-grow overflow-y-auto bg-gray-100/50 dark:bg-black/50 backdrop-blur-sm p-4 sm:p-8 rounded-b-2xl shadow-inner custom-scrollbar flex justify-center sticky-scrollbar">
                                 <div className="relative shadow-2xl bg-white transition-all duration-300 origin-top transform scale-[0.45] mb-[-120%] xs:scale-[0.55] xs:mb-[-100%] sm:scale-[0.7] sm:mb-[-60%] md:scale-[0.85] md:mb-[-30%] lg:scale-100 lg:mb-0 w-[210mm] h-[297mm] flex-shrink-0">
                                     {printListing.listing_type === 'rent' ? (
-                                        <PrintableRentCar
+                                        <UserPrintableRentCar
                                             ref={printableRef}
                                             listing={printListing}
                                             provider={userProvider}
@@ -374,7 +386,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
                                             onReady={() => setIsReadyForPrint(true)}
                                         />
                                     ) : (
-                                        <PrintableSaleCar
+                                        <UserPrintableSaleCar
                                             ref={printableRef}
                                             listing={printListing}
                                             provider={userProvider}

@@ -131,7 +131,8 @@ import {
     Wrench,
     X,
     XCircle,
-    Zap
+    Zap,
+    Gauge
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 
@@ -308,6 +309,7 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
 
     XCircle,
     Zap,
+    Gauge,
     // Aliases for modern names (compatibility)
     'CircleCheck': CheckCircle,
     'CircleX': XCircle,

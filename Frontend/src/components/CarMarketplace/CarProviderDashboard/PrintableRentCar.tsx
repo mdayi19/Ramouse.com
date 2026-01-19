@@ -75,7 +75,7 @@ const PrintableRentCar = forwardRef<
         if (listingUrl && qrCanvasRef.current) {
             try {
                 await toCanvas(qrCanvasRef.current, listingUrl, {
-                    width: 240,
+                    width: 320,
                     margin: 1,
                     errorCorrectionLevel: 'H',
                     color: {
@@ -230,7 +230,7 @@ const PrintableRentCar = forwardRef<
                         <div className="col-span-12 flex justify-center items-center gap-8 mt-4">
                             {/* QR Code */}
                             <div className="bg-white p-4 rounded-2xl shadow-sm text-center border border-slate-200">
-                                <canvas ref={qrCanvasRef} className="w-[220px] h-[220px]" />
+                                <canvas ref={qrCanvasRef} className="w-[300px] h-[300px]" />
                                 <p className="text-slate-800 text-sm font-bold mt-2">امسح الكود لعرض السيارة</p>
                             </div>
 
