@@ -4,11 +4,13 @@ import React, {
     forwardRef,
     useMemo,
     useCallback,
+    useState,
 } from 'react';
 import { CarProvider, Settings } from '../../../types';
 import Icon from '../../Icon';
 import { toCanvas } from 'qrcode';
 import { getStorageUrl } from '../../../config/api';
+import { urlToBase64 } from '../../../utils/helpers';
 
 /* ---------------------------------- */
 /* Printable Rent Car Component       */
@@ -32,6 +34,19 @@ const PrintableRentCar = forwardRef<
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const providerQrCanvasRef = useRef<HTMLCanvasElement>(null);
     const readyCalledRef = useRef(false);
+    const [logoBase64, setLogoBase64] = useState<string>('');
+
+    // Pre-load logo as base64 for PDF generation
+    useEffect(() => {
+        const loadLogo = async () => {
+            if (provider.profile_photo) {
+                const url = getStorageUrl(provider.profile_photo);
+                const base64 = await urlToBase64(url);
+                if (base64) setLogoBase64(base64);
+            }
+        };
+        loadLogo();
+    }, [provider.profile_photo]);
 
     /* -------- Listing URL -------- */
     const listingUrl = useMemo(() => {
@@ -156,9 +171,10 @@ const PrintableRentCar = forwardRef<
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-4">
                             <img
-                                src="/logo without name.svg"
+                                src={logoBase64 || (provider.profile_photo && provider.profile_photo.trim() !== '' ? getStorageUrl(provider.profile_photo) : "/logo without name.svg")}
                                 alt="Logo"
-                                className="h-16 w-16 object-contain"
+                                className="h-16 w-16 object-contain rounded-full bg-white"
+                                crossOrigin="anonymous"
                             />
                             <div>
                                 <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">

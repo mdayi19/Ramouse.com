@@ -56,3 +56,19 @@ export function timeUntil(dateString: string): string {
     if (minutes < 1) return "ينتهي قريباً جداً";
     return `ينتهي خلال ${minutes} دقيقة`;
 }
+
+export async function urlToBase64(url: string): Promise<string> {
+    try {
+        const response = await fetch(url, { mode: 'cors' });
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+        });
+    } catch (error) {
+        console.error('Error converting URL to base64:', error);
+        return '';
+    }
+}

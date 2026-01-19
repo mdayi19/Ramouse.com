@@ -4,10 +4,13 @@ import React, {
     forwardRef,
     useMemo,
     useCallback,
+    useState,
 } from 'react';
 import { CarProvider, Settings } from '../../../types';
 import Icon from '../../Icon';
 import { toCanvas } from 'qrcode';
+import { getStorageUrl } from '../../../config/api';
+import { urlToBase64 } from '../../../utils/helpers';
 
 /* ---------------------------------- */
 /* User Printable Sale Car Component  */
@@ -30,6 +33,20 @@ const UserPrintableSaleCar = forwardRef<
 }, ref) => {
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const readyCalledRef = useRef(false);
+    const [logoBase64, setLogoBase64] = useState<string>('');
+
+    // Pre-load logo as base64 for PDF generation
+    useEffect(() => {
+        const loadLogo = async () => {
+            const logoPath = provider.logo || provider.profile_photo;
+            if (logoPath) {
+                const url = getStorageUrl(logoPath);
+                const base64 = await urlToBase64(url);
+                if (base64) setLogoBase64(base64);
+            }
+        };
+        loadLogo();
+    }, [provider.logo, provider.profile_photo]);
 
     /* -------- Listing URL -------- */
     const listingUrl = useMemo(() => {
@@ -111,9 +128,10 @@ const UserPrintableSaleCar = forwardRef<
                 <header className="absolute top-[10mm] left-[10mm] right-[10mm] border-b-4 border-blue-600 pb-4 h-[30mm] flex items-start justify-between">
                     <div className="flex items-center gap-4">
                         <img
-                            src="/logo without name.svg"
+                            src={logoBase64 || (provider.logo ? getStorageUrl(provider.logo) : (provider.profile_photo ? getStorageUrl(provider.profile_photo) : "/logo without name.svg"))}
                             alt="Logo"
-                            className="h-16 w-16 object-contain"
+                            className="h-16 w-16 object-contain rounded-full bg-white"
+                            crossOrigin="anonymous"
                         />
                         <div>
                             <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">
