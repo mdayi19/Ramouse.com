@@ -1107,19 +1107,24 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
             {
                 showWizard && (
                     <CarListingWizard
-                        onComplete={() => {
+                        onSuccess={() => {
                             setShowWizard(false);
                             setEditingListing(null);
                             loadListings();
-                            showToast(editingListing ? 'تم تحديث الإعلان بنجاح' : 'تم إضافة الإعلان بنجاح', 'success');
+                            // Toast is already handled inside the wizard's success flow usually, but keeping it here if needed or relying on wizard's internal toast.
+                            // However, the wizard calls onSuccess AFTER showing its own toast.
+                            // Let's remove the redundant toast here if the wizard handles it, or keep it if standard pattern.
+                            // The wizard implementation shows "Updated/Created successfully" toast then calls onSuccess.
+                            // So we don't strictly need another toast here, but it doesn't hurt.
                         }}
-                        onCancel={() => {
+                        onClose={() => {
                             setShowWizard(false);
                             setEditingListing(null);
                         }}
                         showToast={showToast}
                         userPhone={userPhone}
                         editingListing={editingListing}
+                        apiPrefix="/car-provider"
                     />
                 )
             }
