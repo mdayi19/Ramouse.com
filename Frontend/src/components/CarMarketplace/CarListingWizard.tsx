@@ -20,22 +20,25 @@ import StepFeatures from './CarListingWizard/StepFeatures';
 import { translateColor, translateTransmission, translateFuelType, translateCondition } from './translations';
 
 interface CarListingWizardProps {
-    onComplete: () => void;
-    onCancel: () => void;
+    onClose: () => void;
+    onSuccess: () => void;
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
-    userPhone: string;
+    userPhone?: string; // Optional now
+    apiPrefix?: string; // New prop
     editingListing?: any;
-    onlySale?: boolean; // True for customers/technicians/tow_trucks
+    onlySale?: boolean;
 }
 
 export const CarListingWizard: React.FC<CarListingWizardProps> = ({
-    onComplete,
-    onCancel,
+    onClose,
+    onSuccess,
     showToast,
-    userPhone,
+    userPhone = '',
+    apiPrefix,
     editingListing,
     onlySale = false
 }) => {
+
     const contentRef = useRef<HTMLDivElement>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [categories, setCategories] = useState<any[]>([]); // Car listing categories (sedan, SUV, etc.)
@@ -425,10 +428,18 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
             let response;
             if (editingListing) {
-                response = await CarProviderService.updateListing(editingListing.id, payload as any);
+                if (apiPrefix) {
+                    response = await CarProviderService.updateUserListing(apiPrefix, editingListing.id, payload as any);
+                } else {
+                    response = await CarProviderService.updateListing(editingListing.id, payload as any);
+                }
                 console.log('✅ Update response:', response);
             } else {
-                response = await CarProviderService.createListing(payload);
+                if (apiPrefix) {
+                    response = await CarProviderService.createUserListing(apiPrefix, payload);
+                } else {
+                    response = await CarProviderService.createListing(payload);
+                }
                 console.log('✅ Create response:', response);
             }
 
@@ -446,7 +457,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
 
             // Wait a bit for user to see success toast
             await new Promise(resolve => setTimeout(resolve, 500));
-            onComplete();
+            onSuccess();
         } catch (error: any) {
             console.error('❌ Listing submission failed:', error);
             console.error('Error response:', error.response?.data);
@@ -586,7 +597,7 @@ export const CarListingWizard: React.FC<CarListingWizardProps> = ({
                 {/* Footer */}
                 <div className="border-t border-slate-200 dark:border-slate-700 p-4 sm:p-6 flex items-center justify-between">
                     <button
-                        onClick={onCancel}
+                        onClick={onClose}
                         className="px-4 sm:px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors text-sm sm:text-base min-h-[48px]"
                     >
                         إلغاء

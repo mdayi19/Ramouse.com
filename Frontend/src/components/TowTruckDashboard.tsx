@@ -139,7 +139,7 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
                         <Route index element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} />} />
                         <Route path="overview" element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} />} />
                         <Route path="profile" element={<ProfileView towTruck={towTruck} updateTowTruckData={updateTowTruckData} showToast={showToast} settings={settings} onLogout={onLogout} />} />
-                        <Route path="myCarListings" element={<MyCarListingsView showToast={showToast} userRole="tow_truck" userPhone={towTruck?.phone || ''} />} />
+                        <Route path="myCarListings" element={<MyCarListingsView showToast={showToast} userRole="tow_truck" userPhone={towTruck?.phone || ''} currentUser={towTruck} settings={settings} />} />
                         <Route path="reviews" element={<ReviewsView towTruck={towTruck} showToast={showToast} />} />
                         <Route path="store" element={<StoreView towTruck={towTruck} showToast={showToast} addNotificationForUser={props.addNotificationForUser} settings={settings} storeCategories={storeCategories} />} />
                         <Route path="store/product/:productId" element={<StoreView towTruck={towTruck} showToast={showToast} addNotificationForUser={props.addNotificationForUser} settings={settings} storeCategories={storeCategories} />} />

@@ -424,6 +424,13 @@ export class CarProviderService {
         return response.data;
     }
 
+    static async createUserListing(apiPrefix: string, data: any) {
+        // Ensure apiPrefix does not end with slash
+        const prefix = apiPrefix.endsWith('/') ? apiPrefix.slice(0, -1) : apiPrefix;
+        const response = await api.post(`${prefix}/listings`, data);
+        return response.data;
+    }
+
     static async updateListing(id: number, data: FormData | Record<string, any>) {
         // Handle both FormData and plain objects
         if (data instanceof FormData) {
@@ -435,6 +442,21 @@ export class CarProviderService {
         } else {
             // Plain object - send as JSON with PUT method
             const response = await api.put(`/car-provider/listings/${id}`, data);
+            return response.data;
+        }
+    }
+
+    static async updateUserListing(apiPrefix: string, id: number, data: FormData | Record<string, any>) {
+        const prefix = apiPrefix.endsWith('/') ? apiPrefix.slice(0, -1) : apiPrefix;
+
+        if (data instanceof FormData) {
+            data.append('_method', 'PUT');
+            const response = await api.post(`${prefix}/listings/${id}`, data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return response.data;
+        } else {
+            const response = await api.put(`${prefix}/listings/${id}`, data);
             return response.data;
         }
     }
@@ -517,6 +539,26 @@ export class CarProviderService {
 
     static async getUserListings(apiPrefix: string) {
         const response = await api.get(`${apiPrefix}/listings`);
+        return response.data;
+    }
+
+    static async deleteUserListing(apiPrefix: string, id: number) {
+        const response = await api.delete(`${apiPrefix}/listings/${id}`);
+        return response.data;
+    }
+
+    static async toggleUserListingVisibility(apiPrefix: string, id: number) {
+        const response = await api.patch(`${apiPrefix}/listings/${id}/toggle`);
+        return response.data;
+    }
+
+    static async quickEditUserListing(apiPrefix: string, id: number, data: any) {
+        const response = await api.patch(`${apiPrefix}/listings/${id}/quick-edit`, data);
+        return response.data;
+    }
+
+    static async unsponsorUserListing(apiPrefix: string, id: number) {
+        const response = await api.post(`${apiPrefix}/listings/${id}/unsponsor`);
         return response.data;
     }
 

@@ -19,8 +19,27 @@ class UserListingController extends Controller
         $listings = CarListing::with(['category', 'brand'])
             ->where('owner_id', $user->id)
             ->where('seller_type', 'individual')
+            ->withCount([
+                'analytics as contact_phone_count' => function ($query) {
+                    $query->where('event_type', 'contact_phone');
+                },
+                'analytics as contact_whatsapp_count' => function ($query) {
+                    $query->where('event_type', 'contact_whatsapp');
+                },
+                'analytics as favorites_count' => function ($query) {
+                    $query->where('event_type', 'favorite');
+                },
+                'analytics as shares_count' => function ($query) {
+                    $query->where('event_type', 'share');
+                }
+            ])
+            ->addSelect([
+                'unique_visitors' => \App\Models\CarListingAnalytic::selectRaw('count(distinct user_ip)')
+                    ->whereColumn('car_listing_id', 'car_listings.id')
+                    ->where('event_type', 'view')
+            ])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(50); // Increased limit to ensure more listings are loaded for analytics
 
         return response()->json([
             'success' => true,
