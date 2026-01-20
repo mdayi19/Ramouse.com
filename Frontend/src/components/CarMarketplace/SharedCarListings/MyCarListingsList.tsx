@@ -154,9 +154,10 @@ export const MyCarListingsList: React.FC<Props> = ({
 
             if (onOptimisticUpdate) {
                 onOptimisticUpdate(listingId, updateData);
-            } else {
-                onRefresh();
             }
+
+            // Always refresh to ensure consistency, as requested
+            onRefresh();
 
             showToast('تم تحديث السعر بنجاح', 'success');
             setEditingPriceId(null);
