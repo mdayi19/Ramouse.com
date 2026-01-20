@@ -19,3 +19,6 @@ export type { FilterPresetsProps, FilterPreset } from './FilterPresets';
 
 export { MobileFilterDrawer } from './MobileFilterDrawer';
 export type { MobileFilterDrawerProps } from './MobileFilterDrawer';
+
+export { LazyImage, ProgressiveImage } from './LazyImage';
+export type { LazyImageProps, ProgressiveImageProps } from './LazyImage';
