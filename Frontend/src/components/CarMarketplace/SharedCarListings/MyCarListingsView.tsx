@@ -77,7 +77,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
         try {
             const [statsData, listingsData] = await Promise.all([
                 CarProviderService.getUserListingStats(apiPrefix),
-                CarProviderService.getUserListings(apiPrefix)
+                CarProviderService.getUserListings(apiPrefix, { _t: Date.now() })
             ]);
 
             setStats(statsData.stats);
@@ -122,6 +122,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
 
             await CarProviderService.toggleUserListingVisibility(apiPrefix, listingId);
             showToast(listing.is_hidden ? 'تم إظهار الإعلان' : 'تم إخفاء الإعلان', 'success');
+            loadData();
         } catch (error) {
             // Revert on failure
             showToast('فشل تحديث حالة الإعلان', 'error');
@@ -139,6 +140,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
             if (stats) {
                 setStats({ ...stats, total_listings: stats.total_listings - 1, remaining_listings: stats.remaining_listings + 1 });
             }
+            loadData();
         } catch (error) {
             showToast('فشل حذف الإعلان', 'error');
         }

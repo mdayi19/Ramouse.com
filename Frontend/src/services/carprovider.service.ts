@@ -537,8 +537,8 @@ export class CarProviderService {
         return response.data;
     }
 
-    static async getUserListings(apiPrefix: string) {
-        const response = await api.get(`${apiPrefix}/listings`);
+    static async getUserListings(apiPrefix: string, params: any = {}) {
+        const response = await api.get(`${apiPrefix}/listings`, { params });
         return response.data;
     }
 
