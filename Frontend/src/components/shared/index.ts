@@ -13,3 +13,9 @@ export type { LoadingSpinnerProps, SkeletonProps } from './LoadingSpinner';
 
 export { SearchAutocomplete } from './SearchAutocomplete';
 export type { SearchAutocompleteProps, SearchSuggestion } from './SearchAutocomplete';
+
+export { FilterPresets } from './FilterPresets';
+export type { FilterPresetsProps, FilterPreset } from './FilterPresets';
+
+export { MobileFilterDrawer } from './MobileFilterDrawer';
+export type { MobileFilterDrawerProps } from './MobileFilterDrawer';
