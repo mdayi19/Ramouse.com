@@ -89,7 +89,7 @@ export const DesktopWelcomeScreen: React.FC<DesktopWelcomeScreenProps> = ({
                                 </span>
                             </h1>
 
-                            <p className="text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed max-w-lg">
+                            <p className="text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed w-full">
                                 منصة واحدة تجمع كل ما تحتاجه سيارتك. من قطع الغيار والصيانة، إلى المزادات والخدمات الطارئة.
                             </p>
 
@@ -139,7 +139,7 @@ export const DesktopWelcomeScreen: React.FC<DesktopWelcomeScreenProps> = ({
                         variants={fadeIn}
                         className="relative hidden lg:block"
                     >
-                        <div className="relative w-full aspect-square max-w-lg mx-auto">
+                        <div className="relative w-full aspect-square mx-auto">
                             {/* Glass Card 1 */}
                             <motion.div
                                 animate={{ y: [0, -20, 0] }}
@@ -197,12 +197,12 @@ export const DesktopWelcomeScreen: React.FC<DesktopWelcomeScreenProps> = ({
                 <div className="mb-20">
                     <div className="text-center mb-12">
                         <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">سوق السيارات</h2>
-                        <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+                        <p className="text-lg text-slate-500 dark:text-slate-400 w-full mx-auto">
                             تصفح، اشترِ، أو استأجر سيارتك المثالية من منصة واحدة متكاملة.
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                    <div className="grid md:grid-cols-3 gap-6 w-full mx-auto">
                         {/* Car Listings - Big Button */}
                         <motion.button
                             whileHover={{ scale: 1.03, y: -5 }}
@@ -276,7 +276,7 @@ export const DesktopWelcomeScreen: React.FC<DesktopWelcomeScreenProps> = ({
 
                 <div className="text-center mb-16">
                     <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">خدماتنا</h2>
-                    <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+                    <p className="text-lg text-slate-500 dark:text-slate-400 w-full mx-auto">
                         منظومة متكاملة لخدمة سيارتك بأحدث التقنيات وأفضل المعايير.
                     </p>
                 </div>
@@ -377,7 +377,7 @@ export const DesktopWelcomeScreen: React.FC<DesktopWelcomeScreenProps> = ({
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
                     <div className="relative z-10">
                         <h2 className="text-4xl lg:text-5xl font-black text-white mb-6">جاهز لتجربة مختلفة؟</h2>
-                        <p className="text-blue-100 text-xl max-w-2xl mx-auto mb-10">
+                        <p className="text-blue-100 text-xl w-full mx-auto mb-10">
                             انضم اليوم إلى أكبر شبكة لخدمات السيارات في المنطقة.
                         </p>
                         <motion.button

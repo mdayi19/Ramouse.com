@@ -165,13 +165,13 @@ export const MobileWelcomeScreen: React.FC<MobileWelcomeScreenProps> = ({
                         ثورة في عالم خدمات السيارات
                     </h2>
 
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto mb-10 text-base font-medium">
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed w-full mx-auto mb-10 text-base font-medium">
                         جميع خدمات السيارات في تطبيق واحد.
                         <br />
                         <span className="text-sm opacity-80">قطع غيار • ميكانيك • سطحات</span>
                     </p>
 
-                    <div className="flex flex-col gap-4 max-w-xs mx-auto">
+                    <div className="flex flex-col gap-4 w-full mx-auto px-4">
                         <motion.button
                             whileHover={{ scale: 1.02, boxShadow: "0 20px 25px -5px rgb(59 130 246 / 0.5)" }}
                             whileTap={{ scale: 0.98 }}
@@ -519,7 +519,7 @@ export const MobileWelcomeScreen: React.FC<MobileWelcomeScreenProps> = ({
                     className="py-12 px-6"
                 >
                     <h3 className="text-2xl font-black text-center text-slate-900 dark:text-white mb-12">كيف تعمل راموسة؟</h3>
-                    <div className="max-w-md mx-auto relative">
+                    <div className="w-full mx-auto relative px-4">
                         {/* Static Line for Performance */}
                         <div className="absolute top-0 bottom-0 right-[28px] w-0.5 bg-gradient-to-b from-blue-500/0 via-blue-500/50 to-blue-500/0" />
 
@@ -567,7 +567,7 @@ export const MobileWelcomeScreen: React.FC<MobileWelcomeScreenProps> = ({
                         <div className="relative z-10 p-10 text-center text-white">
                             <div>
                                 <h3 className="text-4xl font-black mb-4 tracking-tight">جاهز تبدأ؟</h3>
-                                <p className="text-blue-100 mb-8 max-w-xs mx-auto text-lg leading-relaxed">
+                                <p className="text-blue-100 mb-8 w-full mx-auto text-lg leading-relaxed px-4">
                                     انضم لآلاف المستخدمين وسجل طلبك الأول الآن.
                                 </p>
                                 <motion.button
