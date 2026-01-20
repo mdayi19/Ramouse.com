@@ -149,13 +149,22 @@ const Header: React.FC<HeaderProps> = ({
                     : 'bg-transparent border-transparent py-2.5'
                     }`}
             >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center">
 
                         {/* Logo */}
                         <div
                             className="flex items-center gap-2 cursor-pointer group relative z-20"
                             onClick={() => onNavigate('welcome')}
+                            role="button"
+                            tabIndex={0}
+                            aria-label="العودة إلى الصفحة الرئيسية"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onNavigate('welcome');
+                                }
+                            }}
                         >
                             <img
                                 src={settings.logoUrl || "/logo without name.svg"}
@@ -244,7 +253,9 @@ const Header: React.FC<HeaderProps> = ({
                             <button
                                 onClick={toggleDarkMode}
                                 className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all hover:rotate-12 hover:text-secondary group"
-                                aria-label="Toggle dark mode"
+                                aria-label={isDarkMode ? 'تفعيل الوضع النهاري' : 'تفعيل الوضع الليلي'}
+                                aria-pressed={isDarkMode}
+                                type="button"
                             >
                                 <Icon name={isDarkMode ? 'Sun' : 'Moon'} className="w-5 h-5 transition-colors" />
                             </button>
@@ -259,6 +270,10 @@ const Header: React.FC<HeaderProps> = ({
                                                 ? 'bg-primary text-white shadow-lg shadow-primary/30'
                                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                                                 }`}
+                                            aria-label={`الإشعارات${unreadCount > 0 ? ` (${unreadCount} غير مقروء)` : ''}`}
+                                            aria-expanded={isNotifyDropdownOpen}
+                                            aria-haspopup="true"
+                                            type="button"
                                         >
                                             <Icon name="Bell" className={`w-5 h-5 ${unreadCount > 0 ? 'animate-bounce-subtle' : ''}`} />
                                             {unreadCount > 0 && (
@@ -275,6 +290,10 @@ const Header: React.FC<HeaderProps> = ({
                                         <button
                                             onClick={handleProfileClick}
                                             className="flex items-center gap-2 pl-1 pr-1 py-1 rounded-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+                                            aria-label="قائمة المستخدم"
+                                            aria-expanded={isProfileDropdownOpen}
+                                            aria-haspopup="true"
+                                            type="button"
                                         >
                                             <div className="w-9 h-9 bg-gradient-to-br from-secondary to-orange-400 rounded-full flex items-center justify-center text-primary-900 font-bold shadow-md">
                                                 {userName ? userName.charAt(0).toUpperCase() : <Icon name="User" className="w-5 h-5" />}
@@ -351,6 +370,9 @@ const Header: React.FC<HeaderProps> = ({
                                     <button
                                         onClick={onMobileMenuClick}
                                         className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                                        aria-label="فتح القائمة"
+                                        aria-expanded="false"
+                                        type="button"
                                     >
                                         <Icon name="Menu" className="w-6 h-6" />
                                     </button>

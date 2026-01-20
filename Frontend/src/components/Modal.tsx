@@ -14,6 +14,8 @@ interface ModalProps {
   showCloseButton?: boolean;
   closeOnBackdropClick?: boolean;
   closeOnEscape?: boolean;
+  ariaLabel?: string;
+  ariaDescribedBy?: string;
 }
 
 const Modal: React.FC<ModalProps> = memo(({
@@ -27,8 +29,11 @@ const Modal: React.FC<ModalProps> = memo(({
   showCloseButton = true,
   closeOnBackdropClick = true,
   closeOnEscape = true,
+  ariaLabel,
+  ariaDescribedBy,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
 
   // Size classes
   const sizeClasses = {
@@ -55,15 +60,27 @@ const Modal: React.FC<ModalProps> = memo(({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, closeOnEscape, onClose]);
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open + Focus management
   useEffect(() => {
     if (isOpen) {
+      // Store currently focused element
+      previousActiveElement.current = document.activeElement as HTMLElement;
+
       document.body.style.overflow = 'hidden';
+
+      // Focus modal after render
+      setTimeout(() => {
+        modalRef.current?.focus();
+      }, 100);
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      // Restore focus when modal closes
+      if (previousActiveElement.current && !isOpen) {
+        previousActiveElement.current.focus();
+      }
     };
   }, [isOpen]);
 
@@ -82,6 +99,11 @@ const Modal: React.FC<ModalProps> = memo(({
         <div
           className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
           onClick={handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? 'modal-title' : undefined}
+          aria-label={ariaLabel || title}
+          aria-describedby={ariaDescribedBy}
         >
           {/* Backdrop */}
           <motion.div
@@ -90,6 +112,7 @@ const Modal: React.FC<ModalProps> = memo(({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            aria-hidden="true"
           />
 
           {/* Modal Container */}
@@ -103,12 +126,13 @@ const Modal: React.FC<ModalProps> = memo(({
               ? 'h-[95vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl'
               : 'max-h-[90vh] rounded-3xl'
               } bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-hidden safe-area-padding-bottom`}
+            tabIndex={-1}
           >
             {/* Header */}
             {(title || showCloseButton) && (
               <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800">
                 {title && (
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  <h3 id="modal-title" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                     {title}
                   </h3>
                 )}
@@ -116,7 +140,8 @@ const Modal: React.FC<ModalProps> = memo(({
                   <button
                     onClick={onClose}
                     className="touch-target -mr-2 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    aria-label="Close"
+                    aria-label="إغلاق النافذة"
+                    type="button"
                   >
                     <Icon name="X" className="w-5 h-5" />
                   </button>

@@ -665,6 +665,14 @@ const App: React.FC = () => {
 
     return (
         <div className={`min-h-screen flex flex-col font-sans bg-sky-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 ${isDarkMode ? 'dark' : ''}`}>
+            {/* Skip to content link for keyboard navigation */}
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-primary focus:text-white focus:rounded-lg focus:shadow-xl focus:outline-none focus:ring-4 focus:ring-primary/50"
+            >
+                تخطي إلى المحتوى الرئيسي
+            </a>
+
             <AnimatePresence>
                 {showSplash && (
                     <Preloader
@@ -711,10 +719,14 @@ const App: React.FC = () => {
                 }}
             />
 
-            <main className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname === '/' || location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car') || location.pathname.startsWith('/car-providers') || location.pathname.startsWith('/car-provider-dashboard')
-                ? 'p-0'
-                : 'px-4 sm:px-6 py-8'
-                }`}>
+            <main
+                id="main-content"
+                role="main"
+                className={`flex-grow w-full flex flex-col pb-28 md:pb-8 ${location.pathname === '/' || location.pathname.startsWith('/car-listings') || location.pathname.startsWith('/rent-car') || location.pathname.startsWith('/car-providers') || location.pathname.startsWith('/car-provider-dashboard')
+                    ? 'p-0'
+                    : 'px-4 sm:px-6 py-8'
+                    }`}
+            >
                 <ErrorBoundary>
                     <Suspense fallback={<PageLoader />}>
                         <RouteTracker />

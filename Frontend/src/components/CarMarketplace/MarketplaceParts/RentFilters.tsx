@@ -325,7 +325,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
     }, [filters, countries, brands, onFilterChange]);
 
     return (
-        <div className={cn("bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-5", className)}>
+        <div className={cn("bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-5", className)} role="region" aria-label="فلاتر التأجير">
             {/* Sticky Filter Header on Mobile */}
             <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 -mx-5 -mt-5 px-5 pt-5 pb-4 mb-2 border-b border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
@@ -456,11 +456,15 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                         value={modelSearch}
                                         onChange={(e) => setModelSearch(e.target.value)}
                                         className="w-full pr-10 pl-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        aria-label="البحث عن موديل"
+                                        role="searchbox"
                                     />
                                     {modelSearch && (
                                         <button
                                             onClick={() => setModelSearch('')}
                                             className="absolute left-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+                                            aria-label="مسح البحث"
+                                            type="button"
                                         >
                                             <X className="w-3 h-3 text-slate-400" />
                                         </button>
@@ -566,6 +570,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 value={filters.min_renter_age || ''}
                                 onChange={(e) => onFilterChange('min_renter_age', e.target.value)}
                                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                aria-label="الحد الأدنى للعمر"
                             >
                                 <option value="">كل الأعمار</option>
                                 <option value="18">18+</option>
@@ -585,6 +590,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 value={filters.min_license_age || ''}
                                 onChange={(e) => onFilterChange('min_license_age', e.target.value)}
                                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                aria-label="سنوات خبرة الرخصة"
                             >
                                 <option value="">أي خبرة</option>
                                 <option value="1">سنة واحدة</option>
@@ -642,6 +648,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 value={filters.min_year || ''}
                                 onChange={(e) => onFilterChange('min_year', e.target.value)}
                                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                aria-label="سنة الصنع من"
                             >
                                 <option value="">اختر السنة</option>
                                 {Array.from({ length: 40 }, (_, i) => new Date().getFullYear() + 1 - i).map(year => (
@@ -660,6 +667,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 value={filters.max_year || ''}
                                 onChange={(e) => onFilterChange('max_year', e.target.value)}
                                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                aria-label="سنة الصنع إلى"
                             >
                                 <option value="">اختر السنة</option>
                                 {Array.from({ length: 40 }, (_, i) => new Date().getFullYear() + 1 - i).map(year => (
@@ -684,7 +692,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                 activeCount={getSectionActiveCount('fuel_type')}
                 onClear={clearSection}
             >
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="نوع الوقود">
                     {[
                         { value: 'gas', label: 'بنزين', icon: Fuel },
                         { value: 'diesel', label: 'ديزل', icon: Droplets },
@@ -709,6 +717,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 className="hidden"
                                 checked={filters.fuel_type === option.value}
                                 readOnly
+                                aria-label={option.label}
                             />
                         </label>
                     ))}
@@ -725,7 +734,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                 activeCount={getSectionActiveCount('transmission')}
                 onClear={clearSection}
             >
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="ناقل الحركة">
                     {[
                         { value: 'automatic', label: 'أوتوماتيك', icon: Zap }, // Maybe "A" icon?
                         { value: 'manual', label: 'عادي', icon: Settings } // Gear icon
@@ -748,6 +757,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 className="hidden"
                                 checked={filters.transmission === option.value}
                                 readOnly
+                                aria-label={option.label}
                             />
                         </label>
                     ))}
@@ -764,7 +774,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                 activeCount={getSectionActiveCount('condition')}
                 onClear={clearSection}
             >
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="حالة السيارة">
                     {[
                         { value: 'new', label: 'جديد', icon: Sparkles },
                         { value: 'used', label: 'مستعمل', icon: History },
@@ -787,6 +797,7 @@ export const RentFiltersComponent: React.FC<RentFiltersProps> = ({
                                 className="hidden"
                                 checked={filters.condition === option.value}
                                 readOnly
+                                aria-label={option.label}
                             />
                         </label>
                     ))}

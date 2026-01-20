@@ -264,7 +264,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
 
                 <div className="w-full px-4 md:px-8 relative z-10">
-                    <div className="max-w-4xl mx-auto text-center">
+                    <div className="w-full mx-auto text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -301,7 +301,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="relative max-w-2xl mx-auto"
+                            className="relative w-full mx-auto"
                         >
                             {/* Glassmorphism Search Bar */}
                             <div className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-2 border border-white/20 shadow-2xl">
@@ -312,19 +312,22 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                     className="w-full px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl text-slate-900 placeholder-slate-400 text-base focus:ring-4 focus:ring-secondary/30 focus:bg-white border-0 outline-none transition-all"
+                                    aria-label="البحث عن سيارات"
+                                    role="searchbox"
                                 />
                                 <button
                                     onClick={handleSearch}
                                     className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-800 text-white rounded-xl px-5 py-2.5 flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
+                                    aria-label="بحث"
+                                    type="button"
                                 >
                                     <Search className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            {/* Controls Bar (Moved to Header) */}
-                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-lg">
+                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-lg" role="toolbar" aria-label="أدوات التحكم بالنتائج">
                                 {/* Result Count */}
-                                <div className="flex items-center gap-2 px-3 text-white font-medium">
+                                <div className="flex items-center gap-2 px-3 text-white font-medium" role="status" aria-live="polite">
                                     <Car className="w-5 h-5 text-secondary" />
                                     <span>{pagination.total > 0 ? `${pagination.total} سيارة متاحة` : 'جاري البحث...'}</span>
                                 </div>
@@ -350,22 +353,31 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     <button
                                         onClick={() => setShowMobileFilters(true)}
                                         className="lg:hidden flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm"
+                                        aria-label="فتح الفلاتر"
+                                        aria-expanded={showMobileFilters}
+                                        type="button"
                                     >
                                         <SlidersHorizontal className="w-4 h-4" />
                                         <span>تصفية</span>
                                     </button>
 
                                     {/* View Toggles */}
-                                    <div className="flex bg-black/20 rounded-xl p-1 gap-1">
+                                    <div className="flex bg-black/20 rounded-xl p-1 gap-1" role="group" aria-label="طريقة العرض">
                                         <button
                                             onClick={() => setViewMode('grid')}
                                             className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-white/70 hover:text-white'}`}
+                                            aria-label="عرض شبكي"
+                                            aria-pressed={viewMode === 'grid'}
+                                            type="button"
                                         >
                                             <Grid className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('list')}
                                             className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-white/70 hover:text-white'}`}
+                                            aria-label="عرض قائمة"
+                                            aria-pressed={viewMode === 'list'}
+                                            type="button"
                                         >
                                             <List className="w-4 h-4" />
                                         </button>
