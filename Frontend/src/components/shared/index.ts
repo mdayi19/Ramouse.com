@@ -10,3 +10,6 @@ export type { InputProps, TextareaProps } from './Input';
 
 export { LoadingSpinner, Skeleton } from './LoadingSpinner';
 export type { LoadingSpinnerProps, SkeletonProps } from './LoadingSpinner';
+
+export { SearchAutocomplete } from './SearchAutocomplete';
+export type { SearchAutocompleteProps, SearchSuggestion } from './SearchAutocomplete';
