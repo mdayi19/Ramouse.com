@@ -578,6 +578,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
         Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
         Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
+        Route::patch('/listings/{id}/quick-edit', [CarProviderController::class, 'quickEdit']);
     });
 
     // Technician Listings (sale only, max 3)
@@ -599,6 +600,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
         Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
         Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
+        Route::patch('/listings/{id}/quick-edit', [CarProviderController::class, 'quickEdit']);
     });
 
     // Tow Truck Listings (sale only, max 3)
@@ -620,6 +622,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/listings/{id}/sponsor', [CarListingController::class, 'sponsorListing']);
         Route::post('/listings/{id}/unsponsor', [CarListingController::class, 'unsponsorListing']);
         Route::get('/sponsorships', [CarListingController::class, 'getSponsorships']);
+        Route::patch('/listings/{id}/quick-edit', [CarProviderController::class, 'quickEdit']);
     });
 
     // Favorites

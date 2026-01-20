@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Plus, Car, X, Check, Printer, Star, ToggleLeft, ToggleRight, Edit3, Trash2, Loader } from 'lucide-react';
+import { Search, Filter, Plus, Car, X, Check, Printer, Star, ToggleLeft, ToggleRight, Edit3, Trash2, Loader, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../Icon';
 import { getImageUrl } from '../../../utils/helpers';
 import { CarProviderService } from '../../../services/carprovider.service';
+import { MobileListingCard } from './MobileListingCard';
 
 interface Props {
     listings: any[];
@@ -19,6 +20,8 @@ interface Props {
     setShowWizard: (show: boolean) => void;
     showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
     stats: any; // Passed for the "remaining listings" check
+    onOptimisticUpdate?: (id: number, data: any) => void;
+    userRole: string;
 }
 
 // Helper to safely extract all rates
@@ -57,7 +60,9 @@ export const MyCarListingsList: React.FC<Props> = ({
     onToggleVisibility,
     setShowWizard,
     showToast,
-    stats
+    stats,
+    onOptimisticUpdate,
+    userRole
 }) => {
     // Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +99,7 @@ export const MyCarListingsList: React.FC<Props> = ({
 
     // Quick Edit Handlers
     const startPriceEdit = (listing: any) => {
+        console.log('Starting price edit for:', listing.id);
         setEditingPriceId(listing.id);
         const isRent = listing.listing_type?.toLowerCase() === 'rent';
 
@@ -143,11 +149,17 @@ export const MyCarListingsList: React.FC<Props> = ({
                 updateData.price = newPrice;
             }
 
+            console.log('Saving price edit:', { apiPrefix, listingId, updateData });
             await CarProviderService.quickEditUserListing(apiPrefix, listingId, updateData);
+
+            if (onOptimisticUpdate) {
+                onOptimisticUpdate(listingId, updateData);
+            } else {
+                onRefresh();
+            }
 
             showToast('تم تحديث السعر بنجاح', 'success');
             setEditingPriceId(null);
-            onRefresh(); // Refresh parent data
         } catch (error) {
             console.error('Update failed:', error);
             showToast('فشل تحديث السعر', 'error');
@@ -180,18 +192,20 @@ export const MyCarListingsList: React.FC<Props> = ({
                 <div className="flex items-center gap-3">
                     {/* Type Tabs */}
                     <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center">
-                        {(['all', 'sale', 'rent'] as const).map((type) => (
-                            <button
-                                key={type}
-                                onClick={() => setTypeFilter(type)}
-                                className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all ${typeFilter === type
-                                    ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                                    }`}
-                            >
-                                {type === 'all' ? 'الكل' : type === 'sale' ? 'للبيع' : 'للإيجار'}
-                            </button>
-                        ))}
+                        {(['all', 'sale', 'rent'] as const)
+                            .filter(type => userRole === 'car_provider' || type !== 'rent')
+                            .map((type) => (
+                                <button
+                                    key={type}
+                                    onClick={() => setTypeFilter(type)}
+                                    className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all ${typeFilter === type
+                                        ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                        }`}
+                                >
+                                    {type === 'all' ? 'الكل' : type === 'sale' ? 'للبيع' : 'للإيجار'}
+                                </button>
+                            ))}
                     </div>
 
                     <button
@@ -280,7 +294,7 @@ export const MyCarListingsList: React.FC<Props> = ({
                 ) : (
                     <div className="space-y-6">
                         {/* Desktop Table */}
-                        <div className="hidden md:block bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700">
+                        <div className="hidden md:block bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-visible border border-slate-100 dark:border-slate-700">
                             <table className="w-full">
                                 <thead className="bg-slate-50/80 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700 backdrop-blur-sm">
                                     <tr>
@@ -328,7 +342,7 @@ export const MyCarListingsList: React.FC<Props> = ({
                                                 <td className="px-6 py-4 align-middle text-slate-900 dark:text-white font-bold">
                                                     {editingPriceId === listing.id ? (
                                                         listing.listing_type?.toLowerCase() === 'rent' ? (
-                                                            <div className="flex flex-col gap-2 min-w-[140px] bg-white dark:bg-slate-800 p-2 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 z-10 relative">
+                                                            <div className="flex flex-col gap-2 min-w-[140px] bg-white dark:bg-slate-800 p-2 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 z-50 relative">
                                                                 <input
                                                                     type="number"
                                                                     placeholder="يومي"
@@ -370,7 +384,7 @@ export const MyCarListingsList: React.FC<Props> = ({
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800">
+                                                            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 z-50 relative">
                                                                 <input
                                                                     type="number"
                                                                     value={tempPrice}
@@ -395,7 +409,7 @@ export const MyCarListingsList: React.FC<Props> = ({
                                                             </div>
                                                         )
                                                     ) : (
-                                                        <div className="flex items-start gap-2 group/price cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors -ml-2" onClick={() => startPriceEdit(listing)}>
+                                                        <div className="flex items-start gap-2 group/price cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors -ml-2" onClick={(e) => { e.stopPropagation(); startPriceEdit(listing); }}>
                                                             {listing.listing_type?.toLowerCase() === 'rent' ? (
                                                                 <div className="flex flex-col gap-1">
                                                                     <div className="font-black text-blue-600 text-base">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-xs font-medium text-slate-400">$ / يوم</span></div>
@@ -490,75 +504,25 @@ export const MyCarListingsList: React.FC<Props> = ({
                         <div className="md:hidden grid grid-cols-1 gap-4">
                             <AnimatePresence>
                                 {filteredListings.map((listing) => (
-                                    <motion.div
+                                    <MobileListingCard
                                         key={listing.id}
-                                        layout
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4"
-                                    >
-                                        <div className="flex gap-4">
-                                            <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 shrink-0">
-                                                <img
-                                                    src={getImageUrl(listing.photos?.[0]) || '/placeholder-car.jpg'}
-                                                    alt={listing.title}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-start">
-                                                    <h3 className="font-bold text-slate-900 dark:text-white truncate">{listing.title}</h3>
-                                                    <span className={`text-[10px] px-2 py-1 rounded-full ${listing.is_hidden ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-600'} font-bold`}>
-                                                        {listing.is_hidden ? 'مخفي' : 'نشط'}
-                                                    </span>
-                                                </div>
-                                                <div className="mt-1 text-slate-500 text-xs flex items-center gap-2">
-                                                    <span>{listing.year}</span>
-                                                    <span>•</span>
-                                                    <span>{typeof listing.mileage === 'number' ? listing.mileage.toLocaleString() : listing.mileage} كم</span>
-                                                </div>
-                                                <div className="mt-2 font-black text-blue-600">
-                                                    {listing.listing_type === 'rent'
-                                                        ? `${getRates(listing)?.daily?.toLocaleString() || 0} $ / يوم`
-                                                        : `${Number(listing.price || 0).toLocaleString()} $`
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-5 gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
-                                            <button onClick={() => onPrint(listing)} className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50 text-gray-600">
-                                                <Printer className="w-4 h-4 mb-1" />
-                                                <span className="text-[10px]">طباعة</span>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    if (listing.is_sponsored) {
-                                                        onUnsponsor(listing.id);
-                                                    } else {
-                                                        onSponsor(listing);
-                                                    }
-                                                }}
-                                                className={`flex flex-col items-center justify-center p-2 rounded-lg ${listing.is_sponsored ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'}`}
-                                            >
-                                                <Star className={`w-4 h-4 mb-1 ${listing.is_sponsored ? 'fill-current' : ''}`} />
-                                                <span className="text-[10px]">{listing.is_sponsored ? 'ممول' : 'تمويل'}</span>
-                                            </button>
-                                            <button onClick={() => onToggleVisibility(listing.id)} className="flex flex-col items-center justify-center p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                                                {listing.is_hidden ? <ToggleLeft className="w-4 h-4 mb-1" /> : <ToggleRight className="w-4 h-4 mb-1" />}
-                                                <span className="text-[10px]">{listing.is_hidden ? 'نشر' : 'إخفاء'}</span>
-                                            </button>
-                                            <button onClick={() => onEdit(listing)} className="flex flex-col items-center justify-center p-2 rounded-lg bg-blue-50 text-blue-600">
-                                                <Edit3 className="w-4 h-4 mb-1" />
-                                                <span className="text-[10px]">تعديل</span>
-                                            </button>
-                                            <button onClick={() => onDelete(listing.id)} className="flex flex-col items-center justify-center p-2 rounded-lg bg-red-50 text-red-600">
-                                                <Trash2 className="w-4 h-4 mb-1" />
-                                                <span className="text-[10px]">حذف</span>
-                                            </button>
-                                        </div>
-                                    </motion.div>
+                                        listing={listing}
+                                        onEdit={onEdit}
+                                        onDelete={onDelete}
+                                        onPrint={onPrint}
+                                        onSponsor={onSponsor}
+                                        onUnsponsor={onUnsponsor}
+                                        onToggleVisibility={onToggleVisibility}
+                                        onQuickPriceEdit={startPriceEdit}
+                                        isEditing={editingPriceId === listing.id}
+                                        tempPrice={tempPrice}
+                                        tempRates={tempRates}
+                                        setTempPrice={setTempPrice}
+                                        setTempRates={setTempRates}
+                                        onSavePrice={savePriceEdit}
+                                        onCancelPrice={cancelPriceEdit}
+                                        savingPrice={savingPrice}
+                                    />
                                 ))}
                             </AnimatePresence>
                         </div>

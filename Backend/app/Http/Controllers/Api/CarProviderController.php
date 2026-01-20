@@ -430,27 +430,27 @@ class CarProviderController extends Controller
             ->where('seller_type', 'provider')
             ->with(['category', 'brand'])
             ->withCount([
-                    'analytics as period_views' => function ($query) use ($startDate) {
-                        $query->where('event_type', 'view')->where('created_at', '>=', $startDate);
-                    },
-                    'analytics as period_unique_visitors' => function ($query) use ($startDate) {
-                        $query->where('event_type', 'view')
-                            ->where('created_at', '>=', $startDate)
-                            ->select(DB::raw('count(distinct user_ip)'));
-                    },
-                    'analytics as period_contact_phone' => function ($query) use ($startDate) {
-                        $query->where('event_type', 'contact_phone')->where('created_at', '>=', $startDate);
-                    },
-                    'analytics as period_contact_whatsapp' => function ($query) use ($startDate) {
-                        $query->where('event_type', 'contact_whatsapp')->where('created_at', '>=', $startDate);
-                    },
-                    'analytics as period_favorites' => function ($query) use ($startDate) {
-                        $query->where('event_type', 'favorite')->where('created_at', '>=', $startDate);
-                    },
-                    'analytics as period_shares' => function ($query) use ($startDate) {
-                        $query->where('event_type', 'share')->where('created_at', '>=', $startDate);
-                    }
-                ])
+                'analytics as period_views' => function ($query) use ($startDate) {
+                    $query->where('event_type', 'view')->where('created_at', '>=', $startDate);
+                },
+                'analytics as period_unique_visitors' => function ($query) use ($startDate) {
+                    $query->where('event_type', 'view')
+                        ->where('created_at', '>=', $startDate)
+                        ->select(DB::raw('count(distinct user_ip)'));
+                },
+                'analytics as period_contact_phone' => function ($query) use ($startDate) {
+                    $query->where('event_type', 'contact_phone')->where('created_at', '>=', $startDate);
+                },
+                'analytics as period_contact_whatsapp' => function ($query) use ($startDate) {
+                    $query->where('event_type', 'contact_whatsapp')->where('created_at', '>=', $startDate);
+                },
+                'analytics as period_favorites' => function ($query) use ($startDate) {
+                    $query->where('event_type', 'favorite')->where('created_at', '>=', $startDate);
+                },
+                'analytics as period_shares' => function ($query) use ($startDate) {
+                    $query->where('event_type', 'share')->where('created_at', '>=', $startDate);
+                }
+            ])
             ->orderBy('period_views', 'desc')
             ->paginate($perPage);
 
@@ -789,10 +789,26 @@ class CarProviderController extends Controller
 
         // Filter valid keys that are present in the request
         $updateData = [];
+        $rentalRates = [];
+
         foreach ($validated as $key => $value) {
             if ($request->has($key)) {
-                $updateData[$key] = $value;
+                if (in_array($key, ['daily_rate', 'weekly_rate', 'monthly_rate'])) {
+                    $rentalRates[$key] = $value;
+                } else {
+                    $updateData[$key] = $value;
+                }
             }
+        }
+
+        // Handle rental terms update if any rates are provided
+        if (!empty($rentalRates)) {
+            $currentTerms = $listing->rental_terms ?? [];
+            if (!is_array($currentTerms)) {
+                $currentTerms = [];
+            }
+
+            $updateData['rental_terms'] = array_merge($currentTerms, $rentalRates);
         }
 
         if (empty($updateData)) {

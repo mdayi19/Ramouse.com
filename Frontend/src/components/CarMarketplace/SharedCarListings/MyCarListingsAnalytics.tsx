@@ -483,15 +483,15 @@ const MetricCard: React.FC<{
     return (
         <motion.div
             whileHover={{ y: -5 }}
-            className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group"
+            className="bg-white dark:bg-slate-800 rounded-2xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group"
         >
             <div className={`absolute top-0 right-0 w-1 h-full bg-gradient-to-b ${theme.bg}`}></div>
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl ${theme.light} ${theme.dark}`}>
-                    <Icon className="w-6 h-6" />
+            <div className="flex justify-between items-start mb-2">
+                <div className={`p-2 rounded-xl ${theme.light} ${theme.dark}`}>
+                    <Icon className="w-4 h-4" />
                 </div>
                 {growth !== null && growth !== undefined && (
-                    <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1.5 rounded-lg border ${isPositive
+                    <div className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-1 rounded-lg border ${isPositive
                         ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
                         : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
                         }`}>
@@ -501,10 +501,10 @@ const MetricCard: React.FC<{
                 )}
             </div>
 
-            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">
+            <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-1">
                 {title}
             </h3>
-            <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                 {value?.toLocaleString() || 0}
             </p>
         </motion.div>

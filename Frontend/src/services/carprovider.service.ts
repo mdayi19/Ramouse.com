@@ -553,7 +553,8 @@ export class CarProviderService {
     }
 
     static async quickEditUserListing(apiPrefix: string, id: number, data: any) {
-        const response = await api.patch(`${apiPrefix}/listings/${id}/quick-edit`, data);
+        const prefix = apiPrefix.endsWith('/') ? apiPrefix.slice(0, -1) : apiPrefix;
+        const response = await api.patch(`${prefix}/listings/${id}/quick-edit`, data);
         return response.data;
     }
 
