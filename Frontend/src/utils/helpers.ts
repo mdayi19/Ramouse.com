@@ -60,15 +60,22 @@ export function timeUntil(dateString: string): string {
 export async function urlToBase64(url: string): Promise<string> {
     try {
         const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) {
+            console.warn(`Failed to fetch image: ${url} (${response.status})`);
+            return '';
+        }
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(blob);
             reader.onload = () => resolve(reader.result as string);
-            reader.onerror = error => reject(error);
+            reader.onerror = error => {
+                console.error(`FileReader error for ${url}:`, error);
+                reject(error);
+            };
         });
     } catch (error) {
-        console.error('Error converting URL to base64:', error);
-        return '';
+        console.error('Error converting URL to base64:', url, error);
+        return ''; // Return empty string instead of throwing
     }
 }

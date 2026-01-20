@@ -123,63 +123,61 @@ const PrintableSaleCar = forwardRef<
             {/* Print-specific styles */}
             <style>{`
                 @media print {
-                    #printable-sale-car {
-                        page-break-inside: avoid !important;
-                        page-break-after: avoid !important;
-                        page-break-before: avoid !important;
-                        break-inside: avoid-page !important;
-                        display: block !important;
-                        position: relative !important;
-                        max-height: 297mm !important;
-                        height: 297mm !important;
-                        overflow: hidden !important;
-                    }
                     @page { 
                         size: A4 portrait;
                         margin: 0;
                     }
                     html, body {
+                        width: 210mm;
+                        height: 297mm;
                         margin: 0 !important;
                         padding: 0 !important;
-                        overflow: hidden !important;
+                    }
+                    #printable-sale-car {
+                        width: 210mm !important;
                         height: 297mm !important;
+                        max-height: 297mm !important;
+                        overflow: hidden !important;
+                        margin: 0 !important;
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
                     }
                 }
             `}</style>
             <div
                 ref={ref}
                 id="printable-sale-car"
-                className="relative w-[210mm] min-h-[297mm] max-h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border"
+                dir="rtl"
+                lang="ar"
+                className="relative w-[210mm] h-[297mm] mx-auto bg-white p-[10mm] flex flex-col justify-between font-sans text-gray-800 box-border"
+                style={{ fontFamily: 'Tajawal, sans-serif' }}
             >
-                {/* Header */}
-                <header className="border-b-4 border-blue-600 pb-4 mb-4 shrink-0">
-                    <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-4">
-                            <img
-                                src={logoBase64 || (provider.profile_photo && provider.profile_photo.trim() !== '' ? getStorageUrl(provider.profile_photo) : "/logo without name.svg")}
-                                alt="Logo"
-                                className="h-16 w-16 object-contain rounded-full bg-white"
-                                crossOrigin="anonymous"
-                            />
-                            <div>
-                                <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">
-                                    {settings.appName}
-                                </h1>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    سوق السيارات المعتمد
-                                </p>
-                            </div>
+                {/* Header - Sticky on Print */}
+                <header className="border-b-4 border-blue-600 pb-4 mb-4 flex items-start justify-between shrink-0">
+                    <div className="flex items-center gap-4">
+                        <img
+                            src={logoBase64 || "/logo without name.svg"}
+                            alt="Logo"
+                            className="h-16 w-16 object-contain rounded-full bg-white"
+                        />
+                        <div>
+                            <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">
+                                {settings.appName}
+                            </h1>
+                            <p className="text-xs text-gray-500 mt-1">
+                                سوق السيارات المعتمد
+                            </p>
                         </div>
-                        <div className="text-right">
-                            <h2 className="text-2xl font-black text-blue-700 mb-1">
-                                سيارة للبيع
-                            </h2>
-                        </div>
+                    </div>
+                    <div className="text-right">
+                        <h2 className="text-2xl font-black text-blue-700 mb-1">
+                            سيارة للبيع
+                        </h2>
                     </div>
                 </header>
 
-                {/* Main Content */}
-                <main className="flex-grow flex flex-col items-start justify-start w-full gap-8">
+                {/* Main Content - Dynamic Flow */}
+                <main className="flex-1 flex flex-col items-start justify-start gap-3 overflow-hidden">
 
                     {/* Header Section: Title Only */}
                     <div className="w-full flex justify-between items-center border-b-2 border-slate-100 pb-6">
@@ -194,14 +192,14 @@ const PrintableSaleCar = forwardRef<
                         {/* Listing QR Code & Specs */}
                         <div className="col-span-12 flex justify-center items-center gap-8 mt-4">
                             {/* QR Code */}
-                            <div className="bg-white p-4 rounded-2xl shadow-sm text-center border border-slate-200">
-                                <canvas ref={qrCanvasRef} className="w-[300px] h-[300px]" />
-                                <p className="text-slate-800 text-sm font-bold mt-2">امسح الكود لعرض السيارة</p>
+                            <div className="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-200">
+                                <canvas ref={qrCanvasRef} className="w-[240px] h-[240px]" />
+                                <p className="text-slate-800 text-xs font-bold mt-1">امسح الكود لعرض السيارة</p>
                             </div>
 
                             {/* Specs Card */}
-                            <div className="bg-gradient-to-br from-blue-50 to-slate-50 p-6 rounded-2xl border border-blue-100 shadow-sm w-[268px] h-[268px] flex flex-col">
-                                <h3 className="text-sm font-bold text-slate-600 mb-3 uppercase tracking-wider">المواصفات الأساسية</h3>
+                            <div className="bg-gradient-to-br from-blue-50 to-slate-50 p-4 rounded-2xl border border-blue-100 shadow-sm w-[220px] h-[220px] flex flex-col">
+                                <h3 className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">المواصفات الأساسية</h3>
                                 <div className="grid grid-cols-2 gap-2.5 flex-1 content-start">
                                     {(() => {
                                         const getTransmissionAr = (val: string) => {
@@ -302,23 +300,21 @@ const PrintableSaleCar = forwardRef<
                     </div>
                 </main>
 
-                {/* Footer */}
-                <footer className="mt-auto pt-4 border-t-4 border-blue-600 shrink-0">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center text-gray-800 gap-3">
-                            <Icon name="Globe" className="w-5 h-5 text-blue-600" />
-                            <span className="text-lg font-black text-gray-800 dir-ltr">
-                                {settings.mainDomain || 'ramouse.com'}
-                            </span>
-                        </div>
+                {/* Footer - Sticky on Print */}
+                <footer className="pt-4 mt-4 border-t-4 border-blue-600 flex items-center justify-between shrink-0">
+                    <div className="flex items-center text-gray-800 gap-3">
+                        <Icon name="Globe" className="w-5 h-5 text-blue-600" />
+                        <span className="text-lg font-black text-gray-800 dir-ltr">
+                            {settings.mainDomain || 'ramouse.com'}
+                        </span>
+                    </div>
 
-                        <div className="flex items-center gap-3 text-gray-800">
-                            <span className="text-lg font-bold">للدعم الفني:</span>
-                            <span dir="ltr" className="text-lg font-black text-blue-700 font-mono tracking-wider">
-                                {settings.companyPhone}
-                            </span>
-                            <Icon name="Phone" className="w-5 h-5 text-blue-600" />
-                        </div>
+                    <div className="flex items-center gap-3 text-gray-800">
+                        <span className="text-lg font-bold">للدعم الفني:</span>
+                        <span dir="ltr" className="text-lg font-black text-blue-700 font-mono tracking-wider">
+                            {settings.companyPhone}
+                        </span>
+                        <Icon name="Phone" className="w-5 h-5 text-blue-600" />
                     </div>
                 </footer>
             </div>

@@ -9,6 +9,7 @@ import UserPrintableRentCar from './UserPrintableRentCar';
 import { MyCarListingsList } from './MyCarListingsList';
 import { MyCarListingsAnalytics } from './MyCarListingsAnalytics';
 import { MyCarListingsSponsorship } from './MyCarListingsSponsorship';
+import { PrintPreviewModal } from '../../shared/PrintPreviewModal';
 
 interface MyCarListingsViewProps {
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -318,86 +319,32 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
                 )}
 
                 {showPrintPreview && printListing && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center z-[100] p-4 print:p-0 print:bg-white"
-                        onClick={() => setShowPrintPreview(false)}
+                    <PrintPreviewModal
+                        title={printListing.listing_type === 'rent' ? 'معاينة العرض (إيجار)' : 'معاينة العرض (بيع)'}
+                        onClose={() => setShowPrintPreview(false)}
+                        onPrint={handleConfirmPrint}
+                        onDownloadPdf={handleDownloadPdf}
+                        isGeneratingPdf={isGeneratingPdf}
+                        isReadyForPrint={isReadyForPrint}
                     >
-                        <style>{`
-                            @media print {
-                                @page { size: A4 portrait; margin: 0; }
-                                html, body { height: auto !important; width: 210mm !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
-                                body * { visibility: hidden; }
-                                .printable-area, .printable-area * { visibility: visible; }
-                                .printable-area { position: absolute; top: 0; left: 0 !important; width: 210mm !important; min-height: 297mm !important; height: auto !important; margin: 0; padding: 0; background: white; z-index: 99999; }
-                                .printable-area > div { transform: none !important; width: 100% !important; }
-                                .print-hidden { display: none !important; }
-                            }
-                        `}</style>
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full max-w-[210mm] flex flex-col gap-0 max-h-full"
-                        >
-                            <div className="w-full bg-white dark:bg-slate-800 p-4 rounded-t-2xl shadow-2xl flex flex-col sm:flex-row justify-between items-center gap-4 print-hidden z-50 border-b border-gray-100 dark:border-gray-700">
-                                <div className="text-center sm:text-right">
-                                    <h3 className="font-bold text-slate-800 dark:text-white text-lg">
-                                        {printListing.listing_type === 'rent' ? 'معاينة العرض (إيجار)' : 'معاينة العرض (بيع)'}
-                                    </h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">جاهز للطباعة بحجم A4</p>
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto justify-center bg-slate-100 dark:bg-slate-700/50 p-1.5 rounded-xl">
-                                    <button
-                                        onClick={handleDownloadPdf}
-                                        disabled={isGeneratingPdf || !isReadyForPrint}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-sm px-4 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50"
-                                    >
-                                        {isGeneratingPdf ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                                        <span className="hidden sm:inline">PDF</span>
-                                    </button>
-                                    <button
-                                        onClick={handleConfirmPrint}
-                                        disabled={!isReadyForPrint}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 font-bold text-sm px-6 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50"
-                                    >
-                                        <Printer className="w-4 h-4" />
-                                        <span>طباعة</span>
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() => setShowPrintPreview(false)}
-                                    className="absolute top-2 right-2 sm:static w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="printable-area w-full flex-grow overflow-y-auto bg-gray-100/50 dark:bg-black/50 backdrop-blur-sm p-4 sm:p-8 rounded-b-2xl shadow-inner custom-scrollbar flex justify-center sticky-scrollbar">
-                                <div className="relative shadow-2xl bg-white transition-all duration-300 origin-top transform scale-[0.45] mb-[-120%] xs:scale-[0.55] xs:mb-[-100%] sm:scale-[0.7] sm:mb-[-60%] md:scale-[0.85] md:mb-[-30%] lg:scale-100 lg:mb-0 w-[210mm] h-[297mm] flex-shrink-0">
-                                    {printListing.listing_type === 'rent' ? (
-                                        <UserPrintableRentCar
-                                            ref={printableRef}
-                                            listing={printListing}
-                                            provider={userProvider}
-                                            settings={settings}
-                                            onReady={() => setIsReadyForPrint(true)}
-                                        />
-                                    ) : (
-                                        <UserPrintableSaleCar
-                                            ref={printableRef}
-                                            listing={printListing}
-                                            provider={userProvider}
-                                            settings={settings}
-                                            onReady={() => setIsReadyForPrint(true)}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                        {printListing.listing_type === 'rent' ? (
+                            <UserPrintableRentCar
+                                ref={printableRef}
+                                listing={printListing}
+                                provider={userProvider}
+                                settings={settings}
+                                onReady={() => setIsReadyForPrint(true)}
+                            />
+                        ) : (
+                            <UserPrintableSaleCar
+                                ref={printableRef}
+                                listing={printListing}
+                                provider={userProvider}
+                                settings={settings}
+                                onReady={() => setIsReadyForPrint(true)}
+                            />
+                        )}
+                    </PrintPreviewModal>
                 )}
             </AnimatePresence>
         </>

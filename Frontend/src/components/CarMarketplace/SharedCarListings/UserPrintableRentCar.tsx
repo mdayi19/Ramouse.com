@@ -38,10 +38,16 @@ const UserPrintableRentCar = forwardRef<
     // Pre-load logo as base64 for PDF generation
     useEffect(() => {
         const loadLogo = async () => {
-            const logoPath = provider.logo || provider.profile_photo;
+            // Check all possible logo properties from userProvider
+            const logoPath = provider.logo || provider.profile_photo || provider.avatar;
+
             if (logoPath) {
-                const url = getStorageUrl(logoPath);
-                const base64 = await urlToBase64(url);
+                // If it's already a data URL or http URL, try to use it directly or fetch it
+                const fullUrl = logoPath.startsWith('http') || logoPath.startsWith('data:')
+                    ? logoPath
+                    : getStorageUrl(logoPath);
+
+                const base64 = await urlToBase64(fullUrl);
                 if (base64) setLogoBase64(base64);
             }
         };
@@ -111,42 +117,42 @@ const UserPrintableRentCar = forwardRef<
             {/* Print-specific styles */}
             <style>{`
                 @media print {
-                    #printable-rent-car {
-                        page-break-inside: avoid !important;
-                        page-break-after: avoid !important;
-                        page-break-before: avoid !important;
-                        break-inside: avoid-page !important;
-                        display: block !important;
-                        position: relative !important;
-                        max-height: 297mm !important;
-                        height: 297mm !important;
-                        overflow: hidden !important;
-                    }
                     @page { 
                         size: A4 portrait;
                         margin: 0;
                     }
                     html, body {
+                        width: 210mm;
+                        height: 297mm;
                         margin: 0 !important;
                         padding: 0 !important;
-                        overflow: hidden !important;
+                    }
+                    #printable-rent-car {
+                        width: 210mm !important;
                         height: 297mm !important;
+                        max-height: 297mm !important;
+                        overflow: hidden !important;
+                        margin: 0 !important;
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
                     }
                 }
             `}</style>
             <div
                 ref={ref}
                 id="printable-rent-car"
-                className="relative w-[210mm] min-h-[297mm] max-h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border"
+                dir="rtl"
+                lang="ar"
+                className="relative w-[210mm] h-[297mm] mx-auto bg-white p-[10mm] flex flex-col justify-between font-sans text-gray-800 box-border"
+                style={{ fontFamily: 'Tajawal, sans-serif' }}
             >
-                {/* Header - Fixed Position */}
-                <header className="absolute top-[10mm] left-[10mm] right-[10mm] border-b-4 border-blue-600 pb-4 h-[30mm] flex items-start justify-between">
+                {/* Header - Sticky on Print */}
+                <header className="border-b-4 border-blue-600 pb-4 mb-4 flex items-start justify-between shrink-0">
                     <div className="flex items-center gap-4">
                         <img
-                            src={logoBase64 || (provider.logo ? getStorageUrl(provider.logo) : (provider.profile_photo ? getStorageUrl(provider.profile_photo) : "/logo without name.svg"))}
+                            src={logoBase64 || "/logo without name.svg"}
                             alt="Logo"
                             className="h-16 w-16 object-contain rounded-full bg-white"
-                            crossOrigin="anonymous"
                         />
                         <div>
                             <h1 className="text-2xl font-extrabold text-blue-800 leading-tight">
@@ -164,8 +170,8 @@ const UserPrintableRentCar = forwardRef<
                     </div>
                 </header>
 
-                {/* Main Content - Centered Absolute */}
-                <main className="absolute top-[45mm] bottom-[35mm] left-[10mm] right-[10mm] flex flex-col items-center justify-start gap-4">
+                {/* Main Content - Dynamic Flow */}
+                <main className="flex-1 flex flex-col items-center justify-start gap-3 overflow-hidden">
 
                     {/* Hero Title */}
                     <div className="text-center space-y-1 mt-4">
@@ -280,8 +286,8 @@ const UserPrintableRentCar = forwardRef<
 
                 </main>
 
-                {/* Footer - Fixed Bottom */}
-                <footer className="absolute bottom-[10mm] left-[10mm] right-[10mm] pt-4 border-t-4 border-blue-600 h-[25mm] flex items-center justify-between">
+                {/* Footer - Sticky on Print */}
+                <footer className="pt-4 mt-4 border-t-4 border-blue-600 flex items-center justify-between shrink-0">
                     <div className="flex items-center text-gray-800 gap-3">
                         <Icon name="Globe" className="w-5 h-5 text-blue-600" />
                         <span className="text-lg font-black text-gray-800" dir="ltr">

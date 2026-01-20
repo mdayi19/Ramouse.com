@@ -96,36 +96,34 @@ const UserPrintableSaleCar = forwardRef<
             {/* Print-specific styles */}
             <style>{`
                 @media print {
-                    #printable-sale-car {
-                        page-break-inside: avoid !important;
-                        page-break-after: avoid !important;
-                        page-break-before: avoid !important;
-                        break-inside: avoid-page !important;
-                        display: block !important;
-                        position: relative !important;
-                        max-height: 297mm !important;
-                        height: 297mm !important;
-                        overflow: hidden !important;
-                    }
                     @page { 
                         size: A4 portrait;
                         margin: 0;
                     }
                     html, body {
+                        width: 210mm;
+                        height: 297mm;
                         margin: 0 !important;
                         padding: 0 !important;
-                        overflow: hidden !important;
+                    }
+                    #printable-sale-car {
+                        width: 210mm !important;
                         height: 297mm !important;
+                        max-height: 297mm !important;
+                        overflow: hidden !important;
+                        margin: 0 !important;
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
                     }
                 }
             `}</style>
             <div
                 ref={ref}
                 id="printable-sale-car"
-                className="relative w-[210mm] min-h-[297mm] max-h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border"
+                className="relative w-[210mm] h-[297mm] mx-auto bg-white p-[10mm] flex flex-col justify-between font-sans text-gray-800 box-border"
             >
-                {/* Header - Fixed Position */}
-                <header className="absolute top-[10mm] left-[10mm] right-[10mm] border-b-4 border-blue-600 pb-4 h-[30mm] flex items-start justify-between">
+                {/* Header - Sticky on Print */}
+                <header className="border-b-4 border-blue-600 pb-4 mb-4 flex items-start justify-between shrink-0">
                     <div className="flex items-center gap-4">
                         <img
                             src={logoBase64 || (provider.logo ? getStorageUrl(provider.logo) : (provider.profile_photo ? getStorageUrl(provider.profile_photo) : "/logo without name.svg"))}
@@ -149,8 +147,8 @@ const UserPrintableSaleCar = forwardRef<
                     </div>
                 </header>
 
-                {/* Main Content - Centered Absolute */}
-                <main className="absolute top-[45mm] bottom-[35mm] left-[10mm] right-[10mm] flex flex-col items-center justify-start gap-4">
+                {/* Main Content - Dynamic Flow */}
+                <main className="flex-1 flex flex-col items-center justify-start gap-4 overflow-hidden">
 
                     {/* Hero Title */}
                     <div className="text-center space-y-1 mt-4">
@@ -277,8 +275,8 @@ const UserPrintableSaleCar = forwardRef<
 
                 </main>
 
-                {/* Footer - Fixed Bottom */}
-                <footer className="absolute bottom-[10mm] left-[10mm] right-[10mm] pt-4 border-t-4 border-blue-600 h-[25mm] flex items-center justify-between">
+                {/* Footer - Sticky on Print */}
+                <footer className="pt-4 mt-4 border-t-4 border-blue-600 flex items-center justify-between shrink-0">
                     <div className="flex items-center text-gray-800 gap-3">
                         <Icon name="Globe" className="w-5 h-5 text-blue-600" />
                         <span className="text-lg font-black text-gray-800" dir="ltr">

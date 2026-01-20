@@ -8,6 +8,7 @@ import { getStorageUrl } from '../../../config/api';
 import PrintableCarProviderProfile from '../PrintableCarProviderProfile';
 import { Settings } from '../../../types';
 import { SYRIAN_CITIES } from '../../../constants';
+import { PrintPreviewModal } from '../../shared/PrintPreviewModal';
 
 interface SettingsViewProps {
     provider: CarProvider;
@@ -958,80 +959,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
                     </div>
                 </div>
             </div>
-            {
-                showPreview && (
-                    <div className="fixed inset-0 bg-black/70 flex flex-col items-center z-[100] p-4 print:p-0 print:bg-white animate-fade-in">
-                        <style>{`
-                        @media print {
-                            @page {
-                                size: A4 portrait;
-                                margin: 0;
-                            }
-                            html, body {
-                                height: 297mm !important;
-                                width: 210mm !important;
-                                overflow: hidden !important;
-                                margin: 0 !important;
-                                padding: 0 !important;
-                            }
-                            body * {
-                                visibility: hidden;
-                            }
-                            .printable-area, .printable-area * {
-                                visibility: visible;
-                            }
-                            .printable-area {
-                                position: fixed;
-                                top: 0;
-                                left: 50% !important;
-                                transform: translateX(-50%) scale(0.95) !important;
-                                transform-origin: top center !important;
-                                width: 210mm !important;
-                                height: 297mm !important;
-                                margin: 0;
-                                padding: 0;
-                                overflow: hidden !important;
-                                background: white;
-                                z-index: 99999;
-                                page-break-after: avoid !important;
-                                page-break-before: avoid !important;
-                            }
-                            .printable-area > div {
-                                transform: none !important;
-                                width: 100% !important;
-                            }
-                            .print-hidden {
-                                display: none !important;
-                            }
-                        }
-                    `}</style>
-                        <div className="w-full max-w-[210mm] bg-white dark:bg-slate-800 p-3 rounded-t-lg shadow-lg flex justify-between items-center print-hidden">
-                            <h3 className="font-bold text-slate-800 dark:text-slate-200">معاينة الملف الشخصي</h3>
-                            <div className="flex gap-2">
-                                <button onClick={handleDownload} disabled={isGenerating || !isReadyForExport} className="flex items-center gap-2 bg-blue-600 text-white font-semibold text-xs sm:text-sm px-3 py-2 rounded-md disabled:bg-slate-400">
-                                    {isGenerating ? <><Loader className="w-4 h-4 animate-spin" /> جارٍ التحميل...</> : <><Download className="w-4 h-4" /> تحميل PDF</>}
-                                </button>
-                                <button onClick={handlePrint} disabled={!isReadyForExport} className="flex items-center gap-2 bg-slate-600 text-white font-semibold text-xs sm:text-sm px-3 py-2 rounded-md disabled:bg-slate-400">
-                                    <Printer className="w-4 h-4" /> طباعة
-                                </button>
-                                <button onClick={() => setShowPreview(false)} className="text-2xl text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white p-1">&times;</button>
-                            </div>
-                        </div>
-
-                        <div className="printable-area w-full max-w-[210mm] h-[calc(100vh-80px)] print:h-auto overflow-y-auto bg-white shadow-lg pb-10">
-                            {/* The content is scaled slightly on mobile screens to fit width if needed */}
-                            <div className="md:scale-100 scale-[0.8] origin-top-left w-[125%] md:w-full">
-                                <PrintableCarProviderProfile
-                                    ref={printableProfileRef}
-                                    provider={{ ...provider, ...formData, profile_photo: logoPreview || undefined, cover_photo: coverPreview || undefined, gallery: gallery as string[] }}
-                                    settings={settings}
-                                    onReady={() => setIsReadyForExport(true)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            {showPreview && (
+                <PrintPreviewModal
+                    title="معاينة الملف الشخصي"
+                    onClose={() => setShowPreview(false)}
+                    onPrint={handlePrint}
+                    onDownloadPdf={handleDownload}
+                    isGeneratingPdf={isGenerating}
+                    isReadyForPrint={isReadyForExport}
+                >
+                    <PrintableCarProviderProfile
+                        ref={printableProfileRef}
+                        provider={{ ...provider, ...formData, profile_photo: logoPreview || undefined, cover_photo: coverPreview || undefined, gallery: gallery as string[] }}
+                        settings={settings}
+                        onReady={() => setIsReadyForExport(true)}
+                    />
+                </PrintPreviewModal>
+            )}
         </motion.div >
     );
 };

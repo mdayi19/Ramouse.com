@@ -8,6 +8,7 @@ import React, {
 import { Technician, Settings } from '../types';
 import Icon from './Icon';
 import { toCanvas } from 'qrcode';
+import { urlToBase64 } from '../utils/helpers';
 
 /* ---------------------------------- */
 /* Social Link Component               */
@@ -70,6 +71,27 @@ const PrintableTechnicianProfile = forwardRef<
 }, ref) => {
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const readyCalledRef = useRef(false);
+    const [profilePhotoBase64, setProfilePhotoBase64] = React.useState<string>('');
+    const [headerLogoBase64, setHeaderLogoBase64] = React.useState<string>('');
+
+    // Pre-load profile photo and header logo
+    useEffect(() => {
+        const loadImages = async () => {
+            // Profile photo
+            if (technician.profilePhoto) {
+                const base64 = await urlToBase64(technician.profilePhoto);
+                if (base64) setProfilePhotoBase64(base64);
+            }
+
+            // Header logo
+            const logoUrl = settings.logoUrl || "/logo without name.svg";
+            if (logoUrl.startsWith('http')) {
+                const base64 = await urlToBase64(logoUrl);
+                if (base64) setHeaderLogoBase64(base64);
+            }
+        };
+        loadImages();
+    }, [technician.profilePhoto, settings.logoUrl]);
 
     /* -------- Profile URL -------- */
     const profileUrl = useMemo(() => {
@@ -132,46 +154,70 @@ const PrintableTechnicianProfile = forwardRef<
         <div
             ref={ref}
             id="printable-profile"
-            className="relative w-[210mm] h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border overflow-hidden"
+            dir="rtl"
+            lang="ar"
+            className="relative w-[210mm] min-h-[297mm] mx-auto bg-white p-[10mm] flex flex-col font-sans text-gray-800 box-border overflow-visible"
+            style={{ fontFamily: 'Tajawal, sans-serif' }}
         >
-            {/* Header */}
-            <header className="border-b-4 border-primary-600 pb-4 mb-4 shrink-0">
-                <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                        <img
-                            src="/logo without name.svg"
-                            alt="Logo"
-                            className="h-20 w-20 object-contain"
-                        />
-                        <div>
-                            <h1 className="text-3xl font-extrabold text-primary-800 leading-tight">
-                                {settings.appName}
-                            </h1>
-                            <p className="text-sm text-gray-500 mt-1">
-                                منصة موثوقة لخدمات السيارات في سوريا
-                            </p>
-                        </div>
+            {/* Print-specific styles */}
+            <style>{`
+                @media print {
+                    @page { 
+                        size: A4 portrait;
+                        margin: 0;
+                    }
+                    html, body {
+                        width: 210mm;
+                        height: 297mm;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    #printable-profile {
+                        width: 210mm !important;
+                        height: 297mm !important;
+                        margin: 0 !important;
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
+                }
+            `}</style>
+            {/* Header - Sticky on Print */}
+            <header className="border-b-4 border-primary-600 pb-4 mb-4 flex items-start justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                    <img
+                        src={headerLogoBase64 || settings.logoUrl || "/logo without name.svg"}
+                        alt="Logo"
+                        className="h-20 w-20 object-contain"
+                    />
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-primary-800 leading-tight">
+                            {settings.appName}
+                        </h1>
+                        <p className="text-sm text-gray-500 mt-1">
+                            منصة موثوقة لخدمات السيارات في سوريا
+                        </p>
                     </div>
-                    <div className="text-right">
-                        <h2 className="text-2xl font-bold text-gray-700 mb-2">
-                            ملف فني معتمد
-                        </h2>
+                </div>
+                <div className="text-right">
+                    <h2 className="text-2xl font-bold text-gray-700 mb-2">
+                        ملف فني معتمد
+                    </h2>
 
-                    </div>
                 </div>
             </header>
 
-            {/* Main */}
-            <main className="flex-grow flex flex-col items-center justify-start text-center py-2 px-4 gap-4 pb-16">
+            {/* Main Content - Dynamic Flow */}
+            <main className="flex-1 flex flex-col items-center justify-start text-center gap-2 py-2 overflow-hidden">
                 {/* Profile */}
                 {/* Profile */}
                 <div className="flex flex-row items-center justify-center gap-6 shrink-0 w-full mt-4 px-8 dir-rtl text-right">
                     {technician.profilePhoto && (
                         <div className="relative shrink-0">
                             <img
-                                src={technician.profilePhoto}
+                                src={profilePhotoBase64 || technician.profilePhoto}
                                 alt={technician.name}
                                 className="relative w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-xl"
+                                crossOrigin="anonymous"
                             />
                         </div>
                     )}
@@ -265,8 +311,8 @@ const PrintableTechnicianProfile = forwardRef<
 
             </main>
 
-            {/* Enhanced Footer */}
-            <footer className="absolute bottom-[10mm] left-[10mm] right-[10mm] pt-2 border-t-4 border-primary-600 bg-white z-[99999] print:visible print:block !important">
+            {/* Footer - Sticky on Print */}
+            <footer className="pt-2 mt-4 border-t-4 border-primary-600 flex justify-between items-center shrink-0">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center text-gray-800 gap-3">
                         <Icon
