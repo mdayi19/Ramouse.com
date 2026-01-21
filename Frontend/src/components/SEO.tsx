@@ -14,7 +14,7 @@ interface SEOProps {
         type?: 'website' | 'article' | 'profile';
     };
     schema?: {
-        type: 'Organization' | 'WebSite' | 'LocalBusiness' | 'Product' | 'BreadcrumbList' | 'Article' | 'BlogPosting' | 'AutoRepair' | 'AutomotiveBusiness';
+        type: 'Organization' | 'WebSite' | 'LocalBusiness' | 'Product' | 'BreadcrumbList' | 'Article' | 'BlogPosting' | 'AutoRepair' | 'AutomotiveBusiness' | 'Dataset';
         data: any;
     };
 }

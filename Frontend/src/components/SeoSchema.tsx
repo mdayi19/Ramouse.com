@@ -2,7 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
 interface SeoSchemaProps {
-    type: 'Organization' | 'WebSite' | 'LocalBusiness' | 'Product' | 'BreadcrumbList' | 'Article' | 'BlogPosting' | 'AutoRepair' | 'AutomotiveBusiness';
+    type: 'Organization' | 'WebSite' | 'LocalBusiness' | 'Product' | 'BreadcrumbList' | 'Article' | 'BlogPosting' | 'AutoRepair' | 'AutomotiveBusiness' | 'Dataset';
     data: any;
 }
 
