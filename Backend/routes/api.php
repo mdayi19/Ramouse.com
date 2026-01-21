@@ -43,6 +43,9 @@ Route::get('/sitemap/products.xml', [App\Http\Controllers\SitemapController::cla
 Route::get('/feed/car-listings.xml', [App\Http\Controllers\FeedController::class, 'carListings']);
 Route::get('/feed/car-rentals.xml', [App\Http\Controllers\FeedController::class, 'carRentals']);
 Route::get('/feed/products.xml', [App\Http\Controllers\FeedController::class, 'products']);
+Route::get('/feed/car-providers.xml', [App\Http\Controllers\FeedController::class, 'carProviders']);
+Route::get('/feed/technicians.xml', [App\Http\Controllers\FeedController::class, 'technicians']);
+Route::get('/feed/tow-trucks.xml', [App\Http\Controllers\FeedController::class, 'towTrucks']);
 
 // Entity Metadata - JSON-LD structured data
 Route::get('/entity/{type}/{id}', [App\Http\Controllers\EntityController::class, 'show']);

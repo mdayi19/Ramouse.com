@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\CarListing;
 use App\Models\Product;
+use App\Models\CarProvider;
+use App\Models\Technician;
+use App\Models\TowTruck;
 use Illuminate\Support\Facades\Cache;
 use OpenApi\Attributes as OA;
 use Carbon\Carbon;
@@ -138,7 +141,7 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
-                $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name) . "\" />";
+                $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name ?? 'Unknown') . "\" />";
                 $entry .= "<category term=\"{$listing->city}\" />";
                 $entry .= "<category term=\"{$listing->listing_type}\" />";
                 $entry .= "<category term=\"{$listing->condition}\" />";
@@ -228,7 +231,7 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
-                $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name) . "\" />";
+                $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name ?? 'Unknown') . "\" />";
                 $entry .= "<category term=\"{$listing->city}\" />";
                 $entry .= "<category term=\"rent\" />";
                 $entry .= "<category term=\"Syria\" />";
@@ -314,6 +317,242 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
                 $entry .= "<category term=\"{$categoryName}\" />";
                 $entry .= "<category term=\"car-parts\" />";
+                $entry .= "<category term=\"Syria\" />";
+                $entry .= "</entry>";
+                return $entry;
+            }
+        );
+    }
+
+    /**
+     * Car Providers Atom feed (latest 20)
+     */
+    #[OA\Get(
+        path: "/api/feed/car-providers.xml",
+        operationId: "getCarProvidersFeed",
+        tags: ["GEO"],
+        summary: "Get car providers Atom feed",
+        description: "Returns Atom 1.0 feed with the latest 20 registered car providers. Updates every 5 minutes.",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Atom feed XML",
+                content: new OA\MediaType(
+                    mediaType: "application/atom+xml",
+                    schema: new OA\Schema(type: "string")
+                )
+            )
+        ]
+    )]
+    public function carProviders()
+    {
+        return $this->generateFeed(
+            'feed:car-providers',
+            'Ramouse.com - Newest Car Providers in Syria',
+            'Real-time feed of newly registered car dealerships and providers in Syria',
+            '/feed/car-providers.xml',
+            '/car-providers',
+            function () {
+                return Cache::remember('feed:car-providers-data', 300, function () {
+                    return CarProvider::where('is_active', true)
+                        ->where('is_verified', true)
+                        ->latest('created_at')
+                        ->limit(20)
+                        ->get();
+                });
+            },
+            function ($provider) {
+                $url = url('/car-providers/' . $provider->id);
+                $id = url('/entity/car-provider/' . $provider->id);
+                $updated = $provider->updated_at->toAtomString();
+                $published = $provider->created_at->toAtomString();
+                $name = htmlspecialchars($provider->name);
+                $city = htmlspecialchars($provider->city);
+
+                $summary = htmlspecialchars("New Car Provider in {$city}: {$name}. Visit their profile for latest listings.");
+
+                $contentHtml = "<h2>{$name}</h2>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
+
+                if ($provider->description) {
+                    $desc = htmlspecialchars($provider->description);
+                    $contentHtml .= "<h3>About</h3><p>{$desc}</p>";
+                }
+
+                if ($provider->profile_photo) {
+                    $imgUrl = asset('storage/' . $provider->profile_photo);
+                    $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
+                }
+
+                $entry = "<entry>";
+                $entry .= "<title>{$name}</title>";
+                $entry .= "<link href=\"{$url}\" />";
+                $entry .= "<id>{$id}</id>";
+                $entry .= "<updated>{$updated}</updated>";
+                $entry .= "<published>{$published}</published>";
+                $entry .= "<summary type=\"text\">{$summary}</summary>";
+                $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+                $entry .= "<category term=\"Car Provider\" />";
+                $entry .= "<category term=\"{$city}\" />";
+                $entry .= "<category term=\"Syria\" />";
+                $entry .= "</entry>";
+                return $entry;
+            }
+        );
+    }
+
+    /**
+     * Technicians Atom feed (latest 20)
+     */
+    #[OA\Get(
+        path: "/api/feed/technicians.xml",
+        operationId: "getTechniciansFeed",
+        tags: ["GEO"],
+        summary: "Get technicians Atom feed",
+        description: "Returns Atom 1.0 feed with the latest 20 registered technicians. Updates every 5 minutes.",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Atom feed XML",
+                content: new OA\MediaType(
+                    mediaType: "application/atom+xml",
+                    schema: new OA\Schema(type: "string")
+                )
+            )
+        ]
+    )]
+    public function technicians()
+    {
+        return $this->generateFeed(
+            'feed:technicians',
+            'Ramouse.com - Newest Technicians in Syria',
+            'Real-time feed of newly registered automotive technicians in Syria',
+            '/feed/technicians.xml',
+            '/technicians',
+            function () {
+                return Cache::remember('feed:technicians-data', 300, function () {
+                    return Technician::where('is_active', true)
+                        ->where('is_verified', true)
+                        ->latest('created_at')
+                        ->limit(20)
+                        ->get();
+                });
+            },
+            function ($tech) {
+                $url = url('/technicians/' . $tech->id);
+                $id = url('/entity/technician/' . $tech->id);
+                $updated = $tech->updated_at->toAtomString();
+                $published = $tech->created_at->toAtomString();
+                $name = htmlspecialchars($tech->name);
+                $city = htmlspecialchars($tech->city);
+                $specialty = htmlspecialchars($tech->specialty ?? 'General Mechanic');
+
+                $summary = htmlspecialchars("New Technician in {$city}: {$name}. Specialty: {$specialty}.");
+
+                $contentHtml = "<h2>{$name}</h2>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
+                $contentHtml .= "<p><strong>Specialty:</strong> {$specialty}</p>";
+
+                if ($tech->description) {
+                    $desc = htmlspecialchars($tech->description);
+                    $contentHtml .= "<h3>About</h3><p>{$desc}</p>";
+                }
+
+                if ($tech->profile_photo) {
+                    $imgUrl = asset('storage/' . $tech->profile_photo);
+                    $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
+                }
+
+                $entry = "<entry>";
+                $entry .= "<title>{$name}</title>";
+                $entry .= "<link href=\"{$url}\" />";
+                $entry .= "<id>{$id}</id>";
+                $entry .= "<updated>{$updated}</updated>";
+                $entry .= "<published>{$published}</published>";
+                $entry .= "<summary type=\"text\">{$summary}</summary>";
+                $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+                $entry .= "<category term=\"Technician\" />";
+                $entry .= "<category term=\"{$specialty}\" />";
+                $entry .= "<category term=\"{$city}\" />";
+                $entry .= "<category term=\"Syria\" />";
+                $entry .= "</entry>";
+                return $entry;
+            }
+        );
+    }
+
+    /**
+     * Tow Trucks Atom feed (latest 20)
+     */
+    #[OA\Get(
+        path: "/api/feed/tow-trucks.xml",
+        operationId: "getTowTrucksFeed",
+        tags: ["GEO"],
+        summary: "Get tow trucks Atom feed",
+        description: "Returns Atom 1.0 feed with the latest 20 registered tow trucks. Updates every 5 minutes.",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Atom feed XML",
+                content: new OA\MediaType(
+                    mediaType: "application/atom+xml",
+                    schema: new OA\Schema(type: "string")
+                )
+            )
+        ]
+    )]
+    public function towTrucks()
+    {
+        return $this->generateFeed(
+            'feed:tow-trucks',
+            'Ramouse.com - Newest Tow Trucks in Syria',
+            'Real-time feed of newly registered tow truck services in Syria',
+            '/feed/tow-trucks.xml',
+            '/tow-trucks',
+            function () {
+                return Cache::remember('feed:tow-trucks-data', 300, function () {
+                    return TowTruck::where('is_active', true)
+                        ->where('is_verified', true)
+                        ->latest('created_at')
+                        ->limit(20)
+                        ->get();
+                });
+            },
+            function ($truck) {
+                $url = url('/tow-trucks/' . $truck->id);
+                $id = url('/entity/tow-truck/' . $truck->id);
+                $updated = $truck->updated_at->toAtomString();
+                $published = $truck->created_at->toAtomString();
+                $name = htmlspecialchars($truck->name);
+                $city = htmlspecialchars($truck->city);
+                $vehicleType = htmlspecialchars($truck->vehicle_type ?? 'Standard Tow Truck');
+
+                $summary = htmlspecialchars("New Tow Truck in {$city}: {$name}. Vehicle Type: {$vehicleType}.");
+
+                $contentHtml = "<h2>{$name}</h2>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
+                $contentHtml .= "<p><strong>Vehicle Type:</strong> {$vehicleType}</p>";
+
+                if ($truck->description) {
+                    $desc = htmlspecialchars($truck->description);
+                    $contentHtml .= "<h3>About</h3><p>{$desc}</p>";
+                }
+
+                if ($truck->profile_photo) {
+                    $imgUrl = asset('storage/' . $truck->profile_photo);
+                    $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
+                }
+
+                $entry = "<entry>";
+                $entry .= "<title>{$name}</title>";
+                $entry .= "<link href=\"{$url}\" />";
+                $entry .= "<id>{$id}</id>";
+                $entry .= "<updated>{$updated}</updated>";
+                $entry .= "<published>{$published}</published>";
+                $entry .= "<summary type=\"text\">{$summary}</summary>";
+                $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+                $entry .= "<category term=\"Tow Truck\" />";
+                $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
                 $entry .= "</entry>";
                 return $entry;
