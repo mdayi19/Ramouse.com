@@ -262,8 +262,7 @@ class SitemapController extends Controller
     public function products()
     {
         return $this->generateXml('products', function () {
-            return Product::where('is_active', true)
-                ->where('total_stock', '>', 0)
+            return Product::where('total_stock', '>', 0)
                 ->with('category')
                 ->orderBy('updated_at', 'desc')
                 ->get();
