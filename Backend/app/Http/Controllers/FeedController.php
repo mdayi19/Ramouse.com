@@ -21,7 +21,7 @@ class FeedController extends Controller
         try {
             // Updated XML building logic manually to avoid Blade issues
             $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-            $xml .= '<feed xmlns="http://www.w3.org/2005/Atom">';
+            $xml .= '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">';
             $xml .= '<title>' . htmlspecialchars($title) . '</title>';
             $xml .= '<link href="' . url($selfLink) . '" rel="self" />';
             $xml .= '<link href="' . url($feedLink) . '" />';
@@ -141,6 +141,22 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Media RSS Tags
+                if ($listing->video_url) {
+                    $entry .= '<media:content url="' . htmlspecialchars($listing->video_url) . '" medium="video" />';
+                }
+
+                if ($listing->photos && is_array($listing->photos)) {
+                    foreach ($listing->photos as $index => $photo) {
+                        $imgUrl = asset('storage/' . $photo);
+                        // First photo as enclosure
+                        if ($index === 0) {
+                            $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
+                        }
+                        $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                    }
+                }
                 $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name ?? 'Unknown') . "\" />";
                 $entry .= "<category term=\"{$listing->city}\" />";
                 $entry .= "<category term=\"{$listing->listing_type}\" />";
@@ -197,7 +213,7 @@ class FeedController extends Controller
                 $updated = $listing->updated_at->toAtomString();
                 $published = $listing->created_at->toAtomString();
                 $title = htmlspecialchars($listing->title);
-                $price = number_format($listing->daily_price_usd ?? 0);
+                $price = number_format($listing->price ?? 0);
                 $transmission = ucfirst($listing->transmission);
                 $fuel = ucfirst($listing->fuel_type);
 
@@ -231,6 +247,17 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Media RSS Tags
+                if ($listing->photos && is_array($listing->photos)) {
+                    foreach ($listing->photos as $index => $photo) {
+                        $imgUrl = asset('storage/' . $photo);
+                        if ($index === 0) {
+                            $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
+                        }
+                        $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                    }
+                }
                 $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name ?? 'Unknown') . "\" />";
                 $entry .= "<category term=\"{$listing->city}\" />";
                 $entry .= "<category term=\"rent\" />";
@@ -315,6 +342,17 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Media RSS Tags
+                if (is_array($product->media) && count($product->media) > 0) {
+                    foreach ($product->media as $index => $image) {
+                        $imgUrl = asset('storage/' . $image);
+                        if ($index === 0) {
+                            $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
+                        }
+                        $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                    }
+                }
                 $entry .= "<category term=\"{$categoryName}\" />";
                 $entry .= "<category term=\"car-parts\" />";
                 $entry .= "<category term=\"Syria\" />";
@@ -384,6 +422,10 @@ class FeedController extends Controller
                     $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
                 }
 
+                if ($provider->business_type) {
+                    $contentHtml .= "<p><strong>Type:</strong> " . ucfirst($provider->business_type) . "</p>";
+                }
+
                 $entry = "<entry>";
                 $entry .= "<title>{$name}</title>";
                 $entry .= "<link href=\"{$url}\" />";
@@ -392,6 +434,20 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Media RSS Tags
+                if ($provider->profile_photo) {
+                    $imgUrl = asset('storage/' . $provider->profile_photo);
+                    $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
+                    $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                }
+
+                if ($provider->gallery && is_array($provider->gallery)) {
+                    foreach ($provider->gallery as $image) {
+                        $imgUrl = asset('storage/' . $image);
+                        $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                    }
+                }
                 $entry .= "<category term=\"Car Provider\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
@@ -471,6 +527,20 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Media RSS Tags
+                if ($tech->profile_photo) {
+                    $imgUrl = asset('storage/' . $tech->profile_photo);
+                    $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
+                    $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                }
+
+                if ($tech->gallery && is_array($tech->gallery)) {
+                    foreach ($tech->gallery as $image) {
+                        $imgUrl = asset('storage/' . $image);
+                        $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                    }
+                }
                 $entry .= "<category term=\"Technician\" />";
                 $entry .= "<category term=\"{$specialty}\" />";
                 $entry .= "<category term=\"{$city}\" />";
@@ -551,6 +621,20 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Media RSS Tags
+                if ($truck->profile_photo) {
+                    $imgUrl = asset('storage/' . $truck->profile_photo);
+                    $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
+                    $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                }
+
+                if ($truck->gallery && is_array($truck->gallery)) {
+                    foreach ($truck->gallery as $image) {
+                        $imgUrl = asset('storage/' . $image);
+                        $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
+                    }
+                }
                 $entry .= "<category term=\"Tow Truck\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
