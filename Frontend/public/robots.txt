@@ -34,3 +34,6 @@ Sitemap: https://ramouse.com/api/sitemap/products.xml
 Sitemap: https://ramouse.com/api/feed/car-listings.xml
 Sitemap: https://ramouse.com/api/feed/car-rentals.xml
 Sitemap: https://ramouse.com/api/feed/products.xml
+Sitemap: https://ramouse.com/api/feed/car-providers.xml
+Sitemap: https://ramouse.com/api/feed/technicians.xml
+Sitemap: https://ramouse.com/api/feed/tow-trucks.xml
