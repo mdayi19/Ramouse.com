@@ -72,6 +72,23 @@ class SitemapController extends Controller
                 $xml .= '</sitemap>';
             }
 
+            // ADDED: Include Feeds in Sitemap Index for AI Discovery
+            $feeds = [
+                'car-listings',
+                'car-rentals',
+                'products',
+                'car-providers',
+                'technicians',
+                'tow-trucks'
+            ];
+
+            foreach ($feeds as $type) {
+                $xml .= '<sitemap>';
+                $xml .= '<loc>' . url("/api/feed/{$type}.xml") . '</loc>';
+                $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>"; // Feeds are real-time
+                $xml .= '</sitemap>';
+            }
+
             $xml .= '</sitemapindex>';
 
             return response($xml, 200)->header('Content-Type', 'application/xml');
