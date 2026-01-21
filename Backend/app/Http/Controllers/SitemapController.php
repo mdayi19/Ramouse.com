@@ -37,35 +37,49 @@ class SitemapController extends Controller
     )]
     public function index()
     {
-        $sitemaps = [
-            [
-                'loc' => url('/api/sitemap/car-listings.xml'),
-                'lastmod' => CarListing::where('listing_type', 'sale')->max('updated_at')
-            ],
-            [
-                'loc' => url('/api/sitemap/car-rentals.xml'),
-                'lastmod' => CarListing::where('listing_type', 'rent')->max('updated_at')
-            ],
-            [
-                'loc' => url('/api/sitemap/car-providers.xml'),
-                'lastmod' => CarProvider::max('updated_at')
-            ],
-            [
-                'loc' => url('/api/sitemap/technicians.xml'),
-                'lastmod' => Technician::max('updated_at')
-            ],
-            [
-                'loc' => url('/api/sitemap/tow-trucks.xml'),
-                'lastmod' => TowTruck::max('updated_at')
-            ],
-            [
-                'loc' => url('/api/sitemap/products.xml'),
-                'lastmod' => Product::max('updated_at')
-            ],
-        ];
+        try {
+            // Get last modified dates safely
+            $lastMods = [
+                'car-listings' => CarListing::where('listing_type', 'sale')->max('updated_at'),
+                'car-rentals' => CarListing::where('listing_type', 'rent')->max('updated_at'),
+                'car-providers' => CarProvider::max('updated_at'),
+                'technicians' => Technician::max('updated_at'),
+                'tow-trucks' => TowTruck::max('updated_at'),
+                'products' => Product::max('updated_at'),
+            ];
 
-        return response()->view('sitemaps.index', compact('sitemaps'))
-            ->header('Content-Type', 'application/xml');
+            $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+            $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+            $sitemaps = [
+                'car-listings',
+                'car-rentals',
+                'car-providers',
+                'technicians',
+                'tow-trucks',
+                'products'
+            ];
+
+            foreach ($sitemaps as $type) {
+                $xml .= '<sitemap>';
+                $xml .= '<loc>' . url("/api/sitemap/{$type}.xml") . '</loc>';
+                if (!empty($lastMods[$type])) {
+                    $date = \Carbon\Carbon::parse($lastMods[$type])->toAtomString();
+                    $xml .= "<lastmod>{$date}</lastmod>";
+                } else {
+                    $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>";
+                }
+                $xml .= '</sitemap>';
+            }
+
+            $xml .= '</sitemapindex>';
+
+            return response($xml, 200)->header('Content-Type', 'application/xml');
+
+        } catch (\Exception $e) {
+            \Log::error('Sitemap Index Error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
