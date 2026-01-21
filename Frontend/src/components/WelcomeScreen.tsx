@@ -3,7 +3,7 @@ import { View, OrderFormData, TechnicianSpecialty } from '../types';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import SEO from './SEO';
 import Icon from './Icon';
-import SephSchema from './SeoSchema';
+import SeoSchema from './SeoSchema';
 import { generateDatasetSchema } from '../utils/structuredData';
 
 // Lazy load the two screen variants
