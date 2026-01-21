@@ -149,6 +149,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
   return (
     <div className="w-full min-h-screen text-slate-900 dark:text-white" dir="rtl">
       {/* SEO Meta Tags */}
+      import {generateDatasetSchema} from '../utils/structuredData';
+      import SeoSchema from './SeoSchema';
+
+      // ... (existing imports)
+
+      // Inside WelcomeScreen component render:
       <SEO
         title="راموسة | المنصة الأولى لخدمات السيارات في سوريا"
         description="اربط سيارتك بأفضل الفنيين، سطحات النقل، ومزودي قطع الغيار في سوريا. خدمة سريعة، أسعار شفافة، وموثوقية عالية."
@@ -170,6 +176,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
           }
         }}
       />
+
+      {/* Dataset Schema for AI Authority */}
+      <SeoSchema type="Dataset" data={generateDatasetSchema()} />
 
       {/* Animated Background */}
       <AnimatedBackground />

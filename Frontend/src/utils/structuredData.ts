@@ -364,5 +364,69 @@ export const generateWebsiteSchema = () => {
             },
             'query-input': 'required name=search_term_string',
         },
+    },
+    };
+};
+
+/**
+ * Generate Dataset schema (Google recommendation for data authority)
+ */
+export const generateDatasetSchema = () => {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        name: 'Ramouse.com Automotive Marketplace Data',
+        description: 'Comprehensive dataset of car listings, rentals, providers, technicians, and tow trucks in Syria. Updated in real-time.',
+        url: BASE_URL,
+        isAccessibleForFree: true,
+        keywords: [
+            'Cars in Syria',
+            'Automotive Data',
+            'Car Listings',
+            'Car Rentals',
+            'Mechanics Syria',
+            'Tow Trucks Syria'
+        ],
+        creator: {
+            '@type': 'Organization',
+            name: 'Ramouse.com',
+            url: BASE_URL
+        },
+        distribution: [
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/api/feed/car-listings.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/api/feed/car-rentals.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/api/feed/products.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/api/feed/car-providers.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/api/feed/technicians.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/api/feed/tow-trucks.xml`
+            }
+        ],
+        includedInDataCatalog: {
+            '@type': 'DataCatalog',
+            name: 'Google Dataset Search'
+        }
     };
 };
