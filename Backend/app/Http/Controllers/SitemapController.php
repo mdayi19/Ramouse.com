@@ -39,27 +39,27 @@ class SitemapController extends Controller
     {
         $sitemaps = [
             [
-                'loc' => url('/sitemap/car-listings.xml'),
+                'loc' => url('/api/sitemap/car-listings.xml'),
                 'lastmod' => CarListing::where('listing_type', 'sale')->max('updated_at')
             ],
             [
-                'loc' => url('/sitemap/car-rentals.xml'),
+                'loc' => url('/api/sitemap/car-rentals.xml'),
                 'lastmod' => CarListing::where('listing_type', 'rent')->max('updated_at')
             ],
             [
-                'loc' => url('/sitemap/car-providers.xml'),
+                'loc' => url('/api/sitemap/car-providers.xml'),
                 'lastmod' => CarProvider::max('updated_at')
             ],
             [
-                'loc' => url('/sitemap/technicians.xml'),
+                'loc' => url('/api/sitemap/technicians.xml'),
                 'lastmod' => Technician::max('updated_at')
             ],
             [
-                'loc' => url('/sitemap/tow-trucks.xml'),
+                'loc' => url('/api/sitemap/tow-trucks.xml'),
                 'lastmod' => TowTruck::max('updated_at')
             ],
             [
-                'loc' => url('/sitemap/products.xml'),
+                'loc' => url('/api/sitemap/products.xml'),
                 'lastmod' => Product::max('updated_at')
             ],
         ];
