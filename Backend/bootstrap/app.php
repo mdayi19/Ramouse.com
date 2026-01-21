@@ -17,7 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'log.requests' => \App\Http\Middleware\LogRequests::class,
             'check.account.status' => \App\Http\Middleware\CheckAccountStatus::class,
             'provenance' => \App\Http\Middleware\AddProvenanceHeaders::class,
+            'public.feed' => \App\Http\Middleware\AllowPublicFeed::class,
         ]);
+
+        // Replace default CORS handler with SmartCors to allow public feeds
+        $middleware->replace(\Illuminate\Http\Middleware\HandleCors::class, \App\Http\Middleware\SmartCors::class);
 
         // Apply account status check to all sanctum-protected routes
         $middleware->appendToGroup('sanctum', [

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Customer, AdminFlashProduct, FlashProductBuyerRequest, Notification, NotificationType, Settings, StoreCategory, Provider, Technician, TowTruck, PaymentMethod, ShippingPriceByCity } from '../../types';
 import Icon from '../Icon';
+import SEO from '../SEO';
 import { fileToBase64 } from '../../utils/helpers';
 import { SYRIAN_CITIES } from '../../constants';
 import { ProductPage } from './ProductPage';
@@ -525,6 +526,13 @@ export const StoreView: React.FC<StoreViewProps> = ({ customer, provider, techni
 
     return (
         <div className="flex flex-col h-full w-full animate-fade-in bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-800" ref={topRef}>
+            {/* SEO Metadata */}
+            <SEO
+                title={`متجر قطع غيار السيارات - ${products.length} منتج متاح | راموسة`}
+                description="تسوق أفضل قطع غيار السيارات، زيوت، بطاريات، وإكسسوارات في سوريا. توصيل سريع لجميع المحافظات وأسعار منافسة."
+                canonical="/store"
+            />
+
             {/* Banner Carousel - Enhanced */}
             <div className="mb-4 md:mb-6">
                 <BannerCarousel banners={settings.storeBanners || []} />

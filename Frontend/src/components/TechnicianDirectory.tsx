@@ -11,6 +11,7 @@ import { DirectoryService } from '../services/directory.service';
 import { DEFAULT_TECHNICIAN_SPECIALTIES, SYRIAN_CITIES } from '../constants';
 import { BASE_URL } from '../lib/api';
 import DirectoryCardSkeleton from './DirectoryCardSkeleton';
+import SEO from './SEO';
 
 interface TechnicianDirectoryProps {
     allTechnicians: Technician[];
@@ -395,6 +396,13 @@ export const TechnicianDirectory: React.FC<TechnicianDirectoryProps> = ({
 
     return (
         <div className="p-3 sm:p-6 w-full animate-fade-in min-h-screen bg-slate-50 dark:bg-slate-900" ref={topRef}>
+            {/* SEO Metadata */}
+            <SEO
+                title={`دليل الفنيين - ${technicians.length > 0 ? technicians.length + ' فني متاح' : 'أفضل الفنيين'} | راموسة`}
+                description="تصفح قائمة أفضل الفنيين ومراكز صيانة السيارات في سوريا. ميكانيك، كهرباء، دوزان، والمزيد. ابحث عن الفني الأقرب إليك."
+                canonical="/technicians"
+            />
+
             {/* Mobile Header with Sticky Back Button */}
             <div className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm pt-3 pb-4 -mx-3 px-3 border-b border-slate-200 dark:border-slate-700 mb-4 md:hidden">
                 <div className="flex items-center justify-between">

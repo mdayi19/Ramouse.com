@@ -31,21 +31,25 @@ Route::match(['get', 'head'], '/ping', function () {
 
 // ======== GEO (GENERATIVE ENGINE OPTIMIZATION) ROUTES ========
 // Sitemaps - Dynamic XML sitemaps for AI crawlers
-Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
-Route::get('/sitemap/car-listings.xml', [App\Http\Controllers\SitemapController::class, 'carListings']);
-Route::get('/sitemap/car-rentals.xml', [App\Http\Controllers\SitemapController::class, 'carRentals']);
-Route::get('/sitemap/car-providers.xml', [App\Http\Controllers\SitemapController::class, 'carProviders']);
-Route::get('/sitemap/technicians.xml', [App\Http\Controllers\SitemapController::class, 'technicians']);
-Route::get('/sitemap/tow-trucks.xml', [App\Http\Controllers\SitemapController::class, 'towTrucks']);
-Route::get('/sitemap/products.xml', [App\Http\Controllers\SitemapController::class, 'products']);
+Route::middleware(['public.feed'])->group(function () {
+    Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
+    Route::get('/sitemap/car-listings.xml', [App\Http\Controllers\SitemapController::class, 'carListings']);
+    Route::get('/sitemap/car-rentals.xml', [App\Http\Controllers\SitemapController::class, 'carRentals']);
+    Route::get('/sitemap/car-providers.xml', [App\Http\Controllers\SitemapController::class, 'carProviders']);
+    Route::get('/sitemap/technicians.xml', [App\Http\Controllers\SitemapController::class, 'technicians']);
+    Route::get('/sitemap/tow-trucks.xml', [App\Http\Controllers\SitemapController::class, 'towTrucks']);
+    Route::get('/sitemap/products.xml', [App\Http\Controllers\SitemapController::class, 'products']);
+});
 
 // Feeds - Real-time Atom feeds for AI systems
-Route::get('/feed/car-listings.xml', [App\Http\Controllers\FeedController::class, 'carListings']);
-Route::get('/feed/car-rentals.xml', [App\Http\Controllers\FeedController::class, 'carRentals']);
-Route::get('/feed/products.xml', [App\Http\Controllers\FeedController::class, 'products']);
-Route::get('/feed/car-providers.xml', [App\Http\Controllers\FeedController::class, 'carProviders']);
-Route::get('/feed/technicians.xml', [App\Http\Controllers\FeedController::class, 'technicians']);
-Route::get('/feed/tow-trucks.xml', [App\Http\Controllers\FeedController::class, 'towTrucks']);
+Route::middleware(['public.feed'])->group(function () {
+    Route::get('/feed/car-listings.xml', [App\Http\Controllers\FeedController::class, 'carListings']);
+    Route::get('/feed/car-rentals.xml', [App\Http\Controllers\FeedController::class, 'carRentals']);
+    Route::get('/feed/products.xml', [App\Http\Controllers\FeedController::class, 'products']);
+    Route::get('/feed/car-providers.xml', [App\Http\Controllers\FeedController::class, 'carProviders']);
+    Route::get('/feed/technicians.xml', [App\Http\Controllers\FeedController::class, 'technicians']);
+    Route::get('/feed/tow-trucks.xml', [App\Http\Controllers\FeedController::class, 'towTrucks']);
+});
 
 // Entity Metadata - JSON-LD structured data
 Route::get('/entity/{type}/{id}', [App\Http\Controllers\EntityController::class, 'show']);

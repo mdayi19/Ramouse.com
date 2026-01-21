@@ -10,6 +10,7 @@ import Icon from './Icon';
 import Rating from './Rating';
 import Pagination from './Pagination';
 import DirectoryCardSkeleton from './DirectoryCardSkeleton';
+import SEO from './SEO';
 
 interface TowTruckDirectoryProps {
     onBack: () => void;
@@ -312,6 +313,13 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
 
     return (
         <div className="p-3 sm:p-6 w-full animate-fade-in min-h-screen bg-slate-50 dark:bg-slate-900" ref={topRef}>
+            {/* SEO Metadata */}
+            <SEO
+                title={`دليل السطحات - ${allTowTrucks.length > 0 ? allTowTrucks.length + ' ونش متاح' : 'أقرب ونش'} | راموسة`}
+                description="خدمات سحب وإنقاذ السيارات على مدار 24 ساعة في سوريا. اعثر على أقرب سطحة أو ونش لموقعك الحالي بسرعة."
+                canonical="/tow-trucks"
+            />
+
             <div className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm pt-3 pb-4 -mx-3 px-3 border-b border-slate-200 dark:border-slate-700 mb-4 md:hidden">
                 <div className="flex items-center justify-between">
                     <button onClick={onBack} className="flex items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-600 active:scale-95 transition-all text-xl"><span className="text-xl">🔙</span></button>

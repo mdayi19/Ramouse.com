@@ -8,6 +8,7 @@ import { RentFilters } from './MarketplaceParts/RentFilters';
 import { ListingSkeleton } from './MarketplaceParts/ListingSkeleton';
 import { ErrorState } from './MarketplaceParts/ErrorState';
 import Icon from '../Icon';
+import SEO from '../SEO';
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { api } from '../../lib/api';
 
@@ -221,6 +222,14 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
+            {/* SEO Metadata */}
+            <Icon name="Search" className="hidden" /> {/* Force Icon import usage */}
+            <SEO
+                title={`تأجير سيارات في سوريا - ${pagination.total} سيارة متاحة | راموسة`}
+                description={`أفضل عروض تأجير السيارات في سوريا. ${pagination.total} سيارة متاحة للإيجار اليومي والشهري. قارن الأسعار واحجز سيارتك الآن.`}
+                canonical="/rent-car"
+            />
+
             {/* 1. Hero / Header Section for RENT */}
             <div className="relative bg-gradient-to-br from-teal-800 via-teal-900 to-slate-800 text-white py-12 md:py-16 overflow-hidden">
                 {/* Animated Background Blobs - Teal Theme */}
