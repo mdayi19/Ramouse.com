@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+{!! '<?xml version="1.0" encoding="UTF-8"?>' !!}
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>Ramouse.com - Latest Car Parts & Accessories in Syria</title>
     <link href="{{ url('/feed/products.xml') }}" rel="self" />
