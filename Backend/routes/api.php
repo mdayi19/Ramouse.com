@@ -29,6 +29,26 @@ Route::match(['get', 'head'], '/ping', function () {
     return response()->json(['pong' => true, 'time' => now()->timestamp]);
 });
 
+// ======== GEO (GENERATIVE ENGINE OPTIMIZATION) ROUTES ========
+// Sitemaps - Dynamic XML sitemaps for AI crawlers
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
+Route::get('/sitemap/car-listings.xml', [App\Http\Controllers\SitemapController::class, 'carListings']);
+Route::get('/sitemap/car-rentals.xml', [App\Http\Controllers\SitemapController::class, 'carRentals']);
+Route::get('/sitemap/car-providers.xml', [App\Http\Controllers\SitemapController::class, 'carProviders']);
+Route::get('/sitemap/technicians.xml', [App\Http\Controllers\SitemapController::class, 'technicians']);
+Route::get('/sitemap/tow-trucks.xml', [App\Http\Controllers\SitemapController::class, 'towTrucks']);
+Route::get('/sitemap/products.xml', [App\Http\Controllers\SitemapController::class, 'products']);
+
+// Feeds - Real-time Atom feeds for AI systems
+Route::get('/feed/car-listings.xml', [App\Http\Controllers\FeedController::class, 'carListings']);
+Route::get('/feed/car-rentals.xml', [App\Http\Controllers\FeedController::class, 'carRentals']);
+Route::get('/feed/products.xml', [App\Http\Controllers\FeedController::class, 'products']);
+
+// Entity Metadata - JSON-LD structured data
+Route::get('/entity/{type}/{id}', [App\Http\Controllers\EntityController::class, 'show']);
+Route::get('/entity/{type}/{id}/metadata', [App\Http\Controllers\EntityController::class, 'metadata']);
+
+
 // Auth with rate limiting
 Route::prefix('auth')->group(function () {
     Route::post('/check-phone', [AuthController::class, 'checkPhone']);

@@ -1,0 +1,424 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Ramouse.com API",
+        "description": "Syria's leading automotive marketplace API for car sales, rentals, spare parts, technicians, and tow services. This API provides programmatic access to all marketplace data with AI-optimized structured responses.",
+        "termsOfService": "https://ramouse.com/terms",
+        "contact": {
+            "name": "Ramouse API Support",
+            "url": "https://ramouse.com/support",
+            "email": "api@ramouse.com"
+        },
+        "license": {
+            "name": "Proprietary",
+            "url": "https://ramouse.com/license"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://ramouse.com",
+            "description": "Ramouse.com API Server"
+        }
+    ],
+    "paths": {
+        "/api/entity/{type}/{id}": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get entity data",
+                "description": "Returns raw entity data by type and ID. Supported types: car-listing, car-provider, technician, tow-truck, product.",
+                "operationId": "getEntity",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "Entity type",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "car-listing",
+                                "car-provider",
+                                "technician",
+                                "tow-truck",
+                                "product"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Entity ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Entity data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entity not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Entity not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/entity/{type}/{id}/metadata": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get entity JSON-LD metadata",
+                "description": "Returns Schema.org JSON-LD structured data for the entity. This is the primary endpoint for AI systems to extract semantic information.",
+                "operationId": "getEntityMetadata",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "Entity type",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "car-listing",
+                                "car-provider",
+                                "technician",
+                                "tow-truck",
+                                "product"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Entity ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON-LD structured data",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "properties": {
+                                        "@context": {
+                                            "type": "string",
+                                            "example": "https://schema.org"
+                                        },
+                                        "@type": {
+                                            "type": "string",
+                                            "example": "Car"
+                                        },
+                                        "@id": {
+                                            "type": "string",
+                                            "example": "https://ramouse.com/entity/car-listing/123"
+                                        },
+                                        "identifier": {
+                                            "type": "integer",
+                                            "example": 123
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Toyota Camry 2020"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entity not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Entity not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/car-listings.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get car listings Atom feed",
+                "description": "Returns Atom 1.0 feed with the latest 50 car listings (sale). Updates every 5 minutes. Ideal for AI systems tracking new inventory.",
+                "operationId": "getCarListingsFeed",
+                "responses": {
+                    "200": {
+                        "description": "Atom feed XML",
+                        "content": {
+                            "application/atom+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/car-rentals.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get car rentals Atom feed",
+                "description": "Returns Atom 1.0 feed with the latest 50 car rental listings. Updates every 5 minutes.",
+                "operationId": "getCarRentalsFeed",
+                "responses": {
+                    "200": {
+                        "description": "Atom feed XML",
+                        "content": {
+                            "application/atom+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/products.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get products Atom feed",
+                "description": "Returns Atom 1.0 feed with the latest 50 car spare parts and accessories. Updates every 5 minutes.",
+                "operationId": "getProductsFeed",
+                "responses": {
+                    "200": {
+                        "description": "Atom feed XML",
+                        "content": {
+                            "application/atom+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get sitemap index",
+                "description": "Returns the main sitemap index listing all entity-specific sitemaps. This is the entry point for AI crawlers and search engines.",
+                "operationId": "getSitemapIndex",
+                "responses": {
+                    "200": {
+                        "description": "Sitemap index XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "<?xml version='1.0' encoding='UTF-8'?><sitemapindex xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>...</sitemapindex>"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap/car-listings.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get car listings sitemap",
+                "description": "Returns XML sitemap for all car listings (sale). Includes images, metadata links, and priority indicators.",
+                "operationId": "getCarListingsSitemap",
+                "responses": {
+                    "200": {
+                        "description": "Car listings sitemap XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap/car-rentals.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get car rentals sitemap",
+                "description": "Returns XML sitemap for all car rental listings. Includes images, metadata links, and priority indicators.",
+                "operationId": "getCarRentalsSitemap",
+                "responses": {
+                    "200": {
+                        "description": "Car rentals sitemap XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap/car-providers.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get car providers sitemap",
+                "description": "Returns XML sitemap for all verified car providers and dealerships.",
+                "operationId": "getCarProvidersSitemap",
+                "responses": {
+                    "200": {
+                        "description": "Car providers sitemap XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap/technicians.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get technicians sitemap",
+                "description": "Returns XML sitemap for all verified automotive technicians and repair services.",
+                "operationId": "getTechniciansSitemap",
+                "responses": {
+                    "200": {
+                        "description": "Technicians sitemap XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap/tow-trucks.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get tow trucks sitemap",
+                "description": "Returns XML sitemap for all verified tow truck and recovery services.",
+                "operationId": "getTowTrucksSitemap",
+                "responses": {
+                    "200": {
+                        "description": "Tow trucks sitemap XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sitemap/products.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get products sitemap",
+                "description": "Returns XML sitemap for all car spare parts and accessories in stock.",
+                "operationId": "getProductsSitemap",
+                "responses": {
+                    "200": {
+                        "description": "Products sitemap XML",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Enter your bearer token in the format: Bearer {token}",
+                "name": "Authorization",
+                "in": "header"
+            },
+            "0": []
+        }
+    },
+    "tags": [
+        {
+            "name": "GEO",
+            "description": "Generative Engine Optimization endpoints (sitemaps, feeds, metadata)",
+            "externalDocs": {
+                "description": "GEO Documentation",
+                "url": "https://ramouse.com/docs/geo"
+            }
+        }
+    ],
+    "externalDocs": {
+        "description": "Find out more about Ramouse.com",
+        "url": "https://ramouse.com/about"
+    }
+}

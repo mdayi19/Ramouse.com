@@ -20,6 +20,9 @@ import ReportListingModal from './ListingParts/ReportListingModal';
 import QuickSpecsBar from './ListingParts/QuickSpecsBar';
 import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
+import { StructuredData } from '../shared/StructuredData';
+import { generateCarListingSchema, generateRentalSchema, generateBreadcrumbSchema } from '../../utils/structuredData';
+
 
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { CarBodyDiagram } from './CarBodyDiagram';
@@ -348,6 +351,22 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
             animate={{ opacity: 1 }}
             className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0"
         >
+            {/* JSON-LD Structured Data for AI/SEO */}
+            <StructuredData
+                data={[
+                    // Car listing schema
+                    listing.listing_type === 'rent'
+                        ? generateRentalSchema(listing)
+                        : generateCarListingSchema(listing),
+                    // Breadcrumb schema
+                    generateBreadcrumbSchema([
+                        { name: 'الرئيسية', url: '/' },
+                        { name: listing.listing_type === 'rent' ? 'إيجار سيارات' : 'سوق السيارات', url: listing.listing_type === 'rent' ? '/rent-car' : '/car-marketplace' },
+                        { name: listing.title, url: `/car-listings/${listing.slug}` },
+                    ])
+                ]}
+            />
+
             {/* 1. Header Navigation & Breadcrumbs */}
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
                 <div className="w-full px-2 md:px-8 sm:px-6 py-4 flex justify-between items-center">

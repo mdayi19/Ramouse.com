@@ -22,3 +22,6 @@ export type { MobileFilterDrawerProps } from './MobileFilterDrawer';
 
 export { LazyImage, ProgressiveImage } from './LazyImage';
 export type { LazyImageProps, ProgressiveImageProps } from './LazyImage';
+
+export { StructuredData, useStructuredData } from './StructuredData';
+export type { StructuredDataProps } from './StructuredData';

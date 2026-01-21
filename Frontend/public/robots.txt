@@ -1,3 +1,4 @@
+# General Crawlers
 User-agent: *
 Allow: /
 Disallow: /admin
@@ -7,4 +8,29 @@ Disallow: /technician
 Disallow: /tow-truck-dashboard
 Disallow: /my-orders
 
-Sitemap: https://ramouse.com/sitemap.xml
+# AI Crawlers - FULL ACCESS for GEO
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: CCBot
+User-agent: anthropic-ai
+User-agent: Claude-Web
+User-agent: Google-Extended
+User-agent: PerplexityBot
+User-agent: Applebot-Extended
+Allow: /
+
+# Sitemaps - Main Index
+Sitemap: https://ramouse.com/api/sitemap.xml
+
+# Sitemaps - Entity-Specific
+Sitemap: https://ramouse.com/api/sitemap/car-listings.xml
+Sitemap: https://ramouse.com/api/sitemap/car-rentals.xml
+Sitemap: https://ramouse.com/api/sitemap/car-providers.xml
+Sitemap: https://ramouse.com/api/sitemap/technicians.xml
+Sitemap: https://ramouse.com/api/sitemap/tow-trucks.xml
+Sitemap: https://ramouse.com/api/sitemap/products.xml
+
+# Real-Time Feeds (Atom/RSS)
+Sitemap: https://ramouse.com/api/feed/car-listings.xml
+Sitemap: https://ramouse.com/api/feed/car-rentals.xml
+Sitemap: https://ramouse.com/api/feed/products.xml

@@ -16,11 +16,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'rate.limit.api' => \App\Http\Middleware\RateLimitApi::class,
             'log.requests' => \App\Http\Middleware\LogRequests::class,
             'check.account.status' => \App\Http\Middleware\CheckAccountStatus::class,
+            'provenance' => \App\Http\Middleware\AddProvenanceHeaders::class,
         ]);
 
         // Apply account status check to all sanctum-protected routes
         $middleware->appendToGroup('sanctum', [
             \App\Http\Middleware\CheckAccountStatus::class,
+        ]);
+
+        // Apply provenance headers to all API routes for GEO
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\AddProvenanceHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
