@@ -9,6 +9,7 @@ import { RentFilters } from './MarketplaceParts/RentFilters';
 import { ListingSkeleton } from './MarketplaceParts/ListingSkeleton';
 import { ErrorState } from './MarketplaceParts/ErrorState';
 import Icon from '../Icon';
+import SEO from '../SEO';
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { api } from '../../lib/api';
 
@@ -246,6 +247,20 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
+            {/* SEO Metadata */}
+            <Icon name="Search" className="hidden" /> {/* Force Icon import usage */}
+            <SEO
+                title={listingType === 'rent'
+                    ? `تأجير سيارات في سوريا - ${pagination.total} سيارة متاحة | راموسة`
+                    : `سيارات للبيع في سوريا - ${pagination.total} إعلان | راموسة`
+                }
+                description={listingType === 'rent'
+                    ? `تصفح ${pagination.total} سيارة للإيجار في دمشق، حلب، وكافة المحافظات. أسعار يومية وشهرية منافسة. هيونداي، كيا، تويوتا والمزيد.`
+                    : `أكبر سوق للسيارات المستعملة والجديدة في سوريا. ${pagination.total} سيارة معروضة للبيع. أسعار حقيقية، صور واضحة، وتواصل مباشر مع البائعين.`
+                }
+                canonical={listingType === 'rent' ? '/rent-car' : '/car-marketplace'}
+            />
+
             {/* 1. Hero / Header Section */}
             <div className="relative bg-gradient-to-br from-primary via-primary-900 to-slate-800 text-white py-12 md:py-16 overflow-hidden">
                 {/* Animated Background Blobs */}
