@@ -364,7 +364,6 @@ export const generateWebsiteSchema = () => {
             },
             'query-input': 'required name=search_term_string',
         },
-    },
     };
 };
 
