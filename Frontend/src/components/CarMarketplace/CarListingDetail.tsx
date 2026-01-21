@@ -187,7 +187,7 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
                 url: window.location.href,
                 type: 'product' as const,
                 price: listing.price,
-                currency: 'SYP',
+                currency: 'USD',
                 availability: 'in stock' as const
             };
 

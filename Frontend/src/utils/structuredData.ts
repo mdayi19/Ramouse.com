@@ -12,7 +12,9 @@ export const generateCarListingSchema = (listing: any) => {
         '@id': `${BASE_URL}/entity/car-listing/${listing.id}`,
         identifier: listing.id,
         name: listing.title,
-        description: listing.description,
+        description: listing.description
+            ? `${listing.description} - ${listing.year} ${listing.brand?.name} ${listing.model} - ${listing.mileage}km`
+            : `${listing.year} ${listing.brand?.name} ${listing.model} - ${listing.mileage}km - ${listing.transmission} - ${listing.city}`,
         url: `${BASE_URL}/car-listings/${listing.slug}`,
         brand: listing.brand ? {
             '@type': 'Brand',
