@@ -116,6 +116,9 @@ GET /api/sitemap/products.xml
 GET /api/feed/car-listings.xml
 GET /api/feed/car-rentals.xml
 GET /api/feed/products.xml
+/api/feed/car-providers.xml
+/api/feed/technicians.xml
+/api/feed/tow-trucks.xml
 ```
 
 ### Entity Metadata
@@ -178,3 +181,10 @@ curl -I https://ramouse.com/api/sitemap.xml
 
 **Maintained By:** Development Team  
 **Version:** 1.0
+https://ramouse.com/api/sitemap.xml (main index)
+https://ramouse.com/api/sitemap/car-listings.xml
+https://ramouse.com/api/sitemap/car-rentals.xml
+https://ramouse.com/api/sitemap/car-providers.xml
+https://ramouse.com/api/sitemap/technicians.xml
+https://ramouse.com/api/sitemap/tow-trucks.xml
+https://ramouse.com/api/sitemap/products.xml

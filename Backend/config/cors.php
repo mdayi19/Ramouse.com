@@ -14,6 +14,11 @@ return [
         'http://127.0.0.1:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3001',
+        // Search Engine Tools
+        'https://www.bing.com',
+        'https://webmaster.bing.com',
+        'https://search.google.com',
+        'https://www.google.com',
     ],
 
     'allowed_headers' => ['*'],

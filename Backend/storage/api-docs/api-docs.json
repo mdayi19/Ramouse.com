@@ -22,6 +22,193 @@
         }
     ],
     "paths": {
+        "/v1/public/car-listings": {
+            "get": {
+                "tags": [
+                    "Car Listings"
+                ],
+                "summary": "List all car listings for sale",
+                "description": "Returns paginated list of active car listings in Syria with filtering options",
+                "operationId": "548064ad64e07f5a1a2e0903e51b2833",
+                "parameters": [
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "description": "Filter by city",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "brand_id",
+                        "in": "query",
+                        "description": "Filter by brand ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "description": "Minimum price",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "description": "Maximum price",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "listing_type",
+                        "in": "query",
+                        "description": "sale or rent (default: sale)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "sale",
+                                "rent"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "listings": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/public/car-rentals": {
+            "get": {
+                "tags": [
+                    "Car Listings"
+                ],
+                "summary": "List all car rentals",
+                "description": "Returns paginated list of active car rental listings",
+                "operationId": "6ef9f46ab285cdb23b36bf82afd77346",
+                "parameters": [
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "description": "Filter by city",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "description": "Minimum daily rate",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "description": "Maximum daily rate",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "listings": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/public/car-listings/{slug}": {
+            "get": {
+                "tags": [
+                    "Car Listings"
+                ],
+                "summary": "Get car listing details",
+                "description": "Returns detailed information about a specific car listing",
+                "operationId": "354b2c61bd71d09a7781f96596137f77",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Listing slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "listing": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Listing not found"
+                    }
+                }
+            }
+        },
         "/api/entity/{type}/{id}": {
             "get": {
                 "tags": [
@@ -180,7 +367,7 @@
                     "GEO"
                 ],
                 "summary": "Get car listings Atom feed",
-                "description": "Returns Atom 1.0 feed with the latest 50 car listings (sale). Updates every 5 minutes. Ideal for AI systems tracking new inventory.",
+                "description": "Returns Atom 1.0 feed with the latest 50 car listings (sale). Updates every 5 minutes.",
                 "operationId": "getCarListingsFeed",
                 "responses": {
                     "200": {
@@ -226,6 +413,72 @@
                 "summary": "Get products Atom feed",
                 "description": "Returns Atom 1.0 feed with the latest 50 car spare parts and accessories. Updates every 5 minutes.",
                 "operationId": "getProductsFeed",
+                "responses": {
+                    "200": {
+                        "description": "Atom feed XML",
+                        "content": {
+                            "application/atom+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/car-providers.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get car providers Atom feed",
+                "description": "Returns Atom 1.0 feed with the latest 20 registered car providers. Updates every 5 minutes.",
+                "operationId": "getCarProvidersFeed",
+                "responses": {
+                    "200": {
+                        "description": "Atom feed XML",
+                        "content": {
+                            "application/atom+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/technicians.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get technicians Atom feed",
+                "description": "Returns Atom 1.0 feed with the latest 20 registered technicians. Updates every 5 minutes.",
+                "operationId": "getTechniciansFeed",
+                "responses": {
+                    "200": {
+                        "description": "Atom feed XML",
+                        "content": {
+                            "application/atom+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/tow-trucks.xml": {
+            "get": {
+                "tags": [
+                    "GEO"
+                ],
+                "summary": "Get tow trucks Atom feed",
+                "description": "Returns Atom 1.0 feed with the latest 20 registered tow trucks. Updates every 5 minutes.",
+                "operationId": "getTowTrucksFeed",
                 "responses": {
                     "200": {
                         "description": "Atom feed XML",
@@ -415,6 +668,10 @@
                 "description": "GEO Documentation",
                 "url": "https://ramouse.com/docs/geo"
             }
+        },
+        {
+            "name": "Car Listings",
+            "description": "Operations for car sales and rentals"
         }
     ],
     "externalDocs": {
