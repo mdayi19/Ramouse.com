@@ -3,6 +3,8 @@ import { View, OrderFormData, TechnicianSpecialty } from '../types';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import SEO from './SEO';
 import Icon from './Icon';
+import SephSchema from './SeoSchema';
+import { generateDatasetSchema } from '../utils/structuredData';
 
 // Lazy load the two screen variants
 const MobileWelcomeScreen = React.lazy(() =>
@@ -149,12 +151,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
   return (
     <div className="w-full min-h-screen text-slate-900 dark:text-white" dir="rtl">
       {/* SEO Meta Tags */}
-      import {generateDatasetSchema} from '../utils/structuredData';
-      import SeoSchema from './SeoSchema';
-
-      // ... (existing imports)
-
-      // Inside WelcomeScreen component render:
       <SEO
         title="راموسة | المنصة الأولى لخدمات السيارات في سوريا"
         description="اربط سيارتك بأفضل الفنيين، سطحات النقل، ومزودي قطع الغيار في سوريا. خدمة سريعة، أسعار شفافة، وموثوقية عالية."
