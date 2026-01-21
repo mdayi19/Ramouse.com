@@ -19,6 +19,14 @@ return [
         'https://webmaster.bing.com',
         'https://search.google.com',
         'https://www.google.com',
+
+        // AI & LLM Tools
+        'https://chat.openai.com',
+        'https://chatgpt.com',
+        'https://claude.ai',
+        'https://bard.google.com',
+        'https://gemini.google.com',
+        'https://www.perplexity.ai',
     ],
 
     'allowed_headers' => ['*'],
