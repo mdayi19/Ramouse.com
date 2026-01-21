@@ -104,7 +104,7 @@ class SitemapController extends Controller
     )]
     public function carListings()
     {
-        $listings = Cache::remember('sitemap:car-listings', 3600, function () {
+        return $this->generateXml('car-listings', function () {
             return CarListing::where('listing_type', 'sale')
                 ->where('is_available', true)
                 ->where('is_hidden', false)
@@ -113,9 +113,6 @@ class SitemapController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->get();
         });
-
-        return response()->view('sitemaps.car-listings', compact('listings'))
-            ->header('Content-Type', 'application/xml');
     }
 
     /**
@@ -140,7 +137,7 @@ class SitemapController extends Controller
     )]
     public function carRentals()
     {
-        $listings = Cache::remember('sitemap:car-rentals', 3600, function () {
+        return $this->generateXml('car-rentals', function () {
             return CarListing::where('listing_type', 'rent')
                 ->where('is_available', true)
                 ->where('is_hidden', false)
@@ -149,9 +146,6 @@ class SitemapController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->get();
         });
-
-        return response()->view('sitemaps.car-rentals', compact('listings'))
-            ->header('Content-Type', 'application/xml');
     }
 
     /**
@@ -176,16 +170,13 @@ class SitemapController extends Controller
     )]
     public function carProviders()
     {
-        $providers = Cache::remember('sitemap:car-providers', 3600, function () {
+        return $this->generateXml('car-providers', function () {
             return CarProvider::where('is_active', true)
                 ->where('is_verified', true)
                 ->withCount('listings')
                 ->orderBy('updated_at', 'desc')
                 ->get();
         });
-
-        return response()->view('sitemaps.car-providers', compact('providers'))
-            ->header('Content-Type', 'application/xml');
     }
 
     /**
@@ -210,15 +201,12 @@ class SitemapController extends Controller
     )]
     public function technicians()
     {
-        $technicians = Cache::remember('sitemap:technicians', 3600, function () {
+        return $this->generateXml('technicians', function () {
             return Technician::where('is_active', true)
                 ->where('is_verified', true)
                 ->orderBy('updated_at', 'desc')
                 ->get();
         });
-
-        return response()->view('sitemaps.technicians', compact('technicians'))
-            ->header('Content-Type', 'application/xml');
     }
 
     /**
@@ -243,15 +231,12 @@ class SitemapController extends Controller
     )]
     public function towTrucks()
     {
-        $towTrucks = Cache::remember('sitemap:tow-trucks', 3600, function () {
+        return $this->generateXml('tow-trucks', function () {
             return TowTruck::where('is_active', true)
                 ->where('is_verified', true)
                 ->orderBy('updated_at', 'desc')
                 ->get();
         });
-
-        return response()->view('sitemaps.tow-trucks', compact('towTrucks'))
-            ->header('Content-Type', 'application/xml');
     }
 
     /**
@@ -276,14 +261,112 @@ class SitemapController extends Controller
     )]
     public function products()
     {
-        $products = Cache::remember('sitemap:products', 3600, function () {
-            return Product::with('category')
+        return $this->generateXml('products', function () {
+            return Product::where('is_active', true)
                 ->where('total_stock', '>', 0)
+                ->with('category')
                 ->orderBy('updated_at', 'desc')
                 ->get();
         });
+    }
 
-        return response()->view('sitemaps.products', compact('products'))
-            ->header('Content-Type', 'application/xml');
+    /**
+     * Helper to generate XML sitemap directly without Blade
+     */
+    private function generateXml($type, $callback)
+    {
+        try {
+            $xml = Cache::remember("sitemap:{$type}", 3600, function () use ($type, $callback) {
+                $items = $callback();
+
+                $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+                $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
+
+                foreach ($items as $item) {
+                    $loc = '';
+                    $images = [];
+                    $lastmod = $item->updated_at ? $item->updated_at->toAtomString() : now()->toAtomString();
+
+                    // Logic based on type
+                    switch ($type) {
+                        case 'car-listings':
+                        case 'car-rentals':
+                            $loc = url('/car-listings/' . $item->slug);
+                            $photos = is_array($item->photos) ? $item->photos : [];
+                            foreach ($photos as $photo) {
+                                $images[] = [
+                                    'loc' => asset('storage/' . $photo),
+                                    'title' => $item->title
+                                ];
+                            }
+                            break;
+
+                        case 'car-providers':
+                            $loc = url('/car-providers/' . $item->id);
+                            if ($item->profile_photo) {
+                                $images[] = [
+                                    'loc' => asset('storage/' . $item->profile_photo),
+                                    'title' => $item->name
+                                ];
+                            }
+                            break;
+
+                        case 'technicians':
+                            $loc = url('/technicians/' . $item->id);
+                            if ($item->profile_photo) {
+                                $images[] = [
+                                    'loc' => asset('storage/' . $item->profile_photo),
+                                    'title' => $item->name
+                                ];
+                            }
+                            break;
+
+                        case 'tow-trucks':
+                            $loc = url('/tow-trucks/' . $item->id);
+                            if ($item->profile_photo) {
+                                $images[] = [
+                                    'loc' => asset('storage/' . $item->profile_photo),
+                                    'title' => $item->name
+                                ];
+                            }
+                            break;
+
+                        case 'products':
+                            $loc = url('/store/products/' . $item->id);
+                            $media = is_array($item->media) ? $item->media : [];
+                            foreach ($media as $img) {
+                                $images[] = [
+                                    'loc' => asset('storage/' . $img),
+                                    'title' => $item->name
+                                ];
+                            }
+                            break;
+                    }
+
+                    $xml .= '<url>';
+                    $xml .= "<loc>{$loc}</loc>";
+                    $xml .= "<lastmod>{$lastmod}</lastmod>";
+                    $xml .= "<changefreq>weekly</changefreq>";
+
+                    foreach ($images as $img) {
+                        $xml .= '<image:image>';
+                        $xml .= "<image:loc>{$img['loc']}</image:loc>";
+                        $xml .= "<image:title>" . htmlspecialchars($img['title']) . "</image:title>";
+                        $xml .= '</image:image>';
+                    }
+
+                    $xml .= '</url>';
+                }
+
+                $xml .= '</urlset>';
+                return $xml;
+            });
+
+            return response($xml, 200)->header('Content-Type', 'application/xml');
+
+        } catch (\Exception $e) {
+            \Log::error("Sitemap XML Error ({$type}): " . $e->getMessage());
+            return response()->json(['error' => 'Error generating sitemap'], 500);
+        }
     }
 }
