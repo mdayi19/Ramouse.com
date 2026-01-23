@@ -11,7 +11,8 @@ import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing, RentalTerms } from '../../services/carprovider.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../../hooks/useAppState';
-import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import { generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import SEO from '../SEO';
 
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
@@ -186,17 +187,15 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
         }
     };
 
-    // SEO Integration - Using existing useSEO hook for rental listings
-    useEffect(() => {
-        if (listing) {
-            const rentalInfo = {
-                dailyRate: listing.daily_rate,
-                weeklyRate: listing.weekly_rate,
-                monthlyRate: listing.monthly_rate
-            };
-            const description = listing.description ||
-                `${listing.title} للإيجار - ${rentalInfo.dailyRate ? `${safePrice(rentalInfo.dailyRate)} يومياً` : ''} ${listing.year || ''}`.trim();
+    // SEO Integration
+    const rentalInfo = listing ? {
+        dailyRate: listing.daily_rate,
+        weeklyRate: listing.weekly_rate,
+        monthlyRate: listing.monthly_rate
+    } : null;
 
+    useEffect(() => {
+        if (listing && rentalInfo) {
             // Generate and inject structured data for rental listings
             const structuredData = generateStructuredData({
                 ...listing,
@@ -354,6 +353,20 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
             animate={{ opacity: 1 }}
             className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 lg:pb-0"
         >
+            {/* SEO Component */}
+            {listing && (
+                <SEO
+                    title={`${listing.title} | إيجار سيارات`}
+                    description={listing.description || `${listing.title} للإيجار في ${listing.city}. ${listing.year} - ${safePrice(listing.daily_rate || 0)} يومياً.`}
+                    openGraph={{
+                        title: `${listing.title} | إيجار سيارات`,
+                        description: listing.description,
+                        image: listing.photos?.[0] || listing.images?.[0],
+                        type: 'website'
+                    }}
+                />
+            )}
+
             {/* Header Navigation */}
             <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
                 <div className="w-full px-2 md:px-8 sm:px-6 py-4 flex justify-between items-center">

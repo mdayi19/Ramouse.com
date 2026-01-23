@@ -109,14 +109,36 @@ class FeedController extends Controller
                 // Build HTML content safely
                 $contentHtml = "<h2>{$title}</h2>";
                 $contentHtml .= "<p><strong>Price:</strong> \${$price} USD</p>";
-                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria" . ($listing->address ? " - " . htmlspecialchars($listing->address) : "") . "</p>";
                 $contentHtml .= "<p><strong>Condition:</strong> {$condition}</p>";
                 $contentHtml .= "<p><strong>Year:</strong> {$listing->year}</p>";
                 $contentHtml .= "<p><strong>Mileage:</strong> {$mileage} km</p>";
                 $contentHtml .= "<p><strong>Transmission:</strong> {$transmission}</p>";
                 $contentHtml .= "<p><strong>Fuel Type:</strong> {$fuel}</p>";
+
+                // Enhanced Specs
+                if ($listing->engine_size)
+                    $contentHtml .= "<p><strong>Engine Size:</strong> " . htmlspecialchars($listing->engine_size) . "</p>";
+                if ($listing->horsepower)
+                    $contentHtml .= "<p><strong>Horsepower:</strong> {$listing->horsepower} HP</p>";
+                if ($listing->body_style)
+                    $contentHtml .= "<p><strong>Body Style:</strong> " . htmlspecialchars($listing->body_style) . "</p>";
+                if ($listing->interior_color)
+                    $contentHtml .= "<p><strong>Interior Color:</strong> " . htmlspecialchars($listing->interior_color) . "</p>";
+                if ($listing->warranty)
+                    $contentHtml .= "<p><strong>Warranty:</strong> " . htmlspecialchars($listing->warranty) . "</p>";
+
                 $contentHtml .= "<p><strong>Doors:</strong> {$listing->doors_count} | <strong>Seats:</strong> {$listing->seats_count}</p>";
                 $contentHtml .= "<p><strong>Color:</strong> {$listing->exterior_color}</p>";
+
+                // Features List
+                if ($listing->features && is_array($listing->features) && count($listing->features) > 0) {
+                    $contentHtml .= "<h3>Key Features</h3><ul>";
+                    foreach ($listing->features as $feature) {
+                        $contentHtml .= "<li>" . htmlspecialchars($feature) . "</li>";
+                    }
+                    $contentHtml .= "</ul>";
+                }
 
                 if ($listing->description) {
                     $desc = htmlspecialchars($listing->description);
@@ -132,6 +154,9 @@ class FeedController extends Controller
 
                 $contentHtml .= "<p><strong>Seller:</strong> " . htmlspecialchars($listing->owner?->name) . "</p>";
                 $contentHtml .= "<p><strong>Contact:</strong> {$listing->contact_phone}</p>";
+                if ($listing->contact_whatsapp) {
+                    $contentHtml .= "<p><strong>WhatsApp:</strong> {$listing->contact_whatsapp}</p>";
+                }
 
                 $entry = "<entry>";
                 $entry .= "<title>{$title}</title>";
@@ -141,6 +166,9 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Metadata Link
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/car-listing/{$listing->id}/metadata") . '" />';
 
                 // Media RSS Tags
                 if ($listing->video_url) {
@@ -162,6 +190,10 @@ class FeedController extends Controller
                 $entry .= "<category term=\"{$listing->listing_type}\" />";
                 $entry .= "<category term=\"{$listing->condition}\" />";
                 $entry .= "<category term=\"Syria\" />";
+                // GeoRSS (City level approximation if latent lat/lon not available)
+                // Since listings don't have lat/lon in model, we skip georss:point unless added to model. 
+                // Plan said: "CarListing feeds will not have exact coordinates".
+    
                 $entry .= "</entry>";
                 return $entry;
             }
@@ -213,7 +245,15 @@ class FeedController extends Controller
                 $updated = $listing->updated_at->toAtomString();
                 $published = $listing->created_at->toAtomString();
                 $title = htmlspecialchars($listing->title);
-                $price = number_format($listing->price ?? 0);
+
+                // Fix: Check rental_terms if price is 0 (Quick Edit stores rates there)
+                $priceValue = $listing->price;
+                if ((empty($priceValue) || $priceValue == 0) && !empty($listing->rental_terms)) {
+                    $terms = is_string($listing->rental_terms) ? json_decode($listing->rental_terms, true) : $listing->rental_terms;
+                    $priceValue = $terms['daily_rate'] ?? $terms['daily_price'] ?? $terms['price'] ?? 0;
+                }
+                $price = number_format((float) $priceValue);
+
                 $transmission = ucfirst($listing->transmission);
                 $fuel = ucfirst($listing->fuel_type);
 
@@ -221,13 +261,45 @@ class FeedController extends Controller
 
                 $contentHtml = "<h2>{$title}</h2>";
                 $contentHtml .= "<p><strong>Daily Rate:</strong> \${$price} USD</p>";
-                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria" . ($listing->address ? " - " . htmlspecialchars($listing->address) : "") . "</p>";
                 $contentHtml .= "<p><strong>Year:</strong> {$listing->year}</p>";
+                $contentHtml .= "<p><strong>Mileage:</strong> {$listing->mileage} km</p>";
                 $contentHtml .= "<p><strong>Transmission:</strong> {$transmission}</p>";
+                $contentHtml .= "<p><strong>Fuel Type:</strong> {$fuel}</p>";
+
+                // Enhanced Specs
+                if ($listing->engine_size)
+                    $contentHtml .= "<p><strong>Engine Size:</strong> " . htmlspecialchars($listing->engine_size) . "</p>";
+                if ($listing->horsepower)
+                    $contentHtml .= "<p><strong>Horsepower:</strong> {$listing->horsepower} HP</p>";
+                if ($listing->body_style)
+                    $contentHtml .= "<p><strong>Body Style:</strong> " . htmlspecialchars($listing->body_style) . "</p>";
+                if ($listing->interior_color)
+                    $contentHtml .= "<p><strong>Interior Color:</strong> " . htmlspecialchars($listing->interior_color) . "</p>";
+
+                $contentHtml .= "<p><strong>Doors:</strong> {$listing->doors_count} | <strong>Seats:</strong> {$listing->seats_count}</p>";
+                $contentHtml .= "<p><strong>Color:</strong> {$listing->exterior_color}</p>";
+
+                // Features List
+                if ($listing->features && is_array($listing->features) && count($listing->features) > 0) {
+                    $contentHtml .= "<h3>Key Features</h3><ul>";
+                    foreach ($listing->features as $feature) {
+                        $contentHtml .= "<li>" . htmlspecialchars($feature) . "</li>";
+                    }
+                    $contentHtml .= "</ul>";
+                }
 
                 if ($listing->description) {
                     $desc = htmlspecialchars($listing->description);
                     $contentHtml .= "<h3>Description</h3><p>{$desc}</p>";
+                }
+
+                // Rental Terms (if available)
+                if (!empty($listing->rental_terms)) {
+                    $terms = is_string($listing->rental_terms) ? json_decode($listing->rental_terms, true) : $listing->rental_terms;
+                    if (isset($terms['requirements'])) {
+                        $contentHtml .= "<h3>Rental Requirements</h3><p>" . htmlspecialchars($terms['requirements']) . "</p>";
+                    }
                 }
 
                 if ($listing->photos && is_array($listing->photos)) {
@@ -238,6 +310,9 @@ class FeedController extends Controller
                 }
 
                 $contentHtml .= "<p><strong>Provider:</strong> " . htmlspecialchars($listing->owner?->name) . "</p>";
+                if ($listing->contact_whatsapp) {
+                    $contentHtml .= "<p><strong>WhatsApp:</strong> {$listing->contact_whatsapp}</p>";
+                }
 
                 $entry = "<entry>";
                 $entry .= "<title>{$title}</title>";
@@ -247,6 +322,9 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Metadata Link
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/car-listing/{$listing->id}/metadata") . '" />';
 
                 // Media RSS Tags
                 if ($listing->photos && is_array($listing->photos)) {
@@ -321,6 +399,12 @@ class FeedController extends Controller
                 $contentHtml .= "<p><strong>Category:</strong> {$categoryName}</p>";
                 $contentHtml .= "<p><strong>Price:</strong> \${$price} USD</p>";
                 $contentHtml .= "<p><strong>Stock:</strong> " . ($product->total_stock > 0 ? $product->total_stock . ' units available' : 'Out of Stock') . "</p>";
+                if ($product->average_rating)
+                    $contentHtml .= "<p><strong>Rating:</strong> {$product->average_rating} / 5</p>";
+                if ($product->static_shipping_cost)
+                    $contentHtml .= "<p><strong>Shipping Cost:</strong> \${$product->static_shipping_cost}</p>";
+                if ($product->shipping_size)
+                    $contentHtml .= "<p><strong>Shipping Size:</strong> " . htmlspecialchars($product->shipping_size) . "</p>";
 
                 if ($product->description) {
                     $desc = htmlspecialchars($product->description);
@@ -342,6 +426,9 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Metadata Link
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/product/{$product->id}/metadata") . '" />';
 
                 // Media RSS Tags
                 if (is_array($product->media) && count($product->media) > 0) {
@@ -410,7 +497,17 @@ class FeedController extends Controller
                 $summary = htmlspecialchars("New Car Provider in {$city}: {$name}. Visit their profile for latest listings.");
 
                 $contentHtml = "<h2>{$name}</h2>";
-                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($provider->address ? " - " . htmlspecialchars($provider->address) : "") . "</p>";
+
+                if ($provider->working_hours) {
+                    $contentHtml .= "<p><strong>Working Hours:</strong> " . htmlspecialchars($provider->working_hours) . "</p>";
+                }
+                if ($provider->website) {
+                    $contentHtml .= "<p><strong>Website:</strong> <a href=\"" . htmlspecialchars($provider->website) . "\">" . htmlspecialchars($provider->website) . "</a></p>";
+                }
+                if ($provider->public_email) {
+                    $contentHtml .= "<p><strong>Email:</strong> " . htmlspecialchars($provider->public_email) . "</p>";
+                }
 
                 if ($provider->description) {
                     $desc = htmlspecialchars($provider->description);
@@ -426,6 +523,13 @@ class FeedController extends Controller
                     $contentHtml .= "<p><strong>Type:</strong> " . ucfirst($provider->business_type) . "</p>";
                 }
 
+                if ($provider->socials) {
+                    $socials = is_string($provider->socials) ? json_decode($provider->socials, true) : $provider->socials;
+                    if (is_array($socials)) {
+                        $contentHtml .= "<p><strong>Socials:</strong> " . implode(', ', array_keys($socials)) . "</p>";
+                    }
+                }
+
                 $entry = "<entry>";
                 $entry .= "<title>{$name}</title>";
                 $entry .= "<link href=\"{$url}\" />";
@@ -434,6 +538,9 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Metadata Link
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/car-provider/{$provider->id}/metadata") . '" />';
 
                 // Media RSS Tags
                 if ($provider->profile_photo) {
@@ -451,6 +558,12 @@ class FeedController extends Controller
                 $entry .= "<category term=\"Car Provider\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
+
+                // GeoRSS
+                if ($provider->latitude && $provider->longitude) {
+                    $entry .= '<georss:point>' . $provider->latitude . ' ' . $provider->longitude . '</georss:point>';
+                }
+
                 $entry .= "</entry>";
                 return $entry;
             }
@@ -506,8 +619,10 @@ class FeedController extends Controller
                 $summary = htmlspecialchars("New Technician in {$city}: {$name}. Specialty: {$specialty}.");
 
                 $contentHtml = "<h2>{$name}</h2>";
-                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($tech->workshop_address ? " - " . htmlspecialchars($tech->workshop_address) : "") . "</p>";
                 $contentHtml .= "<p><strong>Specialty:</strong> {$specialty}</p>";
+                if ($tech->average_rating)
+                    $contentHtml .= "<p><strong>Rating:</strong> {$tech->average_rating} / 5</p>";
 
                 if ($tech->description) {
                     $desc = htmlspecialchars($tech->description);
@@ -519,6 +634,13 @@ class FeedController extends Controller
                     $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
                 }
 
+                if ($tech->socials) {
+                    $socials = is_string($tech->socials) ? json_decode($tech->socials, true) : $tech->socials;
+                    if (is_array($socials)) {
+                        $contentHtml .= "<p><strong>Socials:</strong> " . implode(', ', array_keys($socials)) . "</p>";
+                    }
+                }
+
                 $entry = "<entry>";
                 $entry .= "<title>{$name}</title>";
                 $entry .= "<link href=\"{$url}\" />";
@@ -527,6 +649,9 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Metadata Link
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/technician/{$tech->id}/metadata") . '" />';
 
                 // Media RSS Tags
                 if ($tech->profile_photo) {
@@ -545,6 +670,15 @@ class FeedController extends Controller
                 $entry .= "<category term=\"{$specialty}\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
+
+                // GeoRSS
+                if ($tech->location) {
+                    $loc = $tech->location;
+                    if (is_array($loc)) {
+                        $entry .= '<georss:point>' . $loc['latitude'] . ' ' . $loc['longitude'] . '</georss:point>';
+                    }
+                }
+
                 $entry .= "</entry>";
                 return $entry;
             }
@@ -602,6 +736,10 @@ class FeedController extends Controller
                 $contentHtml = "<h2>{$name}</h2>";
                 $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
                 $contentHtml .= "<p><strong>Vehicle Type:</strong> {$vehicleType}</p>";
+                if ($truck->service_area)
+                    $contentHtml .= "<p><strong>Service Area:</strong> " . htmlspecialchars($truck->service_area) . "</p>";
+                if ($truck->average_rating)
+                    $contentHtml .= "<p><strong>Rating:</strong> {$truck->average_rating} / 5</p>";
 
                 if ($truck->description) {
                     $desc = htmlspecialchars($truck->description);
@@ -613,6 +751,14 @@ class FeedController extends Controller
                     $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
                 }
 
+                if ($truck->socials) {
+                    $socials = is_string($truck->socials) ? json_decode($truck->socials, true) : $truck->socials;
+                    if (is_array($socials)) {
+                        $contentHtml .= "<p><strong>Socials:</strong> " . implode(', ', array_keys($socials)) . "</p>";
+                    }
+                }
+
+
                 $entry = "<entry>";
                 $entry .= "<title>{$name}</title>";
                 $entry .= "<link href=\"{$url}\" />";
@@ -621,6 +767,9 @@ class FeedController extends Controller
                 $entry .= "<published>{$published}</published>";
                 $entry .= "<summary type=\"text\">{$summary}</summary>";
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
+
+                // Metadata Link
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/tow-truck/{$truck->id}/metadata") . '" />';
 
                 // Media RSS Tags
                 if ($truck->profile_photo) {
@@ -638,6 +787,15 @@ class FeedController extends Controller
                 $entry .= "<category term=\"Tow Truck\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
+
+                // GeoRSS
+                if ($truck->location) {
+                    $loc = $truck->location;
+                    if (is_array($loc)) {
+                        $entry .= '<georss:point>' . $loc['latitude'] . ' ' . $loc['longitude'] . '</georss:point>';
+                    }
+                }
+
                 $entry .= "</entry>";
                 return $entry;
             }

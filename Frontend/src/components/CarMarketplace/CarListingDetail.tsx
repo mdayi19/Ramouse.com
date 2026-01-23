@@ -11,7 +11,7 @@ import { getImageUrl } from '../../utils/helpers';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 import { useAppState } from '../../hooks/useAppState';
-import { useSEO, generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import { generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
 import SEO from '../SEO';
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
@@ -176,21 +176,20 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
         }
     };
 
-    // SEO Integration - Using existing useSEO hook
+    // SEO Integration
+    const seoData = listing ? {
+        title: listing.title,
+        description: listing.description || `${listing.title} - ${listing.year} ${listing.mileage ? `${listing.mileage} كم` : ''}`,
+        image: listing.photos?.[0] || listing.images?.[0],
+        url: window.location.href,
+        type: 'product',
+        price: listing.price,
+        currency: 'USD',
+        availability: 'in stock'
+    } : null;
+
     useEffect(() => {
         if (listing) {
-            // Call useSEO with listing data
-            const seoData = {
-                title: listing.title,
-                description: listing.description || `${listing.title} - ${listing.year} ${listing.mileage ? `${listing.mileage} كم` : ''}`,
-                image: listing.photos?.[0] || listing.images?.[0],
-                url: window.location.href,
-                type: 'product' as const,
-                price: listing.price,
-                currency: 'USD',
-                availability: 'in stock' as const
-            };
-
             // Generate and inject structured data
             const structuredData = generateStructuredData(listing);
             injectStructuredData(structuredData);
@@ -351,6 +350,20 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
             animate={{ opacity: 1 }}
             className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 lg:pb-0"
         >
+            {/* SEO Component */}
+            {listing && (
+                <SEO
+                    title={listing.title}
+                    description={listing.description || `${listing.title} - ${listing.year} ${listing.mileage ? `${listing.mileage} كم` : ''}`}
+                    openGraph={{
+                        title: listing.title,
+                        description: listing.description || `${listing.title} - ${listing.year}`,
+                        image: listing.photos?.[0] || listing.images?.[0],
+                        type: 'website'
+                    }}
+                />
+            )}
+
             {/* JSON-LD Structured Data for AI/SEO */}
             <StructuredData
                 data={[

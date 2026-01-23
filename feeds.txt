@@ -1,0 +1,7 @@
+https://ramouse.com/api/feed/car-listings.xml
+https://ramouse.com/api/feed/car-rentals.xml
+https://ramouse.com/api/feed/products.xml
+https://ramouse.com/api/feed/car-providers.xml
+https://ramouse.com/api/feed/technicians.xml
+https://ramouse.com/api/feed/tow-trucks.xml
+https://ramouse.com/api/sitemap.xml

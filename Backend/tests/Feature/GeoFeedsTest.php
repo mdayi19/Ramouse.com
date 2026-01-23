@@ -63,41 +63,84 @@ class GeoFeedsTest extends TestCase
         $this->assertStringContainsString('<link rel="enclosure" href="http://localhost:8000/storage/car1.jpg" type="image/jpeg" />', $content);
     }
 
-    public function test_car_rentals_feed_price_and_media()
+    public function test_car_rentals_feed_price_logic()
     {
-        // Mock data
-        $mockListing = new \App\Models\CarListing();
-        $mockListing->forceFill([
-            'id' => 2,
-            'title' => 'Rental Car',
-            'slug' => 'rental-car',
-            'price' => 50, // This is the fix verification
-            'city' => 'Aleppo',
-            'year' => 2022,
-            'transmission' => 'automatic',
-            'fuel_type' => 'petrol',
-            'photos' => ['rent1.jpg'],
-            'created_at' => now(),
-            'updated_at' => now(),
+        // Case 1: Price in 'price' column
+        $listing1 = new \App\Models\CarListing();
+        $listing1->forceFill([
+            'id' => 101,
+            'title' => 'Price Column Car',
+            'slug' => 'price-column-car',
+            'listing_type' => 'rent',
+            'price' => 100,
+            'rental_terms' => null,
             'is_available' => true,
             'is_hidden' => false,
-            'listing_type' => 'rent'
+            'city' => 'Damascus',
+            'year' => 2020,
+            'created_at' => now(),
+            'updated_at' => now()
         ]);
-        $mockListing->setRelation('brand', new \App\Models\Brand(['name' => 'Kia']));
-        $mockListing->setRelation('owner', new \App\Models\User(['name' => 'Rental Co']));
 
-        \Illuminate\Support\Facades\Cache::put('feed:car-rentals-data', collect([$mockListing]), 300);
+        // Case 2: Price in rental_terms['daily_rate'] (Simulating Quick Edit)
+        $listing2 = new \App\Models\CarListing();
+        $listing2->forceFill([
+            'id' => 102,
+            'title' => 'Rental Terms Car',
+            'slug' => 'rental-terms-car',
+            'listing_type' => 'rent',
+            'price' => 0,
+            'rental_terms' => ['daily_rate' => 200],
+            'is_available' => true,
+            'is_hidden' => false,
+            'city' => 'Damascus',
+            'year' => 2020,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        \Illuminate\Support\Facades\Cache::put('feed:car-rentals-data', collect([$listing1, $listing2]), 300);
 
         $response = $this->get('/api/feed/car-rentals.xml');
         $response->assertStatus(200);
-
         $content = $response->getContent();
-        // Check Price (should be 50, not 0)
-        $this->assertStringContainsString('Rent for $50/day', $content); // In title/summary
-        $this->assertStringContainsString('Daily Rate:</strong> $50 USD', $content);
 
-        // Check Media
-        $this->assertStringContainsString('<media:content url="http://localhost:8000/storage/rent1.jpg" medium="image" />', $content);
+        // Assert 1: Should show $100
+        $this->assertStringContainsString('Daily Rate:</strong> $100 USD', $content);
+
+        // Assert 2: Should show $200 (This is expected to FAIL currently)
+        $this->assertStringContainsString('Daily Rate:</strong> $200 USD', $content);
+    }
+
+    public function test_feed_photos_rendering()
+    {
+        $listing = new \App\Models\CarListing();
+        $listing->forceFill([
+            'id' => 201,
+            'title' => 'Photo Car',
+            'slug' => 'photo-car',
+            'listing_type' => 'sale',
+            'price' => 1000,
+            'photos' => ['test-image.jpg'],
+            'is_available' => true,
+            'is_hidden' => false,
+            'city' => 'Damascus',
+            'year' => 2020,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        \Illuminate\Support\Facades\Cache::put('feed:car-listings-data', collect([$listing]), 300);
+
+        $response = $this->get('/api/feed/car-listings.xml');
+        $content = $response->getContent();
+
+        // Verify Image Tag
+        $this->assertStringContainsString('<img src=', $content);
+        $this->assertStringContainsString('test-image.jpg', $content);
+
+        // Verify Media RSS
+        $this->assertStringContainsString('<media:content', $content);
     }
 
     public function test_products_feed_loading()
@@ -135,5 +178,55 @@ class GeoFeedsTest extends TestCase
         $response = $this->get('/api/sitemap.xml');
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/xml');
+    }
+    public function test_feed_enrichment_checks()
+    {
+        // Mock Rental with Terms
+        $rental = new \App\Models\CarListing();
+        $rental->forceFill([
+            'id' => 301,
+            'title' => 'Enriched Rental',
+            'slug' => 'enriched-rental',
+            'listing_type' => 'rent',
+            'price' => 0,
+            'rental_terms' => ['daily_rate' => 50, 'requirements' => 'Passport required'],
+            'engine_size' => '2.0L',
+            'features' => ['AC', 'GPS'],
+            'city' => 'Damascus',
+            'year' => 2022,
+            'is_available' => true,
+            'is_hidden' => false,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+        \Illuminate\Support\Facades\Cache::put('feed:car-rentals-data', collect([$rental]), 300);
+
+        $response = $this->get('/api/feed/car-rentals.xml');
+        $content = $response->getContent();
+        $this->assertStringContainsString('Passport required', $content);
+        $this->assertStringContainsString('Engine Size:</strong> 2.0L', $content);
+        $this->assertStringContainsString('<li>AC</li>', $content);
+        $this->assertStringContainsString('application/ld+json', $content);
+
+        // Mock Provider with GeoRSS
+        $provider = new \App\Models\CarProvider();
+        $provider->forceFill([
+            'id' => 401,
+            'name' => 'Test Provider',
+            'city' => 'Aleppo',
+            'location' => ['latitude' => 36.2, 'longitude' => 37.1],
+            'working_hours' => '9AM - 5PM',
+            'is_active' => true,
+            'is_verified' => true,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+        \Illuminate\Support\Facades\Cache::put('feed:car-providers-data', collect([$provider]), 300);
+
+        $response = $this->get('/api/feed/car-providers.xml');
+        $content = $response->getContent();
+        $this->assertStringContainsString('<georss:point>36.2 37.1</georss:point>', $content);
+        $this->assertStringContainsString('Working Hours:</strong> 9AM - 5PM', $content);
+        $this->assertStringContainsString('application/ld+json', $content);
     }
 }
