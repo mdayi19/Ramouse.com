@@ -6,14 +6,16 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // Always allow both production and dev origins for local development
+    // Allow web, mobile, and AI tool origins
     'allowed_origins' => [
+        // Production & Development Web
         'https://ramouse.com',
         'https://www.ramouse.com',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3001',
+
         // Search Engine Tools
         'https://www.bing.com',
         'https://webmaster.bing.com',
@@ -27,6 +29,14 @@ return [
         'https://bard.google.com',
         'https://gemini.google.com',
         'https://www.perplexity.ai',
+    ],
+
+    // Allow mobile app patterns (Expo, React Native)
+    'allowed_origins_patterns' => [
+        '/^exp:\/\/.*$/',           // Expo development
+        '/^.*\.expo\.dev$/',        // Expo Go
+        '/^capacitor:\/\/.*$/',     // Capacitor
+        '/^ionic:\/\/.*$/',         // Ionic
     ],
 
     'allowed_headers' => ['*'],
