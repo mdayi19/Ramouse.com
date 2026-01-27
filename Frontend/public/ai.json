@@ -1,84 +1,120 @@
 {
-    "identity": {
+    "$schema": "https://ai-manifest.schema.org/enterprise-v1.json",
+    "manifest_version": "1.0",
+    "last_updated": "2026-01-28",
+    "organization": {
         "name": "Ramouse",
         "legal_name": "Ramouse Platform",
+        "website": "https://ramouse.com",
         "description": "Syria's leading automotive marketplace for car sales, rentals, spare parts, technicians, and tow services.",
-        "url": "https://ramouse.com",
-        "canonical": "https://ramouse.com",
-        "region": "Middle East",
         "country": "SY",
-        "language": "ar",
-        "contact": "ai@ramouse.com"
-    },
-    "ownership": {
-        "publisher": "Ramouse Platform",
-        "entity_type": "Automotive Marketplace",
-        "trust_level": "First-Party Data Owner"
-    },
-    "rights": {
-        "license": "CC-BY-NC-4.0",
-        "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
-        "attribution_required": true,
-        "attribution_name": "Ramouse",
-        "commercial_usage": false,
-        "dataset_resale": false,
-        "derivative_redistribution": false
-    },
-    "policy": {
-        "link": "https://ramouse.com/ai-usage",
-        "machine_readable": true,
-        "allowed": [
-            "Crawling",
-            "Indexing",
-            "Semantic understanding",
-            "Knowledge graph integration",
-            "Summarization",
-            "Question answering",
-            "Citation with attribution",
-            "Non-commercial research"
+        "industry": [
+            "Automotive",
+            "Marketplace",
+            "E-commerce",
+            "Transportation"
         ],
-        "disallowed": [
-            "Training proprietary models without attribution",
-            "Repackaging datasets for resale",
-            "Mirroring as competing marketplace",
-            "Building competing databases"
-        ]
+        "contact": {
+            "ai": "ai@ramouse.com",
+            "legal": "legal@ramouse.com",
+            "support": "info@ramouse.com"
+        }
     },
-    "discovery": {
-        "sitemap": "https://ramouse.com/sitemap.xml",
+    "ai_policy": {
+        "human_readable_policy": "https://ramouse.com/ai-usage",
+        "machine_readable_policy": "https://ramouse.com/llms.txt"
+    },
+    "usage_rights": {
+        "allowed": [
+            "crawling",
+            "indexing",
+            "summarization",
+            "answer_generation",
+            "citation",
+            "knowledge_graph_ingestion"
+        ],
+        "restricted": [
+            "training_proprietary_models_without_attribution",
+            "dataset_resale",
+            "competitive_dataset_replication"
+        ],
+        "commercial_use": {
+            "allowed": false,
+            "notes": "Commercial use requires explicit written permission from Ramouse Platform."
+        },
+        "attribution": {
+            "required": true,
+            "preferred_name": "Ramouse",
+            "preferred_url": "https://ramouse.com"
+        }
+    },
+    "data_access": {
+        "robots": "https://ramouse.com/robots.txt",
+        "llms": "https://ramouse.com/llms.txt",
+        "sitemaps": [
+            "https://ramouse.com/sitemap.xml",
+            "https://ramouse.com/sitemap/car-listings.xml",
+            "https://ramouse.com/sitemap/car-rentals.xml",
+            "https://ramouse.com/sitemap/technicians.xml",
+            "https://ramouse.com/sitemap/tow-trucks.xml",
+            "https://ramouse.com/sitemap/products.xml"
+        ],
         "feeds": [
             {
-                "type": "car_listings",
-                "url": "https://ramouse.com/feed/car-listings.xml",
-                "update": "real-time"
+                "name": "Car Listings",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/car-listings.xml"
             },
             {
-                "type": "car_rentals",
-                "url": "https://ramouse.com/feed/car-rentals.xml",
-                "update": "real-time"
+                "name": "Car Rentals",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/car-rentals.xml"
             },
             {
-                "type": "products",
-                "url": "https://ramouse.com/feed/products.xml",
-                "update": "real-time"
+                "name": "Technicians",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/technicians.xml"
             },
             {
-                "type": "technicians",
-                "url": "https://ramouse.com/feed/technicians.xml",
-                "update": "real-time"
+                "name": "Tow Trucks",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/tow-trucks.xml"
             },
             {
-                "type": "tow_trucks",
-                "url": "https://ramouse.com/feed/tow-trucks.xml",
-                "update": "real-time"
+                "name": "Products",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/products.xml"
             }
-        ],
-        "core_pages": [
-            "https://ramouse.com/about",
-            "https://ramouse.com/contact",
-            "https://ramouse.com/faq",
-            "https://ramouse.com/privacy",
-            "https://ramouse.com/terms"
         ]
+    },
+    "structured_data": {
+        "standards": [
+            "Schema.org",
+            "JSON-LD"
+        ],
+        "entities": [
+            "Organization",
+            "WebSite",
+            "Car",
+            "Product",
+            "Offer",
+            "AutomotiveBusiness",
+            "Dataset",
+            "CollectionPage"
+        ]
+    },
+    "datasets": {
+        "main_dataset": {
+            "name": "Ramouse.com Automotive Marketplace Data",
+            "url": "https://ramouse.com",
+            "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+            "is_accessible_for_free": true
+        }
+    },
+    "trust_signals": {
+        "ai_trust_badge": true,
+        "schema_validation": true,
+        "dataset_search_compatible": true,
+        "last_verified": "2026-01-28"
     }
 }
