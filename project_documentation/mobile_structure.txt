@@ -1,0 +1,276 @@
+RAMOUSE MOBILE APP - FILE STRUCTURE
+=====================================
+Generated: 2026-01-25
+
+ROOT DIRECTORY: c:\laragon\www\ramouse\mobile\
+
+PROJECT CONFIGURATION FILES
+---------------------------
+├── .gitignore
+├── app.json                    # Expo app configuration
+├── babel.config.js             # Babel transpiler configuration
+├── eas.json                    # Expo Application Services configuration
+├── expo-env.d.ts               # Expo TypeScript definitions
+├── index.js                    # Entry point for the mobile app
+├── metro.config.js             # Metro bundler configuration
+├── package.json                # NPM dependencies and scripts
+├── package-lock.json           # NPM lock file
+├── README.md                   # Project documentation
+├── tsconfig.json               # TypeScript configuration
+
+SOURCE CODE (src/)
+------------------
+
+src/api/
+├── client.ts                   # API client configuration
+├── endpoints/                  # API endpoint definitions
+└── interceptors/               # Request/response interceptors
+
+src/app/                        # Expo Router app directory
+├── index.tsx                   # App entry screen
+├── _layout.tsx                 # Root layout
+
+src/app/(admin)/                # Admin role screens
+└── [Admin screens - to be implemented]
+
+src/app/(auth)/                 # Authentication screens
+├── login.tsx                   # Login screen
+├── register-car-provider.tsx   # Car provider registration
+├── register-customer.tsx       # Customer registration
+└── register-technician.tsx     # Technician registration
+
+src/app/(car-provider)/         # Car Provider role screens
+├── _layout.tsx                 # Car provider layout
+├── index.tsx                   # Car provider dashboard
+├── add-listing.tsx             # Add new car listing
+├── listings.tsx                # View all listings
+└── profile.tsx                 # Car provider profile
+
+src/app/(customer)/             # Customer role screens
+├── index.tsx                   # Customer dashboard
+├── edit-profile.tsx            # Edit customer profile
+├── favorites.tsx               # Favorite listings
+├── marketplace.tsx             # Browse marketplace
+├── new-order.tsx               # Create new order
+├── orders.tsx                  # View orders
+├── profile.tsx                 # Customer profile
+├── settings.tsx                # Settings
+├── wallet.tsx                  # Wallet/payments
+├── auctions/
+│   └── index.tsx               # Auction listings
+├── car/
+│   └── [id].tsx                # Car detail page (dynamic route)
+├── order/
+│   └── [id].tsx                # Order detail page (dynamic route)
+├── technicians/
+│   └── index.tsx               # Technician directory
+└── tow-trucks/
+    └── index.tsx               # Tow truck directory
+
+src/app/(technician)/           # Technician role screens
+├── _layout.tsx                 # Technician layout
+├── index.tsx                   # Technician dashboard
+├── jobs.tsx                    # View jobs
+└── profile.tsx                 # Technician profile
+
+src/app/(tow-truck)/            # Tow Truck role screens
+├── _layout.tsx                 # Tow truck layout
+├── index.tsx                   # Tow truck dashboard
+└── requests.tsx                # View tow requests
+
+src/assets/                     # Static assets
+├── adaptive-icon.png           # Android adaptive icon
+├── favicon.png                 # Web favicon
+├── icon.png                    # App icon
+├── splash-icon.png             # Splash screen icon
+├── fonts/                      # Custom fonts
+├── icons/                      # Icon assets
+└── images/                     # Image assets
+
+src/components/                 # Reusable components
+├── index.ts                    # Component exports
+├── CarCard.tsx                 # Car listing card
+├── ErrorState.tsx              # Error state component
+├── ImagePicker.tsx             # Image picker component
+├── LoadingState.tsx            # Loading state component
+├── PaymentMethodCard.tsx       # Payment method card
+├── ProviderProfileForm.tsx     # Provider profile form
+├── admin/                      # Admin-specific components
+├── auth/                       # Auth-specific components
+├── car-provider/               # Car provider components
+├── common/                     # Common/shared components
+├── customer/                   # Customer-specific components
+├── technician/                 # Technician-specific components
+└── tow-truck/                  # Tow truck components
+
+src/components/screens/         # Screen components (legacy structure)
+├── WelcomeScreen.tsx           # Welcome/onboarding screen
+├── auth/
+│   ├── LoginScreen.tsx
+│   ├── RegisterCarProviderScreen.tsx
+│   ├── RegisterCustomerScreen.tsx
+│   └── RegisterTechnicianScreen.tsx
+├── car_provider/
+│   ├── AddListingScreen.tsx
+│   ├── DashboardScreen.tsx
+│   ├── ListingsScreen.tsx
+│   └── ProfileScreen.tsx
+├── customer/
+│   ├── CarDetailScreen.tsx
+│   ├── DashboardScreen.tsx
+│   ├── EditProfileScreen.tsx
+│   ├── FavoritesScreen.tsx
+│   ├── MarketplaceScreen.tsx
+│   ├── NewOrderScreen.tsx
+│   ├── OrderDetailScreen.tsx
+│   ├── OrdersScreen.tsx
+│   ├── ProfileScreen.tsx
+│   ├── SettingsScreen.tsx
+│   ├── TechnicianDirectoryScreen.tsx
+│   ├── TowTruckDirectoryScreen.tsx
+│   ├── WalletScreen.tsx
+│   ├── auctions/
+│   │   └── AuctionListScreen.tsx
+│   └── new_order/
+│       ├── Step1Category.tsx
+│       ├── Step2Brand.tsx
+│       ├── Step3Model.tsx
+│       ├── Step4PartType.tsx
+│       ├── Step5Details.tsx
+│       ├── Step6Review.tsx
+│       └── Step7Success.tsx
+├── technician/
+│   ├── DashboardScreen.tsx
+│   ├── JobsScreen.tsx
+│   └── ProfileScreen.tsx
+└── tow_truck/
+    ├── DashboardScreen.tsx
+    └── RequestsScreen.tsx
+
+src/config/                     # Configuration files
+├── echo.ts                     # Laravel Echo configuration
+└── env.ts                      # Environment variables
+
+src/constants/                  # App constants
+├── navigation.ts               # Navigation constants
+└── [other constants]
+
+src/data/                       # Static data
+└── constants.ts                # Data constants
+
+src/hooks/                      # Custom React hooks
+├── index.ts                    # Hook exports
+├── useAuctionUpdates.ts        # Auction real-time updates
+├── useAuth.ts                  # Authentication hook
+├── useCustomer.ts              # Customer data hook
+├── useMarketplace.ts           # Marketplace data hook
+├── useOrders.ts                # Orders management hook
+└── useRealtime.ts              # Real-time updates hook
+
+src/schemas/                    # Validation schemas
+└── [Zod/Yup schemas]
+
+src/services/                   # API service layer
+├── auction.service.ts          # Auction API calls
+├── auth.service.ts             # Authentication API calls
+├── carprovider.service.ts      # Car provider API calls
+├── customer.service.ts         # Customer API calls
+├── directory.service.ts        # Directory API calls
+├── marketplace.service.ts      # Marketplace API calls
+├── order.service.ts            # Order API calls
+├── technician.service.ts       # Technician API calls
+└── towtruck.service.ts         # Tow truck API calls
+
+src/store/                      # State management
+└── authStore.ts                # Authentication store (Zustand)
+
+src/types/                      # TypeScript type definitions
+├── index.ts                    # Type exports
+├── auction.ts                  # Auction types
+└── [other type definitions]
+
+src/utils/                      # Utility functions
+└── secureStorage.ts            # Secure storage utilities
+
+NODE_MODULES (node_modules/)
+----------------------------
+[Contains all npm dependencies - see package.json for list]
+
+KEY DEPENDENCIES
+----------------
+- expo: ~52.0.23                # Expo framework
+- react: 18.3.1                 # React library
+- react-native: 0.76.6          # React Native
+- expo-router: ~4.0.17          # File-based routing
+- zustand: ^5.0.3               # State management
+- axios: ^1.7.9                 # HTTP client
+- laravel-echo: ^1.16.1         # Real-time events
+- pusher-js: ^8.4.0-rc2         # WebSocket client
+- react-native-paper: ^5.12.5   # UI component library
+
+ARCHITECTURE NOTES
+------------------
+1. File-based routing using Expo Router
+2. Role-based screen organization: (admin), (auth), (car-provider), (customer), (technician), (tow-truck)
+3. Service layer pattern for API calls
+4. Zustand for state management
+5. Real-time updates via Laravel Echo + Pusher
+6. Cross-platform storage solution (secureStorage.ts)
+7. TypeScript for type safety
+8. React Native Paper for UI components
+
+ROUTING STRUCTURE
+-----------------
+- / (index.tsx)                 # Entry/welcome screen
+- /login                        # Login
+- /register-customer            # Customer registration
+- /register-car-provider        # Provider registration
+- /register-technician          # Technician registration
+
+Customer Routes:
+- /(customer)/                  # Customer dashboard
+- /(customer)/marketplace       # Browse cars
+- /(customer)/car/[id]          # Car details
+- /(customer)/orders            # View orders
+- /(customer)/order/[id]        # Order details
+- /(customer)/new-order         # Create order
+- /(customer)/auctions          # Auctions
+- /(customer)/technicians       # Technician directory
+- /(customer)/tow-trucks        # Tow truck directory
+- /(customer)/favorites         # Favorites
+- /(customer)/wallet            # Wallet
+- /(customer)/profile           # Profile
+- /(customer)/settings          # Settings
+
+Car Provider Routes:
+- /(car-provider)/              # Provider dashboard
+- /(car-provider)/listings      # View listings
+- /(car-provider)/add-listing   # Add listing
+- /(car-provider)/profile       # Profile
+
+Technician Routes:
+- /(technician)/                # Technician dashboard
+- /(technician)/jobs            # View jobs
+- /(technician)/profile         # Profile
+
+Tow Truck Routes:
+- /(tow-truck)/                 # Tow truck dashboard
+- /(tow-truck)/requests         # View requests
+
+DEVELOPMENT COMMANDS
+--------------------
+- npm start                     # Start Expo dev server
+- npx expo start --web          # Start web version
+- npx expo start --web --clear  # Start web with cache clear
+- npm run android               # Run on Android
+- npm run ios                   # Run on iOS
+- npm run web                   # Run on web
+
+CURRENT STATUS
+--------------
+- Mobile app is in active development
+- Web compatibility implemented
+- Real-time features integrated
+- Multi-role authentication system in place
+- Marketplace and order management functional
+- Currently running: npx expo start --web --clear

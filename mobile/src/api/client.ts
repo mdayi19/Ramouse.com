@@ -1,5 +1,5 @@
-import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { secureStorage } from '@/utils/secureStorage';
 import ENV from '@/config/env';
 
 // Create axios instance
@@ -33,7 +33,7 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-        const token = await SecureStore.getItemAsync('authToken');
+        const token = await secureStorage.getItem('authToken');
 
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -67,7 +67,7 @@ apiClient.interceptors.response.use(
         return response;
     },
     async (error: AxiosError) => {
-        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -90,7 +90,7 @@ apiClient.interceptors.response.use(
 
             try {
                 // Try to refresh token
-                const refreshToken = await SecureStore.getItemAsync('refreshToken');
+                const refreshToken = await secureStorage.getItem('refreshToken');
 
                 if (!refreshToken) {
                     throw new Error('No refresh token available');
@@ -103,7 +103,7 @@ apiClient.interceptors.response.use(
                 const { token: newToken } = response.data;
 
                 // Save new token
-                await SecureStore.setItemAsync('authToken', newToken);
+                await secureStorage.setItem('authToken', newToken);
 
                 // Update default header
                 apiClient.defaults.headers.common.Authorization = `Bearer ${newToken}`;
@@ -121,9 +121,9 @@ apiClient.interceptors.response.use(
                 processQueue(refreshError as AxiosError, null);
 
                 // Clear all auth data
-                await SecureStore.deleteItemAsync('authToken');
-                await SecureStore.deleteItemAsync('refreshToken');
-                await SecureStore.deleteItemAsync('user');
+                await secureStorage.removeItem('authToken');
+                await secureStorage.removeItem('refreshToken');
+                await secureStorage.removeItem('user');
 
                 // Redirect to login (handled by auth store)
                 return Promise.reject(refreshError);

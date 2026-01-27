@@ -1,0 +1,458 @@
+﻿Directory Structure for ..\Frontend
+Generated on 01/25/2026 15:06:34
+---------------------------
++---.dockerignore
++---.env
++---.env.example
++---.env.hybrid
++---.env.local
++---.gitignore
++---apple-touch-icon.png
++---Dockerfile
++---icon-192.png
++---index.html
++---index.tsx
++---logo without name.svg
++---package.json
++---package-lock.json
++---postcss.config.js
++---pwa-192x192.png
++---pwa-512x512.png
++---screenshot-desktop.png
++---screenshot-mobile.png
++---tailwind.config.js
++---tsconfig.json
++---tsconfig.node.json
++---tsconfig.node.tsbuildinfo
++---tsconfig.tsbuildinfo
++---vite.config.d.ts
++---vite.config.js
++---vite.config.js.timestamp-1767275578616-7527edf1586f.mjs
++---vite.config.js.timestamp-1768157762925-d04ea4071c9e8.mjs
++---vite.config.js.timestamp-1768464097536-918210beeeef6.mjs
++---vite.config.ts
++---vite.config.ts.timestamp-1767030118407-f8059f9aa5499.mjs
++---public
+|   +---.htaccess
+|   +---custom-sw.js
+|   +---debug_analytics.php
+|   +---favicon.ico
+|   +---icon-192.png
+|   +---logo without name.svg
+|   +---notification.mp3
+|   +---notification.wav
+|   +---pwa-192x192.png
+|   +---pwa-512x512.png
+|   +---robots.txt
+|   +---screenshot-desktop.png
+|   +---screenshot-mobile.png
+|   +---sound_error.wav
+|   +---sound_info.wav
+|   +---sound_money.wav
+|   \---sound_new_order.wav
+\---src
+    +---App.tsx
+    +---App.tsx.backup
+    +---App.tsx.broken
+    +---constants.tsx
+    +---index.css
+    +---index.tsx
+    +---lucide-icon-list.ts
+    +---react-gtm-module.d.ts
+    +---test-api.js
+    +---types.ts
+    +---vite-env.d.ts
+    +---components
+    |   +---AdminDashboard.tsx
+    |   +---AISuggestions.tsx
+    |   +---AnnouncementsScreen.tsx
+    |   +---BlogPostScreen.tsx
+    |   +---BlogScreen.tsx
+    |   +---BottomNavBar.tsx
+    |   +---CarLogos.tsx
+    |   +---ContactScreen.tsx
+    |   +---CountdownTimer.tsx
+    |   +---CustomerDashboard.tsx
+    |   +---CustomerGarage.tsx
+    |   +---CustomerSettings.tsx
+    |   +---DataCharts.tsx
+    |   +---DirectoryCardSkeleton.tsx
+    |   +---EmptyState.tsx
+    |   +---ErrorBoundary.tsx
+    |   +---FaqScreen.tsx
+    |   +---FloatingServicesButton.tsx
+    |   +---Footer.tsx
+    |   +---GuestServicesPopup.tsx
+    |   +---Header.tsx
+    |   +---Icon.tsx
+    |   +---IconSearch.tsx
+    |   +---ImageUpload.tsx
+    |   +---InternationalLicenseModal.tsx
+    |   +---LoginScreen.tsx
+    |   +---LoginScreen.tsx.backup
+    |   +---MediaUpload.tsx
+    |   +---MediaViewer.tsx
+    |   +---Modal.tsx
+    |   +---NotificationCenter.tsx
+    |   +---NotificationDropdown.tsx
+    |   +---NotificationPermissionModal.tsx
+    |   +---NotificationSettingsForm.tsx
+    |   +---OrderWizard.tsx
+    |   +---Pagination.tsx
+    |   +---PaymentMethodsView.tsx
+    |   +---PDFExportButton.tsx
+    |   +---Preloader.tsx
+    |   +---PrintableTechnicianProfile.tsx
+    |   +---PrintableTowTruckProfile.tsx
+    |   +---PrivacyPolicyScreen.tsx
+    |   +---ProgressBar.tsx
+    |   +---ProviderDashboard.tsx
+    |   +---ProvidersView.tsx
+    |   +---PublicMobileMenu.tsx
+    |   +---Rating.tsx
+    |   +---RouteTracker.tsx
+    |   +---SEO.tsx
+    |   +---SeoSchema.tsx
+    |   +---ShippingReceipt.tsx
+    |   +---Skeleton.tsx
+    |   +---SkeletonLoader.tsx
+    |   +---Step1Category.tsx
+    |   +---Step2Brand.tsx
+    |   +---Step3Model.tsx
+    |   +---Step4PartType.tsx
+    |   +---Step5Details.tsx
+    |   +---Step6Review.tsx
+    |   +---Step7Success.tsx
+    |   +---StepHelper.tsx
+    |   +---TableSkeleton.tsx
+    |   +---TechnicianDashboard.tsx
+    |   +---TechnicianDirectory.tsx
+    |   +---TechnicianProfile.tsx
+    |   +---TechnicianProfileView.tsx
+    |   +---TechnicianRegistration.tsx
+    |   +---TermsOfUseScreen.tsx
+    |   +---Toast.tsx
+    |   +---TowTruckDashboard.tsx
+    |   +---TowTruckDirectory.tsx
+    |   +---TowTruckProfile.tsx
+    |   +---TowTruckProfile.tsx.backup
+    |   +---TowTruckProfileView.tsx
+    |   +---TowTruckRegistration.tsx
+    |   +---UserWalletView.tsx
+    |   +---VehicleInfoModal.tsx
+    |   +---VisualOrderTimeline.tsx
+    |   +---VoiceRecorder.tsx
+    |   +---WelcomeScreen.tsx
+    |   +---CarAuction
+    |   |   +---AuctionAnnouncementPanel.tsx
+    |   |   +---AuctionBiddingPanel.tsx
+    |   |   +---AuctionCard.tsx
+    |   |   +---AuctionCarDetails.tsx
+    |   |   +---AuctionCarModal.tsx
+    |   |   +---AuctionConnectionStatus.tsx
+    |   |   +---AuctionErrorBoundary.tsx
+    |   |   +---AuctionFormBasic.tsx
+    |   |   +---AuctionFormMedia.tsx
+    |   |   +---AuctionFormPricing.tsx
+    |   |   +---AuctionFormSpecs.tsx
+    |   |   +---AuctionHeader.tsx
+    |   |   +---AuctionListPage.tsx
+    |   |   +---AuctionMedia.tsx
+    |   |   +---AuctionPolicyModal.tsx
+    |   |   +---AuctionReactions.tsx
+    |   |   +---AuctionScheduleModal.tsx
+    |   |   +---AuctionSkeleton.tsx
+    |   |   +---AuctionStatusBadge.tsx
+    |   |   +---AuctionTimeline.tsx
+    |   |   +---BidderFeed.tsx
+    |   |   +---BidHistoryCard.tsx
+    |   |   +---index.ts
+    |   |   +---LiveAuctionRoom.tsx
+    |   |   +---MobileBidSheet.tsx
+    |   |   +---ParticipantsList.tsx
+    |   |   +---QuickBidButton.tsx
+    |   |   \---SimilarAuctionsCarousel.tsx
+    |   +---CarMarketplace
+    |   |   +---AnalyticsView.tsx
+    |   |   +---CarBodyDiagram.tsx
+    |   |   +---CarListingDetail.tsx
+    |   |   +---CarListingWizard.tsx
+    |   |   +---CarMarketplacePage.tsx
+    |   |   +---CarProviderProfile.tsx
+    |   |   +---CarProviderRegistration.tsx
+    |   |   +---ColorPicker.tsx
+    |   |   +---ConditionPresets.tsx
+    |   |   +---DEVELOPMENT.md
+    |   |   +---IconCard.tsx
+    |   |   +---NumberSelector.tsx
+    |   |   +---PhotoUploader.tsx
+    |   |   +---PrintableCarProviderProfile.tsx
+    |   |   +---README.md
+    |   |   +---RentCarListingDetail.tsx
+    |   |   +---RentCarPage.tsx
+    |   |   +---SEO_CHECKLIST.md
+    |   |   +---translations.ts
+    |   |   +---CarListingWizard
+    |   |   |   +---Step1ContactLocation.tsx
+    |   |   |   +---Step2CountryBrandModel.tsx
+    |   |   |   +---Step6RentalConditions.tsx
+    |   |   |   \---StepFeatures.tsx
+    |   |   +---CarProviderDashboard
+    |   |   |   +---AnalyticsCard.tsx
+    |   |   |   +---AnalyticsListingsTable.tsx
+    |   |   |   +---AnalyticsView.tsx
+    |   |   |   +---BACKEND_API_REQUIREMENTS.md
+    |   |   |   +---BulkActions.tsx
+    |   |   |   +---index.tsx
+    |   |   |   +---ListingsView.tsx
+    |   |   |   +---OverviewView.tsx
+    |   |   |   +---PrintableRentCar.tsx
+    |   |   |   +---PrintableSaleCar.tsx
+    |   |   |   +---SettingsView.tsx
+    |   |   |   +---SponsorListingModal.tsx
+    |   |   |   \---SponsorManagementView.tsx
+    |   |   +---ListingParts
+    |   |   |   +---CarGallery.tsx
+    |   |   |   +---FeaturesShowcase.tsx
+    |   |   |   +---PriceCard.tsx
+    |   |   |   +---ProviderSidebar.tsx
+    |   |   |   +---QuickSpecsBar.tsx
+    |   |   |   +---ReportListingModal.tsx
+    |   |   |   +---SimilarListings.tsx
+    |   |   |   +---SpecificationsTabs.tsx
+    |   |   |   \---SponsoredListings.tsx
+    |   |   +---MarketplaceParts
+    |   |   |   +---ActiveFilterPills.tsx
+    |   |   |   +---BottomSheet.tsx
+    |   |   |   +---CarListingCard.tsx
+    |   |   |   +---ComparisonBar.tsx
+    |   |   |   +---ErrorState.tsx
+    |   |   |   +---FilterLoadingOverlay.tsx
+    |   |   |   +---FilterPill.tsx
+    |   |   |   +---FilterSection.tsx
+    |   |   |   +---ListingSkeleton.tsx
+    |   |   |   +---MapView.tsx
+    |   |   |   +---MarketplaceFilters.tsx
+    |   |   |   +---MultiSelect.tsx
+    |   |   |   +---OptimizedImage.tsx
+    |   |   |   +---RangeSlider.tsx
+    |   |   |   +---RentFilters.tsx
+    |   |   |   +---RentListingCard.tsx
+    |   |   |   +---SocialShare.tsx
+    |   |   |   +---SwipeableGallery.tsx
+    |   |   |   \---VideoPlayer.tsx
+    |   |   \---SharedCarListings
+    |   |       +---MobileListingCard.tsx
+    |   |       +---MyCarListingsAnalytics.tsx
+    |   |       +---MyCarListingsList.tsx
+    |   |       +---MyCarListingsSponsorship.tsx
+    |   |       +---MyCarListingsView.tsx
+    |   |       +---types.ts
+    |   |       +---UserPrintableRentCar.tsx
+    |   |       +---UserPrintableSaleCar.tsx
+    |   |       \---UserSponsorListingModal.tsx
+    |   +---CustomerDashboardParts
+    |   |   +---FlashProductsView.tsx
+    |   |   +---OverviewView.tsx
+    |   |   +---types.ts
+    |   |   \---UserAuctionsView.tsx
+    |   +---DashboardParts
+    |   |   +---AccountingView.tsx
+    |   |   +---AuctionManagementView.tsx
+    |   |   +---BlogManagementView.tsx
+    |   |   +---BulletinBoardView.tsx
+    |   |   +---CacheManagementView.tsx
+    |   |   +---CarCategoriesView.tsx
+    |   |   +---CarListingsSponsorView.tsx
+    |   |   +---CarProvidersView.tsx
+    |   |   +---CeoSettingsView.tsx
+    |   |   +---FaqManagementView.tsx
+    |   |   +---FileManager.tsx
+    |   |   +---InternationalLicenseComponents.tsx
+    |   |   +---InternationalLicenseManagementView.tsx
+    |   |   +---InternationalLicenseRequestModal.tsx
+    |   |   +---InternationalLicenseRequestModal.tsx.backup
+    |   |   +---LimitsSettingsView.tsx
+    |   |   +---MaintenanceView.tsx
+    |   |   +---MessageTemplatesView.tsx
+    |   |   +---ModelManagementView.tsx
+    |   |   +---NotificationSettingsEditor.tsx
+    |   |   +---OrdersView.tsx
+    |   |   +---OverviewView.tsx
+    |   |   +---ReviewsManagementView.tsx
+    |   |   +---SchedulerManagementView.tsx
+    |   |   +---SendNotificationView.tsx
+    |   |   +---SeoManagementView.tsx
+    |   |   +---ServerStatusView.tsx
+    |   |   +---SettingsView.tsx
+    |   |   +---Shared.tsx
+    |   |   +---ShippingSettingsView.tsx
+    |   |   +---ShippingView.tsx
+    |   |   +---Sidebar.tsx
+    |   |   +---TechniciansView.tsx
+    |   |   +---TelegramManagementView.tsx
+    |   |   +---TowTruckManagementView.tsx
+    |   |   +---types.ts
+    |   |   +---UserInternationalLicenseView.tsx
+    |   |   +---UsersView.tsx
+    |   |   +---UserWalletManagementView.tsx
+    |   |   +---WhatsappManagementView.tsx
+    |   |   +---AuctionParts
+    |   |   |   +---AuctionActivityLog.tsx
+    |   |   |   +---AuctionCarsTab.tsx
+    |   |   |   +---AuctionCharts.tsx
+    |   |   |   +---AuctionCommandPalette.tsx
+    |   |   |   +---AuctionListTab.tsx
+    |   |   |   +---AuctionOverviewTab.tsx
+    |   |   |   +---AuctionSmartInsights.tsx
+    |   |   |   +---index.ts
+    |   |   |   \---LiveAuctionControl.tsx
+    |   |   \---Store
+    |   |       +---FlashProductManagement.tsx
+    |   |       +---ProductManagement.tsx
+    |   |       +---StoreOrderManagement.tsx
+    |   |       +---StoreOverview.tsx
+    |   |       +---StoreReceipt.tsx
+    |   |       \---StoreSettings.tsx
+    |   +---MyOrders
+    |   |   +---exports.ts
+    |   |   +---index.tsx
+    |   |   +---OrderConfirmationModal.tsx
+    |   |   +---OrderListItem.tsx
+    |   |   +---QuoteCard.tsx
+    |   |   +---QuoteGrid.tsx
+    |   |   +---ReuploadModal.tsx
+    |   |   \---SelectedOrderDetails.tsx
+    |   +---ProviderDashboardParts
+    |   |   +---AcceptedOrdersView.tsx
+    |   |   +---FlashProductsView.tsx
+    |   |   +---MyBidsView.tsx
+    |   |   +---OpenOrdersView.tsx
+    |   |   +---OrderDetails.tsx
+    |   |   +---PaymentInfoFormModal.tsx
+    |   |   +---ProviderOverviewView.tsx
+    |   |   +---ProviderSettingsView.tsx
+    |   |   +---QuoteModal.tsx
+    |   |   +---types.ts
+    |   |   +---WalletView.tsx
+    |   |   \---WithdrawModal.tsx
+    |   +---PWA
+    |   |   +---InstallPrompt.tsx
+    |   |   \---OfflineIndicator.tsx
+    |   +---shared
+    |   |   +---Button.tsx
+    |   |   +---Card.tsx
+    |   |   +---FilterPresets.tsx
+    |   |   +---index.ts
+    |   |   +---Input.tsx
+    |   |   +---LazyImage.tsx
+    |   |   +---LoadingSpinner.tsx
+    |   |   +---MobileFilterDrawer.tsx
+    |   |   +---PrintPreviewModal.tsx
+    |   |   +---SearchAutocomplete.tsx
+    |   |   \---StructuredData.tsx
+    |   +---Store
+    |   |   +---BannerCarousel.tsx
+    |   |   +---CheckoutStepper.tsx
+    |   |   +---CustomerStoreReceipt.tsx
+    |   |   +---ProductPage.tsx
+    |   |   +---ProductSkeleton.tsx
+    |   |   +---RequestDetailsModal.tsx
+    |   |   +---SharedFlashProductsView.tsx
+    |   |   +---StoreCheckoutModal.tsx
+    |   |   +---StoreFilters.tsx
+    |   |   +---StoreOrders.tsx
+    |   |   +---StoreOrderSkeleton.tsx
+    |   |   +---StoreProductCard.tsx
+    |   |   +---StoreProductGrid.tsx
+    |   |   +---StoreView.tsx
+    |   |   \---utils.ts
+    |   +---TechnicianDashboardParts
+    |   |   +---FlashProductsView.tsx
+    |   |   +---OverviewView.tsx
+    |   |   +---ProfileView.tsx
+    |   |   +---ReviewsView.tsx
+    |   |   +---SettingsView.tsx
+    |   |   \---types.ts
+    |   +---TowTruckDashboardParts
+    |   |   +---FlashProductsView.tsx
+    |   |   +---OverviewView.tsx
+    |   |   +---ProfileView.tsx
+    |   |   +---ReviewsView.tsx
+    |   |   +---SettingsView.tsx
+    |   |   \---types.ts
+    |   +---ui
+    |   |   +---Badge.tsx
+    |   |   +---Button.tsx
+    |   |   +---Card.tsx
+    |   |   +---Checkbox.tsx
+    |   |   +---Input.tsx
+    |   |   \---Textarea.tsx
+    |   \---welcome
+    |       +---DesktopWelcomeScreen.tsx
+    |       \---MobileWelcomeScreen.tsx
+    +---config
+    |   \---api.ts
+    +---constants
+    |   +---auctionErrors.ts
+    |   +---carOptions.ts
+    |   \---countries.ts
+    +---context
+    |   \---MarketplaceContext.tsx
+    +---hooks
+    |   +---useAIAuctioneer.ts
+    |   +---useAppData.ts
+    |   +---useAppState.ts
+    |   +---useAuction.ts
+    |   +---useAuctionConnection.ts
+    |   +---useAuctionUpdates.ts
+    |   +---useAuth.ts
+    |   +---useCart.ts
+    |   +---useComparison.ts
+    |   +---useDebounce.ts
+    |   +---useMediaQuery.ts
+    |   +---useMobileOptimizations.ts
+    |   +---useNotifications.ts
+    |   +---useOrderForm.ts
+    |   +---usePerformance.ts
+    |   +---useProductFilter.ts
+    |   +---usePWA.ts
+    |   +---useRealtime.ts
+    |   +---useSEO.ts
+    |   +---useSettings.ts
+    |   +---useTelegram.ts
+    |   +---useVehicleData.ts
+    |   +---useWalletBalance.ts
+    |   \---useWatchlist.ts
+    +---lib
+    |   +---analytics.ts
+    |   +---api.ts
+    |   +---apiCache.ts
+    |   +---config.ts
+    |   +---db.ts
+    |   +---echo.ts
+    |   \---utils.ts
+    +---services
+    |   +---admin.service.ts
+    |   +---auction.service.ts
+    |   +---auth.service.ts
+    |   +---carprovider.service.ts
+    |   +---content.service.ts
+    |   +---directory.service.ts
+    |   +---notification.service.ts
+    |   +---order.service.ts
+    |   +---providerDashboard.service.ts
+    |   +---store.service.ts
+    |   +---tow-truck.service.ts
+    |   +---upload.service.ts
+    |   +---wallet.service.ts
+    |   \---watchlist.service.ts
+    +---stores
+    |   \---comparisonStore.ts
+    \---utils
+        +---carValidation.ts
+        +---errorHandling.ts
+        +---helpers.ts
+        +---performance.ts
+        +---structuredData.ts
+        \---webVitals.ts

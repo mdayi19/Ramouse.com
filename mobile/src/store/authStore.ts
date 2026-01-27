@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { secureStorage } from '@/utils/secureStorage';
 
 export type UserRole = 'customer' | 'technician' | 'car_provider' | 'tow_truck' | 'admin';
 
@@ -60,20 +60,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 password,
             });
 
-            const { token, user, role, is_active, is_verified } = response.data;
+            const { token, user } = response.data;
 
-            // Check if user is active and verified (for service providers)
-            if (!is_active) {
-                throw new Error('Your account has been deactivated. Please contact support.');
+            // CRITICAL: Check if response contains error (nginx/proxy may convert 403 to 200)
+            // If there's an error message but no token, treat as login failure
+            if (!token && (response.data.error || response.data.message)) {
+                const errorMessage = response.data.message || response.data.error || 'Login failed';
+                set({
+                    user: null,
+                    token: null,
+                    isAuthenticated: false,
+                    isLoading: false,
+                    error: errorMessage,
+                });
+                // Throw error with the backend message
+                throw new Error(errorMessage);
             }
 
-            if (!is_verified && role !== 'customer') {
-                throw new Error('Your account is pending admin approval.');
+            // Validate response data
+            if (!user || !token) {
+                throw new Error('Invalid response from server');
             }
 
             // Save token and user to secure storage
-            await SecureStore.setItemAsync('authToken', token);
-            await SecureStore.setItemAsync('user', JSON.stringify(user));
+            await secureStorage.setItem('authToken', token);
+            await secureStorage.setItem('user', JSON.stringify(user));
 
             set({
                 user,
@@ -105,9 +116,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
         } finally {
             // Clear secure storage
-            await SecureStore.deleteItemAsync('authToken');
-            await SecureStore.deleteItemAsync('user');
-            await SecureStore.deleteItemAsync('refreshToken');
+            await secureStorage.removeItem('authToken');
+            await secureStorage.removeItem('user');
+            await secureStorage.removeItem('refreshToken');
 
             // Reset state
             set({
@@ -125,8 +136,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isLoading: true });
 
         try {
-            const token = await SecureStore.getItemAsync('authToken');
-            const userJson = await SecureStore.getItemAsync('user');
+            const token = await secureStorage.getItem('authToken');
+            const userJson = await secureStorage.getItem('user');
 
             if (token && userJson) {
                 const user = JSON.parse(userJson);

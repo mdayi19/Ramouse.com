@@ -1,13 +1,7 @@
 # General Crawlers
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /dashboard
-Disallow: /provider
-Disallow: /technician
-Allow: /technicians
-Disallow: /tow-truck-dashboard
-Disallow: /my-orders
+
 
 # AI Crawlers - FULL ACCESS for GEO
 User-agent: GPTBot
