@@ -14,6 +14,7 @@ Country: SY
 Language: ar
 Contact-AI: ai@ramouse.com
 Human-Policy: https://ramouse.com/ai-usage
+Machine-Policy: https://ramouse.com/.well-known/ai.json
 
 # =========================================================
 # OWNERSHIP & AUTHORITY
