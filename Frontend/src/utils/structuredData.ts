@@ -361,8 +361,18 @@ export const generateOrganizationSchema = () => {
             email: 'info@ramouse.com',
         },
         sameAs: [
-            // Add social media URLs when available
+            'https://www.facebook.com/ramouse',
+            'https://www.instagram.com/ramouse',
+            'https://twitter.com/ramouse'
         ],
+        knowsAbout: [
+            'Automotive Industry',
+            'Vehicle Listings',
+            'Car Rentals',
+            'Automotive Technicians',
+            'Tow Truck Services',
+            'Car Spare Parts'
+        ]
     };
 };
 
@@ -390,22 +400,18 @@ export const generateWebsiteSchema = () => {
 /**
  * Generate Dataset schema (Google recommendation for data authority)
  */
-export const generateDatasetSchema = () => {
+/**
+ * BASE DATASET GENERATOR (Internal Helper)
+ */
+const generateBaseDataset = (name: string, description: string, feedUrl: string, keywords: string[]) => {
     return {
         '@context': 'https://schema.org',
         '@type': 'Dataset',
-        name: 'Ramouse.com Automotive Marketplace Data',
-        description: 'Comprehensive dataset of car listings, rentals, providers, technicians, and tow trucks in Syria. Updated in real-time.',
+        name: name,
+        description: description,
         url: BASE_URL,
         isAccessibleForFree: true,
-        keywords: [
-            'Cars in Syria',
-            'Automotive Data',
-            'Car Listings',
-            'Car Rentals',
-            'Mechanics Syria',
-            'Tow Trucks Syria'
-        ],
+        keywords: keywords,
         creator: {
             '@type': 'Organization',
             name: 'Ramouse.com',
@@ -415,39 +421,79 @@ export const generateDatasetSchema = () => {
             {
                 '@type': 'DataDownload',
                 encodingFormat: 'application/atom+xml',
-                contentUrl: `${BASE_URL}/api/feed/car-listings.xml`
-            },
-            {
-                '@type': 'DataDownload',
-                encodingFormat: 'application/atom+xml',
-                contentUrl: `${BASE_URL}/api/feed/car-rentals.xml`
-            },
-            {
-                '@type': 'DataDownload',
-                encodingFormat: 'application/atom+xml',
-                contentUrl: `${BASE_URL}/api/feed/products.xml`
-            },
-            {
-                '@type': 'DataDownload',
-                encodingFormat: 'application/atom+xml',
-                contentUrl: `${BASE_URL}/api/feed/car-providers.xml`
-            },
-            {
-                '@type': 'DataDownload',
-                encodingFormat: 'application/atom+xml',
-                contentUrl: `${BASE_URL}/api/feed/technicians.xml`
-            },
-            {
-                '@type': 'DataDownload',
-                encodingFormat: 'application/atom+xml',
-                contentUrl: `${BASE_URL}/api/feed/tow-trucks.xml`
+                contentUrl: `${BASE_URL}${feedUrl}`
             }
         ],
         includedInDataCatalog: {
             '@type': 'DataCatalog',
             name: 'Google Dataset Search'
+        },
+        isPartOf: {
+            '@type': 'Dataset',
+            name: 'Ramouse.com Automotive Marketplace Data',
+            url: BASE_URL
         }
     };
+};
+
+/**
+ * Car Listings Dataset Schema
+ */
+export const generateCarListingsDataset = () => {
+    return generateBaseDataset(
+        'Ramouse Car Listings Dataset',
+        'Real-time dataset of cars for sale in Syria, including prices, specs, and availability.',
+        '/feed/car-listings.xml',
+        ['Cars for Sale', 'Used Cars Syria', 'Car Prices', 'Vehicle Listings']
+    );
+};
+
+/**
+ * Car Rentals Dataset Schema
+ */
+export const generateCarRentalsDataset = () => {
+    return generateBaseDataset(
+        'Ramouse Car Rentals Dataset',
+        'Dataset of available car rentals in Syria with daily/weekly rates and terms.',
+        '/feed/car-rentals.xml',
+        ['Car Rentals', 'Rent a Car Syria', 'Rental Rates', 'Vehicle Hire']
+    );
+};
+
+/**
+ * Technicians Dataset Schema
+ */
+export const generateTechniciansDataset = () => {
+    return generateBaseDataset(
+        'Ramouse Technicians Registry',
+        'Directory of verified automotive technicians and mechanics in Syria.',
+        '/feed/technicians.xml',
+        ['Mechanics', 'Auto Technicians', 'Car Repair', 'Syria Mechanics']
+    );
+};
+
+/**
+ * Tow Trucks Dataset Schema
+ */
+export const generateTowTrucksDataset = () => {
+    return generateBaseDataset(
+        'Ramouse Tow Truck Services',
+        'Real-time registry of active tow truck providers in Syria.',
+        '/feed/tow-trucks.xml',
+        ['Tow Trucks', 'Roadside Assistance', 'Car Recovery', 'Towing Services']
+    );
+};
+
+/**
+ * Products Dataset Schema
+ */
+export const generateProductsDataset = () => {
+    return generateBaseDataset(
+        'Ramouse Automotive Parts Dataset',
+        'Catalog of car spare parts and accessories available in Syria.',
+        '/feed/products.xml',
+        ['Spare Parts', 'Car Accessories', 'Auto Parts', 'Car Batteries']
+    );
 };
 
 /**
@@ -469,5 +515,57 @@ export const generateCollectionPageSchema = (title: string, description: string,
                 name: item.title || item.name
             }))
         }
+    };
+};
+
+/**
+ * Generate Main Dataset Schema (Parent Dataset)
+ */
+export const generateMainDatasetSchema = () => {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        name: 'Ramouse.com Automotive Marketplace Data',
+        description: 'Comprehensive real-time dataset of the Ramouse.com platform including car listings, rentals, technicians, tow trucks, and spare parts.',
+        url: BASE_URL,
+        isAccessibleForFree: true,
+        keywords: ['Automotive', 'Syria', 'Car Listings', 'Car Rentals', 'Mechanics', 'Tow Trucks', 'Spare Parts', 'Vehicle Data'],
+        creator: {
+            '@type': 'Organization',
+            name: 'Ramouse.com',
+            url: BASE_URL
+        },
+        distribution: [
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/feed/car-listings.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/feed/car-rentals.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/feed/technicians.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/feed/tow-trucks.xml`
+            },
+            {
+                '@type': 'DataDownload',
+                encodingFormat: 'application/atom+xml',
+                contentUrl: `${BASE_URL}/feed/products.xml`
+            }
+        ],
+        includedInDataCatalog: {
+            '@type': 'DataCatalog',
+            name: 'Google Dataset Search'
+        },
+        license: 'https://creativecommons.org/licenses/by-nc/4.0/'
     };
 };

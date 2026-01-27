@@ -12,6 +12,8 @@ import { DEFAULT_TECHNICIAN_SPECIALTIES, SYRIAN_CITIES } from '../constants';
 import { BASE_URL } from '../lib/api';
 import DirectoryCardSkeleton from './DirectoryCardSkeleton';
 import SEO from './SEO';
+import SeoSchema from './SeoSchema';
+import { generateTechniciansDataset } from '../utils/structuredData';
 
 interface TechnicianDirectoryProps {
     allTechnicians: Technician[];
@@ -402,6 +404,9 @@ export const TechnicianDirectory: React.FC<TechnicianDirectoryProps> = ({
                 description="تصفح قائمة أفضل الفنيين ومراكز صيانة السيارات في سوريا. ميكانيك، كهرباء، دوزان، والمزيد. ابحث عن الفني الأقرب إليك."
                 canonical="/technicians"
             />
+
+            {/* Dataset Schema for AI Authority */}
+            <SeoSchema type="Dataset" data={generateTechniciansDataset()} />
 
             {/* Mobile Header with Sticky Back Button */}
             <div className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm pt-3 pb-4 -mx-3 px-3 border-b border-slate-200 dark:border-slate-700 mb-4 md:hidden">

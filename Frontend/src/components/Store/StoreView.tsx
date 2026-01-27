@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Customer, AdminFlashProduct, FlashProductBuyerRequest, Notification, NotificationType, Settings, StoreCategory, Provider, Technician, TowTruck, PaymentMethod, ShippingPriceByCity } from '../../types';
 import Icon from '../Icon';
 import SEO from '../SEO';
+import SeoSchema from '../SeoSchema';
+import { generateProductsDataset } from '../../utils/structuredData';
 import { fileToBase64 } from '../../utils/helpers';
 import { SYRIAN_CITIES } from '../../constants';
 import { ProductPage } from './ProductPage';
@@ -532,6 +534,9 @@ export const StoreView: React.FC<StoreViewProps> = ({ customer, provider, techni
                 description="تسوق أفضل قطع غيار السيارات، زيوت، بطاريات، وإكسسوارات في سوريا. توصيل سريع لجميع المحافظات وأسعار منافسة."
                 canonical="/store"
             />
+
+            {/* Dataset Schema for AI Authority */}
+            <SeoSchema type="Dataset" data={generateProductsDataset()} />
 
             {/* Banner Carousel - Enhanced */}
             <div className="mb-4 md:mb-6">

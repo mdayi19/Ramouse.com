@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import SeoSchema from './SeoSchema';
+import { generateOrganizationSchema } from '../utils/structuredData';
 
 interface SEOProps {
     title?: string;
@@ -52,26 +53,10 @@ const SEO: React.FC<SEOProps> = ({
                 <meta name="twitter:image" content={ogImage} />
             </Helmet>
 
-            {/* Default Organization Schema for every page (optional, or move to App root) */}
+            {/* Default Organization Schema for every page */}
             <SeoSchema
                 type="Organization"
-                data={{
-                    "name": "Ramouse",
-                    "url": "https://ramouse.com",
-                    "logo": "https://ramouse.com/logo.png",
-                    "description": "Electronic shipping and logistics platform connecting customers with shipping companies",
-                    "sameAs": [
-                        "https://www.facebook.com/ramouse",
-                        "https://www.instagram.com/ramouse"
-                    ],
-                    "contactPoint": {
-                        "@type": "ContactPoint",
-                        "telephone": "+963912345678",
-                        "contactType": "customer service",
-                        "areaServed": "SY",
-                        "availableLanguage": ["Arabic", "English"]
-                    }
-                }}
+                data={generateOrganizationSchema()}
             />
 
             {/* Page Specific Schema */}

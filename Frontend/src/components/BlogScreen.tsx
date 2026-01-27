@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import Icon from './Icon';
 import Pagination from './Pagination';
 import SEO from './SEO';
+import SeoSchema from './SeoSchema';
 
 interface BlogScreenProps {
   onReadMore: (slug: string) => void;
@@ -63,6 +64,27 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ onReadMore, onBack }) => {
           description: "اقرأ أحدث المقالات والنصائح من خبراء السيارات في سوريا.",
           url: "https://ramouse.com/blog",
           type: "website"
+        }}
+      />
+      <SeoSchema
+        type="Blog"
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "مدونة راموسة",
+          "description": "مقالات ونصائح حول صيانة السيارات وقطع الغيار في سوريا",
+          "url": "https://ramouse.com/blog",
+          "blogPost": posts.slice(0, 10).map(post => ({
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.summary,
+            "datePublished": post.publishedAt,
+            "author": {
+              "@type": "Organization",
+              "name": post.author
+            },
+            "url": `https://ramouse.com/blog/${post.slug}`
+          }))
         }}
       />
       <div className="flex justify-between items-center mb-8">

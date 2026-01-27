@@ -6,12 +6,12 @@ import { Input } from './ui/Input';
 
 interface FooterProps {
     settings: Settings;
-    onNavigate?: (view: 'blog' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact') => void;
+    onNavigate?: (view: 'blog' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'aiUsage') => void;
     className?: string;
 }
 
 const Footer: React.FC<FooterProps> = ({ settings, onNavigate, className = '' }) => {
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, view: 'blog' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact') => {
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, view: 'blog' | 'faq' | 'privacyPolicy' | 'termsOfUse' | 'contact' | 'aiUsage') => {
         e.preventDefault();
         if (onNavigate) {
             onNavigate(view);
@@ -173,6 +173,16 @@ const Footer: React.FC<FooterProps> = ({ settings, onNavigate, className = '' })
                     <div className="flex gap-6">
                         <a href="#" onClick={(e) => handleLinkClick(e, 'privacyPolicy')} className="hover:text-white transition-colors">سياسة الخصوصية</a>
                         <a href="#" onClick={(e) => handleLinkClick(e, 'termsOfUse')} className="hover:text-white transition-colors">شروط الاستخدام</a>
+                        <a
+                            href="#"
+                            onClick={(e) => handleLinkClick(e, 'aiUsage')}
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-secondary/30 transition-all text-xs group"
+                        >
+                            <Icon name="Cpu" className="w-3.5 h-3.5 text-secondary group-hover:scale-110 transition-transform" />
+                            <span className="group-hover:text-secondary bg-gradient-to-r from-slate-200 to-slate-400 bg-clip-text text-transparent font-medium group-hover:from-secondary group-hover:to-secondary-300">
+                                AI Trusted
+                            </span>
+                        </a>
                     </div>
                 </div>
             </div>

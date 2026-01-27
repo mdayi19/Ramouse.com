@@ -11,6 +11,8 @@ import Rating from './Rating';
 import Pagination from './Pagination';
 import DirectoryCardSkeleton from './DirectoryCardSkeleton';
 import SEO from './SEO';
+import SeoSchema from './SeoSchema';
+import { generateTowTrucksDataset } from '../utils/structuredData';
 
 interface TowTruckDirectoryProps {
     onBack: () => void;
@@ -319,6 +321,9 @@ export const TowTruckDirectory: React.FC<TowTruckDirectoryProps> = ({
                 description="خدمات سحب وإنقاذ السيارات على مدار 24 ساعة في سوريا. اعثر على أقرب سطحة أو ونش لموقعك الحالي بسرعة."
                 canonical="/tow-trucks"
             />
+
+            {/* Dataset Schema for AI Authority */}
+            <SeoSchema type="Dataset" data={generateTowTrucksDataset()} />
 
             <div className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm pt-3 pb-4 -mx-3 px-3 border-b border-slate-200 dark:border-slate-700 mb-4 md:hidden">
                 <div className="flex items-center justify-between">

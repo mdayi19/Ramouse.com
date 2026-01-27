@@ -12,7 +12,8 @@ import Icon from '../Icon';
 import SEO from '../SEO';
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { api } from '../../lib/api';
-import { generateCollectionPageSchema } from '../../utils/structuredData';
+import { generateCollectionPageSchema, generateCarListingsDataset, generateCarRentalsDataset } from '../../utils/structuredData';
+import SeoSchema from '../SeoSchema';
 
 
 interface CarMarketplacePageProps {
@@ -273,6 +274,12 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                         listings
                     )
                 }}
+            />
+
+            {/* Dataset Schema for AI Authority */}
+            <SeoSchema
+                type="Dataset"
+                data={listingType === 'rent' ? generateCarRentalsDataset() : generateCarListingsDataset()}
             />
 
             {/* 1. Hero / Header Section */}

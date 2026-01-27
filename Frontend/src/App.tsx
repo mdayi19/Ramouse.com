@@ -51,6 +51,7 @@ const ContactScreen = lazy(() => import('./components/ContactScreen'));
 const TowTruckProfile = lazy(() => import('./components/TowTruckProfile'));
 const TowTruckRegistration = lazy(() => import('./components/TowTruckRegistration'));
 const TowTruckDashboard = lazy(() => import('./components/TowTruckDashboard'));
+const AIUsage = lazy(() => import('./components/AIUsage'));
 
 const TechnicianDirectory = lazy(() => import('./components/TechnicianDirectory').then(module => ({ default: module.TechnicianDirectory })));
 const TowTruckDirectory = lazy(() => import('./components/TowTruckDirectory').then(module => ({ default: module.TowTruckDirectory })));
@@ -823,6 +824,7 @@ const App: React.FC = () => {
                             <Route path="/privacy" element={<PrivacyPolicyScreen onBack={() => handleNavigate('welcome')} />} />
                             <Route path="/terms" element={<TermsOfUseScreen onBack={() => handleNavigate('welcome')} />} />
                             <Route path="/contact" element={<ContactScreen onBack={() => handleNavigate('welcome')} settings={settings} showToast={showToast} />} />
+                            <Route path="/ai-usage" element={<AIUsage onBack={() => handleNavigate('welcome')} />} />
 
                             {/* Car Provider Dashboard */}
                             <Route path="/car-provider-dashboard/*" element={

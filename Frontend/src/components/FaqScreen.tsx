@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaqItem, ApiResponse } from '../types';
 import { api } from '../lib/api';
 import Icon from './Icon';
+import SEO from './SEO';
+import SeoSchema from './SeoSchema';
 
 interface FaqScreenProps {
   onBack: () => void;
@@ -65,35 +67,32 @@ const FaqScreen: React.FC<FaqScreenProps> = ({ onBack }) => {
   }, []);
 
   useEffect(() => {
-    if (faqItems.length === 0) return;
+    // Schema handled by SeoSchema component
+  }, []);
 
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = 'faq-ld-json';
-    script.innerHTML = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqItems.map(item => ({
-        "@type": "Question",
-        "name": item.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": item.answer
-        }
-      }))
-    });
-    document.head.appendChild(script);
-
-    return () => {
-      const existingScript = document.getElementById('faq-ld-json');
-      if (existingScript) {
-        document.head.removeChild(existingScript);
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map(item => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
       }
-    };
-  }, [faqItems]);
+    }))
+  };
 
   return (
     <div className="w-full animate-fade-in">
+      <SEO
+        title="الأسئلة الشائعة | راموسة"
+        description="إجابات على الأسئلة الأكثر شيوعاً حول خدمات راموسة، تأجير السيارات، شراء القطع، والتواصل مع الفنيين."
+        canonical="/faq"
+      />
+      {/* Schema Injection */}
+      <SeoSchema type="FAQPage" data={faqSchema} />
+
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-primary dark:text-primary-400">الأسئلة الشائعة</h1>

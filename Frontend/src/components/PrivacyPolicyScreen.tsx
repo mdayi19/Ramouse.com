@@ -1,5 +1,7 @@
 import React from 'react';
 import Icon from './Icon';
+import SEO from './SEO';
+import SeoSchema from './SeoSchema';
 
 interface PrivacyPolicyScreenProps {
   onBack: () => void;
@@ -8,6 +10,21 @@ interface PrivacyPolicyScreenProps {
 const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ onBack }) => {
   return (
     <div className="w-full animate-fade-in bg-white dark:bg-darkcard rounded-xl shadow-lg p-6 sm:p-8">
+      <SEO
+        title="سياسة الخصوصية | راموسة"
+        description="تعرف على كيفية جمع واستخدام وحماية بياناتك في منصة راموسة."
+        canonical="/privacy"
+      />
+      <SeoSchema
+        type="WebPage"
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "سياسة الخصوصية",
+          "description": "سياسة الخصوصية لمنصة راموسة",
+          "url": "https://ramouse.com/privacy"
+        }}
+      />
       <div className="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
         <div>
           <h1 className="text-3xl font-bold text-primary dark:text-primary-400">سياسة الخصوصية</h1>
@@ -21,7 +38,7 @@ const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ onBack }) => 
 
       <div className="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-right leading-relaxed">
         <p>نحن في راموسة لقطع غيار السيارات ("نحن"، "لنا")، نلتزم بحماية خصوصيتك. توضح سياسة الخصوصية هذه كيفية جمع واستخدام والكشف عن معلوماتك الشخصية عند استخدامك لتطبيقنا.</p>
-        
+
         <h2 className="font-bold">1. المعلومات التي نجمعها</h2>
         <p>قد نجمع الأنواع التالية من المعلومات:</p>
         <ul>
@@ -55,7 +72,7 @@ const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ onBack }) => 
 
         <h2 className="font-bold">5. حقوقك</h2>
         <p>لديك الحق في الوصول إلى معلوماتك الشخصية أو تصحيحها أو حذفها. يمكنك إدارة معظم معلوماتك من خلال لوحة التحكم الخاصة بك.</p>
-        
+
         <h2 className="font-bold">6. التغييرات على هذه السياسة</h2>
         <p>قد نقوم بتحديث سياسة الخصوصية هذه من وقت لآخر. سنخطرك بأي تغييرات عن طريق نشر السياسة الجديدة على هذه الصفحة.</p>
 

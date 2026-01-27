@@ -1,5 +1,7 @@
 import React from 'react';
 import Icon from './Icon';
+import SEO from './SEO';
+import SeoSchema from './SeoSchema';
 
 interface TermsOfUseScreenProps {
   onBack: () => void;
@@ -8,6 +10,21 @@ interface TermsOfUseScreenProps {
 const TermsOfUseScreen: React.FC<TermsOfUseScreenProps> = ({ onBack }) => {
   return (
     <div className="w-full animate-fade-in bg-white dark:bg-darkcard rounded-xl shadow-lg p-6 sm:p-8">
+      <SEO
+        title="شروط الاستخدام | راموسة"
+        description="شروط وأحكام استخدام منصة راموسة لخدمات السيارات."
+        canonical="/terms"
+      />
+      <SeoSchema
+        type="WebPage"
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "شروط الاستخدام",
+          "description": "شروط استخدام منصة راموسة",
+          "url": "https://ramouse.com/terms"
+        }}
+      />
       <div className="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
         <div>
           <h1 className="text-3xl font-bold text-primary dark:text-primary-400">شروط الاستخدام</h1>
@@ -47,7 +64,7 @@ const TermsOfUseScreen: React.FC<TermsOfUseScreenProps> = ({ onBack }) => {
 
         <h2 className="font-bold">7. القانون الحاكم</h2>
         <p>تخضع هذه الشروط وتفسر وفقًا للقوانين المعمول بها في الجمهورية العربية السورية.</p>
-        
+
         <h2 className="font-bold">8. اتصل بنا</h2>
         <p>إذا كان لديك أي أسئلة حول شروط الاستخدام هذه، يرجى الاتصال بنا.</p>
       </div>

@@ -11,7 +11,8 @@ import Icon from '../Icon';
 import SEO from '../SEO';
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { api } from '../../lib/api';
-import { generateCollectionPageSchema } from '../../utils/structuredData';
+import { generateCollectionPageSchema, generateCarRentalsDataset } from '../../utils/structuredData';
+import SeoSchema from '../SeoSchema';
 
 
 interface RentCarPageProps {
@@ -239,6 +240,9 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                     )
                 }}
             />
+
+            {/* Dataset Schema for AI Authority */}
+            <SeoSchema type="Dataset" data={generateCarRentalsDataset()} />
 
             {/* 1. Hero / Header Section for RENT */}
             <div className="relative bg-gradient-to-br from-teal-800 via-teal-900 to-slate-800 text-white py-12 md:py-16 overflow-hidden">

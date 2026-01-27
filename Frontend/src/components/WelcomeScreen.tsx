@@ -4,7 +4,7 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 import SEO from './SEO';
 import Icon from './Icon';
 import SeoSchema from './SeoSchema';
-import { generateDatasetSchema } from '../utils/structuredData';
+import { generateMainDatasetSchema } from '../utils/structuredData';
 
 // Lazy load the two screen variants
 const MobileWelcomeScreen = React.lazy(() =>
@@ -174,7 +174,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
       />
 
       {/* Dataset Schema for AI Authority */}
-      <SeoSchema type="Dataset" data={generateDatasetSchema()} />
+      <SeoSchema type="Dataset" data={generateMainDatasetSchema()} />
 
       {/* Animated Background */}
       <AnimatedBackground />

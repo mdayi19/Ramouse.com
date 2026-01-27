@@ -129,6 +129,7 @@ export const useAppState = () => {
     if (path === '/contact') return 'contact';
     if (path.startsWith('/car-listings')) return 'car-listings';
     if (path.startsWith('/rent-car')) return 'rent-car';
+    if (path === '/ai-usage') return 'aiUsage';
     return 'welcome';
   }, [location.pathname]);
 
@@ -168,6 +169,7 @@ export const useAppState = () => {
       case 'contact': path = '/contact'; break;
       case 'car-listings': path = '/car-listings'; break;
       case 'rent-car': path = '/rent-car'; break;
+      case 'aiUsage': path = '/ai-usage'; break;
       default: path = '/';
     }
     navigate(path, { state: params });
