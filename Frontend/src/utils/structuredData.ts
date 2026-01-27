@@ -183,6 +183,21 @@ export const generateCarProviderSchema = (provider: any) => {
 /**
  * Generate Schema.org JSON-LD for technicians
  */
+/**
+ * Helper to get absolute image URL
+ */
+const getImageUrl = (img: any): string | undefined => {
+    if (!img) return undefined;
+    const path = typeof img === 'string' ? img : (img.url || img.data || img.path);
+    if (!path) return undefined;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('data:')) return undefined; // Skip base64 for schema if possible, or allow it
+    return `${BASE_URL}/${path.startsWith('/') ? path.substring(1) : `storage/${path}`}`;
+};
+
+/**
+ * Generate Schema.org JSON-LD for technicians
+ */
 export const generateTechnicianSchema = (technician: any) => {
     return {
         '@context': 'https://schema.org',
@@ -194,7 +209,7 @@ export const generateTechnicianSchema = (technician: any) => {
         url: `${BASE_URL}/technicians/${technician.id}`,
         address: {
             '@type': 'PostalAddress',
-            streetAddress: technician.workshop_address,
+            streetAddress: technician.workshopAddress || technician.workshop_address,
             addressLocality: technician.city,
             addressCountry: 'SY',
         },
@@ -203,11 +218,11 @@ export const generateTechnicianSchema = (technician: any) => {
             latitude: technician.location.latitude,
             longitude: technician.location.longitude,
         } : undefined,
-        telephone: technician.user?.phone,
-        image: technician.profile_photo ? `${BASE_URL}/storage/${technician.profile_photo}` : undefined,
-        aggregateRating: technician.average_rating ? {
+        telephone: technician.user?.phone || technician.phone || technician.id,
+        image: getImageUrl(technician.profilePhoto || technician.profile_photo),
+        aggregateRating: (technician.averageRating || technician.average_rating) ? {
             '@type': 'AggregateRating',
-            ratingValue: technician.average_rating,
+            ratingValue: technician.averageRating || technician.average_rating,
             reviewCount: technician.reviews?.length || 0,
             bestRating: 5,
             worstRating: 1,
@@ -248,11 +263,11 @@ export const generateTowTruckSchema = (towTruck: any) => {
             latitude: towTruck.location.latitude,
             longitude: towTruck.location.longitude,
         } : undefined,
-        telephone: towTruck.user?.phone,
-        image: towTruck.profile_photo ? `${BASE_URL}/storage/${towTruck.profile_photo}` : undefined,
-        aggregateRating: towTruck.average_rating ? {
+        telephone: towTruck.user?.phone || towTruck.phone || towTruck.id,
+        image: getImageUrl(towTruck.profilePhoto || towTruck.profile_photo),
+        aggregateRating: (towTruck.averageRating || towTruck.average_rating) ? {
             '@type': 'AggregateRating',
-            ratingValue: towTruck.average_rating,
+            ratingValue: towTruck.averageRating || towTruck.average_rating,
             reviewCount: towTruck.reviews?.length || 0,
             bestRating: 5,
             worstRating: 1,
@@ -273,6 +288,9 @@ export const generateTowTruckSchema = (towTruck: any) => {
  * Generate Schema.org JSON-LD for products (spare parts)
  */
 export const generateProductSchema = (product: any) => {
+    const images = product.media?.map(getImageUrl).filter(Boolean);
+    const stock = product.totalStock !== undefined ? product.totalStock : product.total_stock;
+
     return {
         '@context': 'https://schema.org',
         '@type': 'Product',
@@ -282,23 +300,23 @@ export const generateProductSchema = (product: any) => {
         description: product.description,
         category: product.category?.name,
         sku: product.id,
-        url: `${BASE_URL}/store/products/${product.id}`,
+        url: `${BASE_URL}/store/product/${product.id}`,
         offers: {
             '@type': 'Offer',
             price: product.price,
             priceCurrency: 'USD',
-            availability: product.total_stock > 0
+            availability: stock > 0
                 ? 'https://schema.org/InStock'
                 : 'https://schema.org/OutOfStock',
             inventoryLevel: {
                 '@type': 'QuantitativeValue',
-                value: product.total_stock,
+                value: stock,
             },
         },
-        image: product.media?.map((img: string) => `${BASE_URL}/storage/${img}`),
-        aggregateRating: product.average_rating ? {
+        image: images,
+        aggregateRating: (product.averageRating || product.average_rating) ? {
             '@type': 'AggregateRating',
-            ratingValue: product.average_rating,
+            ratingValue: product.averageRating || product.average_rating,
             reviewCount: product.reviews?.length || 0,
             bestRating: 5,
             worstRating: 1,
@@ -428,6 +446,28 @@ export const generateDatasetSchema = () => {
         includedInDataCatalog: {
             '@type': 'DataCatalog',
             name: 'Google Dataset Search'
+        }
+    };
+};
+
+/**
+ * Generate CollectionPage schema for list pages
+ */
+export const generateCollectionPageSchema = (title: string, description: string, items: any[]) => {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: title,
+        description: description,
+        url: typeof window !== 'undefined' ? window.location.href : '',
+        mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: items.map((item, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                url: `${BASE_URL}/car-listings/${item.slug || item.id}`,
+                name: item.title || item.name
+            }))
         }
     };
 };

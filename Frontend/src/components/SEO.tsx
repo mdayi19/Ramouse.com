@@ -11,10 +11,10 @@ interface SEOProps {
         description?: string;
         image?: string;
         url?: string;
-        type?: 'website' | 'article' | 'profile';
+        type?: 'website' | 'article' | 'profile' | 'product';
     };
     schema?: {
-        type: 'Organization' | 'WebSite' | 'LocalBusiness' | 'Product' | 'BreadcrumbList' | 'Article' | 'BlogPosting' | 'AutoRepair' | 'AutomotiveBusiness' | 'Dataset';
+        type: string;
         data: any;
     };
 }

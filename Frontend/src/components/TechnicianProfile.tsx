@@ -6,6 +6,8 @@ import Rating from './Rating';
 import { toCanvas } from 'qrcode';
 import PrintableTechnicianProfile from './PrintableTechnicianProfile';
 import SEO from './SEO';
+import { generateTechnicianSchema } from '../utils/structuredData';
+
 
 interface TechnicianProfileProps {
   technician: Technician;
@@ -399,34 +401,8 @@ const TechnicianProfile: React.FC<TechnicianProfileProps> = ({ technician, onBac
           type: 'profile'
         }}
         schema={{
-          type: 'AutoRepair',
-          data: {
-            "name": technician.name,
-            "image": [technician.profilePhoto],
-            "description": technician.description,
-            "address": {
-              "@type": "PostalAddress",
-              "streetAddress": technician.workshopAddress || "Unknown",
-              "addressLocality": technician.city,
-              "addressCountry": "SY"
-            },
-            ...(technician.location && {
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": technician.location.latitude,
-                "longitude": technician.location.longitude
-              }
-            }),
-            "telephone": technician.id,
-            "priceRange": "$$",
-            ...(technician.reviews && technician.reviews.filter(r => r.status === 'approved').length > 0 ? {
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": technician.averageRating?.toFixed(1) || "0",
-                "reviewCount": technician.reviews.filter(r => r.status === 'approved').length
-              }
-            } : {})
-          }
+          type: 'AutomotiveBusiness',
+          data: generateTechnicianSchema(technician)
         }}
       />
       <div className="mb-6">

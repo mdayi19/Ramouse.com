@@ -11,6 +11,8 @@ import Icon from '../Icon';
 import SEO from '../SEO';
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { api } from '../../lib/api';
+import { generateCollectionPageSchema } from '../../utils/structuredData';
+
 
 interface RentCarPageProps {
     showToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -228,6 +230,14 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                 title={`تأجير سيارات في سوريا - ${pagination.total} سيارة متاحة | راموسة`}
                 description={`أفضل عروض تأجير السيارات في سوريا. ${pagination.total} سيارة متاحة للإيجار اليومي والشهري. قارن الأسعار واحجز سيارتك الآن.`}
                 canonical="/rent-car"
+                schema={{
+                    type: 'CollectionPage',
+                    data: generateCollectionPageSchema(
+                        `تأجير سيارات في سوريا - ${pagination.total} سيارة متاحة`,
+                        `أفضل عروض تأجير السيارات في سوريا. ${pagination.total} سيارة متاحة للإيجار اليومي والشهري.`,
+                        listings
+                    )
+                }}
             />
 
             {/* 1. Hero / Header Section for RENT */}

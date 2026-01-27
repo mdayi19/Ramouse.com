@@ -7,6 +7,9 @@ import CountdownTimer from '../CountdownTimer';
 import MediaViewer from '../MediaViewer';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import SEO from '../SEO';
+import { generateProductSchema } from '../../utils/structuredData';
+
 
 interface IdbAccess {
     getMedia: <T>(storeName: 'orderMedia' | 'productMedia', key: string) => Promise<T | undefined>;
@@ -39,7 +42,8 @@ export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAdd
     const [reviewComment, setReviewComment] = useState('');
     const [isReviewing, setIsReviewing] = useState(false);
     const [showMediaViewer, setShowMediaViewer] = useState(false);
-    const [firstImageUrl, setFirstImageUrl] = useState<string>('');
+    // Removed firstImageUrl definition as it's no longer needed for manual schema
+
 
     useEffect(() => {
         const loadMedia = async () => {
@@ -83,10 +87,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAdd
                 if (loadedMedia.length > 0 && loadedMedia[0]) {
                     setActiveImage(loadedMedia[0].data);
                     setActiveMediaIndex(0);
-                    // Only set base64, storage or http URLs for schema
-                    if (loadedMedia[0].data && (loadedMedia[0].data.startsWith('data:') || loadedMedia[0].data.startsWith('http') || loadedMedia[0].data.startsWith('/storage/'))) {
-                        setFirstImageUrl(loadedMedia[0].data);
-                    }
+                    // No need to set firstImageUrl
                 }
             } else {
                 setMediaItems([]);
@@ -98,48 +99,9 @@ export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAdd
         window.scrollTo(0, 0);
     }, [product]);
 
-    // SEO: Inject Product Schema
-    useEffect(() => {
-        if (!product) return;
-        const script = document.createElement('script');
-        script.type = 'application/ld+json';
-        script.id = 'product-ld-json';
+    // SEO: Inject Product Schema via generic component
+    // Removed manual useEffect for schema injection
 
-        const reviewCount = product.reviews?.length || 0;
-
-        const schema = {
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": product.name,
-            "description": product.description,
-            "image": [firstImageUrl].filter(Boolean),
-            "sku": product.id,
-            "offers": {
-                "@type": "Offer",
-                "price": product.price,
-                "priceCurrency": "USD", // Assuming USD based on code, change if needed
-                "availability": product.totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                "priceValidUntil": product.expiresAt // For flash sales
-            },
-            ...(reviewCount > 0 && {
-                "aggregateRating": {
-                    "@type": "AggregateRating",
-                    "ratingValue": product.averageRating ? parseFloat(product.averageRating.toString()).toFixed(1) : "0.0",
-                    "reviewCount": reviewCount
-                }
-            })
-        };
-
-        script.innerHTML = JSON.stringify(schema);
-        document.head.appendChild(script);
-
-        return () => {
-            const existingScript = document.getElementById('product-ld-json');
-            if (existingScript) {
-                document.head.removeChild(existingScript);
-            }
-        };
-    }, [product, firstImageUrl]);
 
     const handleQuantityChange = (delta: number) => {
         setQty(prev => Math.max(1, Math.min(product.purchaseLimitPerBuyer, prev + delta)));
@@ -184,6 +146,21 @@ export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAdd
 
     return (
         <div className="bg-white dark:bg-darkcard rounded-2xl shadow-lg overflow-hidden animate-fade-in min-h-[600px]">
+            <SEO
+                title={`${product.name} | متجر راموسة`}
+                description={product.description?.substring(0, 160) || `تسوق ${product.name} من متجر راموسة. أفضل الأسعار وخدمة توصيل سريعة.`}
+                canonical={`/store/product/${product.id}`}
+                openGraph={{
+                    title: product.name,
+                    description: product.description?.substring(0, 200),
+                    image: product.media?.[0]?.data, // SEO component handles string URLs
+                    type: 'product'
+                }}
+                schema={{
+                    type: "Product",
+                    data: generateProductSchema(product)
+                }}
+            />
             {/* Header */}
             <div className="p-4 border-b dark:border-slate-700 flex items-center gap-2 text-sm text-slate-500 bg-slate-50 dark:bg-slate-800/50">
                 <Button onClick={onBack} variant="ghost" size="sm" className="hover:text-primary flex items-center gap-1 font-medium transition-colors p-0 h-auto"><Icon name="ArrowRight" className="w-4 h-4" /> المتجر</Button>

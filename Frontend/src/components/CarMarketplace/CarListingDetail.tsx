@@ -11,7 +11,7 @@ import { getImageUrl } from '../../utils/helpers';
 import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing } from '../../services/carprovider.service';
 import { useAppState } from '../../hooks/useAppState';
-import { generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import { generateCarListingSchema, generateRentalSchema } from '../../utils/structuredData';
 import SEO from '../SEO';
 import CarGallery from './ListingParts/CarGallery';
 import ProviderSidebar from './ListingParts/ProviderSidebar';
@@ -20,8 +20,8 @@ import ReportListingModal from './ListingParts/ReportListingModal';
 import QuickSpecsBar from './ListingParts/QuickSpecsBar';
 import PriceCard from './ListingParts/PriceCard';
 import SpecificationsTabs from './ListingParts/SpecificationsTabs';
-import { StructuredData } from '../shared/StructuredData';
-import { generateCarListingSchema, generateRentalSchema, generateBreadcrumbSchema } from '../../utils/structuredData';
+
+
 
 
 import SponsoredListings from './ListingParts/SponsoredListings';
@@ -188,13 +188,7 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
         availability: 'in stock'
     } : null;
 
-    useEffect(() => {
-        if (listing) {
-            // Generate and inject structured data
-            const structuredData = generateStructuredData(listing);
-            injectStructuredData(structuredData);
-        }
-    }, [listing]);
+
 
     const handleFavoriteToggle = async () => {
         if (!listing) return;
@@ -359,26 +353,16 @@ const CarListingDetail: React.FC<CarListingDetailProps> = (props) => {
                         title: listing.title,
                         description: listing.description || `${listing.title} - ${listing.year}`,
                         image: listing.photos?.[0] || listing.images?.[0],
-                        type: 'website'
+                        type: 'product'
+                    }}
+                    schema={{
+                        type: listing.listing_type === 'rent' ? 'RentalCarReservation' : 'Car',
+                        data: listing.listing_type === 'rent'
+                            ? generateRentalSchema(listing)
+                            : generateCarListingSchema(listing)
                     }}
                 />
             )}
-
-            {/* JSON-LD Structured Data for AI/SEO */}
-            <StructuredData
-                data={[
-                    // Car listing schema
-                    listing.listing_type === 'rent'
-                        ? generateRentalSchema(listing)
-                        : generateCarListingSchema(listing),
-                    // Breadcrumb schema
-                    generateBreadcrumbSchema([
-                        { name: 'الرئيسية', url: '/' },
-                        { name: listing.listing_type === 'rent' ? 'إيجار سيارات' : 'سوق السيارات', url: listing.listing_type === 'rent' ? '/rent-car' : '/car-marketplace' },
-                        { name: listing.title, url: `/car-listings/${listing.slug}` },
-                    ])
-                ]}
-            />
 
             {/* 1. Header Navigation & Breadcrumbs */}
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">

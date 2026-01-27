@@ -8,6 +8,8 @@ import { toCanvas } from 'qrcode';
 import PrintableTowTruckProfile from './PrintableTowTruckProfile';
 import MediaViewer from './MediaViewer';
 import SEO from './SEO';
+import { generateTowTruckSchema } from '../utils/structuredData';
+
 
 interface TowTruckProfileProps {
     towTruck: TowTruck;
@@ -282,34 +284,8 @@ const TowTruckProfile: React.FC<TowTruckProfileProps> = (props) => {
                     type: 'profile'
                 }}
                 schema={{
-                    type: 'AutomotiveBusiness',
-                    data: {
-                        "name": towTruck.name,
-                        "image": [towTruck.profilePhoto],
-                        "description": towTruck.description,
-                        "address": {
-                            "@type": "PostalAddress",
-                            "streetAddress": towTruck.serviceArea || "Unknown",
-                            "addressLocality": towTruck.city,
-                            "addressCountry": "SY"
-                        },
-                        ...(towTruck.location && {
-                            "geo": {
-                                "@type": "GeoCoordinates",
-                                "latitude": towTruck.location.latitude,
-                                "longitude": towTruck.location.longitude
-                            }
-                        }),
-                        "telephone": towTruck.id,
-                        "priceRange": "$$",
-                        ...(towTruck.reviews && towTruck.reviews.filter(r => r.status === 'approved').length > 0 ? {
-                            "aggregateRating": {
-                                "@type": "AggregateRating",
-                                "ratingValue": towTruck.averageRating?.toFixed(1) || "0",
-                                "reviewCount": towTruck.reviews.filter(r => r.status === 'approved').length
-                            }
-                        } : {})
-                    }
+                    type: 'AutoRepair',
+                    data: generateTowTruckSchema(towTruck)
                 }}
             />
             <div className="mb-6"><button onClick={onBack} className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary-400"><Icon name="ArrowRight" /><span>العودة لدليل السطحات</span></button></div>

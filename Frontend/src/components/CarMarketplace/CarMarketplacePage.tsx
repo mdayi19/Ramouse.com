@@ -12,6 +12,8 @@ import Icon from '../Icon';
 import SEO from '../SEO';
 import SponsoredListings from './ListingParts/SponsoredListings';
 import { api } from '../../lib/api';
+import { generateCollectionPageSchema } from '../../utils/structuredData';
+
 
 interface CarMarketplacePageProps {
     listingType?: 'sale' | 'rent';
@@ -259,6 +261,18 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                     : `أكبر سوق للسيارات المستعملة والجديدة في سوريا. ${pagination.total} سيارة معروضة للبيع. أسعار حقيقية، صور واضحة، وتواصل مباشر مع البائعين.`
                 }
                 canonical={listingType === 'rent' ? '/rent-car' : '/car-marketplace'}
+                schema={{
+                    type: 'CollectionPage',
+                    data: generateCollectionPageSchema(
+                        listingType === 'rent'
+                            ? `تأجير سيارات في سوريا - ${pagination.total} سيارة متاحة`
+                            : `سيارات للبيع في سوريا - ${pagination.total} إعلان`,
+                        listingType === 'rent'
+                            ? `تصفح ${pagination.total} سيارة للإيجار في دمشق، حلب، وكافة المحافظات.`
+                            : `أكبر سوق للسيارات المستعملة والجديدة في سوريا. ${pagination.total} سيارة معروضة للبيع.`,
+                        listings
+                    )
+                }}
             />
 
             {/* 1. Hero / Header Section */}
