@@ -75,6 +75,23 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
           secure: false,
+        },
+        // PROXY SITEMAP & FEEDS TO BACKEND
+        // Ensure these requests go to Laravel, not handled by Vite
+        '/sitemap.xml': {
+          target: proxyTarget,
+          changeOrigin: true,
+          secure: false,
+        },
+        '/sitemap': {
+          target: proxyTarget,
+          changeOrigin: true,
+          secure: false,
+        },
+        '/feed': {
+          target: proxyTarget,
+          changeOrigin: true,
+          secure: false,
         }
       }
     },
@@ -250,14 +267,17 @@ export default defineConfig(({ mode }) => {
         algorithm: 'brotliCompress',
         ext: '.br',
       }),
+      /*
+      // DISABLED: We use dynamic backend sitemap generation (SitemapController)
+      // This strict static generation conflicts with our dynamic system.
       Sitemap({
         hostname: env.VITE_URL || 'https://ramouse.com',
-        // Disable auto-generation of robots.txt because we have a manual public/robots.txt
         generateRobotsTxt: false,
         dynamicRoutes: ['/blog', '/services', '/contact'],
         readable: true,
         exclude: ['/admin', '/dashboard', '/provider', '/technician', '/tow-truck-dashboard']
       })
+      */
     ],
 
     define: {
