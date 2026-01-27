@@ -21,11 +21,31 @@ Route::get('/', function () {
 
 // ===== FEED VANITY URLS (SEO) =====
 // Redirect standard feed guesses to actual endpoints
-Route::redirect('/feed', '/api/feed/car-listings.xml');
-Route::redirect('/feeds', '/api/feed/car-listings.xml');
-Route::redirect('/rss', '/api/feed/car-listings.xml');
-Route::redirect('/atom', '/api/feed/car-listings.xml');
-Route::redirect('/sitemap.xml', '/api/sitemap.xml'); // Root sitemap redirect
+// ===== FEED VANITY URLS (SEO) =====
+// Served directly from web routes for better SEO and AI discovery
+Route::get('/feed/car-listings.xml', [App\Http\Controllers\FeedController::class, 'carListings']);
+Route::get('/feed/car-rentals.xml', [App\Http\Controllers\FeedController::class, 'carRentals']);
+Route::get('/feed/products.xml', [App\Http\Controllers\FeedController::class, 'products']);
+Route::get('/feed/car-providers.xml', [App\Http\Controllers\FeedController::class, 'carProviders']);
+Route::get('/feed/technicians.xml', [App\Http\Controllers\FeedController::class, 'technicians']);
+Route::get('/feed/tow-trucks.xml', [App\Http\Controllers\FeedController::class, 'towTrucks']);
+
+// Redirect legacy/generic feed URLs to the main car listings feed
+Route::redirect('/feed', '/feed/car-listings.xml');
+Route::redirect('/feeds', '/feed/car-listings.xml');
+Route::redirect('/rss', '/feed/car-listings.xml');
+Route::redirect('/atom', '/feed/car-listings.xml');
+
+// ===== SITEMAPS (DIRECT ROOT ACCESS FOR SEO) =====
+// Served directly from web routes to avoid redirects and satisfy strict crawlers (Bing)
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
+Route::get('/sitemap/static-pages.xml', [App\Http\Controllers\SitemapController::class, 'staticPages']);
+Route::get('/sitemap/car-listings.xml', [App\Http\Controllers\SitemapController::class, 'carListings']);
+Route::get('/sitemap/car-rentals.xml', [App\Http\Controllers\SitemapController::class, 'carRentals']);
+Route::get('/sitemap/car-providers.xml', [App\Http\Controllers\SitemapController::class, 'carProviders']);
+Route::get('/sitemap/technicians.xml', [App\Http\Controllers\SitemapController::class, 'technicians']);
+Route::get('/sitemap/tow-trucks.xml', [App\Http\Controllers\SitemapController::class, 'towTrucks']);
+Route::get('/sitemap/products.xml', [App\Http\Controllers\SitemapController::class, 'products']);
 
 // ===== SOCIAL MEDIA PREVIEW ROUTES =====
 // Serve HTML with Open Graph meta tags for social media crawlers

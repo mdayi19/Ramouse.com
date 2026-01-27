@@ -14,10 +14,21 @@ User-agent: PerplexityBot
 User-agent: Applebot-Extended
 Allow: /
 
-# Sitemaps - Main Index
+# Sitemaps - Main Index (SEO Preferred)
+Sitemap: https://ramouse.com/sitemap.xml
+# Sitemaps - API Access (Legacy)
 Sitemap: https://ramouse.com/api/sitemap.xml
 
-# Sitemaps - Entity-Specific
+# Sitemaps - Entity-Specific (SEO Preferred)
+Sitemap: https://ramouse.com/sitemap/static-pages.xml
+Sitemap: https://ramouse.com/sitemap/car-listings.xml
+Sitemap: https://ramouse.com/sitemap/car-rentals.xml
+Sitemap: https://ramouse.com/sitemap/car-providers.xml
+Sitemap: https://ramouse.com/sitemap/technicians.xml
+Sitemap: https://ramouse.com/sitemap/tow-trucks.xml
+Sitemap: https://ramouse.com/sitemap/products.xml
+
+# Sitemaps - Entity-Specific (API Access)
 Sitemap: https://ramouse.com/api/sitemap/car-listings.xml
 Sitemap: https://ramouse.com/api/sitemap/car-rentals.xml
 Sitemap: https://ramouse.com/api/sitemap/car-providers.xml
@@ -25,7 +36,15 @@ Sitemap: https://ramouse.com/api/sitemap/technicians.xml
 Sitemap: https://ramouse.com/api/sitemap/tow-trucks.xml
 Sitemap: https://ramouse.com/api/sitemap/products.xml
 
-# Real-Time Feeds (Atom/RSS)
+# Real-Time Feeds (SEO Preferred)
+Sitemap: https://ramouse.com/feed/car-listings.xml
+Sitemap: https://ramouse.com/feed/car-rentals.xml
+Sitemap: https://ramouse.com/feed/products.xml
+Sitemap: https://ramouse.com/feed/car-providers.xml
+Sitemap: https://ramouse.com/feed/technicians.xml
+Sitemap: https://ramouse.com/feed/tow-trucks.xml
+
+# Real-Time Feeds (API Access)
 Sitemap: https://ramouse.com/api/feed/car-listings.xml
 Sitemap: https://ramouse.com/api/feed/car-rentals.xml
 Sitemap: https://ramouse.com/api/feed/products.xml

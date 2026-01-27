@@ -52,6 +52,7 @@ class SitemapController extends Controller
             $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
             $sitemaps = [
+                'static-pages',
                 'car-listings',
                 'car-rentals',
                 'car-providers',
@@ -62,8 +63,11 @@ class SitemapController extends Controller
 
             foreach ($sitemaps as $type) {
                 $xml .= '<sitemap>';
-                $xml .= '<loc>' . url("/api/sitemap/{$type}.xml") . '</loc>';
-                if (!empty($lastMods[$type])) {
+                // CLEAN URLS: Remove /api/ prefix for cleaner SEO structure
+                $xml .= '<loc>' . url("/sitemap/{$type}.xml") . '</loc>';
+                if ($type === 'static-pages') {
+                    $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>";
+                } elseif (!empty($lastMods[$type])) {
                     $date = \Carbon\Carbon::parse($lastMods[$type])->toAtomString();
                     $xml .= "<lastmod>{$date}</lastmod>";
                 } else {
@@ -84,7 +88,8 @@ class SitemapController extends Controller
 
             foreach ($feeds as $type) {
                 $xml .= '<sitemap>';
-                $xml .= '<loc>' . url("/api/feed/{$type}.xml") . '</loc>';
+                // CLEAN URLS: Use root-level feed URLs for consistency
+                $xml .= '<loc>' . url("/feed/{$type}.xml") . '</loc>';
                 $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>"; // Feeds are real-time
                 $xml .= '</sitemap>';
             }
@@ -96,6 +101,78 @@ class SitemapController extends Controller
         } catch (\Exception $e) {
             \Log::error('Sitemap Index Error: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Static Pages Sitemap
+     */
+    #[OA\Get(
+        path: "/api/sitemap/static-pages.xml",
+        operationId: "getStaticPagesSitemap",
+        tags: ["GEO"],
+        summary: "Get static pages sitemap",
+        description: "Returns XML sitemap for all public static pages (Home, About, Services, etc.).",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Static pages sitemap XML",
+                content: new OA\MediaType(
+                    mediaType: "application/xml",
+                    schema: new OA\Schema(type: "string")
+                )
+            )
+        ]
+    )]
+    public function staticPages()
+    {
+        $pages = [
+            '/' => ['priority' => '1.0', 'freq' => 'daily'],
+            '/blog' => ['priority' => '0.8', 'freq' => 'daily'],
+            '/faq' => ['priority' => '0.5', 'freq' => 'weekly'],
+            '/privacy' => ['priority' => '0.3', 'freq' => 'monthly'],
+            '/terms' => ['priority' => '0.3', 'freq' => 'monthly'],
+            '/contact' => ['priority' => '0.7', 'freq' => 'monthly'],
+            '/services' => ['priority' => '0.9', 'freq' => 'weekly'],
+            '/technicians' => ['priority' => '0.9', 'freq' => 'daily'],
+            '/tow-trucks' => ['priority' => '0.9', 'freq' => 'daily'],
+            '/car-providers' => ['priority' => '0.9', 'freq' => 'daily'],
+            '/car-listings' => ['priority' => '1.0', 'freq' => 'hourly'],
+            '/rent-car' => ['priority' => '1.0', 'freq' => 'hourly'],
+            '/auctions' => ['priority' => '0.8', 'freq' => 'hourly'],
+            '/store' => ['priority' => '0.9', 'freq' => 'daily'],
+            '/register-technician' => ['priority' => '0.6', 'freq' => 'monthly'],
+            '/register-tow-truck' => ['priority' => '0.6', 'freq' => 'monthly'],
+            '/register-car-provider' => ['priority' => '0.6', 'freq' => 'monthly'],
+            '/announcements' => ['priority' => '0.7', 'freq' => 'daily'],
+        ];
+
+        try {
+            $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+            $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+            foreach ($pages as $path => $meta) {
+                // Determine absolute URL - in Laravel `url()` helper works for backend routes,
+                // but these are Frontend routes.
+                // Assuming backend and frontend are same domain in prod (ramouse.com),
+                // `url('/')` returns `https://ramouse.com`.
+                $loc = url($path);
+
+                $xml .= '<url>';
+                $xml .= "<loc>{$loc}</loc>";
+                $xml .= "<lastmod>" . now()->startOfDay()->toAtomString() . "</lastmod>"; // Static pages assumed updated today
+                $xml .= "<changefreq>{$meta['freq']}</changefreq>";
+                $xml .= "<priority>{$meta['priority']}</priority>";
+                $xml .= '</url>';
+            }
+
+            $xml .= '</urlset>';
+
+            return response($xml, 200)->header('Content-Type', 'application/xml');
+
+        } catch (\Exception $e) {
+            \Log::error('Static Sitemap Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Error generating static sitemap'], 500);
         }
     }
 

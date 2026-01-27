@@ -32,7 +32,9 @@ Route::match(['get', 'head'], '/ping', function () {
 // ======== GEO (GENERATIVE ENGINE OPTIMIZATION) ROUTES ========
 // Sitemaps - Dynamic XML sitemaps for AI crawlers
 Route::middleware(['public.feed'])->group(function () {
+    // Kept for backward compatibility / API access if needed
     Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
+    Route::get('/sitemap/static-pages.xml', [App\Http\Controllers\SitemapController::class, 'staticPages']);
     Route::get('/sitemap/car-listings.xml', [App\Http\Controllers\SitemapController::class, 'carListings']);
     Route::get('/sitemap/car-rentals.xml', [App\Http\Controllers\SitemapController::class, 'carRentals']);
     Route::get('/sitemap/car-providers.xml', [App\Http\Controllers\SitemapController::class, 'carProviders']);
