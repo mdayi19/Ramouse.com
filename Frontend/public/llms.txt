@@ -12,6 +12,7 @@ Canonical-URL: https://ramouse.com
 Region: Middle East
 Country: SY
 Language: ar
+Alternate-Language: en
 Contact-AI: ai@ramouse.com
 Human-Policy: https://ramouse.com/ai-usage
 Machine-Policy: https://ramouse.com/.well-known/ai.json
@@ -34,7 +35,8 @@ Attribution-Required: true
 Attribution-Name: Ramouse
 Attribution-URL: https://ramouse.com
 
-Commercial-Usage: prohibited
+Commercial-Usage: restricted
+Commercial-Usage-Note: Requires written permission from Ramouse Platform
 Dataset-Resale: prohibited
 Derivative-Redistribution: prohibited
 
@@ -50,7 +52,7 @@ Allowed:
 - Question answering
 - Citation with attribution
 - Non-commercial research
-- Search Generative Experiences (SGE)
+- Search Generative Experiences (Google, Bing, AI Search)
 
 # =========================================================
 # DISALLOWED AI USAGE
