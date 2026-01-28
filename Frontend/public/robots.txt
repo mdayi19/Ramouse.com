@@ -28,6 +28,7 @@ Sitemap: https://ramouse.com/sitemap/car-providers.xml
 Sitemap: https://ramouse.com/sitemap/technicians.xml
 Sitemap: https://ramouse.com/sitemap/tow-trucks.xml
 Sitemap: https://ramouse.com/sitemap/products.xml
+Sitemap: https://ramouse.com/sitemap/blog-posts.xml
 
 # Real-Time Feeds (SEO Preferred)
 Sitemap: https://ramouse.com/feed/car-listings.xml

@@ -7,6 +7,7 @@ use App\Models\CarProvider;
 use App\Models\Technician;
 use App\Models\TowTruck;
 use App\Models\Product;
+use App\Models\BlogPost;
 use Illuminate\Support\Facades\Cache;
 use OpenApi\Attributes as OA;
 
@@ -46,6 +47,7 @@ class SitemapController extends Controller
                 'technicians' => Technician::max('updated_at'),
                 'tow-trucks' => TowTruck::max('updated_at'),
                 'products' => Product::max('updated_at'),
+                'blog-posts' => BlogPost::max('updated_at'),
             ];
 
             $xml = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -58,13 +60,14 @@ class SitemapController extends Controller
                 'car-providers',
                 'technicians',
                 'tow-trucks',
-                'products'
+                'products',
+                'blog-posts'
             ];
 
             foreach ($sitemaps as $type) {
                 $xml .= '<sitemap>';
-                // CLEAN URLS: Remove /api/ prefix for cleaner SEO structure
-                $xml .= '<loc>' . url("/sitemap/{$type}.xml") . '</loc>';
+                // SOLID FIX: Force Frontend URL
+                $xml .= '<loc>https://ramouse.com/sitemap/' . $type . '.xml</loc>';
                 if ($type === 'static-pages') {
                     $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>";
                 } elseif (!empty($lastMods[$type])) {
@@ -88,8 +91,8 @@ class SitemapController extends Controller
 
             foreach ($feeds as $type) {
                 $xml .= '<sitemap>';
-                // CLEAN URLS: Use root-level feed URLs for consistency
-                $xml .= '<loc>' . url("/feed/{$type}.xml") . '</loc>';
+                // SOLID FIX: Force Frontend URL
+                $xml .= '<loc>https://ramouse.com/feed/' . $type . '.xml</loc>';
                 $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>"; // Feeds are real-time
                 $xml .= '</sitemap>';
             }
@@ -364,6 +367,34 @@ class SitemapController extends Controller
     }
 
     /**
+     * Blog Posts sitemap
+     */
+    #[OA\Get(
+        path: "/api/sitemap/blog-posts.xml",
+        operationId: "getBlogPostsSitemap",
+        tags: ["GEO"],
+        summary: "Get blog posts sitemap",
+        description: "Returns XML sitemap for all published blog posts.",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Blog posts sitemap XML",
+                content: new OA\MediaType(
+                    mediaType: "application/xml",
+                    schema: new OA\Schema(type: "string")
+                )
+            )
+        ]
+    )]
+    public function blogPosts()
+    {
+        return $this->generateXml('blog-posts', function () {
+            // Updated_at is used for lastmod, published_at is for ordering
+            return BlogPost::orderBy('published_at', 'desc')->get();
+        });
+    }
+
+    /**
      * Helper to generate XML sitemap directly without Blade
      */
     private function generateXml($type, $callback)
@@ -384,7 +415,7 @@ class SitemapController extends Controller
                     switch ($type) {
                         case 'car-listings':
                         case 'car-rentals':
-                            $loc = url('/car-listings/' . $item->slug);
+                            $loc = 'https://ramouse.com/car-listings/' . $item->slug;
                             $photos = is_array($item->photos) ? $item->photos : [];
                             foreach ($photos as $photo) {
                                 $images[] = [
@@ -395,7 +426,7 @@ class SitemapController extends Controller
                             break;
 
                         case 'car-providers':
-                            $loc = url('/car-providers/' . $item->id);
+                            $loc = 'https://ramouse.com/car-providers/' . $item->id;
                             if ($item->profile_photo) {
                                 $images[] = [
                                     'loc' => asset('storage/' . $item->profile_photo),
@@ -405,7 +436,7 @@ class SitemapController extends Controller
                             break;
 
                         case 'technicians':
-                            $loc = url('/technicians/' . $item->id);
+                            $loc = 'https://ramouse.com/technicians/' . $item->id;
                             if ($item->profile_photo) {
                                 $images[] = [
                                     'loc' => asset('storage/' . $item->profile_photo),
@@ -415,7 +446,7 @@ class SitemapController extends Controller
                             break;
 
                         case 'tow-trucks':
-                            $loc = url('/tow-trucks/' . $item->id);
+                            $loc = 'https://ramouse.com/tow-trucks/' . $item->id;
                             if ($item->profile_photo) {
                                 $images[] = [
                                     'loc' => asset('storage/' . $item->profile_photo),
@@ -425,7 +456,7 @@ class SitemapController extends Controller
                             break;
 
                         case 'products':
-                            $loc = url('/store/products/' . $item->id);
+                            $loc = 'https://ramouse.com/store/products/' . $item->id;
                             $media = is_array($item->media) ? $item->media : [];
                             foreach ($media as $img) {
                                 $images[] = [
@@ -434,6 +465,23 @@ class SitemapController extends Controller
                                 ];
                             }
                             break;
+
+                        case 'blog-posts':
+                            $loc = 'https://ramouse.com/blog/' . $item->slug;
+                            if ($item->imageUrl) {
+                                $images[] = [
+                                    'loc' => asset('storage/' . $item->imageUrl), // Asset helper points to storage correctly? Usually asset() points to public.
+                                    // If asset() returns backend URL, we might need a fix here too.
+                                    'title' => $item->title
+                                ];
+                            }
+                            break;
+                    }
+
+                    // FALLBACK FOR LOC IF NOT SET ABOVE
+                    if (empty($loc)) {
+                        // Generic fallback if needed, but we should handle all cases
+                        continue;
                     }
 
                     $xml .= '<url>';
