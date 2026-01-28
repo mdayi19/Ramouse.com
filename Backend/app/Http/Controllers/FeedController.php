@@ -21,8 +21,8 @@ class FeedController extends Controller
         try {
             // Updated XML building logic manually to avoid Blade issues
             $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-            $xml .= '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">';
-            $xml .= '<title>' . htmlspecialchars($title) . '</title>';
+            $xml .= '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#">';
+            $xml .= '<title>' . htmlspecialchars($title, ENT_XML1, 'UTF-8') . '</title>';
             $xml .= '<link href="' . url($selfLink) . '" rel="self" />';
             $xml .= '<link href="' . url($feedLink) . '" />';
             $xml .= '<id>' . url($selfLink) . '</id>';
@@ -37,7 +37,7 @@ class FeedController extends Controller
             $xml .= '<name>Ramouse.com</name>';
             $xml .= '<uri>https://ramouse.com</uri>';
             $xml .= '</author>';
-            $xml .= '<subtitle>' . htmlspecialchars($subtitle) . '</subtitle>';
+            $xml .= '<subtitle>' . htmlspecialchars($subtitle, ENT_XML1, 'UTF-8') . '</subtitle>';
 
             foreach ($items as $item) {
                 $xml .= $entryCallback($item);
@@ -45,7 +45,7 @@ class FeedController extends Controller
 
             $xml .= '</feed>';
 
-            return response($xml, 200)->header('Content-Type', 'application/atom+xml');
+            return response($xml, 200)->header('Content-Type', 'application/atom+xml; charset=UTF-8');
 
         } catch (\Exception $e) {
             \Log::error("Feed Error ({$key}): " . $e->getMessage());
@@ -97,19 +97,19 @@ class FeedController extends Controller
                 $id = url('/entity/car-listing/' . $listing->id);
                 $updated = $listing->updated_at->toAtomString();
                 $published = $listing->created_at->toAtomString();
-                $title = htmlspecialchars($listing->title);
+                $title = htmlspecialchars($listing->title, ENT_XML1, 'UTF-8');
                 $condition = ucfirst($listing->condition);
                 $price = number_format($listing->price);
                 $mileage = number_format($listing->mileage);
                 $transmission = ucfirst($listing->transmission);
                 $fuel = ucfirst($listing->fuel_type);
 
-                $summary = htmlspecialchars("{$listing->brand?->name} {$listing->model} {$listing->year} - {$condition} condition. Price: \${$price} USD. Location: {$listing->city}, Syria. Mileage: {$mileage} km. {$transmission} transmission, {$fuel} fuel.");
+                $summary = htmlspecialchars("{$listing->brand?->name} {$listing->model} {$listing->year} - {$condition} condition. Price: \${$price} USD. Location: {$listing->city}, Syria. Mileage: {$mileage} km. {$transmission} transmission, {$fuel} fuel.", ENT_XML1, 'UTF-8');
 
                 // Build HTML content safely
                 $contentHtml = "<h2>{$title}</h2>";
                 $contentHtml .= "<p><strong>Price:</strong> \${$price} USD</p>";
-                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria" . ($listing->address ? " - " . htmlspecialchars($listing->address) : "") . "</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria" . ($listing->address ? " - " . htmlspecialchars($listing->address, ENT_XML1, 'UTF-8') : "") . "</p>";
                 $contentHtml .= "<p><strong>Condition:</strong> {$condition}</p>";
                 $contentHtml .= "<p><strong>Year:</strong> {$listing->year}</p>";
                 $contentHtml .= "<p><strong>Mileage:</strong> {$mileage} km</p>";
@@ -118,15 +118,15 @@ class FeedController extends Controller
 
                 // Enhanced Specs
                 if ($listing->engine_size)
-                    $contentHtml .= "<p><strong>Engine Size:</strong> " . htmlspecialchars($listing->engine_size) . "</p>";
+                    $contentHtml .= "<p><strong>Engine Size:</strong> " . htmlspecialchars($listing->engine_size, ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->horsepower)
                     $contentHtml .= "<p><strong>Horsepower:</strong> {$listing->horsepower} HP</p>";
                 if ($listing->body_style)
-                    $contentHtml .= "<p><strong>Body Style:</strong> " . htmlspecialchars($listing->body_style) . "</p>";
+                    $contentHtml .= "<p><strong>Body Style:</strong> " . htmlspecialchars($listing->body_style, ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->interior_color)
-                    $contentHtml .= "<p><strong>Interior Color:</strong> " . htmlspecialchars($listing->interior_color) . "</p>";
+                    $contentHtml .= "<p><strong>Interior Color:</strong> " . htmlspecialchars($listing->interior_color, ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->warranty)
-                    $contentHtml .= "<p><strong>Warranty:</strong> " . htmlspecialchars($listing->warranty) . "</p>";
+                    $contentHtml .= "<p><strong>Warranty:</strong> " . htmlspecialchars($listing->warranty, ENT_XML1, 'UTF-8') . "</p>";
 
                 $contentHtml .= "<p><strong>Doors:</strong> {$listing->doors_count} | <strong>Seats:</strong> {$listing->seats_count}</p>";
                 $contentHtml .= "<p><strong>Color:</strong> {$listing->exterior_color}</p>";
@@ -135,13 +135,13 @@ class FeedController extends Controller
                 if ($listing->features && is_array($listing->features) && count($listing->features) > 0) {
                     $contentHtml .= "<h3>Key Features</h3><ul>";
                     foreach ($listing->features as $feature) {
-                        $contentHtml .= "<li>" . htmlspecialchars($feature) . "</li>";
+                        $contentHtml .= "<li>" . htmlspecialchars($feature, ENT_XML1, 'UTF-8') . "</li>";
                     }
                     $contentHtml .= "</ul>";
                 }
 
                 if ($listing->description) {
-                    $desc = htmlspecialchars($listing->description);
+                    $desc = htmlspecialchars($listing->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>Description</h3><p>{$desc}</p>";
                 }
 
@@ -152,7 +152,7 @@ class FeedController extends Controller
                     }
                 }
 
-                $contentHtml .= "<p><strong>Seller:</strong> " . htmlspecialchars($listing->owner?->name) . "</p>";
+                $contentHtml .= "<p><strong>Seller:</strong> " . htmlspecialchars($listing->owner?->name, ENT_XML1, 'UTF-8') . "</p>";
                 $contentHtml .= "<p><strong>Contact:</strong> {$listing->contact_phone}</p>";
                 if ($listing->contact_whatsapp) {
                     $contentHtml .= "<p><strong>WhatsApp:</strong> {$listing->contact_whatsapp}</p>";
@@ -244,7 +244,7 @@ class FeedController extends Controller
                 $id = url('/entity/car-listing/' . $listing->id);
                 $updated = $listing->updated_at->toAtomString();
                 $published = $listing->created_at->toAtomString();
-                $title = htmlspecialchars($listing->title);
+                $title = htmlspecialchars($listing->title, ENT_XML1, 'UTF-8');
 
                 // Fix: Check rental_terms if price is 0 (Quick Edit stores rates there)
                 $priceValue = $listing->price;
@@ -257,11 +257,11 @@ class FeedController extends Controller
                 $transmission = ucfirst($listing->transmission);
                 $fuel = ucfirst($listing->fuel_type);
 
-                $summary = htmlspecialchars("{$listing->brand?->name} {$listing->model} {$listing->year} - Rent for \${$price}/day. Location: {$listing->city}, Syria.");
+                $summary = htmlspecialchars("{$listing->brand?->name} {$listing->model} {$listing->year} - Rent for \${$price}/day. Location: {$listing->city}, Syria.", ENT_XML1, 'UTF-8');
 
                 $contentHtml = "<h2>{$title}</h2>";
                 $contentHtml .= "<p><strong>Daily Rate:</strong> \${$price} USD</p>";
-                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria" . ($listing->address ? " - " . htmlspecialchars($listing->address) : "") . "</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$listing->city}, Syria" . ($listing->address ? " - " . htmlspecialchars($listing->address, ENT_XML1, 'UTF-8') : "") . "</p>";
                 $contentHtml .= "<p><strong>Year:</strong> {$listing->year}</p>";
                 $contentHtml .= "<p><strong>Mileage:</strong> {$listing->mileage} km</p>";
                 $contentHtml .= "<p><strong>Transmission:</strong> {$transmission}</p>";
@@ -269,13 +269,13 @@ class FeedController extends Controller
 
                 // Enhanced Specs
                 if ($listing->engine_size)
-                    $contentHtml .= "<p><strong>Engine Size:</strong> " . htmlspecialchars($listing->engine_size) . "</p>";
+                    $contentHtml .= "<p><strong>Engine Size:</strong> " . htmlspecialchars($listing->engine_size, ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->horsepower)
                     $contentHtml .= "<p><strong>Horsepower:</strong> {$listing->horsepower} HP</p>";
                 if ($listing->body_style)
-                    $contentHtml .= "<p><strong>Body Style:</strong> " . htmlspecialchars($listing->body_style) . "</p>";
+                    $contentHtml .= "<p><strong>Body Style:</strong> " . htmlspecialchars($listing->body_style, ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->interior_color)
-                    $contentHtml .= "<p><strong>Interior Color:</strong> " . htmlspecialchars($listing->interior_color) . "</p>";
+                    $contentHtml .= "<p><strong>Interior Color:</strong> " . htmlspecialchars($listing->interior_color, ENT_XML1, 'UTF-8') . "</p>";
 
                 $contentHtml .= "<p><strong>Doors:</strong> {$listing->doors_count} | <strong>Seats:</strong> {$listing->seats_count}</p>";
                 $contentHtml .= "<p><strong>Color:</strong> {$listing->exterior_color}</p>";
@@ -284,13 +284,13 @@ class FeedController extends Controller
                 if ($listing->features && is_array($listing->features) && count($listing->features) > 0) {
                     $contentHtml .= "<h3>Key Features</h3><ul>";
                     foreach ($listing->features as $feature) {
-                        $contentHtml .= "<li>" . htmlspecialchars($feature) . "</li>";
+                        $contentHtml .= "<li>" . htmlspecialchars($feature, ENT_XML1, 'UTF-8') . "</li>";
                     }
                     $contentHtml .= "</ul>";
                 }
 
                 if ($listing->description) {
-                    $desc = htmlspecialchars($listing->description);
+                    $desc = htmlspecialchars($listing->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>Description</h3><p>{$desc}</p>";
                 }
 
@@ -298,7 +298,7 @@ class FeedController extends Controller
                 if (!empty($listing->rental_terms)) {
                     $terms = is_string($listing->rental_terms) ? json_decode($listing->rental_terms, true) : $listing->rental_terms;
                     if (isset($terms['requirements'])) {
-                        $contentHtml .= "<h3>Rental Requirements</h3><p>" . htmlspecialchars($terms['requirements']) . "</p>";
+                        $contentHtml .= "<h3>Rental Requirements</h3><p>" . htmlspecialchars($terms['requirements'], ENT_XML1, 'UTF-8') . "</p>";
                     }
                 }
 
@@ -309,7 +309,7 @@ class FeedController extends Controller
                     }
                 }
 
-                $contentHtml .= "<p><strong>Provider:</strong> " . htmlspecialchars($listing->owner?->name) . "</p>";
+                $contentHtml .= "<p><strong>Provider:</strong> " . htmlspecialchars($listing->owner?->name, ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->contact_whatsapp) {
                     $contentHtml .= "<p><strong>WhatsApp:</strong> {$listing->contact_whatsapp}</p>";
                 }
@@ -388,12 +388,12 @@ class FeedController extends Controller
                 $id = url('/entity/product/' . $product->id);
                 $updated = $product->updated_at->toAtomString();
                 $published = $product->created_at->toAtomString();
-                $title = htmlspecialchars($product->name);
+                $title = htmlspecialchars($product->name, ENT_XML1, 'UTF-8');
                 $price = number_format($product->price);
-                $categoryName = htmlspecialchars($product->category?->name ?? 'Uncategorized');
+                $categoryName = htmlspecialchars($product->category?->name ?? 'Uncategorized', ENT_XML1, 'UTF-8');
                 $stockStatus = $product->total_stock > 0 ? 'In Stock' : 'Out of Stock';
 
-                $summary = htmlspecialchars("{$title} - {$categoryName}. Price: \${$price} USD. {$stockStatus}.");
+                $summary = htmlspecialchars("{$title} - {$categoryName}. Price: \${$price} USD. {$stockStatus}.", ENT_XML1, 'UTF-8');
 
                 $contentHtml = "<h2>{$title}</h2>";
                 $contentHtml .= "<p><strong>Category:</strong> {$categoryName}</p>";
@@ -404,10 +404,10 @@ class FeedController extends Controller
                 if ($product->static_shipping_cost)
                     $contentHtml .= "<p><strong>Shipping Cost:</strong> \${$product->static_shipping_cost}</p>";
                 if ($product->shipping_size)
-                    $contentHtml .= "<p><strong>Shipping Size:</strong> " . htmlspecialchars($product->shipping_size) . "</p>";
+                    $contentHtml .= "<p><strong>Shipping Size:</strong> " . htmlspecialchars($product->shipping_size, ENT_XML1, 'UTF-8') . "</p>";
 
                 if ($product->description) {
-                    $desc = htmlspecialchars($product->description);
+                    $desc = htmlspecialchars($product->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>Description</h3><p>{$desc}</p>";
                 }
 
@@ -491,26 +491,27 @@ class FeedController extends Controller
                 $id = url('/entity/car-provider/' . $provider->id);
                 $updated = $provider->updated_at->toAtomString();
                 $published = $provider->created_at->toAtomString();
-                $name = htmlspecialchars($provider->name);
-                $city = htmlspecialchars($provider->city);
+                $name = htmlspecialchars($provider->name, ENT_XML1, 'UTF-8');
+                $city = htmlspecialchars($provider->city, ENT_XML1, 'UTF-8');
 
-                $summary = htmlspecialchars("New Car Provider in {$city}: {$name}. Visit their profile for latest listings.");
+                $summary = htmlspecialchars("New Car Provider in {$city}: {$name}. Visit their profile for latest listings.", ENT_XML1, 'UTF-8');
 
                 $contentHtml = "<h2>{$name}</h2>";
-                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($provider->address ? " - " . htmlspecialchars($provider->address) : "") . "</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($provider->address ? " - " . htmlspecialchars($provider->address, ENT_XML1, 'UTF-8') : "") . "</p>";
 
                 if ($provider->working_hours) {
-                    $contentHtml .= "<p><strong>Working Hours:</strong> " . htmlspecialchars($provider->working_hours) . "</p>";
+                    $contentHtml .= "<p><strong>Working Hours:</strong> " . htmlspecialchars($provider->working_hours, ENT_XML1, 'UTF-8') . "</p>";
                 }
                 if ($provider->website) {
-                    $contentHtml .= "<p><strong>Website:</strong> <a href=\"" . htmlspecialchars($provider->website) . "\">" . htmlspecialchars($provider->website) . "</a></p>";
+                    $website = htmlspecialchars($provider->website, ENT_XML1, 'UTF-8');
+                    $contentHtml .= "<p><strong>Website:</strong> <a href=\"" . $website . "\">" . $website . "</a></p>";
                 }
                 if ($provider->public_email) {
-                    $contentHtml .= "<p><strong>Email:</strong> " . htmlspecialchars($provider->public_email) . "</p>";
+                    $contentHtml .= "<p><strong>Email:</strong> " . htmlspecialchars($provider->public_email, ENT_XML1, 'UTF-8') . "</p>";
                 }
 
                 if ($provider->description) {
-                    $desc = htmlspecialchars($provider->description);
+                    $desc = htmlspecialchars($provider->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>About</h3><p>{$desc}</p>";
                 }
 
@@ -612,20 +613,20 @@ class FeedController extends Controller
                 $id = url('/entity/technician/' . $tech->id);
                 $updated = $tech->updated_at->toAtomString();
                 $published = $tech->created_at->toAtomString();
-                $name = htmlspecialchars($tech->name);
-                $city = htmlspecialchars($tech->city);
-                $specialty = htmlspecialchars($tech->specialty ?? 'General Mechanic');
+                $name = htmlspecialchars($tech->name, ENT_XML1, 'UTF-8');
+                $city = htmlspecialchars($tech->city, ENT_XML1, 'UTF-8');
+                $specialty = htmlspecialchars($tech->specialty ?? 'General Mechanic', ENT_XML1, 'UTF-8');
 
-                $summary = htmlspecialchars("New Technician in {$city}: {$name}. Specialty: {$specialty}.");
+                $summary = htmlspecialchars("New Technician in {$city}: {$name}. Specialty: {$specialty}.", ENT_XML1, 'UTF-8');
 
                 $contentHtml = "<h2>{$name}</h2>";
-                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($tech->workshop_address ? " - " . htmlspecialchars($tech->workshop_address) : "") . "</p>";
+                $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($tech->workshop_address ? " - " . htmlspecialchars($tech->workshop_address, ENT_XML1, 'UTF-8') : "") . "</p>";
                 $contentHtml .= "<p><strong>Specialty:</strong> {$specialty}</p>";
                 if ($tech->average_rating)
                     $contentHtml .= "<p><strong>Rating:</strong> {$tech->average_rating} / 5</p>";
 
                 if ($tech->description) {
-                    $desc = htmlspecialchars($tech->description);
+                    $desc = htmlspecialchars($tech->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>About</h3><p>{$desc}</p>";
                 }
 
@@ -727,22 +728,22 @@ class FeedController extends Controller
                 $id = url('/entity/tow-truck/' . $truck->id);
                 $updated = $truck->updated_at->toAtomString();
                 $published = $truck->created_at->toAtomString();
-                $name = htmlspecialchars($truck->name);
-                $city = htmlspecialchars($truck->city);
-                $vehicleType = htmlspecialchars($truck->vehicle_type ?? 'Standard Tow Truck');
+                $name = htmlspecialchars($truck->name, ENT_XML1, 'UTF-8');
+                $city = htmlspecialchars($truck->city, ENT_XML1, 'UTF-8');
+                $vehicleType = htmlspecialchars($truck->vehicle_type ?? 'Standard Tow Truck', ENT_XML1, 'UTF-8');
 
-                $summary = htmlspecialchars("New Tow Truck in {$city}: {$name}. Vehicle Type: {$vehicleType}.");
+                $summary = htmlspecialchars("New Tow Truck in {$city}: {$name}. Vehicle Type: {$vehicleType}.", ENT_XML1, 'UTF-8');
 
                 $contentHtml = "<h2>{$name}</h2>";
                 $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
                 $contentHtml .= "<p><strong>Vehicle Type:</strong> {$vehicleType}</p>";
                 if ($truck->service_area)
-                    $contentHtml .= "<p><strong>Service Area:</strong> " . htmlspecialchars($truck->service_area) . "</p>";
+                    $contentHtml .= "<p><strong>Service Area:</strong> " . htmlspecialchars($truck->service_area, ENT_XML1, 'UTF-8') . "</p>";
                 if ($truck->average_rating)
                     $contentHtml .= "<p><strong>Rating:</strong> {$truck->average_rating} / 5</p>";
 
                 if ($truck->description) {
-                    $desc = htmlspecialchars($truck->description);
+                    $desc = htmlspecialchars($truck->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>About</h3><p>{$desc}</p>";
                 }
 
