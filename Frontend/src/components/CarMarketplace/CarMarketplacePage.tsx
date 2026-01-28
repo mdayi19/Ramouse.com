@@ -373,7 +373,7 @@ export const CarMarketplacePage: React.FC<CarMarketplacePageProps> = ({
                                     <select
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value)}
-                                        className="hidden md:flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm cursor-pointer outline-none"
+                                        className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm cursor-pointer outline-none"
                                         aria-label="ترتيب النتائج"
                                     >
                                         <option value="" className="bg-slate-800 text-white">ترتيب حسب</option>

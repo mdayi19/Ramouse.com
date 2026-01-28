@@ -44,6 +44,7 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    const [sortBy, setSortBy] = useState<string>(''); // Sort: price_asc, price_desc, year_desc, year_asc, mileage_asc, date_desc
 
     // Sponsored Pool State
     const [sponsoredPool, setSponsoredPool] = useState<CarListing[]>([]);
@@ -117,6 +118,34 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }, [filters]);
+
+    // Apply sorting when sortBy changes
+    useEffect(() => {
+        if (!sortBy || listings.length === 0) return;
+
+        const sorted = [...listings].sort((a, b) => {
+            switch (sortBy) {
+                case 'price_asc':
+                    return (a.price || 0) - (b.price || 0);
+                case 'price_desc':
+                    return (b.price || 0) - (a.price || 0);
+                case 'year_desc':
+                    return (b.year || 0) - (a.year || 0);
+                case 'year_asc':
+                    return (a.year || 0) - (b.year || 0);
+                case 'mileage_asc':
+                    return (a.mileage || 0) - (b.mileage || 0);
+                case 'mileage_desc':
+                    return (b.mileage || 0) - (a.mileage || 0);
+                case 'date_desc':
+                    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+                default:
+                    return 0;
+            }
+        });
+
+        setListings(sorted);
+    }, [sortBy]);
 
     const loadListings = async (isReset: boolean) => {
         if (isReset) {
@@ -339,6 +368,22 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                                 </div>
 
                                 <div className="flex items-center gap-2">
+                                    {/* Sort Dropdown */}
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value)}
+                                        className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 text-sm cursor-pointer outline-none"
+                                        aria-label="ترتيب النتائج"
+                                    >
+                                        <option value="" className="bg-slate-800 text-white">ترتيب حسب</option>
+                                        <option value="price_asc" className="bg-slate-800 text-white">السعر: من الأقل للأعلى</option>
+                                        <option value="price_desc" className="bg-slate-800 text-white">السعر: من الأعلى للأقل</option>
+                                        <option value="year_desc" className="bg-slate-800 text-white">الأحدث أولاً</option>
+                                        <option value="year_asc" className="bg-slate-800 text-white">الأقدم أولاً</option>
+                                        <option value="mileage_asc" className="bg-slate-800 text-white">المسافة: الأقل أولاً</option>
+                                        <option value="date_desc" className="bg-slate-800 text-white">الأحدث إضافة</option>
+                                    </select>
+
                                     {/* Mobile Filter */}
                                     <button
                                         onClick={() => setShowMobileFilters(true)}

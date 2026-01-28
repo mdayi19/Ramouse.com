@@ -51,7 +51,8 @@ export const StoreProductCard: React.FC<StoreProductCardProps> = ({ product, qty
         if (!isVisible) return;
 
         const loadImage = async () => {
-            const API_BASE = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000';
+            const API_BASE_URL = (import.meta as any).env.VITE_API_URL || '/api';
+            const API_BASE = API_BASE_URL.endsWith('/api') ? API_BASE_URL.replace('/api', '') : API_BASE_URL;
 
             if (product?.media && product.media.length > 0) {
                 const item = product.media[0];

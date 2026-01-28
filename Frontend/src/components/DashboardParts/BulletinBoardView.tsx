@@ -16,8 +16,9 @@ const getImageUrl = (imageUrl?: string): string | undefined => {
     // If it's already a full URL or base64, return as is
     if (imageUrl.startsWith('http') || imageUrl.startsWith('data:')) return imageUrl;
     // If it's a storage path, prepend the backend URL
-    const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000/api';
-    const baseUrl = API_URL.replace('/api', '');
+    // If it's a storage path, prepend the backend URL
+    const API_URL = (import.meta as any).env.VITE_API_URL || '/api';
+    const baseUrl = API_URL.endsWith('/api') ? API_URL.replace('/api', '') : API_URL;
     return baseUrl + imageUrl;
 };
 

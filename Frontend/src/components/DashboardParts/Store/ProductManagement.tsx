@@ -65,7 +65,9 @@ const StoreProductFormModal: React.FC<{
     useEffect(() => {
         const resolveMedia = async () => {
             const db = (window as any).db;
-            const API_BASE = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000';
+            const API_BASE_URL = (import.meta as any).env.VITE_API_URL || '/api';
+            // For storage URLs, we need the base URL without /api if the path starts with /storage
+            const API_BASE = API_BASE_URL.endsWith('/api') ? API_BASE_URL.replace('/api', '') : API_BASE_URL;
             let resolved: { item: GalleryItem, url: string }[] = [];
 
             // If database is available, try to resolve blob URLs

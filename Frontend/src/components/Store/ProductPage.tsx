@@ -53,7 +53,8 @@ export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAdd
 
                 try {
                     for (let i = 0; i < product.media.length; i++) {
-                        const API_BASE = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000';
+                        const API_BASE_URL = (import.meta as any).env.VITE_API_URL || '/api';
+                        const API_BASE = API_BASE_URL.endsWith('/api') ? API_BASE_URL.replace('/api', '') : API_BASE_URL;
                         const item = product.media[i];
                         if (item.data && typeof item.data === 'string') {
                             // Check if it's a storage URL (starts with /storage/)

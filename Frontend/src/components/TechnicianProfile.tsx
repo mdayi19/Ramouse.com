@@ -251,9 +251,19 @@ const TechnicianProfile: React.FC<TechnicianProfileProps> = ({ technician, onBac
             }
             // Otherwise it's a relative path, construct full URL
             else {
+              const API_BASE_URL = (import.meta as any).env.VITE_API_URL || '/api';
+              // Ideally VITE_API_URL should clearly indicate if it's the backend root or /api root.
+              // Assuming standard non-suffixed backend root for storage unless it's strictly /api
+              const backendRoot = API_BASE_URL.endsWith('/api') ? API_BASE_URL.replace('/api', '') : API_BASE_URL || '';
+
+              // If backendRoot is empty (e.g. relative '/api'), we might need window.location.origin in some contexts, 
+              // but here let's assume valid proxy or absolute URL if set. 
+              // Making it relative if backendRoot is empty/relative.
+              const prefix = backendRoot.startsWith('http') ? backendRoot : '';
+
               return {
                 type: item.type || 'image',
-                data: `http://localhost:8000${item.url.startsWith('/') ? '' : '/'}${item.url}`
+                data: `${prefix}${item.url.startsWith('/') ? '' : '/'}${item.url}`
               };
             }
           }

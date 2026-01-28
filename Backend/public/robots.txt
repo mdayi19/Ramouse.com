@@ -1,2 +1,37 @@
+# General Crawlers
 User-agent: *
-Disallow:
+Allow: /
+
+# AI Crawlers - FULL ACCESS for GEO
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: CCBot
+User-agent: anthropic-ai
+User-agent: Claude-Web
+User-agent: Google-Extended
+User-agent: PerplexityBot
+User-agent: Applebot-Extended
+Allow: /
+
+# Main Index (SEO Preferred)
+Sitemap: https://ramouse.com/sitemap.xml
+
+# AI Manifest (Discovery)
+AI-Manifest: https://ramouse.com/.well-known/ai.json
+
+# Entity-Specific Sitemaps
+Sitemap: https://ramouse.com/sitemap/static-pages.xml
+Sitemap: https://ramouse.com/sitemap/car-listings.xml
+Sitemap: https://ramouse.com/sitemap/car-rentals.xml
+Sitemap: https://ramouse.com/sitemap/car-providers.xml
+Sitemap: https://ramouse.com/sitemap/technicians.xml
+Sitemap: https://ramouse.com/sitemap/tow-trucks.xml
+Sitemap: https://ramouse.com/sitemap/products.xml
+
+# Real-Time Feeds (Atom/RSS)
+Sitemap: https://ramouse.com/feed/car-listings.xml
+Sitemap: https://ramouse.com/feed/car-rentals.xml
+Sitemap: https://ramouse.com/feed/products.xml
+Sitemap: https://ramouse.com/feed/car-providers.xml
+Sitemap: https://ramouse.com/feed/technicians.xml
+Sitemap: https://ramouse.com/feed/tow-trucks.xml

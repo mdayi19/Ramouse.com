@@ -375,7 +375,8 @@ const StoreOrderManagement: React.FC<StoreOrderManagementProps> = ({ requests, p
     }
 
     const getProductImage = (productId: string) => {
-        const API_BASE = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000';
+        const API_BASE_URL = (import.meta as any).env.VITE_API_URL || '/api';
+        const API_BASE = API_BASE_URL.endsWith('/api') ? API_BASE_URL.replace('/api', '') : API_BASE_URL;
         const product = products.find(p => p.id === productId);
 
         if (product?.media && product.media.length > 0 && product.media[0].type === 'image') {
