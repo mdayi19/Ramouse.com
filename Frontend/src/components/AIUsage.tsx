@@ -21,7 +21,16 @@ const AIUsage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     "@type": "WebPage",
                     "name": "AI Usage Policy",
                     "description": "Policy representing how Ramouse.com allows AI users to interact with its data.",
-                    "url": "https://ramouse.com/ai-usage"
+                    "url": "https://ramouse.com/ai-usage",
+                    "isPartOf": {
+                        "@type": "WebSite",
+                        "name": "Ramouse.com",
+                        "url": "https://ramouse.com"
+                    },
+                    "relatedLink": [
+                        "https://ramouse.com/.well-known/ai.json",
+                        "https://ramouse.com/llms.txt"
+                    ]
                 }}
             />
 
@@ -103,6 +112,16 @@ const AIUsage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             <p className="text-sm text-slate-500 dark:text-slate-400">
                                 يمكن العثور على التفاصيل التقنية الكاملة في ملف <code className="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">/llms.txt</code> في الجذر الرئيسي للموقع.
                             </p>
+                        </div>
+
+                        {/* AI Trust Badge */}
+                        <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700 text-center animate-fade-in-up delay-200">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-600 shadow-sm">
+                                <Icon name="ShieldCheck" className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                    This platform provides machine-readable AI usage policies.
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
