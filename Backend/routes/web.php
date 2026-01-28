@@ -46,6 +46,7 @@ Route::get('/sitemap/car-providers.xml', [App\Http\Controllers\SitemapController
 Route::get('/sitemap/technicians.xml', [App\Http\Controllers\SitemapController::class, 'technicians']);
 Route::get('/sitemap/tow-trucks.xml', [App\Http\Controllers\SitemapController::class, 'towTrucks']);
 Route::get('/sitemap/products.xml', [App\Http\Controllers\SitemapController::class, 'products']);
+Route::get('/sitemap/blog-posts.xml', [App\Http\Controllers\SitemapController::class, 'blogPosts']);
 
 // ===== SOCIAL MEDIA PREVIEW ROUTES =====
 // Serve HTML with Open Graph meta tags for social media crawlers
