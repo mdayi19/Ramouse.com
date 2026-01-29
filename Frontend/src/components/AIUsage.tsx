@@ -100,8 +100,8 @@ const AIUsage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         </div>
                     </div>
                 </div>
+            </motion.div>
         </div>
-        </div >
     );
 };
 
