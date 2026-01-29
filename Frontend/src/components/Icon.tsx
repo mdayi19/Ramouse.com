@@ -175,9 +175,10 @@ const XLogo = (props: LucideProps) => (
 
 const iconMap: Record<string, React.FC<LucideProps>> = {
     TikTok,
-    'Twitter': XLogo, // Map Twitter to X Logo
-    'X': XLogo,
-    AlertCircle,
+    'Twitter': XLogo,
+    'XLogo': XLogo,
+    'X': X, // Standard Close Icon
+    'Close': X,
     AlertTriangle,
     Archive,
     Armchair,
