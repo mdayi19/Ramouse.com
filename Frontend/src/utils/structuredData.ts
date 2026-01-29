@@ -569,3 +569,56 @@ export const generateMainDatasetSchema = () => {
         license: 'https://creativecommons.org/licenses/by-nc/4.0/'
     };
 };
+/**
+ * Generate Schema.org JSON-LD for Blog Articles with Deep Entity Linking
+ */
+export const generateBlogArticleSchema = (article: any) => {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        '@id': `${BASE_URL}/blog/${article.slug}#article`,
+        headline: article.title,
+        description: article.summary || article.excerpt,
+        image: getImageUrl(article.imageUrl || article.cover_image),
+        datePublished: article.publishedAt || article.created_at,
+        dateModified: article.updated_at || article.publishedAt || article.created_at,
+        author: {
+            '@type': 'Organization',
+            '@id': `${BASE_URL}/#organization`,
+            name: 'Ramouse Platform',
+            url: BASE_URL,
+            logo: `${BASE_URL}/logo.png`
+        },
+        publisher: {
+            '@id': `${BASE_URL}/#organization`
+        },
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `${BASE_URL}/blog/${article.slug}`
+        },
+        "about": [
+            {
+                "@type": "Dataset",
+                "@id": `${BASE_URL}/entity/dataset/car-listings`,
+                "name": "Syrian Car Market Live Data"
+            }
+        ],
+        "spatialCoverage": {
+            "@type": "Place",
+            "name": "Syria",
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "SY"
+            }
+        },
+        "keywords": article.tags?.map((t: any) => t.name).join(', ') || "سيارات سوريا, أسعار السيارات 2026, راموسة",
+        "mainEntity": article.faqs ? article.faqs.map((faq: any) => ({
+            "@type": "Question",
+            "name": faq.question,
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+            }
+        })) : undefined
+    };
+};

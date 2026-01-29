@@ -486,6 +486,8 @@ export interface BlogPost {
   imageUrl: string;
   author: string;
   publishedAt: string;
+  tags?: { name: string }[];
+  faqs?: FaqItem[];
 }
 
 export interface FaqItem {
@@ -710,6 +712,8 @@ export interface BlogPost {
   imageUrl: string;
   author: string;
   publishedAt: string;
+  tags?: { name: string }[];
+  faqs?: FaqItem[];
 }
 
 export interface FaqItem {

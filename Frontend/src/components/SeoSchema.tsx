@@ -17,7 +17,7 @@ const SeoSchema: React.FC<SeoSchemaProps> = ({ type, data }) => {
     return (
         <Helmet>
             <script type="application/ld+json">
-                {JSON.stringify(schemaWithContext)}
+                {JSON.stringify(schemaWithContext).replace(/</g, '\\u003c')}
             </script>
         </Helmet>
     );

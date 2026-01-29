@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getImageUrl } from '../utils/helpers';
+import { generateBlogArticleSchema } from '../utils/structuredData';
 import { BlogPost } from '../types';
 import { contentService } from '../services/content.service';
 import Icon from './Icon';
@@ -111,17 +112,8 @@ const BlogPostScreen: React.FC<BlogPostScreenProps> = ({ slug, onBack }) => {
             type: 'article'
           }}
           schema={{
-            type: 'BlogPosting',
-            data: {
-              "headline": post.title,
-              "image": getImageUrl(post.imageUrl),
-              "author": {
-                "@type": "Organization",
-                "name": post.author
-              },
-              "datePublished": post.publishedAt,
-              "description": post.summary
-            }
+            type: 'BlogPosting', // Legacy override, but data is custom now
+            data: generateBlogArticleSchema(post)
           }}
         />
       )}
