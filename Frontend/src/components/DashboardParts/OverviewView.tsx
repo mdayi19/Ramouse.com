@@ -397,7 +397,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ orders, providers, customer
 
                     {/* Reviews */}
                     <button
-                        onClick={() => onNavigate('reviews')}
+                        onClick={() => onNavigate('reviewsManagement')}
                         className="group relative p-5 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border-2 border-yellow-200 dark:border-yellow-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -412,7 +412,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ orders, providers, customer
 
                     {/* Notifications */}
                     <button
-                        onClick={() => onNavigate('sendNotification')}
+                        onClick={() => onNavigate('sendNotifications')}
                         className="group relative p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/30 dark:to-pink-900/30 border-2 border-rose-200 dark:border-rose-700 hover:border-rose-300 dark:hover:border-rose-600 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-pink-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
