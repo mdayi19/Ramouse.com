@@ -76,6 +76,11 @@ class Provider extends Authenticatable
         return $this->belongsTo(User::class);
     }
 
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class, 'provider_id', 'id');
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
