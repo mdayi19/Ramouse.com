@@ -176,15 +176,16 @@ const CarListingsSponsorView: React.FC<Props> = ({ showToast }) => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white">إدارة الإعلانات الممولة</h2>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">إدارة ومراقبة الإعلانات المرعاة والإيرادات</p>
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-500 via-orange-500 to-pink-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2">⭐ إدارة الإعلانات الممولة</h2>
+                    <p className="text-white/90">إدارة ومراقبة الإعلانات المرعاة والإيرادات</p>
                 </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                 <button
                     onClick={loadData}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="absolute bottom-4 left-4 flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-xl text-white rounded-lg hover:bg-white/30 transition-colors border border-white/30"
                 >
                     <RefreshCw className="w-4 h-4" />
                     تحديث

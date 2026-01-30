@@ -16,9 +16,10 @@ interface ShippingViewProps {
 const OrderCard: React.FC<{
     order: Order;
     actions: React.ReactNode;
-}> = ({ order, actions }) => {
+    index?: number;
+}> = ({ order, actions, index = 0 }) => {
     return (
-        <Card className="p-4 space-y-3 hover:shadow-md transition-shadow">
+        <Card className="p-4 space-y-3 backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg hover:shadow-2xl transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 30}ms` }}>
             <div className="flex justify-between items-start">
                 <div>
                     <p className="font-mono text-xs text-slate-500 mb-1">{order.orderNumber}</p>
@@ -55,39 +56,44 @@ const ShippingView: React.FC<ShippingViewProps> = ({ orders, onUpdateStatus, onO
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <Icon name="Truck" className="w-6 h-6 text-primary" />
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <Icon name="Truck" className="w-8 h-8" />
                         إدارة الشحن والتوصيل
                     </h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">متابعة الطلبات الجاهزة للشحن والتي هي قيد التوصيل.</p>
+                    <p className="text-white/90">متابعة الطلبات الجاهزة للشحن والتي هي قيد التوصيل</p>
                 </div>
-                <div className="flex gap-2">
-                    <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                        {readyToShipOrders.length} جاهز
-                    </div>
-                    <div className="px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-sm font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        {inTransitOrders.length} قيد الشحن
-                    </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
+
+            {/* Stats Badges */}
+            <div className="flex gap-3 justify-end">
+                <div className="px-4 py-2 backdrop-blur-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md border border-blue-200 dark:border-blue-800">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    {readyToShipOrders.length} جاهز
+                </div>
+                <div className="px-4 py-2 backdrop-blur-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md border border-amber-200 dark:border-amber-800">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    {inTransitOrders.length} قيد الشحن
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Column 1: Ready to Ship */}
                 <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md">
                         <Icon name="Box" className="w-5 h-5" />
-                        جاهزة للشحن
-                    </h3>
+                        <h3 className="text-lg font-bold">جاهزة للشحن</h3>
+                    </div>
                     <div className="space-y-4">
                         {readyToShipOrders.length > 0 ? (
-                            readyToShipOrders.map(order => (
+                            readyToShipOrders.map((order, index) => (
                                 <OrderCard
                                     key={order.orderNumber}
                                     order={order}
+                                    index={index}
                                     actions={
                                         <>
                                             <Button
@@ -120,16 +126,17 @@ const ShippingView: React.FC<ShippingViewProps> = ({ orders, onUpdateStatus, onO
 
                 {/* Column 2: In Transit */}
                 <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
                         <Icon name="Truck" className="w-5 h-5" />
-                        قيد التوصيل
-                    </h3>
+                        <h3 className="text-lg font-bold">قيد التوصيل</h3>
+                    </div>
                     <div className="space-y-4">
                         {inTransitOrders.length > 0 ? (
-                            inTransitOrders.map(order => (
+                            inTransitOrders.map((order, index) => (
                                 <OrderCard
                                     key={order.orderNumber}
                                     order={order}
+                                    index={index}
                                     actions={
                                         <>
                                             {order.status === 'تم الشحن للعميل' && (

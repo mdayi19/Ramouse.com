@@ -293,14 +293,39 @@ const TechniciansView: React.FC<TechniciansViewProps> = ({ addNotificationForUse
     }
 
     return (
-        <div className="bg-white dark:bg-darkcard p-6 rounded-lg shadow-md space-y-6">
-            <ViewHeader title="إدارة الفنيين" subtitle="مراجعة وتفعيل حسابات الفنيين المسجلين." />
+        <div className="space-y-6">
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2">🛠️ إدارة الفنيين</h2>
+                    <p className="text-white/90">مراجعة وتفعيل حسابات الفنيين المسجلين</p>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
 
-            {/* Stats */}
+            {/* Stats with Glassmorphism */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard title="إجمالي الفنيين" value={allTechnicians.length} icon={<Icon name="Users" />} />
-                <StatCard title="بانتظار التوثيق" value={pendingVerificationCount} icon={<Icon name="Clock" className="w-6 h-6" />} />
-                <StatCard title="الحسابات النشطة" value={activeCount} icon={<Icon name="CheckCircle" className="w-6 h-6 text-green-500" />} />
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-lg flex items-center gap-4">
+                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white p-3 rounded-full shadow-md"><Icon name="Users" /></div>
+                    <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">إجمالي الفنيين</p>
+                        <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{allTechnicians.length}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/30 border-2 border-amber-200 dark:border-amber-700 shadow-lg flex items-center gap-4">
+                    <div className="bg-gradient-to-br from-amber-500 to-orange-500 text-white p-3 rounded-full shadow-md"><Icon name="Clock" className="w-6 h-6" /></div>
+                    <div>
+                        <p className="text-sm text-amber-700 dark:text-amber-300">بانتظار التوثيق</p>
+                        <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">{pendingVerificationCount}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/30 border-2 border-green-200 dark:border-green-700 shadow-lg flex items-center gap-4">
+                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-md"><Icon name="CheckCircle" className="w-6 h-6" /></div>
+                    <div>
+                        <p className="text-sm text-green-700 dark:text-green-300">الحسابات النشطة</p>
+                        <p className="text-2xl font-bold text-green-900 dark:text-green-100">{activeCount}</p>
+                    </div>
+                </Card>
             </div>
 
             {/* Filters & Add Button */}

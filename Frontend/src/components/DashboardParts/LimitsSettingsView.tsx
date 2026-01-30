@@ -50,16 +50,23 @@ const LimitsSettingsView: React.FC<LimitsSettingsViewProps> = ({ settings, onSav
     );
 
     return (
-        <Card className="p-6">
-            <ViewHeader title="إدارة الحدود" subtitle="تحديد القيود والحدود المختلفة داخل التطبيق لضمان سلاسة العمل والتحكم في الموارد." />
-            <form onSubmit={handleSubmit} className="space-y-8 mt-6">
+        <div className="space-y-6">
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2">⚙️ إدارة الحدود</h2>
+                    <p className="text-white/90">تحديد القيود والحدود المختلفة داخل التطبيق</p>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* --- COLUMN 1 --- */}
                     <div className="space-y-8">
                         {/* Customer Limits */}
-                        <Card className="p-6 bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-slate-700 shadow-none">
-                            <h3 className="flex items-center gap-2 font-semibold text-lg mb-4 text-slate-800 dark:text-slate-200"><Icon name="Users" /> حدود العملاء</h3>
+                        <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-md">
+                            <h3 className="flex items-center gap-2 font-semibold text-lg mb-4 text-blue-800 dark:text-blue-200"><Icon name="Users" /> حدود العملاء</h3>
                             <div className="space-y-4">
                                 <InputField label="الحد الأقصى للطلبات النشطة" name="maxActiveOrders" desc="أقصى عدد من الطلبات غير المكتملة التي يمكن للعميل الواحد فتحها في وقت واحد." />
                                 <InputField label="الحد الأقصى للصور لكل طلب" name="maxImagesPerOrder" desc="أقصى عدد من الصور يمكن للعميل رفعها لتوضيح تفاصيل الطلب." />
@@ -67,8 +74,8 @@ const LimitsSettingsView: React.FC<LimitsSettingsViewProps> = ({ settings, onSav
                         </Card>
 
                         {/* Security Limits */}
-                        <Card className="p-6 bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-slate-700 shadow-none">
-                            <h3 className="flex items-center gap-2 font-semibold text-lg mb-4 text-slate-800 dark:text-slate-200"><Icon name="Shield" className="w-6 h-6" /> حدود الأمان</h3>
+                        <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/30 border-2 border-green-200 dark:border-green-700 shadow-md">
+                            <h3 className="flex items-center gap-2 font-semibold text-lg mb-4 text-green-800 dark:text-green-200"><Icon name="Shield" className="w-6 h-6" /> حدود الأمان</h3>
                             <div className="space-y-4">
                                 <InputField label="الحد الأقصى لمحاولات التحقق" name="maxVerificationAttempts" desc="عدد المرات التي يمكن للمستخدم طلب رمز التحقق فيها قبل الحظر المؤقت." />
                                 <InputField label="نافذة محاولات التحقق (بالدقائق)" name="verificationWindowMinutes" desc="المدة الزمنية التي يتم فيها حساب محاولات التحقق وإعادة تعيين العداد." />
@@ -327,7 +334,7 @@ const LimitsSettingsView: React.FC<LimitsSettingsViewProps> = ({ settings, onSav
                     </Button>
                 </div>
             </form >
-        </Card>
+        </div>
     );
 };
 

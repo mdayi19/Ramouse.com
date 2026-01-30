@@ -141,34 +141,47 @@ const SchedulerManagementView: React.FC<{
 
     return (
         <div className="space-y-6">
-            <ViewHeader
-                title="إدارة المجدول"
-                subtitle="مراقبة وإدارة المهام المجدولة التلقائية"
-            />
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2">⏰ إدارة المجدول</h2>
+                    <p className="text-white/90">Scheduler Management - مراقبة وإدارة المهام المجدولة التلقائية</p>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
 
-            {/* Tabs */}
-            <Card className="p-4">
+            {/* Gradient Tabs */}
+            <Card className="p-2 backdrop-blur-xl bg-white/90 dark:bg-darkcard/90 border-slate-200 dark:border-slate-700 shadow-lg">
                 <div className="flex gap-2">
                     <Button
-                        variant={activeTab === 'overview' ? 'primary' : 'ghost'}
+                        variant="ghost"
                         onClick={() => setActiveTab('overview')}
-                        className="flex-1"
+                        className={`flex-1 transition-all duration-300 ${activeTab === 'overview'
+                                ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md hover:from-indigo-600 hover:to-purple-600'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
                     >
                         <Icon name="LayoutDashboard" className="w-4 h-4 ml-2" />
                         نظرة عامة
                     </Button>
                     <Button
-                        variant={activeTab === 'tasks' ? 'primary' : 'ghost'}
+                        variant="ghost"
                         onClick={() => setActiveTab('tasks')}
-                        className="flex-1"
+                        className={`flex-1 transition-all duration-300 ${activeTab === 'tasks'
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md hover:from-blue-600 hover:to-cyan-600'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
                     >
                         <Icon name="Clock" className="w-4 h-4 ml-2" />
                         المهام المجدولة
                     </Button>
                     <Button
-                        variant={activeTab === 'logs' ? 'primary' : 'ghost'}
+                        variant="ghost"
                         onClick={() => setActiveTab('logs')}
-                        className="flex-1"
+                        className={`flex-1 transition-all duration-300 ${activeTab === 'logs'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md hover:from-amber-600 hover:to-orange-600'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
                     >
                         <Icon name="FileText" className="w-4 h-4 ml-2" />
                         السجلات
@@ -179,11 +192,17 @@ const SchedulerManagementView: React.FC<{
             {/* Overview Tab */}
             {activeTab === 'overview' && (
                 <div className="space-y-6">
-                    {/* Health Status */}
-                    <Card className={`p-6 border-2 ${health?.healthy ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20'}`}>
+                    {/* Health Status with Glassmorphism */}
+                    <Card className={`p-6 backdrop-blur-xl border-2 shadow-xl animate-fade-in ${health?.healthy
+                            ? 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/40'
+                            : 'border-red-400 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/40'
+                        }`}>
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${health?.healthy ? 'bg-green-500' : 'bg-red-500'}`}>
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${health?.healthy
+                                        ? 'bg-gradient-to-br from-green-500 to-emerald-500'
+                                        : 'bg-gradient-to-br from-red-500 to-rose-500'
+                                    }`}>
                                     <Icon name={health?.healthy ? 'CheckCircle' : 'AlertCircle'} className="w-8 h-8 text-white" />
                                 </div>
                                 <div>
@@ -200,42 +219,50 @@ const SchedulerManagementView: React.FC<{
                                     )}
                                 </div>
                             </div>
-                            <Button onClick={fetchAllData} size="sm" variant="ghost">
+                            <Button onClick={fetchAllData} size="sm" variant="ghost" className="hover:bg-white/50 dark:hover:bg-black/30">
                                 <Icon name="RefreshCw" className="w-4 h-4" />
                             </Button>
                         </div>
                     </Card>
 
-                    {/* Statistics Cards */}
+                    {/* Statistics Cards with Stagger */}
                     {stats && (
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <StatCard
-                                title="إجمالي المهام"
-                                value={stats.total_tasks}
-                                icon={<Icon name="List" className="w-6 h-6 text-blue-600 dark:text-blue-400" />}
-                                iconClassName="bg-blue-100 dark:bg-blue-900/30"
-                            />
+                            <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
+                                <StatCard
+                                    title="إجمالي المهام"
+                                    value={stats.total_tasks}
+                                    icon={<Icon name="List" className="w-6 h-6 text-blue-600 dark:text-blue-400" />}
+                                    iconClassName="bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30"
+                                />
+                            </div>
 
-                            <StatCard
-                                title="تنفيذات ناجحة اليوم"
-                                value={stats.successful_runs_today}
-                                icon={<Icon name="CheckCircle" className="w-6 h-6 text-green-600 dark:text-green-400" />}
-                                iconClassName="bg-green-100 dark:bg-green-900/30"
-                            />
+                            <div className="animate-fade-in" style={{ animationDelay: '50ms' }}>
+                                <StatCard
+                                    title="تنفيذات ناجحة اليوم"
+                                    value={stats.successful_runs_today}
+                                    icon={<Icon name="CheckCircle" className="w-6 h-6 text-green-600 dark:text-green-400" />}
+                                    iconClassName="bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30"
+                                />
+                            </div>
 
-                            <StatCard
-                                title="تنفيذات فاشلة اليوم"
-                                value={stats.failed_runs_today}
-                                icon={<Icon name="XCircle" className="w-6 h-6 text-red-600 dark:text-red-400" />}
-                                iconClassName="bg-red-100 dark:bg-red-900/30"
-                            />
+                            <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+                                <StatCard
+                                    title="تنفيذات فاشلة اليوم"
+                                    value={stats.failed_runs_today}
+                                    icon={<Icon name="XCircle" className="w-6 h-6 text-red-600 dark:text-red-400" />}
+                                    iconClassName="bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30"
+                                />
+                            </div>
 
-                            <StatCard
-                                title="معدل النجاح"
-                                value={`${stats.uptime_percentage}%`}
-                                icon={<Icon name="Activity" className="w-6 h-6 text-purple-600 dark:text-purple-400" />}
-                                iconClassName="bg-purple-100 dark:bg-purple-900/30"
-                            />
+                            <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+                                <StatCard
+                                    title="معدل النجاح"
+                                    value={`${stats.uptime_percentage}%`}
+                                    icon={<Icon name="Activity" className="w-6 h-6 text-purple-600 dark:text-purple-400" />}
+                                    iconClassName="bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30"
+                                />
+                            </div>
                         </div>
                     )}
 
@@ -270,10 +297,11 @@ const SchedulerManagementView: React.FC<{
                                 لا توجد مهام مجدولة
                             </div>
                         ) : (
-                            tasks.map((task) => (
+                            tasks.map((task, index) => (
                                 <div
                                     key={task.id}
-                                    className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                    className="p-4 backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in"
+                                    style={{ animationDelay: `${index * 30}ms` }}
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1">

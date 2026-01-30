@@ -3,9 +3,10 @@ import { Settings, MessagingAPI } from '../../types';
 import Modal from '../Modal';
 import { ViewHeader, EditIcon, DeleteIcon, Icon } from './Shared';
 import { AdminService } from '../../services/admin.service';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Badge } from '../ui/Badge';
 import { cn } from '../../lib/utils';
 
 interface WhatsappManagementViewProps {
@@ -51,56 +52,49 @@ const ApiFormModal: React.FC<{
     return (
         <Modal title={isEditing ? 'تعديل API' : 'إضافة API جديد'} onClose={onClose}>
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <Input
-                        label="اسم مميز للـ API"
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <Input
-                        label="API URL"
-                        type="url"
-                        id="apiUrl"
-                        name="apiUrl"
-                        value={formData.apiUrl}
-                        onChange={handleChange}
-                        className="text-left"
-                        dir="ltr"
-                        required
-                    />
-                </div>
-                <div>
-                    <Input
-                        label="App Key"
-                        type="text"
-                        id="appKey"
-                        name="appKey"
-                        value={formData.appKey}
-                        onChange={handleChange}
-                        className="text-left"
-                        dir="ltr"
-                        required
-                    />
-                </div>
-                <div>
-                    <Input
-                        label="Auth Key"
-                        type="text"
-                        id="authKey"
-                        name="authKey"
-                        value={formData.authKey}
-                        onChange={handleChange}
-                        className="text-left"
-                        dir="ltr"
-                        required
-                    />
-                </div>
+                <Input
+                    label="اسم مميز للـ API"
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="bg-slate-50 dark:bg-slate-900/50"
+                />
+                <Input
+                    label="API URL"
+                    type="url"
+                    id="apiUrl"
+                    name="apiUrl"
+                    value={formData.apiUrl}
+                    onChange={handleChange}
+                    className="text-left bg-slate-50 dark:bg-slate-900/50 font-mono text-sm"
+                    dir="ltr"
+                    required
+                />
+                <Input
+                    label="App Key"
+                    type="text"
+                    id="appKey"
+                    name="appKey"
+                    value={formData.appKey}
+                    onChange={handleChange}
+                    className="text-left bg-slate-50 dark:bg-slate-900/50 font-mono text-sm"
+                    dir="ltr"
+                    required
+                />
+                <Input
+                    label="Auth Key"
+                    type="text"
+                    id="authKey"
+                    name="authKey"
+                    value={formData.authKey}
+                    onChange={handleChange}
+                    className="text-left bg-slate-50 dark:bg-slate-900/50 font-mono text-sm"
+                    dir="ltr"
+                    required
+                />
                 <div className="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
                     <Button onClick={onClose} variant="ghost" type="button">
                         إلغاء
@@ -146,9 +140,9 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
         const apis = settings[key] || [];
 
         let updatedApis: MessagingAPI[];
-        if (apis.some(a => a.id === apiToSave.id)) { // Editing
+        if (apis.some(a => a.id === apiToSave.id)) {
             updatedApis = apis.map(a => a.id === apiToSave.id ? apiToSave : a);
-        } else { // Adding
+        } else {
             updatedApis = [...apis, apiToSave];
         }
         onSave({ [key]: updatedApis });
@@ -180,76 +174,119 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
         description: string;
         type: 'verification' | 'notification';
         apis: MessagingAPI[];
-    }> = ({ title, description, type, apis }) => (
-        <Card className="bg-slate-50 dark:bg-darkbg border-slate-200 dark:border-slate-700 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-                <Button size="sm" onClick={() => handleOpenModal(null, type)} className="gap-1">
-                    <Icon name="Plus" className="w-4 h-4" /> إضافة
-                </Button>
-            </CardHeader>
-            <CardContent>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{description}</p>
+        color: string;
+        icon: string;
+    }> = ({ title, description, type, apis, color, icon }) => (
+        <Card className="backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg">
+            <div className={`bg-gradient-to-r ${color} p-5 rounded-t-xl`}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <Icon name={icon as any} className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white">{title}</h3>
+                            <p className="text-sm text-white/80">{description}</p>
+                        </div>
+                    </div>
+                    <Button size="sm" onClick={() => handleOpenModal(null, type)} className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                        <Icon name="Plus" className="w-4 h-4 ml-1" /> إضافة
+                    </Button>
+                </div>
+            </div>
+            <div className="p-5">
                 <div className="space-y-3">
-                    {apis.map(api => (
-                        <Card key={api.id} className="border bg-white dark:bg-darkcard dark:border-slate-600 shadow-sm">
-                            <CardContent className="p-3 flex justify-between items-start">
-                                <div>
+                    {apis.map((api, index) => (
+                        <Card
+                            key={api.id}
+                            className="border bg-slate-50 dark:bg-slate-900/50 dark:border-slate-700 shadow-sm hover:shadow-md transition-all animate-fade-in"
+                            style={{ animationDelay: `${index * 30}ms` }}
+                        >
+                            <div className="p-4 flex justify-between items-start">
+                                <div className="flex-1">
                                     <p className="font-bold text-slate-800 dark:text-slate-200">{api.name}</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono" dir="ltr">{api.apiUrl}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1" dir="ltr">{api.apiUrl}</p>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                     <label className="relative inline-flex items-center cursor-pointer" title={api.isActive ? 'مفعل' : 'معطل'}>
                                         <input type="checkbox" checked={api.isActive} onChange={() => handleToggleActive(api.id, type)} className="sr-only peer" />
-                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500"></div>
                                     </label>
-                                    <Button size="icon" variant="ghost" onClick={() => handleOpenModal(api, type)} className="text-blue-600 hover:text-blue-800 h-8 w-8" title="تعديل">
+                                    <Button size="icon" variant="ghost" onClick={() => handleOpenModal(api, type)} className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 h-8 w-8" title="تعديل">
                                         <EditIcon className="w-4 h-4" />
                                     </Button>
-                                    <Button size="icon" variant="ghost" onClick={() => handleDeleteApi(api.id, type)} className="text-red-600 hover:text-red-800 h-8 w-8" title="حذف">
+                                    <Button size="icon" variant="ghost" onClick={() => handleDeleteApi(api.id, type)} className="text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 h-8 w-8" title="حذف">
                                         <DeleteIcon className="w-4 h-4" />
                                     </Button>
                                 </div>
-                            </CardContent>
+                            </div>
                         </Card>
                     ))}
-                    {apis.length === 0 && <p className="text-sm text-center text-slate-500 py-4">لا توجد واجهات API مضافة.</p>}
+                    {apis.length === 0 && (
+                        <div className="text-center py-8">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+                                <Icon name="Package" className="w-8 h-8 text-slate-400" />
+                            </div>
+                            <p className="text-sm text-slate-500">لا توجد واجهات API مضافة</p>
+                        </div>
+                    )}
                 </div>
-            </CardContent>
+            </div>
         </Card>
     );
 
     return (
-        <Card className="p-6">
-            <ViewHeader title="إدارة WhatsApp" subtitle="إضافة وتعديل واجهات برمجة التطبيقات المستخدمة لإرسال رسائل التحقق والإشعارات." />
-
-            <Card className={cn(
-                "mb-6 border-2 transition-colors",
-                settings.whatsappNotificationsActive
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                    : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-            )}>
-                <CardContent className="p-4 flex justify-between items-center">
+        <div className="space-y-6 animate-fade-in">
+            {/* Header */}
+            <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-white/90 to-slate-50/90 dark:from-darkcard/90 dark:to-slate-900/90 border-none shadow-xl">
+                <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center shadow-lg">
+                        <Icon name="MessageCircle" className="w-7 h-7 text-green-600 dark:text-green-400" />
+                    </div>
                     <div>
-                        <h3 className="text-lg font-bold">الحالة العامة لرسائل WhatsApp</h3>
-                        <p className={cn(
-                            "font-semibold text-lg",
-                            settings.whatsappNotificationsActive ? 'text-green-600' : 'text-red-600'
+                        <ViewHeader title="💬 إدارة WhatsApp" subtitle="إضافة وتعديل واجهات برمجة التطبيقات المستخدمة لإرسال رسائل التحقق والإشعارات." />
+                    </div>
+                </div>
+            </Card>
+
+            {/* Global Status */}
+            <Card className={cn(
+                "backdrop-blur-xl border-2 transition-all shadow-lg",
+                settings.whatsappNotificationsActive
+                    ? 'border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20'
+                    : 'border-red-500 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20'
+            )}>
+                <div className="p-5 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center shadow-md",
+                            settings.whatsappNotificationsActive
+                                ? 'bg-gradient-to-br from-green-500 to-emerald-500'
+                                : 'bg-gradient-to-br from-red-500 to-rose-500'
                         )}>
-                            {settings.whatsappNotificationsActive ? 'مفعل' : 'متوقف'}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            هذا المفتاح يتحكم بجميع رسائل الواتساب الصادرة من النظام.
-                        </p>
+                            <Icon name={settings.whatsappNotificationsActive ? "Check" : "X"} className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">الحالة العامة لرسائل WhatsApp</h3>
+                            <p className={cn(
+                                "font-semibold text-lg",
+                                settings.whatsappNotificationsActive ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+                            )}>
+                                {settings.whatsappNotificationsActive ? '✓ مفعل' : '✗ متوقف'}
+                            </p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                هذا المفتاح يتحكم بجميع رسائل الواتساب الصادرة من النظام
+                            </p>
+                        </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" checked={settings.whatsappNotificationsActive} onChange={handleGlobalToggle} className="sr-only peer" />
                         <div className={cn(
                             "w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all",
-                            settings.whatsappNotificationsActive ? 'peer-checked:bg-green-600' : 'peer-checked:bg-slate-500'
+                            settings.whatsappNotificationsActive ? 'peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-500' : 'peer-checked:bg-slate-500'
                         )}></div>
                     </label>
-                </CardContent>
+                </div>
             </Card>
 
             {/* Environment Fallback Indicator */}
@@ -257,9 +294,9 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
                 (!settings.verificationApis?.length && !settings.notificationApis?.length) ||
                 (!settings.verificationApis?.some(a => a.isActive) && !settings.notificationApis?.some(a => a.isActive))
             ) && (
-                    <Card className="mb-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
-                        <CardContent className="p-4 flex items-start gap-3">
-                            <Icon name="Info" className="w-6 h-6 flex-shrink-0 text-blue-600" />
+                    <Card className="backdrop-blur-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 shadow-lg">
+                        <div className="p-5 flex items-start gap-3">
+                            <Icon name="Info" className="w-6 h-6 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                             <div>
                                 <h4 className="font-bold text-blue-800 dark:text-blue-300">يعمل النظام بوضع البيئة (Environment Mode)</h4>
                                 <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
@@ -269,39 +306,54 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
                                     App Key: {settings.whatsapp_env_status.env_app_key_preview}
                                 </div>
                             </div>
-                        </CardContent>
+                        </div>
                     </Card>
                 )}
 
+            {/* API Lists */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ApiList
                     title="واجهات التحقق (OTP)"
-                    description="تُستخدم هذه الواجهات لإرسال رموز التحقق للمستخدمين الجدد."
+                    description="إرسال رموز التحقق للمستخدمين"
                     type="verification"
                     apis={settings.verificationApis || []}
+                    color="from-purple-500 to-pink-500"
+                    icon="Shield"
                 />
                 <ApiList
                     title="واجهات الإشعارات"
-                    description="تُستخدم هذه الواجهات لإرسال جميع الإشعارات الأخرى."
+                    description="إرسال جميع الإشعارات الأخرى"
                     type="notification"
                     apis={settings.notificationApis || []}
+                    color="from-blue-500 to-cyan-500"
+                    icon="Bell"
                 />
             </div>
 
-            <Card className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 shadow-none">
-                <CardContent className="p-4 flex items-start gap-3">
-                    <Icon name="Info" className="w-5 h-5 flex-shrink-0 mt-0.5 text-yellow-600" />
-                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+            {/* Info Note */}
+            <Card className="backdrop-blur-xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-800 shadow-lg">
+                <div className="p-5 flex items-start gap-3">
+                    <Icon name="Lightbulb" className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
                         <strong>ملاحظة:</strong> يستخدم النظام هذه الواجهات بترتيب دوري (Round-robin) مع تجاوز الفاشلة منها. سيتم استخدام الواجهة المفعلة التالية في القائمة في حال فشل الإرسال من الواجهة الحالية.
                     </p>
-                </CardContent>
+                </div>
             </Card>
 
-            <Card className="mt-6 bg-slate-50 dark:bg-darkbg border-slate-200 dark:border-slate-700 shadow-sm">
-                <CardHeader>
-                    <CardTitle className="text-lg">اختبار الإرسال</CardTitle>
-                </CardHeader>
-                <CardContent>
+            {/* Test Section */}
+            <Card className="backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 rounded-t-xl">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <Icon name="Send" className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white">اختبار الإرسال</h3>
+                            <p className="text-sm text-emerald-100">إرسال رسالة تجريبية للتأكد من الإعدادات</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-5">
                     <div className="flex flex-col md:flex-row gap-4 items-end">
                         <div className="flex-1 w-full">
                             <Input
@@ -310,6 +362,7 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
                                 onChange={e => setTestPhone(e.target.value)}
                                 placeholder="+963..."
                                 dir="ltr"
+                                className="bg-slate-50 dark:bg-slate-900/50"
                             />
                         </div>
                         <div className="flex-[2] w-full">
@@ -317,18 +370,20 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
                                 label="الرسالة"
                                 value={testMessage}
                                 onChange={e => setTestMessage(e.target.value)}
+                                className="bg-slate-50 dark:bg-slate-900/50"
                             />
                         </div>
                         <Button
                             onClick={handleSendTest}
                             disabled={sendingTest}
                             isLoading={sendingTest}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold whitespace-nowrap"
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20"
                         >
+                            <Icon name="Send" className="w-4 h-4 ml-1.5" />
                             إرسال تجريبي
                         </Button>
                     </div>
-                </CardContent>
+                </div>
             </Card>
 
             {isModalOpen && editingApi && (
@@ -339,7 +394,7 @@ const WhatsappManagementView: React.FC<WhatsappManagementViewProps> = ({ setting
                     onClose={() => setIsModalOpen(false)}
                 />
             )}
-        </Card>
+        </div>
     );
 };
 

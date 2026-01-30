@@ -123,33 +123,37 @@ const CarCategoriesView: React.FC<Props> = ({ showToast }) => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Car Categories</h2>
-                    <p className="text-gray-600 dark:text-gray-400">Manage vehicle categories</p>
+            {/* Header with Gradient */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2">🚗 فئات السيارات</h2>
+                    <p className="text-white/90">Car Categories Management</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="flex items-center justify-between">
+                <div className="flex gap-3">
                     <button
                         onClick={loadCategories}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        className="flex items-center gap-2 px-5 py-2.5 backdrop-blur-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 transition-all shadow-sm hover:shadow-md"
                     >
                         <RefreshCw className="w-4 h-4" />
-                        Refresh
+                        تحديث
                     </button>
                     <button
                         onClick={() => setShowAddForm(!showAddForm)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all shadow-md hover:shadow-lg"
                     >
                         {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                        {showAddForm ? 'Cancel' : 'Add Category'}
+                        {showAddForm ? 'إلغاء' : 'إضافة فئة'}
                     </button>
                 </div>
             </div>
 
-            {/* Add/Edit Form */}
+            {/* Add/Edit Form with Glassmorphism */}
             {showAddForm && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div className="backdrop-blur-xl bg-white/90 dark:bg-darkcard/90 rounded-2xl shadow-xl p-6 border border-slate-200 dark:border-slate-700 animate-fade-in">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                         {editingId ? 'Edit Category' : 'Add New Category'}
                     </h3>
@@ -214,12 +218,13 @@ const CarCategoriesView: React.FC<Props> = ({ showToast }) => {
                 </div>
             )}
 
-            {/* Categories Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((category) => (
+            {/* Categories Grid with Glassmorphism */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {categories.map((category, index) => (
                     <div
                         key={category.id}
-                        className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                        className="group backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 rounded-2xl p-6 border-none shadow-lg hover:shadow-2xl transition-all duration-300 animate-fade-in hover:scale-105"
+                        style={{ animationDelay: `${index * 30}ms` }}
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
@@ -236,20 +241,20 @@ const CarCategoriesView: React.FC<Props> = ({ showToast }) => {
                                 )}
                             </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 mt-4">
                             <button
                                 onClick={() => handleEdit(category)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 rounded-xl transition-all shadow-md hover:shadow-lg"
                             >
                                 <Edit className="w-4 h-4" />
-                                Edit
+                                تعديل
                             </button>
                             <button
                                 onClick={() => handleDelete(category.id)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 rounded-xl transition-all shadow-md hover:shadow-lg"
                             >
                                 <Trash2 className="w-4 h-4" />
-                                Delete
+                                حذف
                             </button>
                         </div>
                     </div>

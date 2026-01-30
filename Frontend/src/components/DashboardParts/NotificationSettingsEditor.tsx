@@ -113,51 +113,58 @@ const NotificationSettingsEditor: React.FC<NotificationSettingsEditorProps> = ({
             <ViewHeader title="إدارة الإشعارات" subtitle="تفعيل أو تعطيل إشعارات الرسائل التلقائية." />
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات العملاء</legend>
-                        <div className="space-y-3">
+                    {/* Customers */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in">
+                        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 text-white font-bold text-lg">إشعارات العملاء</div>
+                        <div className="p-4 space-y-3">
                             {customerKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات المزودين</legend>
-                        <div className="space-y-3">
+                    {/* Providers */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in" style={{ animationDelay: '50ms' }}>
+                        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-3 text-white font-bold text-lg">إشعارات المزودين</div>
+                        <div className="p-4 space-y-3">
                             {providerKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات الفنيين</legend>
-                        <div className="space-y-3">
+                    {/* Technicians */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in" style={{ animationDelay: '100ms' }}>
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white font-bold text-lg">إشعارات الفنيين</div>
+                        <div className="p-4 space-y-3">
                             {technicianKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات سائقي السطحات</legend>
-                        <div className="space-y-3">
+                    {/* Tow Trucks */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in" style={{ animationDelay: '150ms' }}>
+                        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-3 text-white font-bold text-lg">إشعارات سائقي السطحات</div>
+                        <div className="p-4 space-y-3">
                             {towTruckKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات معارض السيارات</legend>
-                        <div className="space-y-3">
+                    {/* Car Providers */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in" style={{ animationDelay: '200ms' }}>
+                        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 p-3 text-white font-bold text-lg">إشعارات معارض السيارات</div>
+                        <div className="p-4 space-y-3">
                             {carProviderKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات المتجر والعروض</legend>
-                        <div className="space-y-3">
+                    {/* Store */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in" style={{ animationDelay: '250ms' }}>
+                        <div className="bg-gradient-to-r from-yellow-500 to-amber-500 p-3 text-white font-bold text-lg">إشعارات المتجر والعروض</div>
+                        <div className="p-4 space-y-3">
                             {storeKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
 
-                    <Card className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                        <legend className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2 w-full">إشعارات الإدارة</legend>
-                        <div className="space-y-3">
+                    {/* Admin */}
+                    <Card className="overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-darkcard/80 border-none shadow-lg animate-fade-in" style={{ animationDelay: '300ms' }}>
+                        <div className="bg-gradient-to-r from-red-500 to-rose-500 p-3 text-white font-bold text-lg">إشعارات الإدارة</div>
+                        <div className="p-4 space-y-3">
                             {adminKeys.map(k => <CheckboxField key={k} name={k} />)}
                         </div>
                     </Card>
