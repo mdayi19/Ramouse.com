@@ -10,39 +10,131 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
+import { COUNTRY_CODES } from '../../constants/countries';
 
 interface UsersViewProps {
     allOrders: Order[];
 }
 
 const CustomerFormModal: React.FC<{
-    customer: Customer;
-    onSave: (data: Partial<Customer>) => void;
+    customer?: Customer;
+    isNew?: boolean;
+    onSave: (data: Partial<Customer> & { password?: string }) => void;
     onClose: () => void;
-}> = ({ customer, onSave, onClose }) => {
-    const [name, setName] = useState(customer.name || '');
-    const [address, setAddress] = useState(customer.address || '');
+}> = ({ customer, isNew = false, onSave, onClose }) => {
+    const [name, setName] = useState(customer?.name || '');
+    const [countryCode, setCountryCode] = useState('+964');
+    const [localPhone, setLocalPhone] = useState('');
+    const [address, setAddress] = useState(customer?.address || '');
+    const [password, setPassword] = useState('');
+
+    const fullPhoneNumber = useMemo(() => countryCode + localPhone, [countryCode, localPhone]);
+    const selectedCountry = useMemo(() => COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0], [countryCode]);
+
+    // Initialize phone fields when editing existing customer
+    useEffect(() => {
+        if (customer?.id && isNew === false) {
+            const foundCode = COUNTRY_CODES.find(c => customer.id.startsWith(c.code));
+            if (foundCode) {
+                setCountryCode(foundCode.code);
+                setLocalPhone(customer.id.substring(foundCode.code.length));
+            } else {
+                setLocalPhone(customer.id);
+            }
+        }
+    }, [customer, isNew]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ name, address });
+        console.log('Form submitted!', { isNew, name, localPhone, countryCode, password });
+
+        if (isNew) {
+            // Validate phone length
+            if (localPhone.length !== selectedCountry.length) {
+                const errorMsg = `رقم الهاتف غير صحيح!\nأدخلت: ${localPhone.length} رقم\nمطلوب: ${selectedCountry.length} رقم\n\nمثال صحيح: ${selectedCountry.placeholder}`;
+                console.error('Phone validation failed:', {
+                    entered: localPhone,
+                    enteredLength: localPhone.length,
+                    expected: selectedCountry.length,
+                    country: selectedCountry.name
+                });
+                alert(errorMsg);
+                return;
+            }
+            if (!password) {
+                alert('كلمة المرور مطلوبة');
+                return;
+            }
+            if (password.length < 6) {
+                alert('يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل.');
+                return;
+            }
+
+            console.log('Validation passed, calling onSave with:', { name, id: fullPhoneNumber, address, password: '***' });
+            onSave({ name, id: fullPhoneNumber, address, password });
+        } else {
+            onSave({ name, address });
+        }
     };
 
     return (
-        <Modal title={`تعديل بيانات ${customer.name || customer.id}`} onClose={onClose}>
+        <Modal title={isNew ? 'إضافة عميل جديد' : `تعديل بيانات ${customer?.name || customer?.id}`} onClose={onClose}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                     label="الاسم"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    required
                 />
+                {isNew && (
+                    <>
+                        <div>
+                            <label htmlFor="phone" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">رقم الهاتف</label>
+                            <div className="flex mt-1 group relative">
+                                <select
+                                    value={countryCode}
+                                    onChange={e => setCountryCode(e.target.value)}
+                                    className="appearance-none rounded-r-xl border-l-0 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors px-3 py-3 pr-8 w-[100px]"
+                                    dir="ltr"
+                                >
+                                    {COUNTRY_CODES.map((c, idx) => <option key={`${idx}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>)}
+                                </select>
+                                <div className="absolute top-1/2 right-2 transform -translate-y-1/2 pointer-events-none text-slate-500">
+                                    <Icon name="ChevronDown" className="w-4 h-4" />
+                                </div>
+                                <Input
+                                    type="tel"
+                                    id="phone"
+                                    value={localPhone}
+                                    onChange={e => setLocalPhone(e.target.value.replace(/\D/g, ''))}
+                                    className="rounded-r-none rounded-l-xl border-l h-auto py-3 sm:text-sm bg-slate-50 dark:bg-slate-700/50"
+                                    placeholder={selectedCountry.placeholder}
+                                    required
+                                    dir="ltr"
+                                />
+                            </div>
+                            <p className={`text-xs mt-1 ${localPhone.length === selectedCountry.length ? 'text-green-600 dark:text-green-400' : 'text-slate-500'}`}>
+                                {localPhone.length} / {selectedCountry.length} رقم {localPhone.length === selectedCountry.length && '✓'}
+                            </p>
+                        </div>
+                        <Input
+                            label="كلمة المرور"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            type="password"
+                            placeholder="6 أحرف على الأقل"
+                            dir="ltr"
+                        />
+                    </>
+                )}
                 <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">العنوان</label>
                     <textarea value={address} onChange={e => setAddress(e.target.value)} rows={3} className="w-full p-2.5 border border-slate-200 dark:border-slate-800 rounded-xl dark:bg-slate-950 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-slate-500" />
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
                     <Button type="button" onClick={onClose} variant="ghost">إلغاء</Button>
-                    <Button type="submit">حفظ</Button>
+                    <Button type="submit">{isNew ? 'إضافة' : 'حفظ'}</Button>
                 </div>
             </form>
         </Modal>
@@ -54,6 +146,7 @@ const ITEMS_PER_PAGE = 10;
 const UsersView: React.FC<UsersViewProps> = ({ allOrders }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
@@ -77,6 +170,31 @@ const UsersView: React.FC<UsersViewProps> = ({ allOrders }) => {
 
         fetchUsers();
     }, []);
+
+    const handleAddCustomer = async (data: Partial<Customer> & { password?: string }) => {
+        console.log('🚀 handleAddCustomer called with:', data);
+        try {
+            console.log('📡 Making API call to /admin/users...');
+            const response = await api.post('/admin/users', {
+                phone: data.id,
+                password: data.password,
+                name: data.name,
+                address: data.address
+            });
+            console.log('✅ API response:', response.data);
+            if (response.data.success) {
+                console.log('✅ Success! Adding customer to list and closing modal');
+                setCustomers([response.data.data, ...customers]);
+                setShowAddModal(false);
+            } else {
+                console.warn('⚠️ API returned success=false:', response.data);
+            }
+        } catch (err: any) {
+            console.error('❌ Error adding user:', err);
+            console.error('❌ Error response:', err.response?.data);
+            alert(err.response?.data?.error || 'فشل في إضافة المستخدم');
+        }
+    };
 
     const handleUpdateCustomer = async (customerId: string, data: Partial<Customer>) => {
         try {
@@ -158,13 +276,22 @@ const UsersView: React.FC<UsersViewProps> = ({ allOrders }) => {
             {!loading && !error && (
                 <>
                     <Card className="p-4 shadow-sm border-none">
-                        <div className="relative max-w-md">
-                            <Input
-                                placeholder="ابحث بالاسم أو الرقم..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                icon={<Icon name="Search" className="w-5 h-5" />}
-                            />
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                            <div className="relative w-full sm:max-w-md">
+                                <Input
+                                    placeholder="ابحث بالاسم أو الرقم..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    icon={<Icon name="Search" className="w-5 h-5" />}
+                                />
+                            </div>
+                            <Button
+                                onClick={() => setShowAddModal(true)}
+                                className="w-full sm:w-auto whitespace-nowrap"
+                            >
+                                <Icon name="UserPlus" className="w-4 h-4 ml-2" />
+                                إضافة عميل جديد
+                            </Button>
                         </div>
                     </Card>
 
@@ -320,6 +447,7 @@ const UsersView: React.FC<UsersViewProps> = ({ allOrders }) => {
                         />
                     )}
                     {editingCustomer && <CustomerFormModal customer={editingCustomer} onClose={() => setEditingCustomer(null)} onSave={(data) => { handleUpdateCustomer(editingCustomer.id, data); setEditingCustomer(null); }} />}
+                    {showAddModal && <CustomerFormModal isNew onClose={() => setShowAddModal(false)} onSave={handleAddCustomer} />}
                 </>
             )}
         </div>

@@ -1360,6 +1360,95 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * Create a new customer user (Admin Dashboard)
+     * Matches pattern from AuthController::registerCustomer
+     */
+    public function createUser(Request $request)
+    {
+        $validated = $request->validate([
+            'phone' => 'required|string',
+            'password' => 'required|string|min:6',
+            'name' => 'nullable|string',
+            'address' => 'nullable|string',
+        ]);
+
+        // Check if user already exists
+        $existingUser = User::where('phone', $validated['phone'])
+            ->orWhere('phone', str_replace('+', '', $validated['phone']))
+            ->first();
+
+        if ($existingUser) {
+            return response()->json([
+                'success' => false,
+                'error' => 'المستخدم موجود بالفعل'
+            ], 400);
+        }
+
+        // Generate unique 10-character ID (same as registerCustomer)
+        do {
+            $uniqueId = strtoupper(substr(md5(uniqid(rand(), true)), 0, 10));
+            $existingId = Customer::where('unique_id', $uniqueId)->first();
+        } while ($existingId);
+
+        DB::beginTransaction();
+        try {
+            // 1. Create User record
+            $user = User::create([
+                'name' => $validated['name'] ?? 'عميل جديد',
+                'phone' => $validated['phone'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'customer',
+                'is_admin' => false,
+            ]);
+
+            // 2. Create Customer Profile
+            $customer = Customer::create([
+                'id' => $validated['phone'],  // Phone is the ID
+                'user_id' => $user->id,
+                'unique_id' => $uniqueId,
+                'name' => $validated['name'] ?? 'عميل جديد',
+                'address' => $validated['address'] ?? null,
+                'password' => Hash::make($validated['password']), // Kept for consistency
+            ]);
+
+            DB::commit();
+
+            // Broadcast real-time events (same as registerCustomer)
+            event(new \App\Events\UserRegistered([
+                'id' => $customer->id,
+                'unique_id' => $customer->unique_id,
+                'name' => $customer->name,
+                'phone' => $customer->id,
+            ], 'customer'));
+
+            event(new \App\Events\AdminDashboardEvent('user.registered', [
+                'user_type' => 'customer',
+                'name' => $customer->name,
+            ]));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إنشاء العميل بنجاح',
+                'data' => [
+                    'id' => $customer->id,
+                    'uniqueId' => $customer->unique_id,
+                    'phone' => $customer->id,
+                    'name' => $customer->name,
+                    'address' => $customer->address,
+                    'isActive' => true,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'فشل في إنشاء العميل',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function listUsers()
     {
         $customers = Customer::select('id', 'unique_id', 'name', 'address', 'is_active', 'created_at')

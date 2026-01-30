@@ -369,6 +369,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // User Management
         Route::get('/users/search', [AdminController::class, 'searchUsers']);
+        Route::post('/users', [AdminController::class, 'createUser']);
         Route::get('/users', [AdminController::class, 'listUsers']);
         Route::put('/users/{id}', [AdminController::class, 'updateUser']);
         Route::post('/users/{id}/reset-password', [AdminController::class, 'resetUserPassword']);
