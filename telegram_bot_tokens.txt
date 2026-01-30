@@ -1,14 +1,15 @@
 koera 
 
-
 8384231011:AAHwMGo47u8hLa-hFjV9kxeg8n36XVJdO-w
 -1003140324258
 ----------
-germany 
+germany - euro
+
 -1003290952853
 8428045043:AAGTKIiK5kskBRjLwhGjQjxXrt8Qx8KCC7Q
 ---------
 american
+
 -1003590304338
 8465125635:AAFXgU9EB3VQHgfnB3ZepI5j143Jpe1Tuks
 
@@ -25,7 +26,7 @@ chaina
 -1003403289273
 8438418747:AAE1zVvMOOJElXrYvE_xrqTwD3n-d63XJew
 -------------
-frans
+rus -iran -india
  
 -1003613672732
 8526172592:AAFqABNztjUj53Mi6AShygi-WJtxaEXrGBI

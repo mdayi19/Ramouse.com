@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\TowTruckController;
 use App\Http\Controllers\TechnicianController;
+use App\Http\Controllers\CacheController;
 
 
 /*
@@ -486,6 +487,16 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/logs', [App\Http\Controllers\Admin\SchedulerController::class, 'logs']);
             Route::post('/execute', [App\Http\Controllers\Admin\SchedulerController::class, 'execute']);
             Route::get('/stats', [App\Http\Controllers\Admin\SchedulerController::class, 'stats']);
+        });
+
+        // ======== CACHE MANAGEMENT ========
+        Route::prefix('cache')->group(function () {
+            Route::post('/clear', [CacheController::class, 'clear']);
+            Route::post('/clear-config', [CacheController::class, 'clearConfig']);
+            Route::post('/clear-routes', [CacheController::class, 'clearRoutes']);
+            Route::post('/clear-views', [CacheController::class, 'clearViews']);
+            Route::post('/clear-all', [CacheController::class, 'clearAll']);
+            Route::get('/stats', [CacheController::class, 'stats']);
         });
     });
 });
