@@ -493,17 +493,31 @@ const ModelManagementView: React.FC<ModelManagementViewProps> = (props) => {
     };
 
     return (
-        <Card className="p-6">
-            <ViewHeader title="إدارة النماذج" subtitle="إدارة البيانات الديناميكية للتطبيق مثل فئات السيارات، الشركات، والموديلات." />
-            <div className="flex border-b mb-4 dark:border-slate-700">
-                <TabButton tabId="categories" label="الفئات" />
-                <TabButton tabId="brands" label="الشركات المصنّعة" />
-                <TabButton tabId="models" label="الموديلات" />
-                <TabButton tabId="partTypes" label="أنواع القطع" />
-                <TabButton tabId="specialties" label="تخصصات الفنيين" />
+        <div className="space-y-6">
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <Icon name="Database" className="w-8 h-8" />
+                        إدارة النماذج
+                    </h2>
+                    <p className="text-white/90">إدارة فئات السيارات، الشركات، الموديلات، أنواع القطع، والتخصصات</p>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             </div>
-            <div>{renderTabContent()}</div>
-        </Card>
+
+            {/* Tab Navigation */}
+            <Card className="p-0 overflow-hidden">
+                <div className="flex border-b dark:border-slate-700">
+                    <TabButton tabId="categories" label="الفئات" />
+                    <TabButton tabId="brands" label="الشركات المصنّعة" />
+                    <TabButton tabId="models" label="الموديلات" />
+                    <TabButton tabId="partTypes" label="أنواع القطع" />
+                    <TabButton tabId="specialties" label="تخصصات الفنيين" />
+                </div>
+                <div className="p-6">{renderTabContent()}</div>
+            </Card>
+        </div>
     );
 };
 

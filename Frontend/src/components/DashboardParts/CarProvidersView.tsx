@@ -178,14 +178,56 @@ const CarProvidersView: React.FC<Props> = ({ showToast }) => {
 
     return (
         <div className="space-y-6">
-            <ViewHeader title="مزودي السيارات" subtitle="إدارة حسابات معارض ووكالات السيارات، التوثيق، وحالة الحساب." />
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <Icon name="Car" className="w-8 h-8" />
+                        مزودي السيارات
+                    </h2>
+                    <p className="text-white/90">إدارة حسابات معارض ووكالات السيارات، التوثيق، وحالة الحساب</p>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
 
-            {/* Stats */}
+            {/* Glassmorphism Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <StatCard title="إجمالي المزودين" value={providers.length} icon="Users" colorClass="bg-blue-500 text-blue-600" />
-                <StatCard title="نشط" value={providers.filter(p => p.is_active).length} icon="CheckCircle" colorClass="bg-green-500 text-green-600" />
-                <StatCard title="بانتظار التوثيق" value={providers.filter(p => !p.is_verified).length} icon="Clock" colorClass="bg-orange-500 text-orange-600" />
-                <StatCard title="موثوق" value={providers.filter(p => p.is_trusted).length} icon="Shield" colorClass="bg-purple-500 text-purple-600" />
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-cyan-900/20 dark:to-sky-900/30 border-2 border-cyan-200 dark:border-cyan-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-cyan-500 to-sky-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="Users" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-cyan-700 dark:text-cyan-300 font-medium">إجمالي المزودين</p>
+                        <p className="text-2xl font-black text-cyan-900 dark:text-cyan-100">{providers.length}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/30 border-2 border-green-200 dark:border-green-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="CheckCircle" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-green-700 dark:text-green-300 font-medium">نشط</p>
+                        <p className="text-2xl font-black text-green-900 dark:text-green-100">{providers.filter(p => p.is_active).length}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/30 border-2 border-orange-200 dark:border-orange-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-orange-500 to-amber-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="Clock" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">بانتظار التوثيق</p>
+                        <p className="text-2xl font-black text-orange-900 dark:text-orange-100">{providers.filter(p => !p.is_verified).length}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/30 border-2 border-purple-200 dark:border-purple-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-purple-500 to-indigo-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="Shield" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-purple-700 dark:text-purple-300 font-medium">موثوق</p>
+                        <p className="text-2xl font-black text-purple-900 dark:text-purple-100">{providers.filter(p => p.is_trusted).length}</p>
+                    </div>
+                </Card>
             </div>
 
             {/* Filters */}

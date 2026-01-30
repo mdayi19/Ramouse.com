@@ -227,13 +227,48 @@ const TowTruckManagementView: React.FC<TowTruckManagementViewProps> = (props) =>
     }
 
     return (
-        <div className="bg-white dark:bg-darkcard p-6 rounded-lg shadow-md space-y-6">
-            <ViewHeader title="إدارة السطحات" subtitle="مراجعة وتفعيل حسابات سائقي السطحات." />
+        <div className="space-y-6">
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <Icon name="Truck" className="w-8 h-8" />
+                        إدارة السطحات
+                    </h2>
+                    <p className="text-white/90">مراجعة وتفعيل حسابات سائقي السطحات</p>
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            </div>
 
+            {/* Glassmorphism Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard title="إجمالي السائقين" value={allTowTrucks.length} icon={<Icon name="Users" />} />
-                <StatCard title="بانتظار التوثيق" value={pendingVerificationCount} icon={<Icon name="Clock" className="w-6 h-6" />} />
-                <StatCard title="الحسابات النشطة" value={activeCount} icon={<Icon name="CheckCircle" className="w-6 h-6 text-green-500" />} />
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/30 border-2 border-orange-200 dark:border-orange-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-orange-500 to-amber-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="Users" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">إجمالي السائقين</p>
+                        <p className="text-2xl font-black text-orange-900 dark:text-orange-100">{allTowTrucks.length}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/30 border-2 border-yellow-200 dark:border-yellow-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-yellow-500 to-amber-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="Clock" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300 font-medium">بانتظار التوثيق</p>
+                        <p className="text-2xl font-black text-yellow-900 dark:text-yellow-100">{pendingVerificationCount}</p>
+                    </div>
+                </Card>
+                <Card className="p-5 backdrop-blur-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/30 border-2 border-green-200 dark:border-green-700 shadow-lg flex items-center gap-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-md">
+                        <Icon name="CheckCircle" className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-green-700 dark:text-green-300 font-medium">الحسابات النشطة</p>
+                        <p className="text-2xl font-black text-green-900 dark:text-green-100">{activeCount}</p>
+                    </div>
+                </Card>
             </div>
 
             <Card className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-none shadow-sm pb-6">

@@ -356,31 +356,40 @@ const UserWalletManagementView: React.FC<UserWalletManagementViewProps> = ({ sho
     }
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 bg-slate-50 dark:bg-slate-900 min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <ViewHeader
-                    title="إدارة محفظة المستخدمين"
-                    subtitle="إدارة طلبات الإيداع والسحب للعملاء والفنيين وسيارات الونش"
-                />
-                <div className="flex gap-2">
-                    <Button
-                        onClick={handleExportCSV}
-                        disabled={filteredData.length === 0}
-                        className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800"
-                        icon="Download"
-                    >
-                        <span className="hidden sm:inline">تصدير CSV</span>
-                    </Button>
-                    <Button
-                        onClick={() => fetchData(true)}
-                        variant="ghost"
-                        className="bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        isLoading={loading}
-                        icon="RefreshCw"
-                    >
-                        <span className="hidden sm:inline">تحديث</span>
-                    </Button>
+        <div className="space-y-6 pb-10">
+            {/* Gradient Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 p-8 shadow-lg">
+                <div className="relative z-10">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                                <Icon name="Wallet" className="w-8 h-8" />
+                                إدارة محفظة المستخدمين
+                            </h2>
+                            <p className="text-white/90">إدارة طلبات الإيداع والسحب للعملاء والفنيين وسيارات الونش</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={handleExportCSV}
+                                disabled={filteredData.length === 0}
+                                className="backdrop-blur-xl bg-white/20 border border-white/30 text-white hover:bg-white/30"
+                                icon="Download"
+                            >
+                                <span className="hidden sm:inline">تصدير CSV</span>
+                            </Button>
+                            <Button
+                                onClick={() => fetchData(true)}
+                                variant="ghost"
+                                className="backdrop-blur-xl bg-white/20 border border-white/30 text-white hover:bg-white/30"
+                                isLoading={loading}
+                                icon="RefreshCw"
+                            >
+                                <span className="hidden sm:inline">تحديث</span>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
