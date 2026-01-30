@@ -265,7 +265,8 @@ export const RentCarPage: React.FC<RentCarPageProps> = ({
                     data: generateCollectionPageSchema(
                         `تأجير سيارات في سوريا - ${pagination.total} سيارة متاحة`,
                         `أفضل عروض تأجير السيارات في سوريا. ${pagination.total} سيارة متاحة للإيجار اليومي والشهري.`,
-                        listings
+                        listings,
+                        '/rent-car'
                     )
                 }}
             />

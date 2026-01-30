@@ -103,6 +103,50 @@
 
     gtag('config', 'G-L3D0EWMEQ6');
   </script>
+
+  <!-- Static JSON-LD Fallback for Non-JS Crawlers -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Ramouse.com",
+          "url": "https://ramouse.com",
+          "logo": "https://ramouse.com/logo.png",
+          "description": "Syria's leading automotive marketplace for car sales, rentals, spare parts, technicians, and tow services",
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "SY"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            "email": "info@ramouse.com"
+          },
+          "sameAs": [
+            "https://www.facebook.com/ramouse",
+            "https://www.instagram.com/ramouse",
+            "https://twitter.com/ramouse"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "name": "Ramouse.com",
+          "url": "https://ramouse.com",
+          "description": "Buy, sell, and rent cars in Syria. Find spare parts, technicians, and tow services.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://ramouse.com/car-marketplace?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+  </script>
 </head>
 
 <body class="bg-light dark:bg-darkbg text-slate-900 dark:text-slate-100 transition-colors duration-300">

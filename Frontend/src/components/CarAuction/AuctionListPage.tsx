@@ -15,6 +15,9 @@ import { AuctionConnectionStatus } from './AuctionConnectionStatus';
 import { AuctionErrorBoundary } from './AuctionErrorBoundary';
 import confetti from 'canvas-confetti';
 import { AuctionStatusBadge } from './AuctionStatusBadge';
+import SEO from '../SEO';
+import SeoSchema from '../SeoSchema';
+import { generateAuctionCollectionSchema } from '../../utils/structuredData';
 
 interface AuctionListPageProps {
     onSelectAuction: (auction: Auction) => void;
@@ -193,6 +196,15 @@ export const AuctionListPage: React.FC<AuctionListPageProps> = ({
     return (
         <AuctionErrorBoundary>
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+                <SEO
+                    title="مزادات السيارات الفاخرة | راموسة"
+                    description="شارك في مزادات حصرية للسيارات في سوريا. مزادات مباشرة ومجدولة لأندر السيارات بأسعار تنافسية."
+                    canonical="/auctions"
+                />
+                <SeoSchema
+                    type="CollectionPage"
+                    data={generateAuctionCollectionSchema(safeAuctions)}
+                />
                 {/* Premium Hero Section */}
                 <div className="relative overflow-hidden bg-slate-900 pb-24 pt-16 lg:pb-32 lg:pt-24">
                     {/* Background Pattern */}

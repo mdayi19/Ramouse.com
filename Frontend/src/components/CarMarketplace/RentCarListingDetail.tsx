@@ -11,7 +11,7 @@ import { CarProviderService } from '../../services/carprovider.service';
 import type { CarListing, RentalTerms } from '../../services/carprovider.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../../hooks/useAppState';
-import { generateStructuredData, injectStructuredData } from '../../hooks/useSEO';
+import { generateRentalSchema } from '../../utils/structuredData';
 import SEO from '../SEO';
 
 import CarGallery from './ListingParts/CarGallery';
@@ -187,27 +187,6 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
         }
     };
 
-    // SEO Integration
-    const rentalInfo = listing ? {
-        dailyRate: listing.daily_rate,
-        weeklyRate: listing.weekly_rate,
-        monthlyRate: listing.monthly_rate
-    } : null;
-
-    useEffect(() => {
-        if (listing && rentalInfo) {
-            // Generate and inject structured data for rental listings
-            const structuredData = generateStructuredData({
-                ...listing,
-                listing_type: 'rent',
-                daily_rate: rentalInfo.dailyRate,
-                weekly_rate: rentalInfo.weeklyRate,
-                monthly_rate: rentalInfo.monthlyRate
-            });
-            injectStructuredData(structuredData);
-        }
-    }, [listing]);
-
 
 
     if (loading) {
@@ -354,6 +333,7 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
             className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 lg:pb-0"
         >
             {/* SEO Component */}
+            {/* SEO Component */}
             {listing && (
                 <SEO
                     title={`${listing.title} | إيجار سيارات`}
@@ -362,7 +342,11 @@ const RentCarListingDetail: React.FC<RentCarListingDetailProps> = (props) => {
                         title: `${listing.title} | إيجار سيارات`,
                         description: listing.description,
                         image: listing.photos?.[0] || listing.images?.[0],
-                        type: 'website'
+                        type: 'product'
+                    }}
+                    schema={{
+                        type: 'RentalCarReservation',
+                        data: generateRentalSchema(listing)
                     }}
                 />
             )}

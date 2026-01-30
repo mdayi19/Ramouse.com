@@ -85,7 +85,7 @@ export const generateRentalSchema = (listing: any) => {
         '@type': 'RentalCarReservation',
         '@id': `${BASE_URL}/entity/car-listing/${listing.id}`,
         identifier: listing.id,
-        url: `${BASE_URL}/car-listings/${listing.slug}`,
+        url: `${BASE_URL}/rent-car/${listing.slug}`,
         reservationFor: {
             '@type': 'Car',
             name: listing.title,
@@ -499,7 +499,7 @@ export const generateProductsDataset = () => {
 /**
  * Generate CollectionPage schema for list pages
  */
-export const generateCollectionPageSchema = (title: string, description: string, items: any[]) => {
+export const generateCollectionPageSchema = (title: string, description: string, items: any[], itemBaseUrl: string = '/car-listings') => {
     return {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
@@ -511,7 +511,7 @@ export const generateCollectionPageSchema = (title: string, description: string,
             itemListElement: items.map((item, index) => ({
                 '@type': 'ListItem',
                 position: index + 1,
-                url: `${BASE_URL}/car-listings/${item.slug || item.id}`,
+                url: `${BASE_URL}${itemBaseUrl}/${item.slug || item.id}`,
                 name: item.title || item.name
             }))
         }
@@ -620,5 +620,79 @@ export const generateBlogArticleSchema = (article: any) => {
                 "text": faq.answer
             }
         })) : undefined
+    };
+};
+
+/**
+ * Generate Schema.org JSON-LD for Auction Listing
+ */
+export const generateAuctionListingSchema = (auction: any) => {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        '@id': `${BASE_URL}/entity/auction/${auction.id}`,
+        name: auction.title,
+        description: auction.car ? `${auction.car.year} ${auction.car.brand} ${auction.car.model}` : auction.title,
+        image: auction.car?.media?.images?.[0] ? getImageUrl(auction.car.media.images[0]) : undefined,
+        offers: {
+            '@type': 'Offer',
+            priceCurrency: 'USD',
+            price: auction.current_bid || auction.starting_bid,
+            availability: (auction.is_live || auction.status === 'scheduled') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            url: `${BASE_URL}/auctions/${auction.id}`,
+            validFrom: auction.scheduled_start,
+            validThrough: auction.actual_end || auction.scheduled_end,
+            offeredBy: {
+                '@type': 'Organization',
+                name: 'Ramouse Auctions'
+            }
+        },
+        brand: auction.car?.brand ? {
+            '@type': 'Brand',
+            name: auction.car.brand
+        } : undefined,
+        model: auction.car?.model,
+        productionDate: auction.car?.year,
+        itemCondition: 'https://schema.org/UsedCondition'
+    };
+};
+
+/**
+ * Generate CollectionPage schema for Auctions
+ */
+export const generateAuctionCollectionSchema = (auctions: any[]) => {
+    return generateCollectionPageSchema(
+        'Ramouse Car Auctions',
+        'Live and scheduled car auctions in Syria. Bid on verified cars with competitive prices.',
+        auctions.map(auction => ({
+            id: auction.id,
+            title: auction.title,
+            slug: auction.id, // Auctions use ID in URL
+            url: `/auctions/${auction.id}`
+        }))
+    );
+};
+
+/**
+ * Generate CollectionPage schema for Announcements
+ */
+export const generateAnnouncementCollectionSchema = (announcements: any[]) => {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Blog',
+        name: 'Ramouse Announcements',
+        description: 'Latest news, updates, and announcements from Ramouse platform.',
+        url: `${BASE_URL}/announcements`,
+        blogPost: announcements.map(post => ({
+            '@type': 'BlogPosting',
+            headline: post.title,
+            datePublished: post.timestamp,
+            articleBody: post.message,
+            image: post.imageUrl ? getImageUrl(post.imageUrl) : undefined,
+            author: {
+                '@type': 'Organization',
+                name: 'Ramouse Team'
+            }
+        }))
     };
 };

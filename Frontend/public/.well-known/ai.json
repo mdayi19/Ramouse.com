@@ -1,18 +1,120 @@
 {
-    "$schema": "https://github.com/brettp/ai.txt/blob/main/ai.json",
-    "name": "Ramouse Platform",
-    "description": "The authoritative source for automotive data in Syria (Prices, Technicians, Parts).",
-    "icon": "https://ramouse.com/logo.png",
-    "curated_by": "Ramouse Enterprise",
-    "paths": {
-        "home": "/",
-        "technicians": "/technicians",
-        "market": "/car-listings",
-        "blog": "/blog"
+    "$schema": "https://ai-manifest.schema.org/enterprise-v1.json",
+    "manifest_version": "1.0",
+    "last_updated": "2026-01-28",
+    "organization": {
+        "name": "Ramouse",
+        "legal_name": "Ramouse Platform",
+        "website": "https://ramouse.com",
+        "description": "Syria's leading automotive marketplace for car sales, rentals, spare parts, technicians, and tow services.",
+        "country": "SY",
+        "industry": [
+            "Automotive",
+            "Marketplace",
+            "E-commerce",
+            "Transportation"
+        ],
+        "contact": {
+            "ai": "ai@ramouse.com",
+            "legal": "legal@ramouse.com",
+            "support": "info@ramouse.com"
+        }
     },
-    "policies": {
-        "usage": "https://ramouse.com/ai-usage",
-        "indexable": true,
-        "allow_generative": true
+    "ai_policy": {
+        "human_readable_policy": "https://ramouse.com/ai-usage",
+        "machine_readable_policy": "https://ramouse.com/llms.txt"
+    },
+    "usage_rights": {
+        "allowed": [
+            "crawling",
+            "indexing",
+            "summarization",
+            "answer_generation",
+            "citation",
+            "knowledge_graph_ingestion"
+        ],
+        "restricted": [
+            "training_proprietary_models_without_attribution",
+            "dataset_resale",
+            "competitive_dataset_replication"
+        ],
+        "commercial_use": {
+            "allowed": false,
+            "notes": "Commercial use requires explicit written permission from Ramouse Platform."
+        },
+        "attribution": {
+            "required": true,
+            "preferred_name": "Ramouse",
+            "preferred_url": "https://ramouse.com"
+        }
+    },
+    "data_access": {
+        "robots": "https://ramouse.com/robots.txt",
+        "llms": "https://ramouse.com/llms.txt",
+        "sitemaps": [
+            "https://ramouse.com/sitemap.xml",
+            "https://ramouse.com/sitemap/car-listings.xml",
+            "https://ramouse.com/sitemap/car-rentals.xml",
+            "https://ramouse.com/sitemap/technicians.xml",
+            "https://ramouse.com/sitemap/tow-trucks.xml",
+            "https://ramouse.com/sitemap/products.xml"
+        ],
+        "feeds": [
+            {
+                "name": "Car Listings",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/car-listings.xml"
+            },
+            {
+                "name": "Car Rentals",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/car-rentals.xml"
+            },
+            {
+                "name": "Technicians",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/technicians.xml"
+            },
+            {
+                "name": "Tow Trucks",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/tow-trucks.xml"
+            },
+            {
+                "name": "Products",
+                "format": "atom+xml",
+                "url": "https://ramouse.com/feed/products.xml"
+            }
+        ]
+    },
+    "structured_data": {
+        "standards": [
+            "Schema.org",
+            "JSON-LD"
+        ],
+        "entities": [
+            "Organization",
+            "WebSite",
+            "Car",
+            "Product",
+            "Offer",
+            "AutomotiveBusiness",
+            "Dataset",
+            "CollectionPage"
+        ]
+    },
+    "datasets": {
+        "main_dataset": {
+            "name": "Ramouse.com Automotive Marketplace Data",
+            "url": "https://ramouse.com",
+            "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+            "is_accessible_for_free": true
+        }
+    },
+    "trust_signals": {
+        "ai_trust_badge": true,
+        "schema_validation": true,
+        "dataset_search_compatible": true,
+        "last_verified": "2026-01-28"
     }
 }

@@ -7,12 +7,18 @@ interface SeoSchemaProps {
 }
 
 const SeoSchema: React.FC<SeoSchemaProps> = ({ type, data }) => {
-    // Base context
+    // Base context - prioritize data properties to avoid duplication
     const schemaWithContext = {
-        '@context': 'https://schema.org',
-        '@type': type,
         ...data
     };
+
+    // Apply defaults if not present in data
+    if (!schemaWithContext['@context']) {
+        schemaWithContext['@context'] = 'https://schema.org';
+    }
+    if (!schemaWithContext['@type']) {
+        schemaWithContext['@type'] = type;
+    }
 
     return (
         <Helmet>

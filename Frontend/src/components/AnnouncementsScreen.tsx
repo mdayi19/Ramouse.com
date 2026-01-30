@@ -6,6 +6,9 @@ import { api } from '../lib/api';
 import { getImageUrl } from '../utils/helpers';
 import EmptyState from './EmptyState';
 import Icon from './Icon';
+import SEO from './SEO';
+import SeoSchema from './SeoSchema';
+import { generateAnnouncementCollectionSchema } from '../utils/structuredData';
 
 interface AnnouncementsScreenProps {
     onBack: () => void;
@@ -157,6 +160,15 @@ const AnnouncementsScreen: React.FC<AnnouncementsScreenProps> = ({ onBack, isAut
 
     return (
         <div className="p-4 sm:p-0 w-full">
+            <SEO
+                title="لوحة الإعلانات | راموسة"
+                description="آخر الأخبار والتحديثات من فريق راموسة."
+                canonical="/announcements"
+            />
+            <SeoSchema
+                type="Blog"
+                data={generateAnnouncementCollectionSchema(filteredAnnouncements)}
+            />
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-primary dark:text-primary-400">لوحة الإعلانات</h1>

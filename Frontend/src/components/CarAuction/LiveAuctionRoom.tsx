@@ -15,6 +15,8 @@ import { LiveAuctionRoomSkeleton } from './AuctionSkeleton';
 import { AuctionPolicyModal } from './AuctionPolicyModal';
 import { parseAuctionError, getErrorMessage } from '../../constants/auctionErrors';
 import confetti from 'canvas-confetti';
+import SEO from '../SEO';
+import { generateAuctionListingSchema } from '../../utils/structuredData';
 
 // New infrastructure components
 import { AuctionConnectionStatus } from './AuctionConnectionStatus';
@@ -397,6 +399,15 @@ export const LiveAuctionRoom: React.FC<LiveAuctionRoomProps> = ({
 
     return (
         <div className={`min-h-screen transition-colors duration-1000 ${isUrgent ? 'bg-red-950/30' : 'bg-slate-900'} ${isImmersive ? 'overflow-hidden' : ''}`}>
+            <SEO
+                title={auction.title}
+                description={auction.description || `انضم للمزاد المباشر على ${auction.title} في راموسة.`}
+                canonical={`/auctions/${auctionId}`}
+                schema={{
+                    type: 'Product',
+                    data: generateAuctionListingSchema(auction)
+                }}
+            />
             {/* Immersive Background */}
             <div className={`absolute inset-0 transition-all duration-1000 ${isImmersive ? 'z-[60] bg-black/95' : '-z-10'}`}>
                 {isImmersive && (
