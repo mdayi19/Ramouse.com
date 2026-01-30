@@ -109,3 +109,40 @@ Schedule::command('sponsorships:expire')
         Log::error('[Scheduler] Failed to expire sponsorships');
     });
 
+// === LIMIT ENFORCEMENT SCHEDULED JOBS ===
+
+// Cancel stale orders daily at 2 AM
+Schedule::command('orders:cancel-stale')
+    ->dailyAt('02:00')
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('[Scheduler] Stale orders cancellation completed successfully');
+    })
+    ->onFailure(function () {
+        Log::error('[Scheduler] Failed to cancel stale orders');
+    });
+
+// Expire old quotes daily at 3 AM
+Schedule::command('quotes:expire-old')
+    ->dailyAt('03:00')
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('[Scheduler] Old quotes expiry completed successfully');
+    })
+    ->onFailure(function () {
+        Log::error('[Scheduler] Failed to expire old quotes');
+    });
+
+// Deactivate inactive providers weekly on Sunday at 4 AM
+Schedule::command('providers:deactivate-inactive')
+    ->weekly()
+    ->sundays()
+    ->at('04:00')
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('[Scheduler] Inactive providers deactivation completed successfully');
+    })
+    ->onFailure(function () {
+        Log::error('[Scheduler] Failed to deactivate inactive providers');
+    });
+

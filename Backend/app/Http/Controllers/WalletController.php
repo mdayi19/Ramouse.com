@@ -71,6 +71,22 @@ class WalletController extends Controller
             'total_holds' => $totalHolds,
         ]);
 
+        // Check if transaction exceeds high-value threshold
+        $highValueThreshold = $limitSettings['highValueTransactionThreshold'] ?? 1000;
+        if ($request->amount >= $highValueThreshold) {
+            try {
+                event(new \App\Events\AdminDashboardEvent('HIGH_VALUE_TRANSACTION', [
+                    'type' => 'deposit',
+                    'amount' => $request->amount,
+                    'userId' => $user->id,
+                    'userName' => $profile->name,
+                    'userType' => $userType,
+                ]));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send high-value transaction alert: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'balance' => (float) $profile->wallet_balance,
             'availableBalance' => (float) ($profile->wallet_balance - $totalHolds),
@@ -388,6 +404,22 @@ class WalletController extends Controller
                 \Log::warning('Failed to send user notification: ' . $e->getMessage());
             }
         });
+
+        // Check if transaction exceeds high-value threshold (after transaction completes)
+        $highValueThreshold = $limitSettings['highValueTransactionThreshold'] ?? 1000;
+        if ($request->amount >= $highValueThreshold) {
+            try {
+                event(new \App\Events\AdminDashboardEvent('HIGH_VALUE_TRANSACTION', [
+                    'type' => 'withdrawal',
+                    'amount' => $request->amount,
+                    'userId' => $user->id,
+                    'userName' => $profile->name,
+                    'userType' => $userType,
+                ]));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send high-value transaction alert: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'message' => 'تم تقديم طلب السحب بنجاح',

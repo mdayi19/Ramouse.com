@@ -150,6 +150,10 @@ class SchedulerController extends Controller
                 'notifications:cleanup',
                 'optimize',
                 'scheduler:health',
+                // Limit Enforcement Commands
+                'orders:cancel-stale',
+                'quotes:expire-old',
+                'providers:deactivate-inactive',
             ];
 
             if (!in_array($command, $allowedCommands)) {
@@ -258,6 +262,7 @@ class SchedulerController extends Controller
             '0 0 * * *' => 'يوميًا عند منتصف الليل',
             '0 2 * * *' => 'يوميًا الساعة 2:00 صباحًا',
             '0 3 * * *' => 'يوميًا الساعة 3:00 صباحًا',
+            '0 4 * * 0' => 'أسبوعيًا يوم الأحد الساعة 4:00 صباحًا',
             '0 9 * * *' => 'يوميًا الساعة 9:00 صباحًا',
             '0 10 * * *' => 'يوميًا الساعة 10:00 صباحًا',
             '0 0 * * 0' => 'أسبوعيًا يوم الأحد',

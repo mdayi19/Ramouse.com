@@ -59,6 +59,23 @@ class OrderController extends Controller
             ], 403);
         }
 
+        // Check active orders limit
+        $limitSettings = \App\Models\SystemSettings::getSetting('limitSettings');
+        $maxActiveOrders = $limitSettings['maxActiveOrders'] ?? 5;
+
+        if ($user) {
+            $activeOrdersCount = Order::where('user_id', $user->phone)
+                ->whereIn('status', ['pending', 'quoted', 'payment_pending', 'processing'])
+                ->count();
+
+            if ($activeOrdersCount >= $maxActiveOrders) {
+                return response()->json([
+                    'message' => "لديك {$activeOrdersCount} طلبات نشطة. الحد الأقصى المسموح: {$maxActiveOrders}",
+                    'error' => 'max_active_orders_exceeded'
+                ], 400);
+            }
+        }
+
         // Determine user type (supports customers, technicians, and tow truck providers)
         $userType = 'customer'; // Default
         if ($user && isset($user->role)) {
@@ -107,6 +124,17 @@ class OrderController extends Controller
         }
 
         \Log::info('📝 FINAL NAME', ['customer_name' => $customerName]);
+
+        // Validate max images per order
+        $maxImages = $limitSettings['maxImagesPerOrder'] ?? 10;
+        $imageCount = count($request->form_data['images'] ?? []);
+
+        if ($imageCount > $maxImages) {
+            return response()->json([
+                'message' => "عدد الصور ({$imageCount}) يتجاوز الحد المسموح ({$maxImages})",
+                'error' => 'too_many_images'
+            ], 400);
+        }
 
         $order = Order::create([
             'order_number' => (string) now()->timestamp, // Simplified: timestamp only
@@ -196,6 +224,46 @@ class OrderController extends Controller
 
         if (!$provider) {
             return response()->json(['message' => __('messages.provider_profile_not_found')], 404);
+        }
+
+        // Get limit settings
+        $limitSettings = \App\Models\SystemSettings::getSetting('limitSettings');
+
+        // Check max quotes per order
+        $maxQuotesPerOrder = $limitSettings['maxQuotesPerOrder'] ?? 10;
+        $quotesCount = Quote::where('order_number', $orderNumber)->count();
+
+        if ($quotesCount >= $maxQuotesPerOrder) {
+            return response()->json([
+                'message' => "هذا الطلب وصل للحد الأقصى من العروض ({$maxQuotesPerOrder})",
+                'error' => 'max_quotes_reached'
+            ], 400);
+        }
+
+        // Check max images per quote
+        $maxImagesPerQuote = $limitSettings['maxImagesPerQuote'] ?? 5;
+        $quoteImageCount = count($request->media['images'] ?? []);
+
+        if ($quoteImageCount > $maxImagesPerQuote) {
+            return response()->json([
+                'message' => "عدد الصور ({$quoteImageCount}) يتجاوز الحد المسموح ({$maxImagesPerQuote})",
+                'error' => 'too_many_images_in_quote'
+            ], 400);
+        }
+
+        // Check max active bids per provider
+        $maxBids = $limitSettings['maxActiveBidsPerProvider'] ?? 20;
+        $activeBidsCount = Quote::where('provider_id', $provider->id)
+            ->whereHas('order', function ($q) {
+                $q->whereIn('status', ['pending', 'quoted']);
+            })
+            ->count();
+
+        if ($activeBidsCount >= $maxBids) {
+            return response()->json([
+                'message' => "لديك {$activeBidsCount} عرض نشط. الحد الأقصى: {$maxBids}",
+                'error' => 'max_active_bids_exceeded'
+            ], 400);
         }
 
         $quote = Quote::create([

@@ -16,8 +16,36 @@ class UploadController extends Controller
      */
     public function upload(Request $request)
     {
+        // Get dynamic limits from settings
+        $limitSettings = \App\Models\SystemSettings::getSetting('limitSettings');
+        $maxImageSizeMB = $limitSettings['maxImageSizeMB'] ?? 5;
+        $maxVideoSizeMB = $limitSettings['maxVideoSizeMB'] ?? 50;
+        $maxVoiceNoteSizeMB = $limitSettings['maxVoiceNoteSizeMB'] ?? 5;
+
+        // Pre-validate file exists
+        if (!$request->hasFile('file')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No file provided'
+            ], 400);
+        }
+
+        $file = $request->file('file');
+        $mimeType = $file->getMimeType();
+
+        // Determine max size based on file type
+        if (str_starts_with($mimeType, 'image/')) {
+            $maxSizeKB = $maxImageSizeMB * 1024;
+        } elseif (str_starts_with($mimeType, 'video/')) {
+            $maxSizeKB = $maxVideoSizeMB * 1024;
+        } elseif (str_starts_with($mimeType, 'audio/')) {
+            $maxSizeKB = $maxVoiceNoteSizeMB * 1024;
+        } else {
+            $maxSizeKB = 51200; // Default 50MB for other files
+        }
+
         $request->validate([
-            'file' => 'required|file|max:51200', // Max 50MB
+            'file' => "required|file|max:{$maxSizeKB}",
         ]);
 
         try {
@@ -77,15 +105,45 @@ class UploadController extends Controller
      */
     public function uploadMultiple(Request $request)
     {
+        // Get dynamic limits from settings
+        $limitSettings = \App\Models\SystemSettings::getSetting('limitSettings');
+        $maxImageSizeMB = $limitSettings['maxImageSizeMB'] ?? 5;
+        $maxVideoSizeMB = $limitSettings['maxVideoSizeMB'] ?? 50;
+        $maxVoiceNoteSizeMB = $limitSettings['maxVoiceNoteSizeMB'] ?? 5;
+
+        // Use the highest limit for validation (we'll check individual files below)
+        $maxSizeKB = max($maxImageSizeMB, $maxVideoSizeMB, $maxVoiceNoteSizeMB) * 1024;
+
         $request->validate([
             'files' => 'required|array',
-            'files.*' => 'file|max:51200', // Max 50MB per file
+            'files.*' => "file|max:{$maxSizeKB}",
         ]);
 
         try {
             $uploadedFiles = [];
 
             foreach ($request->file('files') as $file) {
+                $mimeType = $file->getMimeType();
+
+                // Check individual file size against type-specific limit
+                $fileSizeMB = $file->getSize() / 1024 / 1024;
+                if (str_starts_with($mimeType, 'image/') && $fileSizeMB > $maxImageSizeMB) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "حجم الصورة يتجاوز الحد المسموح ({$maxImageSizeMB}MB)"
+                    ], 400);
+                } elseif (str_starts_with($mimeType, 'video/') && $fileSizeMB > $maxVideoSizeMB) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "حجم الفيديو يتجاوز الحد المسموح ({$maxVideoSizeMB}MB)"
+                    ], 400);
+                } elseif (str_starts_with($mimeType, 'audio/') && $fileSizeMB > $maxVoiceNoteSizeMB) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "حجم الملاحظة الصوتية يتجاوز الحد المسموح ({$maxVoiceNoteSizeMB}MB)"
+                    ], 400);
+                }
+
                 $extension = $file->getClientOriginalExtension();
                 $filename = Str::uuid() . '.' . $extension;
 
