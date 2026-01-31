@@ -156,10 +156,33 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             });
         }
 
+        // Price filters
         if ($minPrice)
             $q->where('price', '>=', $minPrice);
         if ($maxPrice)
             $q->where('price', '<=', $maxPrice);
+
+        // Advanced filters
+        if (!empty($args['brand_id']))
+            $q->where('brand_id', $args['brand_id']);
+
+        if (!empty($args['min_year']))
+            $q->where('year', '>=', $args['min_year']);
+
+        if (!empty($args['max_year']))
+            $q->where('year', '<=', $args['max_year']);
+
+        if (!empty($args['transmission']))
+            $q->where('transmission', $args['transmission']);
+
+        if (!empty($args['fuel_type']))
+            $q->where('fuel_type', $args['fuel_type']);
+
+        if (!empty($args['condition']))
+            $q->where('condition', $args['condition']);
+
+        if (!empty($args['city']))
+            $q->where('city', 'like', "%{$args['city']}%");
 
         $results = $q->limit(5)->get();
 
@@ -178,6 +201,10 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             $q->where('specialty', 'like', "%$specialty%");
         if ($city)
             $q->where('city', 'like', "%$city%");
+
+        // Rating filter
+        if (!empty($args['min_rating']))
+            $q->where('average_rating', '>=', $args['min_rating']);
 
         // Geolocation Logic
         if ($nearMe && $userLat && $userLng) {
@@ -203,6 +230,10 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         if ($city)
             $q->where('city', 'like', "%$city%");
+
+        // Vehicle type filter
+        if (!empty($args['vehicle_type']))
+            $q->where('vehicle_type', 'like', "%{$args['vehicle_type']}%");
 
         if ($nearMe && $userLat && $userLng) {
             $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
@@ -359,8 +390,15 @@ ABSOLUTE RULES - NO EXCEPTIONS:
                 properties: [
                     'query' => new Schema(type: DataType::STRING, description: 'Keywords (brand, model). Leave empty to show all cars.'),
                     'type' => new Schema(type: DataType::STRING, enum: ['sale', 'rent'], description: 'sale or rent'),
-                    'min_price' => new Schema(type: DataType::NUMBER),
-                    'max_price' => new Schema(type: DataType::NUMBER),
+                    'min_price' => new Schema(type: DataType::NUMBER, description: 'Minimum price in dollars'),
+                    'max_price' => new Schema(type: DataType::NUMBER, description: 'Maximum price in dollars'),
+                    'brand_id' => new Schema(type: DataType::NUMBER, description: 'Brand ID to filter by specific brand'),
+                    'min_year' => new Schema(type: DataType::NUMBER, description: 'Minimum manufacturing year (e.g. 2015)'),
+                    'max_year' => new Schema(type: DataType::NUMBER, description: 'Maximum manufacturing year (e.g. 2023)'),
+                    'transmission' => new Schema(type: DataType::STRING, enum: ['automatic', 'manual'], description: 'Transmission type'),
+                    'fuel_type' => new Schema(type: DataType::STRING, enum: ['gas', 'diesel', 'electric', 'hybrid'], description: 'Fuel type'),
+                    'condition' => new Schema(type: DataType::STRING, enum: ['new', 'used', 'certified_pre_owned'], description: 'Car condition'),
+                    'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic (e.g. دمشق, حلب)'),
                 ],
                 required: []
             )
@@ -376,8 +414,9 @@ ABSOLUTE RULES - NO EXCEPTIONS:
                 type: DataType::OBJECT,
                 properties: [
                     'specialty' => new Schema(type: DataType::STRING, description: 'e.g. BMW, Electrician'),
-                    'city' => new Schema(type: DataType::STRING),
+                    'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic'),
                     'near_me' => new Schema(type: DataType::BOOLEAN, description: 'True if user asks for nearby'),
+                    'min_rating' => new Schema(type: DataType::NUMBER, description: 'Minimum average rating (1-5, e.g. 4 for 4+ stars)'),
                 ]
             )
         );
@@ -391,8 +430,9 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
-                    'city' => new Schema(type: DataType::STRING),
-                    'near_me' => new Schema(type: DataType::BOOLEAN),
+                    'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic'),
+                    'near_me' => new Schema(type: DataType::BOOLEAN, description: 'True if user asks for nearby'),
+                    'vehicle_type' => new Schema(type: DataType::STRING, description: 'Type of tow truck (e.g. سطحة, ونش)'),
                 ]
             )
         );
@@ -406,7 +446,10 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
-                    'query' => new Schema(type: DataType::STRING),
+                    'query' => new Schema(type: DataType::STRING, description: 'Product name or keywords'),
+                    'min_price' => new Schema(type: DataType::NUMBER, description: 'Minimum price in dollars'),
+                    'max_price' => new Schema(type: DataType::NUMBER, description: 'Maximum price in dollars'),
+                    'in_stock_only' => new Schema(type: DataType::BOOLEAN, description: 'Only show products in stock'),
                 ],
                 required: ['query']
             )
