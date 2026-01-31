@@ -291,21 +291,22 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             'type' => 'car_listings',
             'count' => $results->count(),
             'items' => $results->map(function ($car) {
+                // Explicitly create clean array without boolean attributes
                 return [
-                    'id' => $car->id,
-                    'title' => $car->title,
+                    'id' => (int) $car->id,
+                    'title' => (string) $car->title,
                     'price' => number_format($car->price, 0) . ' $',
-                    'year' => $car->year,
+                    'year' => (int) $car->year,
                     'mileage' => number_format($car->mileage) . ' كم',
                     'city' => $car->city ?? 'غير محدد',
-                    'brand' => $car->brand?->name,
-                    'model' => $car->model,
-                    'image' => $car->photos[0] ?? null,
+                    'brand' => $car->brand?->name ?? 'غير محدد',
+                    'model' => (string) $car->model,
+                    'image' => isset($car->photos[0]) ? (string) $car->photos[0] : null,
                     'url' => "/cars/{$car->slug}",
-                    'condition' => $car->condition,
-                    'transmission' => $car->transmission,
+                    'condition' => (string) $car->condition,
+                    'transmission' => (string) $car->transmission,
                 ];
-            })->toArray()
+            })->values()->toArray()
         ];
     }
 
