@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { User, Sparkles } from 'lucide-react';
+import { User, Sparkles, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ResultCards } from './ResultCards';
 
@@ -9,9 +9,11 @@ interface ChatMessageProps {
     role: 'user' | 'model';
     content: string;
     timestamp?: number;
+    showLoginButton?: boolean;
+    onLoginClick?: () => void;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timestamp }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timestamp, showLoginButton, onLoginClick }) => {
     const isUser = role === 'user';
 
     // Try to parse content as JSON (structured results from backend)
@@ -58,6 +60,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timesta
                                 {content}
                             </ReactMarkdown>
                         </div>
+                    )}
+
+                    {/* Login Button */}
+                    {showLoginButton && onLoginClick && (
+                        <motion.button
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            onClick={onLoginClick}
+                            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                        >
+                            <LogIn className="w-4 h-4" />
+                            تسجيل الدخول الآن
+                        </motion.button>
                     )}
 
                     {/* Time */}

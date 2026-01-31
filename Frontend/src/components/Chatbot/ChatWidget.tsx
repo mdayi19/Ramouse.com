@@ -45,24 +45,25 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
         } catch (error: any) {
             console.error(error);
             let errorText = 'عذراً، حدث خطأ ما. يرجى المحاولة لاحقاً.';
+            let showLoginButton = false;
 
             if (error.response?.data?.message) {
                 errorText = error.response.data.message;
             }
 
-            if (error.response?.status === 429) {
-                errorText = 'عذراً، لقد تجاوزت الحد المسموح به من الرسائل اليوم. يرجى تسجيل الدخول للحصول على المزيد.';
-                if (!isAuthenticated) {
-                    errorText += ' [تسجيل الدخول]';
-                }
+            if (error.response?.status === 429 || error.response?.data?.error === 'Daily limit reached.') {
+                errorText = 'لقد تجاوزت الحد اليومي كزائر (50 رسالة). يرجى تسجيل الدخول للحصول على حد أعلى!';
+                showLoginButton = !isAuthenticated;
             } else if (error.response?.status === 401) {
                 errorText = 'يرجى تسجيل الدخول للمتابعة.';
+                showLoginButton = true;
             }
 
             const errorMsg: IChatMessage = {
                 role: 'model',
                 content: errorText,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                showLoginButton
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
@@ -128,7 +129,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {messages.map((msg, idx) => (
-                                    <ChatMessage key={idx} role={msg.role} content={msg.content} timestamp={msg.timestamp} />
+                                    <ChatMessage
+                                        key={idx}
+                                        role={msg.role}
+                                        content={msg.content}
+                                        timestamp={msg.timestamp}
+                                        showLoginButton={msg.showLoginButton}
+                                        onLoginClick={onLoginClick}
+                                    />
                                 ))}
                                 {isLoading && (
                                     <div className="flex justify-start w-full">

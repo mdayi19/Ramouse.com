@@ -4,6 +4,7 @@ export interface ChatMessage {
     role: 'user' | 'model';
     content: string;
     timestamp: number;
+    showLoginButton?: boolean;
 }
 
 export interface ChatResponse {
