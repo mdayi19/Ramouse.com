@@ -133,7 +133,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         $maxPrice = $args['max_price'] ?? null;
 
         $q = CarListing::query()
-            ->with(['brand', 'carModel', 'city', 'user'])
+            ->with(['brand', 'owner'])
             ->where('is_available', true)
             ->where('is_hidden', false)
             ->where('listing_type', $type);
@@ -142,8 +142,8 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             $q->where(function ($sub) use ($query) {
                 $sub->where('title', 'like', "%$query%")
                     ->orWhere('description', 'like', "%$query%")
-                    ->orWhereHas('brand', fn($b) => $b->where('name', 'like', "%$query%"))
-                    ->orWhereHas('carModel', fn($m) => $m->where('name', 'like', "%$query%"));
+                    ->orWhere('model', 'like', "%$query%")
+                    ->orWhereHas('brand', fn($b) => $b->where('name', 'like', "%$query%"));
             });
         }
 
