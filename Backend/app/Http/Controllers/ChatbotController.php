@@ -111,21 +111,28 @@ class ChatbotController extends Controller
             ]);
 
 
-            // Don't save JSON tool results to history - they break Gemini SDK on replay
-            // Only save actual conversational text responses
+            // Convert JSON tool results to text summary for history
+            // This allows the AI to know what it previously showed the user without breaking SDK with JSON
+            $contentToSave = $responseContent;
+
             $parsedJson = json_decode($responseContent, true);
             $isToolResult = (json_last_error() === JSON_ERROR_NONE && isset($parsedJson['type']));
 
-            if (!$isToolResult) {
-                // Only save regular text responses to history
-                ChatHistory::create([
-                    'user_id' => $userId,
-                    'session_id' => $sessionId,
-                    'role' => 'model',
-                    'content' => $responseContent
-                ]);
+            if ($isToolResult) {
+                // It's a JSON tool result - save a text summary instead
+                $count = $parsedJson['count'] ?? 0;
+                $type = $parsedJson['type'] ?? 'results';
+                // Summary in Arabic so the Arabic AI understands context naturally
+                $contentToSave = "تم عرض {$count} نتائج من نوع {$type}";
             }
-            // Tool results are displayed to user but NOT added to conversation history
+
+            // Save AI response (either full text or summary)
+            ChatHistory::create([
+                'user_id' => $userId,
+                'session_id' => $sessionId,
+                'role' => 'model',
+                'content' => $contentToSave
+            ]);
 
 
             // Track analytics
@@ -366,20 +373,25 @@ class ChatbotController extends Controller
                     usleep(30000); // 30ms delay between words for smooth streaming
                 }
 
-                // Don't save JSON tool results to history (same as non-streaming)
+                // Convert JSON tool results to text summary for history
+                $contentToSave = $responseContent;
+
                 $parsedJson = json_decode($responseContent, true);
                 $isToolResult = (json_last_error() === JSON_ERROR_NONE && isset($parsedJson['type']));
 
-                if (!$isToolResult) {
-                    // Only save regular text responses to history
-                    ChatHistory::create([
-                        'user_id' => $userId,
-                        'session_id' => $sessionId,
-                        'role' => 'model',
-                        'content' => $responseContent
-                    ]);
+                if ($isToolResult) {
+                    $count = $parsedJson['count'] ?? 0;
+                    $type = $parsedJson['type'] ?? 'results';
+                    $contentToSave = "تم عرض {$count} نتائج من نوع {$type}";
                 }
-                // Tool results displayed to user but NOT added to conversation history
+
+                // Save AI response
+                ChatHistory::create([
+                    'user_id' => $userId,
+                    'session_id' => $sessionId,
+                    'role' => 'model',
+                    'content' => $contentToSave
+                ]);
 
                 // Calculate response time
                 $responseTime = (microtime(true) - $startTime) * 1000;
