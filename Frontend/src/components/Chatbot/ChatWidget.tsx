@@ -71,6 +71,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
         }
     };
 
+    const handleTestLimit = () => {
+        // TEST ONLY - Simulate limit error
+        const errorMsg: IChatMessage = {
+            role: 'model',
+            content: 'لقد تجاوزت الحد اليومي كزائر (50 رسالة). يرجى تسجيل الدخول للحصول على حد أعلى!',
+            timestamp: Date.now(),
+            showLoginButton: !isAuthenticated
+        };
+        setMessages(prev => [...prev, errorMsg]);
+    };
+
     const handleClear = () => {
         if (window.confirm('هل أنت متأكد من مسح المحادثة؟')) {
             setMessages([]);
@@ -113,6 +124,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             )}
+                            {/* TEST BUTTON - Remove in production */}
+                            <button
+                                onClick={handleTestLimit}
+                                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-orange-500 transition-colors text-xs"
+                                title="TEST: Simulate Limit"
+                            >
+                                🧪
+                            </button>
                             <button
                                 onClick={onClose}
                                 className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
@@ -125,7 +144,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                     {/* Content Body */}
                     <div className="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-black/20 scroll-smooth custom-scrollbar">
                         {messages.length === 0 ? (
-                            <ChatWelcome onActionSelect={handleSend} />
+                            <ChatWelcome
+                                onActionSelect={handleSend}
+                                isAuthenticated={isAuthenticated}
+                                onLoginClick={onLoginClick}
+                            />
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {messages.map((msg, idx) => (
