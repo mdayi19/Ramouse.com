@@ -427,13 +427,12 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         return new FunctionDeclaration(
             name: 'search_technicians',
-            description: 'REQUIRED TOOL: Call this for ANY user question about mechanics, technicians, or car repairs. Search the Ramouse database.',
+            description: 'REQUIRED TOOL: Call this for ANY user question about mechanics, technicians, or car repairs. Search the Ramouse database. If user asks for nearby technicians, the system will automatically use geolocation.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
                     'specialty' => new Schema(type: DataType::STRING, description: 'e.g. BMW, Electrician'),
                     'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic'),
-                    'near_me' => new Schema(type: DataType::BOOLEAN, description: 'True if user asks for nearby'),
                     'min_rating' => new Schema(type: DataType::NUMBER, description: 'Minimum average rating (1-5, e.g. 4 for 4+ stars)'),
                 ]
             )
@@ -444,12 +443,11 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         return new FunctionDeclaration(
             name: 'search_tow_trucks',
-            description: 'REQUIRED TOOL: Call this for ANY user question about tow trucks, winch services, or sat7a. Search the Ramouse database.',
+            description: 'REQUIRED TOOL: Call this for ANY user question about tow trucks, winch services, or sat7a. Search the Ramouse database. If user asks for nearby tow trucks, the system will automatically use geolocation.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
                     'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic'),
-                    'near_me' => new Schema(type: DataType::BOOLEAN, description: 'True if user asks for nearby'),
                     'vehicle_type' => new Schema(type: DataType::STRING, description: 'Type of tow truck (e.g. سطحة, ونش)'),
                 ]
             )
@@ -460,14 +458,13 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         return new FunctionDeclaration(
             name: 'search_products',
-            description: 'REQUIRED TOOL: Call this for ANY user question about spare parts, car parts, or products. Search the Ramouse database.',
+            description: 'REQUIRED TOOL: Call this for ANY user question about spare parts, car parts, or products. Search the Ramouse database. Only active and available products are returned.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
                     'query' => new Schema(type: DataType::STRING, description: 'Product name or keywords'),
                     'min_price' => new Schema(type: DataType::NUMBER, description: 'Minimum price in dollars'),
                     'max_price' => new Schema(type: DataType::NUMBER, description: 'Maximum price in dollars'),
-                    'in_stock_only' => new Schema(type: DataType::BOOLEAN, description: 'Only show products in stock'),
                 ],
                 required: ['query']
             )
