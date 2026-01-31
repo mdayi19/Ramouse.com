@@ -134,7 +134,8 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         $q = CarListing::query()
             ->with(['brand', 'carModel', 'city', 'user'])
-            ->where('status', 'active')
+            ->where('is_available', true)
+            ->where('is_hidden', false)
             ->where('listing_type', $type);
 
         if ($query) {
