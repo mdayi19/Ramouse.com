@@ -46,6 +46,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
             console.error(error);
             let errorText = 'عذراً، حدث خطأ ما. يرجى المحاولة لاحقاً.';
 
+            if (error.response?.data?.message) {
+                errorText = error.response.data.message;
+            }
+
             if (error.response?.status === 429) {
                 errorText = 'عذراً، لقد تجاوزت الحد المسموح به من الرسائل اليوم. يرجى تسجيل الدخول للحصول على المزيد.';
                 if (!isAuthenticated) {
