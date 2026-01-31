@@ -36,10 +36,6 @@ class AiSearchService
      */
     public function sendMessage(array $history, string $message, ?float $userLat = null, ?float $userLng = null)
     {
-        // 1. Initialize Chat with History
-        // Switching to 'gemini-2.5-flash' as requested by user.
-        $chat = Gemini::generativeModel(model: 'models/gemini-2.5-flash')->startChat(history: []);
-
         // 2. Define Tools
         $tools = new Tool(
             functionDeclarations: [
@@ -49,6 +45,12 @@ class AiSearchService
                 $this->toolSearchProducts(),
             ]
         );
+
+        // 1. Initialize Chat with History & Tools
+        // Switching to 'gemini-2.5-flash' as requested by user.
+        $chat = Gemini::generativeModel(model: 'models/gemini-2.5-flash')
+            ->withTool($tools)
+            ->startChat(history: []);
 
         // 3. First Call: Send User Message
         // We incorporate the system prompt as the first message or instruction if possible, 
@@ -62,7 +64,7 @@ class AiSearchService
             $fullMessage = $this->systemPrompt . "\n\nUser: " . $message;
         }
 
-        $response = $chat->sendMessage($fullMessage, tools: $tools);
+        $response = $chat->sendMessage($fullMessage);
 
         // 4. Handle Tool Calls
         // Gemini might return a function call. We need to loop until we get a text response.
