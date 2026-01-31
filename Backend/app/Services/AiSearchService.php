@@ -51,17 +51,16 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             ]
         );
 
-        // 1. Initialize Chat with System Instruction, History & Tools
+        // 1. Initialize Chat with History & Tools
         // Using 'gemini-flash-latest' which auto-updates to the latest Flash model (currently 2.5)
-        $systemInstruction = Content::parse(['parts' => [['text' => $this->systemPrompt]]]);
-
+        // NOTE: withSystemInstruction has SDK bugs, so we prepend to first message instead
         $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
-            ->withSystemInstruction($systemInstruction)
             ->withTool($tools)
             ->startChat(history: $history);
 
-        // 2. Send User Message
-        $response = $chat->sendMessage($message);
+        // 2. Send User Message (prepend system prompt on first message only)
+        $fullMessage = empty($history) ? $this->systemPrompt . "\n\nUser: " . $message : $message;
+        $response = $chat->sendMessage($fullMessage);
 
         // 4. Handle Tool Calls
         // Gemini might return a function call. We need to loop until we get a text response.
