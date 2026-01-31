@@ -35,11 +35,8 @@ class AiSearchService
     public function sendMessage(array $history, string $message, ?float $userLat = null, ?float $userLng = null)
     {
         // 1. Initialize Chat with History
-        // Note: We are using a simplified approach. In a real scenario, map $history to Content objects.
-        // For now, we'll start a fresh chat with the system prompt and append history context manually if needed
-        // or just rely on the implementation to handle history objects.
-
-        $chat = Gemini::geminiPro()->startChat(history: []);
+        // Switching to 'gemini-2.0-flash' as 'gemini-pro' is unavailable for this key/region.
+        $chat = Gemini::generativeModel(model: 'models/gemini-2.0-flash')->startChat(history: []);
 
         // 2. Define Tools
         $tools = Tool::make(
