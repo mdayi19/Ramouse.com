@@ -41,7 +41,7 @@ class ChatbotController extends Controller
         // 3. Daily Usage Limit
         $limitKey = 'chat_limit_' . ($userId ? "user_{$userId}" : "ip_" . $request->ip());
         $dailyCount = Cache::get($limitKey, 0);
-        $maxDaily = $userId ? 50 : 5; // 50 for users, 5 for guests
+        $maxDaily = $userId ? 100 : 50; // Increased for testing (was 50/5)
 
         if ($dailyCount >= $maxDaily) {
             return response()->json([
