@@ -82,6 +82,11 @@ class CarListingController extends Controller
             $query->orderBy($sortBy, $sortDir);
         }
 
+        // City filter
+        if ($request->city) {
+            $query->where('city', 'like', '%' . $request->city . '%');
+        }
+
         // Pagination
         $perPage = min($request->per_page ?? 20, 50);
         $listings = $query->paginate($perPage);
