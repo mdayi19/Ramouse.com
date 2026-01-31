@@ -251,7 +251,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         $query = $args['query'] ?? '';
 
-        $q = Product::query()->where('is_active', true);
+        $q = Product::query();
 
         if ($query) {
             $q->where(function ($sub) use ($query) {
@@ -266,10 +266,6 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         if (!empty($args['max_price']))
             $q->where('price', '<=', $args['max_price']);
-
-        // Stock filter
-        if (!empty($args['in_stock_only']) && $args['in_stock_only'])
-            $q->where('total_stock', '>', 0);
 
         $results = $q->limit(5)->get();
 
