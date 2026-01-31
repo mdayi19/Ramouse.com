@@ -47,8 +47,8 @@ class AiSearchService
         );
 
         // 1. Initialize Chat with History & Tools
-        // Using 'gemini-1.5-flash' for better free tier availability.
-        $chat = Gemini::generativeModel(model: 'gemini-1.5-flash')
+        // Using 'gemini-flash-latest' which auto-updates to the latest Flash model (currently 2.5)
+        $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
             ->withTool($tools)
             ->startChat(history: []);
 
