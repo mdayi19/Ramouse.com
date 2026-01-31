@@ -47,8 +47,8 @@ class AiSearchService
         );
 
         // 1. Initialize Chat with History & Tools
-        // Switching to 'gemini-2.5-flash' as requested by user.
-        $chat = Gemini::generativeModel(model: 'models/gemini-2.5-flash')
+        // Switching to 'gemini-1.5-flash' for better free tier availability.
+        $chat = Gemini::generativeModel(model: 'models/gemini-1.5-flash')
             ->withTool($tools)
             ->startChat(history: []);
 
@@ -70,8 +70,10 @@ class AiSearchService
         // Gemini might return a function call. We need to loop until we get a text response.
 
         $functionCall = $response->functionCall(); // Check if there's a function call
+        $loopCount = 0;
 
-        while ($functionCall) {
+        while ($functionCall && $loopCount < 5) {
+            $loopCount++;
             $name = $functionCall->name;
             $args = $functionCall->args;
 
