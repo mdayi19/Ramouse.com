@@ -53,8 +53,10 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         // 1. Initialize Chat with System Instruction, History & Tools
         // Using 'gemini-flash-latest' which auto-updates to the latest Flash model (currently 2.5)
+        $systemInstruction = Content::parse(['parts' => [['text' => $this->systemPrompt]]]);
+
         $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
-            ->withSystemInstruction($this->systemPrompt)
+            ->withSystemInstruction($systemInstruction)
             ->withTool($tools)
             ->startChat(history: $history);
 
