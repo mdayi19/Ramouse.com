@@ -101,7 +101,7 @@ class ChatbotController extends Controller
                 'remaining' => $maxDaily - ($dailyCount + 1)
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("Chatbot Error: " . $e->getMessage());
             // Return JSON error instead of 500 page
             return response()->json([
