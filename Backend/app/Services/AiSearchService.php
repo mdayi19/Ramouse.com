@@ -15,6 +15,7 @@ use App\Models\UserPreference;
 use Gemini\Data\Schema;
 use Gemini\Enums\DataType;
 use Illuminate\Support\Facades\Log;
+use Gemini\Data\Part;
 
 class AiSearchService
 {
@@ -156,8 +157,20 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         $systemPrompt = $this->buildPersonalizedPrompt($userId);
 
         // IMPORTANT: Inject System Prompt into History to maintain context across turns
-        if (!empty($history) && isset($history[0]['parts'][0]['text']) && $history[0]['role'] === 'user') {
-            $history[0]['parts'][0]['text'] = $systemPrompt . "\n\n" . $history[0]['parts'][0]['text'];
+        if (!empty($history)) {
+            $firstItem = $history[0];
+
+            // Handle if history item is Content Object (preferred)
+            if ($firstItem instanceof Content && $firstItem->role === Role::USER) {
+                $text = $firstItem->parts[0]->text ?? '';
+                $newText = $systemPrompt . "\n\n" . $text;
+                // Re-create the first message with system prompt prepended
+                $history[0] = new Content([new Part($newText)], Role::USER);
+            }
+            // Handle if history item is Array (fallback)
+            elseif (is_array($firstItem) && isset($firstItem['parts'][0]['text']) && $firstItem['role'] === 'user') {
+                $history[0]['parts'][0]['text'] = $systemPrompt . "\n\n" . $history[0]['parts'][0]['text'];
+            }
         }
 
         $chat = Gemini::generativeModel(model: 'gemini-flash-latest')

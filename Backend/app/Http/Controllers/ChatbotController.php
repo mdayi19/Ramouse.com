@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Gemini\Data\Content;
+use Gemini\Data\Part;
+use Gemini\Enums\Role;
 
 class ChatbotController extends Controller
 {
@@ -76,13 +79,14 @@ class ChatbotController extends Controller
                     return !empty(trim($chat->content ?? ''));
                 })
                 ->map(function ($chat) {
-                    $role = $chat->role === 'user' ? 'user' : 'model';
+                    $role = $chat->role === 'user' ? Role::USER : Role::MODEL;
                     $content = (string) ($chat->content ?? '');
 
-                    return [
-                        'role' => $role,
-                        'parts' => [['text' => $content]]
-                    ];
+                    if ($role === Role::USER) {
+                        return new Content([new Part($content)], $role);
+                    } else {
+                        return new Content([new Part($content)], $role);
+                    }
                 })
                 ->values()
                 ->toArray();
@@ -318,10 +322,14 @@ class ChatbotController extends Controller
                         return !empty(trim($chat->content ?? ''));
                     })
                     ->map(function ($chat) {
-                        return [
-                            'role' => $chat->role === 'user' ? 'user' : 'model',
-                            'parts' => [['text' => (string) ($chat->content ?? '')]]
-                        ];
+                        $role = $chat->role === 'user' ? Role::USER : Role::MODEL;
+                        $content = (string) ($chat->content ?? '');
+
+                        if ($role === Role::USER) {
+                            return new Content([new Part($content)], $role);
+                        } else {
+                            return new Content([new Part($content)], $role);
+                        }
                     })
                     ->values()
                     ->toArray();
