@@ -90,18 +90,12 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
             Log::info("Gemini Tool Call: $name", $args);
 
-            // Execute Tool
+            // Execute Tool and return JSON directly to frontend
             $toolResult = $this->executeTool($name, $args, $userLat, $userLng);
 
-            // Send Result back to Gemini
-            $response = $chat->sendMessage(
-                part: [
-                    'functionResponse' => [
-                        'name' => $name,
-                        'response' => ['result' => $toolResult]
-                    ]
-                ]
-            );
+            // Return the JSON result directly - no need to send back to Gemini
+            // This preserves rich card functionality in frontend
+            return $toolResult;
         }
 
         return $response->text();
