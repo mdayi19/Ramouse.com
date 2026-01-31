@@ -2,6 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// --- Chatbot Routes ---
+Route::middleware(['throttle:10,1'])->group(function () {
+    Route::post('/chatbot/send', [App\Http\Controllers\ChatbotController::class, 'sendMessage']);
+});
+
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
@@ -170,8 +176,9 @@ Route::middleware(['auth:sanctum'])->prefix('technician')->group(function () {
 // Tow Truck Profile Management (for authenticated tow trucks)
 Route::middleware(['auth:sanctum'])->prefix('tow-truck')->group(function () {
     Route::get('/stats', [TowTruckController::class, 'getDashboardStats']);
-    // Future routes like profile update can be moved here from generically handling them or kept as is if working fine for now.
-    // user/profile update is handled by AuthController generic updateProfile
+    // Future routes like profile update can be moved here from generically handling them or kept as is if working fine for
+    // now.
+// user/profile update is handled by AuthController generic updateProfile
 });
 
 // Provider Wallet Routes
@@ -179,7 +186,10 @@ Route::middleware(['auth:sanctum'])->prefix('provider')->group(function () {
     Route::get('/open-orders', [App\Http\Controllers\ProviderController::class, 'getOpenOrders']);
     Route::get('/my-bids', [App\Http\Controllers\ProviderController::class, 'getMyBids']);
     Route::get('/accepted-orders', [App\Http\Controllers\ProviderController::class, 'getAcceptedOrders']);
-    Route::put('/orders/{orderNumber}/status', [App\Http\Controllers\ProviderController::class, 'updateAcceptedOrderStatus']);
+    Route::put('/orders/{orderNumber}/status', [
+        App\Http\Controllers\ProviderController::class,
+        'updateAcceptedOrderStatus'
+    ]);
     Route::get('/overview-data', [App\Http\Controllers\ProviderController::class, 'getOverviewData']);
     Route::get('/transactions', [App\Http\Controllers\ProviderController::class, 'getTransactions']);
     Route::get('/withdrawals', [App\Http\Controllers\ProviderController::class, 'getWithdrawals']);
@@ -208,23 +218,47 @@ Route::middleware(['auth:sanctum'])->prefix('wallet')->group(function () {
     Route::post('/payment-methods', [App\Http\Controllers\WalletController::class, 'addPaymentMethod']);
     Route::put('/payment-methods/{methodId}', [App\Http\Controllers\WalletController::class, 'updatePaymentMethod']);
     Route::delete('/payment-methods/{methodId}', [App\Http\Controllers\WalletController::class, 'deletePaymentMethod']);
-    Route::post('/payment-methods/{methodId}/set-primary', [App\Http\Controllers\WalletController::class, 'setPrimaryPaymentMethod']);
+    Route::post('/payment-methods/{methodId}/set-primary', [
+        App\Http\Controllers\WalletController::class,
+        'setPrimaryPaymentMethod'
+    ]);
 });
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
     // International License (Authed)
-    Route::get('/international-license/pricing', [App\Http\Controllers\InternationalLicenseController::class, 'getPricing']);
+    Route::get('/international-license/pricing', [
+        App\Http\Controllers\InternationalLicenseController::class,
+        'getPricing'
+    ]);
     Route::post('/international-license/step1', [App\Http\Controllers\InternationalLicenseController::class, 'storeStep1']);
-    Route::post('/international-license/upload-documents', [App\Http\Controllers\InternationalLicenseController::class, 'uploadDocuments']);
-    Route::post('/international-license/upload-payment-proof', [App\Http\Controllers\InternationalLicenseController::class, 'uploadPaymentProof']);
-    Route::post('/international-license/attach-proof', [App\Http\Controllers\InternationalLicenseController::class, 'attachProofOfPayment']);
-    Route::post('/international-license/final-submit', [App\Http\Controllers\InternationalLicenseController::class, 'finalSubmit']);
+    Route::post('/international-license/upload-documents', [
+        App\Http\Controllers\InternationalLicenseController::class,
+        'uploadDocuments'
+    ]);
+    Route::post('/international-license/upload-payment-proof', [
+        App\Http\Controllers\InternationalLicenseController::class,
+        'uploadPaymentProof'
+    ]);
+    Route::post('/international-license/attach-proof', [
+        App\Http\Controllers\InternationalLicenseController::class,
+        'attachProofOfPayment'
+    ]);
+    Route::post('/international-license/final-submit', [
+        App\Http\Controllers\InternationalLicenseController::class,
+        'finalSubmit'
+    ]);
     Route::get('/international-license/my-requests', [App\Http\Controllers\InternationalLicenseController::class, 'index']);
 
     // Re-upload routes (Correction)
-    Route::post('/international-license/requests/{id}/reupload-payment', [App\Http\Controllers\InternationalLicenseController::class, 'updatePaymentProof']);
-    Route::post('/international-license/requests/{id}/reupload-documents', [App\Http\Controllers\InternationalLicenseController::class, 'updateDocuments']);
+    Route::post(
+        '/international-license/requests/{id}/reupload-payment',
+        [App\Http\Controllers\InternationalLicenseController::class, 'updatePaymentProof']
+    );
+    Route::post(
+        '/international-license/requests/{id}/reupload-documents',
+        [App\Http\Controllers\InternationalLicenseController::class, 'updateDocuments']
+    );
 
     // User Info
     Route::get('/user', function (Request $request) {
@@ -313,11 +347,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Financials (User Wallet - customers, technicians, tow trucks)
         Route::get('/user-deposits', [App\Http\Controllers\Admin\FinancialController::class, 'listUserDeposits']);
-        Route::post('/user-deposits/{id}/approve', [App\Http\Controllers\Admin\FinancialController::class, 'approveUserDeposit']);
+        Route::post('/user-deposits/{id}/approve', [
+            App\Http\Controllers\Admin\FinancialController::class,
+            'approveUserDeposit'
+        ]);
         Route::post('/user-deposits/{id}/reject', [App\Http\Controllers\Admin\FinancialController::class, 'rejectUserDeposit']);
         Route::get('/user-withdrawals', [App\Http\Controllers\Admin\FinancialController::class, 'listUserWithdrawals']);
-        Route::post('/user-withdrawals/{id}/approve', [App\Http\Controllers\Admin\FinancialController::class, 'approveUserWithdrawal']);
-        Route::post('/user-withdrawals/{id}/reject', [App\Http\Controllers\Admin\FinancialController::class, 'rejectUserWithdrawal']);
+        Route::post('/user-withdrawals/{id}/approve', [
+            App\Http\Controllers\Admin\FinancialController::class,
+            'approveUserWithdrawal'
+        ]);
+        Route::post('/user-withdrawals/{id}/reject', [
+            App\Http\Controllers\Admin\FinancialController::class,
+            'rejectUserWithdrawal'
+        ]);
         Route::get('/user-transactions', [App\Http\Controllers\Admin\FinancialController::class, 'listUserTransactions']);
         Route::post('/users/{id}/add-funds', [App\Http\Controllers\Admin\FinancialController::class, 'addUserFunds']);
 
@@ -325,9 +368,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'updateSettings']);
 
         // Vehicle Data & Specialties
-        Route::apiResource('/vehicle/categories', App\Http\Controllers\Admin\VehicleDataController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::apiResource('/vehicle/brands', App\Http\Controllers\Admin\VehicleDataController::class)->only(['index', 'store', 'update', 'destroy']); // Note: You might need separate controllers or methods if using apiResource, or just custom routes
-        // Custom routes for Vehicle Data to keep it simple in one controller
+        Route::apiResource('/vehicle/categories', App\Http\Controllers\Admin\VehicleDataController::class)->only([
+            'index',
+            'store',
+            'update',
+            'destroy'
+        ]);
+        Route::apiResource('/vehicle/brands', App\Http\Controllers\Admin\VehicleDataController::class)->only([
+            'index',
+            'store',
+            'update',
+            'destroy'
+        ]); // Note: You might need separate controllers or methods if using apiResource, or just custom
+        // routes
+// Custom routes for Vehicle Data to keep it simple in one controller
         Route::get('/vehicle/data', [App\Http\Controllers\Admin\VehicleDataController::class, 'getAllData']);
         Route::post('/vehicle/categories', [App\Http\Controllers\Admin\VehicleDataController::class, 'saveCategory']);
         Route::delete('/vehicle/categories/{id}', [App\Http\Controllers\Admin\VehicleDataController::class, 'deleteCategory']);
@@ -338,7 +392,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vehicle/part-types', [App\Http\Controllers\Admin\VehicleDataController::class, 'savePartType']);
         Route::delete('/vehicle/part-types/{id}', [App\Http\Controllers\Admin\VehicleDataController::class, 'deletePartType']);
         Route::post('/technicians/specialties', [App\Http\Controllers\Admin\VehicleDataController::class, 'saveSpecialty']);
-        Route::delete('/technicians/specialties/{id}', [App\Http\Controllers\Admin\VehicleDataController::class, 'deleteSpecialty']);
+        Route::delete('/technicians/specialties/{id}', [
+            App\Http\Controllers\Admin\VehicleDataController::class,
+            'deleteSpecialty'
+        ]);
 
         Route::post('/blog', [AdminController::class, 'createBlogPost']);
         Route::put('/blog/{id}', [AdminController::class, 'updateBlogPost']);
@@ -412,16 +469,34 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/reviews/{id}', [App\Http\Controllers\ReviewController::class, 'destroy']);
 
         // International License
-        Route::get('/international-license/pricing', [App\Http\Controllers\InternationalLicenseController::class, 'getPricing']);
+        Route::get('/international-license/pricing', [
+            App\Http\Controllers\InternationalLicenseController::class,
+            'getPricing'
+        ]);
         Route::post('/international-license/step1', [App\Http\Controllers\InternationalLicenseController::class, 'storeStep1']);
-        Route::post('/international-license/upload-documents', [App\Http\Controllers\InternationalLicenseController::class, 'uploadDocuments']);
-        Route::post('/international-license/upload-payment-proof', [App\Http\Controllers\InternationalLicenseController::class, 'uploadPaymentProof']);
-        Route::post('/international-license/final-submit', [App\Http\Controllers\InternationalLicenseController::class, 'finalSubmit']);
+        Route::post('/international-license/upload-documents', [
+            App\Http\Controllers\InternationalLicenseController::class,
+            'uploadDocuments'
+        ]);
+        Route::post('/international-license/upload-payment-proof', [
+            App\Http\Controllers\InternationalLicenseController::class,
+            'uploadPaymentProof'
+        ]);
+        Route::post('/international-license/final-submit', [
+            App\Http\Controllers\InternationalLicenseController::class,
+            'finalSubmit'
+        ]);
         Route::get('/international-license/my-requests', [App\Http\Controllers\InternationalLicenseController::class, 'index']);
 
         // Admin International License Management
-        Route::get('/international-license-requests', [App\Http\Controllers\InternationalLicenseController::class, 'adminIndex']);
-        Route::patch('/international-license-requests/{id}/status', [App\Http\Controllers\InternationalLicenseController::class, 'updateStatus']);
+        Route::get('/international-license-requests', [
+            App\Http\Controllers\InternationalLicenseController::class,
+            'adminIndex'
+        ]);
+        Route::patch('/international-license-requests/{id}/status', [
+            App\Http\Controllers\InternationalLicenseController::class,
+            'updateStatus'
+        ]);
 
         // ======== AUCTION MANAGEMENT ========
         Route::prefix('auctions')->group(function () {
@@ -676,5 +751,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // ======== USER CAR SUBMISSION ========
-Route::middleware(['auth:sanctum'])->post('/sell-car', [App\Http\Controllers\AuctionCarController::class, 'userSubmit']);
-Route::middleware(['auth:sanctum'])->post('/auctions/cars/upload-media', [App\Http\Controllers\AuctionCarController::class, 'uploadMedia']);
+Route::middleware(['auth:sanctum'])->post('/sell-car', [
+    App\Http\Controllers\AuctionCarController::class,
+    'userSubmit'
+]);
+Route::middleware(['auth:sanctum'])->post(
+    '/auctions/cars/upload-media',
+    [App\Http\Controllers\AuctionCarController::class, 'uploadMedia']
+);

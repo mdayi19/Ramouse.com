@@ -16,6 +16,8 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ToastContainer from './components/Toast';
 import FloatingServicesButton from './components/FloatingServicesButton';
+import { FloatingChatBotButton } from './components/FloatingChatBotButton';
+import { ChatWidget } from './components/Chatbot/ChatWidget';
 import PublicMobileMenu from './components/PublicMobileMenu';
 import GuestServicesPopup from './components/GuestServicesPopup';
 import BottomNavBar from './components/BottomNavBar';
@@ -161,6 +163,7 @@ const App: React.FC = () => {
     const [showSplash, setShowSplash] = useState(true);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
     const [showServicesPopup, setShowServicesPopup] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const handleSplashFinish = useCallback(() => {
         setShowSplash(false);
@@ -966,10 +969,38 @@ const App: React.FC = () => {
 
             {/* Floating Services Button (Guest Mobile) */}
             {!isAuthenticated && isPublicView && (
-                <FloatingServicesButton
-                    onClick={() => setShowServicesPopup(true)}
-                    logoUrl={settings.logoUrl}
-                />
+                <>
+                    <FloatingServicesButton
+                        onClick={() => setShowServicesPopup(true)}
+                        logoUrl={settings.logoUrl}
+                    />
+                    <FloatingChatBotButton
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                        isOpen={isChatOpen}
+                    />
+                    <ChatWidget
+                        isOpen={isChatOpen}
+                        onClose={() => setIsChatOpen(false)}
+                        isAuthenticated={isAuthenticated}
+                        onLoginClick={handleLoginClick}
+                    />
+                </>
+            )}
+
+            {/* Authenticated Floating Button (If desireable, or generally available) */}
+            {isAuthenticated && (
+                <>
+                    <FloatingChatBotButton
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                        isOpen={isChatOpen}
+                    />
+                    <ChatWidget
+                        isOpen={isChatOpen}
+                        onClose={() => setIsChatOpen(false)}
+                        isAuthenticated={isAuthenticated}
+                        onLoginClick={handleLoginClick}
+                    />
+                </>
             )}
 
             <GuestServicesPopup
