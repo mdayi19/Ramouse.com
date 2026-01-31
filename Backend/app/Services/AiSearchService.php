@@ -109,18 +109,27 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
     protected function executeTool(string $name, array $args, ?float $userLat, ?float $userLng)
     {
+        $result = null;
+
         switch ($name) {
             case 'search_cars':
-                return $this->searchCars($args);
+                $result = $this->searchCars($args);
+                break;
             case 'search_technicians':
-                return $this->searchTechnicians($args, $userLat, $userLng);
+                $result = $this->searchTechnicians($args, $userLat, $userLng);
+                break;
             case 'search_tow_trucks':
-                return $this->searchTowTrucks($args, $userLat, $userLng);
+                $result = $this->searchTowTrucks($args, $userLat, $userLng);
+                break;
             case 'search_products':
-                return $this->searchProducts($args);
+                $result = $this->searchProducts($args);
+                break;
             default:
                 return "Error: Unknown tool '$name'.";
         }
+
+        // Return JSON string for frontend to parse
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
     // --- SEARCH LOGIC ---

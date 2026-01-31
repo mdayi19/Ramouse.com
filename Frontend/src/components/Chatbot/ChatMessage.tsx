@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { User, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ResultCards } from './ResultCards';
 
 interface ChatMessageProps {
     role: 'user' | 'model';
@@ -12,6 +13,17 @@ interface ChatMessageProps {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timestamp }) => {
     const isUser = role === 'user';
+
+    // Try to parse content as JSON (structured results from backend)
+    let structuredResults = null;
+    try {
+        const parsed = JSON.parse(content);
+        if (parsed.type && Array.isArray(parsed.items)) {
+            structuredResults = parsed;
+        }
+    } catch {
+        // Not JSON, treat as markdown text
+    }
 
     return (
         <motion.div
@@ -37,12 +49,16 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timesta
                         : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-none'
                     }
                 `}>
-                    {/* Content */}
-                    <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'dark:prose-invert'} prose-p:my-1 prose-ul:my-1 prose-headings:my-2`}>
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {content}
-                        </ReactMarkdown>
-                    </div>
+                    {/* Content - Render ResultCards or Markdown */}
+                    {structuredResults ? (
+                        <ResultCards results={structuredResults} />
+                    ) : (
+                        <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'dark:prose-invert'} prose-p:my-1 prose-ul:my-1 prose-headings:my-2`}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {content}
+                            </ReactMarkdown>
+                        </div>
+                    )}
 
                     {/* Time */}
                     <div className={`text-[9px] mt-1 opacity-70 ${isUser ? 'text-blue-100' : 'text-slate-400'}`}>
