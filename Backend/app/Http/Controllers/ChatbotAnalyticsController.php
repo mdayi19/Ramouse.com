@@ -46,7 +46,7 @@ class ChatbotAnalyticsController extends Controller
         $csv = "Timestamp,Event Type,User ID,Session ID,Response Time (ms),Event Data\n";
 
         foreach ($analytics as $record) {
-            $eventData = json_encode($record->event_data);
+            $eventData = $record->event_data; // Already JSON string
             $csv .= "\"{$record->created_at}\",\"{$record->event_type}\",\"{$record->user_id}\",\"{$record->session_id}\",\"{$record->response_time_ms}\",\"{$eventData}\"\n";
         }
 
@@ -266,7 +266,8 @@ class ChatbotAnalyticsController extends Controller
             ->get();
 
         $errorsByType = $errors->groupBy(function ($error) {
-            return $error->event_data['error_type'] ?? 'Unknown';
+            $data = json_decode($error->event_data, true) ?? [];
+            return $data['error_type'] ?? 'Unknown';
         })->map(function ($group) {
             return [
                 'count' => $group->count(),
