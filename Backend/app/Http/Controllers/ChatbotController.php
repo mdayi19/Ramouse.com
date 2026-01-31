@@ -125,11 +125,11 @@ class ChatbotController extends Controller
                 'session_id' => $sessionId,
                 'user_id' => $userId,
                 'event_type' => 'message_sent',
-                'event_data' => [
+                'event_data' => json_encode([
                     'message_length' => strlen($message),
-                    'had_location' => !is_null($request->latitude),
+                    'had_location' => !is_null($request->input('latitude')),
                     'has_result_cards' => str_contains($responseContent, '"type"')
-                ],
+                ]),
                 'response_time_ms' => $responseTime
             ]);
 
@@ -187,10 +187,10 @@ class ChatbotController extends Controller
                 'session_id' => $sessionId ?? 'unknown',
                 'user_id' => $userId ?? null,
                 'event_type' => 'error',
-                'event_data' => [
+                'event_data' => json_encode([
                     'error_type' => get_class($e),
                     'error_message' => substr($e->getMessage(), 0, 255)
-                ]
+                ])
             ]);
 
             // Return JSON error instead of 500 page
@@ -245,10 +245,10 @@ class ChatbotController extends Controller
             'session_id' => $request->session_id,
             'user_id' => $userId,
             'event_type' => 'feedback',
-            'event_data' => [
+            'event_data' => json_encode([
                 'is_positive' => $request->is_positive,
                 'has_comment' => !empty($request->comment)
-            ]
+            ])
         ]);
 
         return response()->json([
@@ -348,12 +348,21 @@ class ChatbotController extends Controller
                     usleep(30000); // 30ms delay between words for smooth streaming
                 }
 
+                // Convert JSON tool results to text summary for history (same as non-streaming)
+                $contentToSave = $responseContent;
+                $parsedJson = json_decode($responseContent, true);
+                if (json_last_error() === JSON_ERROR_NONE && isset($parsedJson['type'])) {
+                    $count = $parsedJson['count'] ?? 0;
+                    $type = $parsedJson['type'] ?? 'results';
+                    $contentToSave = "تم عرض {$count} نتائج من نوع {$type}";
+                }
+
                 // Save AI response
                 ChatHistory::create([
                     'user_id' => $userId,
                     'session_id' => $sessionId,
                     'role' => 'model',
-                    'content' => $responseContent
+                    'content' => $contentToSave
                 ]);
 
                 // Calculate response time
@@ -364,12 +373,12 @@ class ChatbotController extends Controller
                     'session_id' => $sessionId,
                     'user_id' => $userId,
                     'event_type' => 'message_sent',
-                    'event_data' => [
+                    'event_data' => json_encode([
                         'message_length' => strlen($message),
                         'had_location' => !empty($request->input('latitude')),
                         'has_result_cards' => str_contains($responseContent, '"type"'),
                         'streaming' => true
-                    ],
+                    ]),
                     'response_time_ms' => $responseTime
                 ]);
 
@@ -393,10 +402,11 @@ class ChatbotController extends Controller
                     'session_id' => $sessionId,
                     'user_id' => $userId,
                     'event_type' => 'error',
-                    'event_data' => [
+                    'event_data' => json_encode([
                         'error_type' => get_class($e),
-                        'error_message' => substr($e->getMessage(), 0, 255)
-                    ]
+                        'error_message' => substr($e->getMessage(), 0, 255),
+                        'streaming' => true
+                    ])
                 ]);
 
                 // Send error to client

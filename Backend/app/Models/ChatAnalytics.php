@@ -15,7 +15,6 @@ class ChatAnalytics extends Model
     ];
 
     protected $casts = [
-        'event_data' => 'array',
         'response_time_ms' => 'integer'
     ];
 
