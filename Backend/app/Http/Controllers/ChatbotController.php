@@ -28,7 +28,8 @@ class ChatbotController extends Controller
 
         try {
             // Pre-check for API Key to avoid hard crash in Service
-            if (!env('GEMINI_API_KEY')) {
+            // Use config() instead of env() because env() returns null when config is cached
+            if (!config('gemini.api_key')) {
                 throw new \Exception("GEMINI_API_KEY is missing in .env");
             }
 
