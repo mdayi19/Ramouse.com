@@ -53,12 +53,18 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         // 1. Initialize Chat with History & Tools
         // Using 'gemini-flash-latest' which auto-updates to the latest Flash model (currently 2.5)
-        // NOTE: withSystemInstruction has SDK bugs, so we prepend to first message instead
+
+        // IMPORTANT: Inject System Prompt into History to maintain context across turns
+        if (!empty($history) && isset($history[0]['parts'][0]['text']) && $history[0]['role'] === 'user') {
+            $history[0]['parts'][0]['text'] = $this->systemPrompt . "\n\n" . $history[0]['parts'][0]['text'];
+        }
+
         $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
             ->withTool($tools)
             ->startChat(history: $history);
 
-        // 2. Send User Message (prepend system prompt on first message only)
+        // 2. Send User Message
+        // If history was empty, we need to add prompt here. If history existed, we added it above.
         $fullMessage = empty($history) ? $this->systemPrompt . "\n\nUser: " . $message : $message;
         $response = $chat->sendMessage($fullMessage);
 
