@@ -11,6 +11,7 @@ use App\Models\CarListing;
 use App\Models\Technician;
 use App\Models\TowTruck;
 use App\Models\Product;
+use App\Models\UserPreference;
 use Gemini\Data\Schema;
 use Gemini\Enums\DataType;
 use Illuminate\Support\Facades\Log;
@@ -37,9 +38,106 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 12. You are a DATABASE SEARCH INTERFACE. Nothing more.";
 
     /**
+     * Build a personalized system prompt based on user preferences
+     */
+    protected function buildPersonalizedPrompt(?int $userId = null): string
+    {
+        $basePrompt = $this->systemPrompt;
+
+        if (!$userId) {
+            return $basePrompt;
+        }
+
+        // Get user's top preferences
+        $preferences = UserPreference::where('user_id', $userId)
+            ->orderBy('frequency', 'desc')
+            ->take(5)
+            ->get();
+
+        if ($preferences->isEmpty()) {
+            return $basePrompt;
+        }
+
+        // Build personalization context
+        $personalContext = "\n\nUSER CONTEXT (for better search relevance):";
+
+        foreach ($preferences as $pref) {
+            switch ($pref->preference_key) {
+                case 'preferred_city':
+                    $personalContext .= "\n- User frequently searches in city: {$pref->preference_value}";
+                    break;
+                case 'preferred_brand':
+                    $personalContext .= "\n- User interested in brand: {$pref->preference_value}";
+                    break;
+                case 'price_range':
+                    $personalContext .= "\n- User's budget range: {$pref->preference_value}";
+                    break;
+                case 'car_condition':
+                    $personalContext .= "\n- Prefers: {$pref->preference_value} cars";
+                    break;
+            }
+        }
+
+        return $basePrompt . $personalContext;
+    }
+
+    /**
+     * Learn from search parameters
+     */
+    protected function learnPreferences(?int $userId, array $searchParams)
+    {
+        if (!$userId || empty($searchParams)) {
+            return;
+        }
+
+        // Track city preference
+        if (!empty($searchParams['city'])) {
+            $this->saveOrUpdatePreference($userId, 'preferred_city', $searchParams['city']);
+        }
+
+        // Track brand preference
+        if (!empty($searchParams['brand'])) {
+            $this->saveOrUpdatePreference($userId, 'preferred_brand', $searchParams['brand']);
+        }
+
+        // Track price range
+        if (!empty($searchParams['min_price']) && !empty($searchParams['max_price'])) {
+            $range = "{$searchParams['min_price']}-{$searchParams['max_price']}";
+            $this->saveOrUpdatePreference($userId, 'price_range', $range);
+        }
+
+        // Track condition preference
+        if (!empty($searchParams['condition'])) {
+            $this->saveOrUpdatePreference($userId, 'car_condition', $searchParams['condition']);
+        }
+    }
+
+    /**
+     * Save or update a preference
+     */
+    protected function saveOrUpdatePreference(int $userId, string $key, string $value)
+    {
+        $pref = UserPreference::firstOrCreate(
+            ['user_id' => $userId, 'preference_key' => $key],
+            ['preference_value' => $value, 'frequency' => 0]
+        );
+
+        if ($pref->preference_value === $value) {
+            $pref->incrementUsage();
+        } else {
+            // Value changed, reset with new value
+            $pref->update([
+                'preference_value' => $value,
+                'frequency' => 1,
+                'last_used_at' => now()
+            ]);
+        }
+    }
+
+    /**
      * Send a message to Gemini and handle tool calls.
      */
-    public function sendMessage(array $history, string $message, ?float $userLat = null, ?float $userLng = null)
+    public function sendMessage(array $history, string $message, ?float $userLat = null, ?float $userLng = null, ?int $userId = null)
     {
         // 2. Define Tools
         $tools = new Tool(
@@ -54,9 +152,12 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         // 1. Initialize Chat with History & Tools
         // Using 'gemini-flash-latest' which auto-updates to the latest Flash model (currently 2.5)
 
+        // Build personalized prompt
+        $systemPrompt = $this->buildPersonalizedPrompt($userId);
+
         // IMPORTANT: Inject System Prompt into History to maintain context across turns
         if (!empty($history) && isset($history[0]['parts'][0]['text']) && $history[0]['role'] === 'user') {
-            $history[0]['parts'][0]['text'] = $this->systemPrompt . "\n\n" . $history[0]['parts'][0]['text'];
+            $history[0]['parts'][0]['text'] = $systemPrompt . "\n\n" . $history[0]['parts'][0]['text'];
         }
 
         $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
@@ -65,7 +166,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         // 2. Send User Message
         // If history was empty, we need to add prompt here. If history existed, we added it above.
-        $fullMessage = empty($history) ? $this->systemPrompt . "\n\nUser: " . $message : $message;
+        $fullMessage = empty($history) ? $systemPrompt . "\n\nUser: " . $message : $message;
         $response = $chat->sendMessage($fullMessage);
 
         // 4. Handle Tool Calls
@@ -97,7 +198,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             Log::info("Gemini Tool Call: $name", $args);
 
             // Execute Tool and return JSON directly to frontend
-            $toolResult = $this->executeTool($name, $args, $userLat, $userLng);
+            $toolResult = $this->executeTool($name, $args, $userLat, $userLng, $userId);
 
             // Return the JSON result directly - no need to send back to Gemini
             // This preserves rich card functionality in frontend
@@ -114,12 +215,16 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         }
     }
 
-    protected function executeTool(string $name, array $args, ?float $userLat, ?float $userLng)
+    protected function executeTool(string $name, array $args, ?float $userLat, ?float $userLng, ?int $userId = null)
     {
         $result = null;
 
         switch ($name) {
             case 'search_cars':
+                // Learn from car search preferences
+                if ($userId) {
+                    $this->learnPreferences($userId, $args);
+                }
                 $result = $this->searchCars($args);
                 break;
             case 'search_technicians':
@@ -289,8 +394,26 @@ ABSOLUTE RULES - NO EXCEPTIONS:
                 'type' => 'car_listings',
                 'message' => 'لم يتم العثور على نتائج. جرب كلمات بحث مختلفة.',
                 'count' => 0,
-                'items' => []
+                'items' => [],
+                'suggestions' => [
+                    'ابحث في جميع المدن',
+                    'جرب ماركات مشابهة',
+                    'ارفع حد السعر',
+                    'اعرض السيارات المستعملة'
+                ]
             ];
+        }
+
+        // Generate contextual suggestions based on results
+        $suggestions = [
+            'ابحث عن فني متخصص في هذه الماركة',
+            'اعرض قطع غيار لهذه الماركة'
+        ];
+
+        // Add price-based suggestions
+        if ($results->count() > 3) {
+            $suggestions[] = 'اعرض خيارات أرخص';
+            $suggestions[] = 'اعرض نفس الماركة في مدن أخرى';
         }
 
         return [
@@ -312,7 +435,8 @@ ABSOLUTE RULES - NO EXCEPTIONS:
                     'condition' => (string) $car->condition,
                     'transmission' => (string) $car->transmission,
                 ];
-            })->values()->toArray()
+            })->values()->toArray(),
+            'suggestions' => $suggestions
         ];
     }
 

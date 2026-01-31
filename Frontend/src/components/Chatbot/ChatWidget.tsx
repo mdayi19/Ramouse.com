@@ -5,6 +5,10 @@ import { ChatWelcome } from './ChatWelcome';
 import { ChatInput } from './ChatInput';
 import { ChatMessage } from './ChatMessage';
 import { ChatService, ChatMessage as IChatMessage } from '../../services/ChatService';
+import { chatStreamService } from '../../services/chat-stream.service';
+
+// Enable/disable streaming (can be toggled based on user preference)
+const USE_STREAMING = true;
 
 interface ChatWidgetProps {
     isOpen: boolean;
@@ -16,6 +20,7 @@ interface ChatWidgetProps {
 export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthenticated, onLoginClick }) => {
     const [messages, setMessages] = useState<IChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [aiStatus, setAiStatus] = useState<string>('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Scroll to bottom on new message
@@ -28,20 +33,84 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
         const userMsg: IChatMessage = { role: 'user', content: text, timestamp: Date.now() };
         setMessages(prev => [...prev, userMsg]);
         setIsLoading(true);
+        setAiStatus('جارٍ التفكير...');
 
         try {
             // Get Location if possible (optional)
             let lat, lng;
             // Simplified geolocation check could go here
 
-            const response = await ChatService.sendMessage(text, lat, lng);
+            if (USE_STREAMING) {
+                // --- STREAMING MODE ---
+                let streamedContent = '';
+                const sessionId = ChatService.getSessionId();
 
-            const botMsg: IChatMessage = {
-                role: 'model',
-                content: response.response,
-                timestamp: Date.now()
-            };
-            setMessages(prev => [...prev, botMsg]);
+                // Add a placeholder message for the AI response
+                const aiMsgPlaceholder: IChatMessage = {
+                    role: 'model',
+                    content: '',
+                    timestamp: Date.now()
+                };
+                setMessages(prev => [...prev, aiMsgPlaceholder]);
+
+                await chatStreamService.streamMessage(
+                    text,
+                    sessionId || '',
+                    // onChunk
+                    (chunk: string) => {
+                        streamedContent += chunk;
+                        setMessages(prev => {
+                            const newMessages = [...prev];
+                            newMessages[newMessages.length - 1] = {
+                                ...newMessages[newMessages.length - 1],
+                                content: streamedContent
+                            };
+                            return newMessages;
+                        });
+                    },
+                    // onStatus
+                    (status: string) => {
+                        setAiStatus(status);
+                    },
+                    // onComplete
+                    (returnedSessionId: string) => {
+                        setIsLoading(false);
+                        setAiStatus('');
+                        ChatService.setSessionId(returnedSessionId);
+                    },
+                    // onError
+                    (error: string) => {
+                        setIsLoading(false);
+                        setAiStatus('');
+                        setMessages(prev => {
+                            const newMessages = [...prev];
+                            newMessages[newMessages.length - 1] = {
+                                ...newMessages[newMessages.length - 1],
+                                content: error
+                            };
+                            return newMessages;
+                        });
+                    },
+                    lat,
+                    lng
+                );
+            } else {
+                // --- NON-STREAMING MODE (original) ---
+                // Update status after 1 second to show database search
+                const statusTimer = setTimeout(() => {
+                    setAiStatus('جارٍ البحث في قاعدة البيانات...');
+                }, 1000);
+
+                const response = await ChatService.sendMessage(text, lat, lng);
+                clearTimeout(statusTimer);
+
+                const botMsg: IChatMessage = {
+                    role: 'model',
+                    content: response.response,
+                    timestamp: Date.now()
+                };
+                setMessages(prev => [...prev, botMsg]);
+            }
         } catch (error: any) {
             console.error(error);
             let errorText = 'عذراً، حدث خطأ ما. يرجى المحاولة لاحقاً.';
@@ -67,7 +136,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
-            setIsLoading(false);
+            if (!USE_STREAMING) {
+                setIsLoading(false);
+                setAiStatus('');
+            }
         }
     };
 
@@ -86,8 +158,20 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 20, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed bottom-24 right-4 z-[49] w-[90vw] md:w-[400px] h-[600px] max-h-[80vh] bg-white dark:bg-slate-900 shadow-2xl rounded-3xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden font-sans"
+                    className="fixed z-[49] bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-hidden font-sans
+                        md:bottom-24 md:right-4 md:w-[400px] md:h-[600px] md:max-h-[80vh] md:rounded-3xl md:border md:border-slate-200 md:dark:border-slate-700
+                        bottom-0 right-0 left-0 top-0 w-full h-full rounded-none"
                 >
+                    {/* Mobile Close Button */}
+                    <div className="md:hidden absolute top-4 right-4 z-50">
+                        <button
+                            onClick={onClose}
+                            className="w-10 h-10 rounded-full bg-slate-900/10 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center text-slate-700 dark:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
                     {/* Header */}
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-10">
                         <div className="flex items-center gap-3">
@@ -103,7 +187,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="hidden md:flex items-center gap-1">
                             {messages.length > 0 && (
                                 <button
                                     onClick={handleClear}
@@ -140,14 +224,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                                         timestamp={msg.timestamp}
                                         showLoginButton={msg.showLoginButton}
                                         onLoginClick={onLoginClick}
+                                        onSuggestionClick={handleSend}
                                     />
                                 ))}
                                 {isLoading && (
                                     <div className="flex justify-start w-full">
-                                        <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-bl-none shadow-sm flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                        <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-bl-none shadow-sm">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1">
+                                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                                </div>
+                                                {aiStatus && (
+                                                    <span className="text-xs text-slate-600 dark:text-slate-400 mr-1">{aiStatus}</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}

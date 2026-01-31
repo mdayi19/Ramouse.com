@@ -6,6 +6,14 @@ use Illuminate\Support\Facades\Route;
 // --- Chatbot Routes ---
 Route::middleware(['throttle:10,1'])->group(function () {
     Route::post('/chatbot/send', [App\Http\Controllers\ChatbotController::class, 'sendMessage']);
+    Route::post('/chatbot/stream', [App\Http\Controllers\ChatbotController::class, 'streamMessage']);
+    Route::post('/chatbot/feedback', [App\Http\Controllers\ChatbotController::class, 'submitFeedback']);
+});
+
+// Chatbot Analytics (Admin only)
+Route::middleware(['auth:sanctum'])->prefix('admin/chatbot')->group(function () {
+    Route::get('/analytics', [App\Http\Controllers\ChatbotAnalyticsController::class, 'getDashboard']);
+    Route::get('/analytics/export', [App\Http\Controllers\ChatbotAnalyticsController::class, 'exportCSV']);
 });
 
 use Illuminate\Support\Facades\Broadcast;

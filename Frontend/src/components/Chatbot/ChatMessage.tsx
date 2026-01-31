@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { User, Sparkles, LogIn } from 'lucide-react';
+import { User, Sparkles, LogIn, Copy, Share2, ThumbsUp, ThumbsDown, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ResultCards } from './ResultCards';
 
@@ -11,10 +11,13 @@ interface ChatMessageProps {
     timestamp?: number;
     showLoginButton?: boolean;
     onLoginClick?: () => void;
+    onSuggestionClick?: (suggestion: string) => void;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timestamp, showLoginButton, onLoginClick }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timestamp, showLoginButton, onLoginClick, onSuggestionClick }) => {
     const isUser = role === 'user';
+    const [copied, setCopied] = useState(false);
+    const [feedbackGiven, setFeedbackGiven] = useState<'up' | 'down' | null>(null);
 
     // Try to parse content as JSON (structured results from backend)
     let structuredResults = null;
@@ -26,6 +29,54 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timesta
     } catch {
         // Not JSON, treat as markdown text
     }
+
+    // Action Handlers
+    const handleCopy = () => {
+        navigator.clipboard.writeText(content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                text: content,
+                title: 'محادثة راموسة AI'
+            }).catch(() => {
+                // Fallback to copy if share fails
+                handleCopy();
+            });
+        } else {
+            handleCopy();
+        }
+    };
+
+    const handleFeedback = async (isPositive: boolean) => {
+        setFeedbackGiven(isPositive ? 'up' : 'down');
+
+        // Get session ID from ChatService
+        const sessionId = localStorage.getItem('chat_session_id');
+
+        try {
+            const response = await fetch('/api/chatbot/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    timestamp: timestamp,
+                    is_positive: isPositive
+                })
+            });
+
+            const data = await response.json();
+            console.log('Feedback sent:', data.message);
+        } catch (error) {
+            console.error('Failed to send feedback:', error);
+        }
+    };
 
     return (
         <motion.div
@@ -53,12 +104,60 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timesta
                 `}>
                     {/* Content - Render ResultCards or Markdown */}
                     {structuredResults ? (
-                        <ResultCards results={structuredResults} />
+                        <ResultCards results={structuredResults} onSuggestionClick={onSuggestionClick} />
                     ) : (
                         <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'dark:prose-invert'} prose-p:my-1 prose-ul:my-1 prose-headings:my-2`}>
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {content}
                             </ReactMarkdown>
+                        </div>
+                    )}
+
+                    {/* Action Buttons (AI messages only) */}
+                    {!isUser && (
+                        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                            <button
+                                onClick={handleCopy}
+                                className="flex items-center gap-1 text-xs px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                                title="نسخ"
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="w-3 h-3 text-green-500" />
+                                        <span className="text-green-500">تم النسخ</span>
+                                    </>
+                                ) : (
+                                    <Copy className="w-3 h-3" />
+                                )}
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                                title="مشاركة"
+                            >
+                                <Share2 className="w-3 h-3" />
+                            </button>
+                            <div className="flex-1"></div>
+                            <button
+                                onClick={() => handleFeedback(true)}
+                                className={`p-1.5 rounded transition-colors ${feedbackGiven === 'up'
+                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                    : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400'
+                                    }`}
+                                title="مفيد"
+                            >
+                                <ThumbsUp className="w-3 h-3" />
+                            </button>
+                            <button
+                                onClick={() => handleFeedback(false)}
+                                className={`p-1.5 rounded transition-colors ${feedbackGiven === 'down'
+                                    ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                    : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400'
+                                    }`}
+                                title="غير مفيد"
+                            >
+                                <ThumbsDown className="w-3 h-3" />
+                            </button>
                         </div>
                     )}
 

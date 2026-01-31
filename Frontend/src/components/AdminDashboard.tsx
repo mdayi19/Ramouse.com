@@ -52,6 +52,9 @@ import CarProvidersView from './DashboardParts/CarProvidersView';
 import CarListingsSponsorView from './DashboardParts/CarListingsSponsorView';
 import CarCategoriesView from './DashboardParts/CarCategoriesView';
 
+// Chatbot Analytics
+import { ChatbotAnalyticsView } from './DashboardParts/ChatbotAnalyticsView';
+
 
 export interface AdminDashboardProps {
     allOrders: Order[];
@@ -632,6 +635,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                 { id: 'telegramManagement', label: 'إدارة Telegram', onClick: () => handleSetView('telegramManagement'), isActive: currentView === 'telegramManagement', icon: 'Send' },
                 { id: 'messageTemplates', label: 'قوالب الرسائل', onClick: () => handleSetView('messageTemplates'), isActive: currentView === 'messageTemplates', icon: 'FileText' },
                 { id: 'notifications', label: 'إعدادات الإشعارات', onClick: () => handleSetView('notifications'), isActive: currentView === 'notifications', icon: 'Bell' },
+                { id: 'chatbotAnalytics', label: 'تحليلات راموسة AI', onClick: () => handleSetView('chatbotAnalytics'), isActive: currentView === 'chatbotAnalytics', icon: 'BarChart3' },
                 { id: 'modelManagement', label: 'إدارة النماذج', onClick: () => handleSetView('modelManagement'), isActive: currentView === 'modelManagement', icon: 'Database' },
                 { id: 'cacheManagement', label: 'إدارة التخزين', onClick: () => handleSetView('cacheManagement'), isActive: currentView === 'cacheManagement', icon: 'HardDrive' },
                 { id: 'schedulerManagement', label: 'المجدول', onClick: () => handleSetView('schedulerManagement'), isActive: currentView === 'schedulerManagement', icon: 'Clock' },
@@ -745,6 +749,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                             <Route path="carProviders" element={<CarProvidersView showToast={showToast} />} />
                             <Route path="carSponsorships" element={<CarListingsSponsorView showToast={showToast} />} />
                             <Route path="carCategories" element={<CarCategoriesView showToast={showToast} />} />
+
+                            {/* Chatbot Analytics */}
+                            <Route path="chatbotAnalytics" element={<ChatbotAnalyticsView />} />
 
                             <Route path="*" element={<Navigate to="" replace />} />
                         </Routes>

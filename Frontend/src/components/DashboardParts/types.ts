@@ -7,6 +7,7 @@ export type AdminView = 'overview' | 'orders' | 'providers' | 'users' | 'setting
     | 'schedulerManagement'
     | 'carProviders'
     | 'carSponsorships'
-    | 'carCategories';
+    | 'carCategories'
+    | 'chatbotAnalytics';
 export type AccountingViewTab = 'balances' | 'withdrawals' | 'history';
 export type ModelManagementTab = 'categories' | 'brands' | 'models' | 'partTypes' | 'specialties';
