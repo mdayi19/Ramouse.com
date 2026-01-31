@@ -335,7 +335,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
                     'rating' => $tech->average_rating,
                     'city' => $tech->city,
                     'distance' => $tech->distance ? round($tech->distance, 1) . ' كم' : null,
-                    'isVerified' => $tech->is_verified,
+                    'isVerified' => $tech->is_verified ? 1 : 0, // Convert boolean to int
                     'phone' => $tech->phone,
                 ];
             })->toArray()
