@@ -71,6 +71,10 @@ class ChatbotController extends Controller
                 ->take(20)
                 ->get()
                 ->reverse()
+                ->filter(function ($chat) {
+                    // Skip messages with empty content (Gemini SDK rejects them)
+                    return !empty(trim($chat->content ?? ''));
+                })
                 ->map(function ($chat) {
                     $role = $chat->role === 'user' ? 'user' : 'model';
                     $content = (string) ($chat->content ?? '');
@@ -307,6 +311,10 @@ class ChatbotController extends Controller
                     ->take(20)
                     ->get()
                     ->reverse()
+                    ->filter(function ($chat) {
+                        // Skip messages with empty content (Gemini SDK rejects them)
+                        return !empty(trim($chat->content ?? ''));
+                    })
                     ->map(function ($chat) {
                         return [
                             'role' => $chat->role === 'user' ? 'user' : 'model',
