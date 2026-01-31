@@ -98,7 +98,14 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             return $toolResult;
         }
 
-        return $response->text();
+        // Return text response for general chat (no tool calls)
+        try {
+            $textResponse = $response->text();
+            return $textResponse ?: 'أهلاً بك، أنا راموسة. كيف يمكنني مساعدتك؟';
+        } catch (\Exception $e) {
+            Log::error("Failed to get text response: " . $e->getMessage());
+            return 'أهلاً بك، أنا راموسة. كيف يمكنني مساعدتك؟';
+        }
     }
 
     protected function executeTool(string $name, array $args, ?float $userLat, ?float $userLng)
