@@ -69,13 +69,28 @@ class AiSearchService
         // 4. Handle Tool Calls
         // Gemini might return a function call. We need to loop until we get a text response.
 
-        $functionCall = $response->functionCall(); // Check if there's a function call
         $loopCount = 0;
+        while ($loopCount < 5) {
+            // Check if there's a function call in the response
+            $functionCall = null;
 
-        while ($functionCall && $loopCount < 5) {
+            if (isset($response->candidates[0]->content->parts)) {
+                foreach ($response->candidates[0]->content->parts as $part) {
+                    if (isset($part->functionCall)) {
+                        $functionCall = $part->functionCall;
+                        break;
+                    }
+                }
+            }
+
+            // If no function call, we're done - return the text
+            if (!$functionCall) {
+                break;
+            }
+
             $loopCount++;
             $name = $functionCall->name;
-            $args = $functionCall->args;
+            $args = (array) $functionCall->args;
 
             Log::info("Gemini Tool Call: $name", $args);
 
@@ -91,8 +106,6 @@ class AiSearchService
                     ]
                 ]
             );
-
-            $functionCall = $response->functionCall();
         }
 
         return $response->text();
