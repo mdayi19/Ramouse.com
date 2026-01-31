@@ -35,8 +35,8 @@ class AiSearchService
     public function sendMessage(array $history, string $message, ?float $userLat = null, ?float $userLng = null)
     {
         // 1. Initialize Chat with History
-        // Switching to 'gemini-2.0-flash' as 'gemini-pro' is unavailable for this key/region.
-        $chat = Gemini::generativeModel(model: 'models/gemini-2.0-flash')->startChat(history: []);
+        // Switching to 'gemini-2.5-flash' as requested by user.
+        $chat = Gemini::generativeModel(model: 'models/gemini-2.5-flash')->startChat(history: []);
 
         // 2. Define Tools
         $tools = Tool::make(
