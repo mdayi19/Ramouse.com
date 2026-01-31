@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     /**
@@ -12,77 +13,39 @@ return new class extends Migration {
     {
         // Add indexes for better query performance - using checks to prevent duplicates
 
-        if (Schema::hasTable('car_listings')) {
-            Schema::table('car_listings', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = $sm->listTableIndexes('car_listings');
+        $addIndex = function ($table, $indexName, $columns) {
+            $exists = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
+            if (empty($exists)) {
+                Schema::table($table, function (Blueprint $table) use ($columns, $indexName) {
+                    $table->index($columns, $indexName);
+                });
+            }
+        };
 
-                if (!array_key_exists('idx_car_listing_search', $indexes)) {
-                    $table->index(['listing_type', 'is_available', 'is_hidden', 'city'], 'idx_car_listing_search');
-                }
-                if (!array_key_exists('idx_car_listing_filters', $indexes)) {
-                    $table->index(['brand_id', 'year', 'transmission', 'fuel_type', 'condition'], 'idx_car_listing_filters');
-                }
-                if (!array_key_exists('idx_car_listing_price', $indexes)) {
-                    $table->index('price', 'idx_car_listing_price');
-                }
-            });
+        if (Schema::hasTable('car_listings')) {
+            $addIndex('car_listings', 'idx_car_listing_search', ['listing_type', 'is_available', 'is_hidden', 'city']);
+            $addIndex('car_listings', 'idx_car_listing_filters', ['brand_id', 'year', 'transmission', 'fuel_type', 'condition']);
+            $addIndex('car_listings', 'idx_car_listing_price', 'price');
         }
 
         if (Schema::hasTable('technicians')) {
-            Schema::table('technicians', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = $sm->listTableIndexes('technicians');
-
-                if (!array_key_exists('idx_technicians_search', $indexes)) {
-                    $table->index(['is_active', 'is_verified', 'city'], 'idx_technicians_search');
-                }
-                if (!array_key_exists('idx_technicians_specialty', $indexes)) {
-                    $table->index('specialty', 'idx_technicians_specialty');
-                }
-                if (!array_key_exists('idx_technicians_rating', $indexes)) {
-                    $table->index('average_rating', 'idx_technicians_rating');
-                }
-            });
+            $addIndex('technicians', 'idx_technicians_search', ['is_active', 'is_verified', 'city']);
+            $addIndex('technicians', 'idx_technicians_specialty', 'specialty');
+            $addIndex('technicians', 'idx_technicians_rating', 'average_rating');
         }
 
         if (Schema::hasTable('tow_trucks')) {
-            Schema::table('tow_trucks', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = $sm->listTableIndexes('tow_trucks');
-
-                if (!array_key_exists('idx_tow_trucks_search', $indexes)) {
-                    $table->index(['is_active', 'is_verified', 'city'], 'idx_tow_trucks_search');
-                }
-                if (!array_key_exists('idx_tow_trucks_type', $indexes)) {
-                    $table->index('vehicle_type', 'idx_tow_trucks_type');
-                }
-            });
+            $addIndex('tow_trucks', 'idx_tow_trucks_search', ['is_active', 'is_verified', 'city']);
+            $addIndex('tow_trucks', 'idx_tow_trucks_type', 'vehicle_type');
         }
 
         if (Schema::hasTable('products')) {
-            Schema::table('products', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = $sm->listTableIndexes('products');
-
-                if (!array_key_exists('idx_products_name', $indexes)) {
-                    $table->index('name', 'idx_products_name');
-                }
-                if (!array_key_exists('idx_products_price', $indexes)) {
-                    $table->index('price', 'idx_products_price');
-                }
-            });
+            $addIndex('products', 'idx_products_name', 'name');
+            $addIndex('products', 'idx_products_price', 'price');
         }
 
         if (Schema::hasTable('chat_histories')) {
-            Schema::table('chat_histories', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = $sm->listTableIndexes('chat_histories');
-
-                if (!array_key_exists('idx_chat_history_session_date', $indexes)) {
-                    $table->index(['session_id', 'created_at'], 'idx_chat_history_session_date');
-                }
-            });
+            $addIndex('chat_histories', 'idx_chat_history_session_date', ['session_id', 'created_at']);
         }
     }
 
