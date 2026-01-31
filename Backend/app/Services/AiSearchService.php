@@ -11,6 +11,8 @@ use App\Models\CarListing;
 use App\Models\Technician;
 use App\Models\TowTruck;
 use App\Models\Product;
+use Gemini\Data\Schema;
+use Gemini\Enums\DataType;
 use Illuminate\Support\Facades\Log;
 
 class AiSearchService
@@ -39,7 +41,7 @@ class AiSearchService
         $chat = Gemini::generativeModel(model: 'models/gemini-2.5-flash')->startChat(history: []);
 
         // 2. Define Tools
-        $tools = Tool::make(
+        $tools = new Tool(
             functionDeclarations: [
                 $this->toolSearchCars(),
                 $this->toolSearchTechnicians(),
@@ -242,65 +244,65 @@ class AiSearchService
 
     protected function toolSearchCars()
     {
-        return FunctionDeclaration::create(
+        return new FunctionDeclaration(
             name: 'search_cars',
             description: 'Search for cars for sale or rent based on user criteria.',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'query' => ['type' => 'string', 'description' => 'Keywords (brand, model)'],
-                    'type' => ['type' => 'string', 'enum' => ['sale', 'rent']],
-                    'min_price' => ['type' => 'number'],
-                    'max_price' => ['type' => 'number'],
+            parameters: new Schema(
+                type: DataType::OBJECT,
+                properties: [
+                    'query' => new Schema(type: DataType::STRING, description: 'Keywords (brand, model)'),
+                    'type' => new Schema(type: DataType::STRING, enum: ['sale', 'rent']),
+                    'min_price' => new Schema(type: DataType::NUMBER),
+                    'max_price' => new Schema(type: DataType::NUMBER),
                 ],
-                'required' => ['query']
-            ]
+                required: ['query']
+            )
         );
     }
 
     protected function toolSearchTechnicians()
     {
-        return FunctionDeclaration::create(
+        return new FunctionDeclaration(
             name: 'search_technicians',
             description: 'Find mechanics and technicians.',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'specialty' => ['type' => 'string', 'description' => 'e.g. BMW, Electrician'],
-                    'city' => ['type' => 'string'],
-                    'near_me' => ['type' => 'boolean', 'description' => 'True if user asks for nearby'],
+            parameters: new Schema(
+                type: DataType::OBJECT,
+                properties: [
+                    'specialty' => new Schema(type: DataType::STRING, description: 'e.g. BMW, Electrician'),
+                    'city' => new Schema(type: DataType::STRING),
+                    'near_me' => new Schema(type: DataType::BOOLEAN, description: 'True if user asks for nearby'),
                 ]
-            ]
+            )
         );
     }
 
     protected function toolSearchTowTrucks()
     {
-        return FunctionDeclaration::create(
+        return new FunctionDeclaration(
             name: 'search_tow_trucks',
             description: 'Find tow trucks (Winch/Sat7a).',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'city' => ['type' => 'string'],
-                    'near_me' => ['type' => 'boolean'],
+            parameters: new Schema(
+                type: DataType::OBJECT,
+                properties: [
+                    'city' => new Schema(type: DataType::STRING),
+                    'near_me' => new Schema(type: DataType::BOOLEAN),
                 ]
-            ]
+            )
         );
     }
 
     protected function toolSearchProducts()
     {
-        return FunctionDeclaration::create(
+        return new FunctionDeclaration(
             name: 'search_products',
             description: 'Search for spare parts and products.',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'query' => ['type' => 'string'],
+            parameters: new Schema(
+                type: DataType::OBJECT,
+                properties: [
+                    'query' => new Schema(type: DataType::STRING),
                 ],
-                'required' => ['query']
-            ]
+                required: ['query']
+            )
         );
     }
 }
