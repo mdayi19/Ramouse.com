@@ -246,18 +246,36 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         return $this->formatTowTruckResults($results);
     }
 
+
     protected function searchProducts($args)
     {
         $query = $args['query'] ?? '';
 
-        $results = Product::query()
-            ->where('name', 'like', "%$query%")
-            ->orWhere('description', 'like', "%$query%")
-            ->limit(5)
-            ->get();
+        $q = Product::query()->where('is_active', true);
+
+        if ($query) {
+            $q->where(function ($sub) use ($query) {
+                $sub->where('name', 'like', "%$query%")
+                    ->orWhere('description', 'like', "%$query%");
+            });
+        }
+
+        // Price filters
+        if (!empty($args['min_price']))
+            $q->where('price', '>=', $args['min_price']);
+
+        if (!empty($args['max_price']))
+            $q->where('price', '<=', $args['max_price']);
+
+        // Stock filter
+        if (!empty($args['in_stock_only']) && $args['in_stock_only'])
+            $q->where('total_stock', '>', 0);
+
+        $results = $q->limit(5)->get();
 
         return $this->formatProductResults($results);
     }
+
 
     // --- RESULT FORMATTING METHODS ---
     // These methods structure search results for rich card display in the frontend
