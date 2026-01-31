@@ -105,8 +105,8 @@ class ChatbotController extends Controller
         } catch (\Exception $e) {
             Log::error("Chatbot Error: " . $e->getMessage());
             return response()->json([
-                'error' => 'Something went wrong.',
-                'message' => 'عذراً، حدث خطأ أثناء المعالجة. يرجى المحاولة لاحقاً.'
+                'error' => 'Error: ' . $e->getMessage(),
+                'message' => 'عذراً، حدث خطأ: ' . $e->getMessage()
             ], 500);
         }
     }
