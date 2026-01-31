@@ -193,7 +193,6 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         $specialty = $args['specialty'] ?? null;
         $city = $args['city'] ?? null;
-        $nearMe = $args['near_me'] ?? false;
 
         $q = Technician::query()->where('is_active', true)->where('is_verified', true);
 
@@ -206,8 +205,8 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         if (!empty($args['min_rating']))
             $q->where('average_rating', '>=', $args['min_rating']);
 
-        // Geolocation Logic
-        if ($nearMe && $userLat && $userLng) {
+        // Geolocation Logic - automatically use if coordinates provided
+        if ($userLat && $userLng) {
             // Simplified Haversine or similar if supported by DB, or basic ordering
             // For standard MySQL, usually separate query or raw DB expression.
             // Using basic approximation for this example:
@@ -224,7 +223,6 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     protected function searchTowTrucks($args, $userLat, $userLng)
     {
         $city = $args['city'] ?? null;
-        $nearMe = $args['near_me'] ?? false;
 
         $q = TowTruck::query()->where('is_active', true)->where('is_verified', true);
 
@@ -235,7 +233,8 @@ ABSOLUTE RULES - NO EXCEPTIONS:
         if (!empty($args['vehicle_type']))
             $q->where('vehicle_type', 'like', "%{$args['vehicle_type']}%");
 
-        if ($nearMe && $userLat && $userLng) {
+        // Geolocation Logic - automatically use if coordinates provided
+        if ($userLat && $userLng) {
             $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
                 ->having('distance', '<', 50)
                 ->orderBy('distance');
