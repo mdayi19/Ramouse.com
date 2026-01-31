@@ -17,19 +17,24 @@ use Illuminate\Support\Facades\Log;
 
 class AiSearchService
 {
-    protected $systemPrompt = "You are 'Ramouse AI' (راموسة), an intelligent assistant for Ramouse.com. 
-You speak Arabic (Standard or Syrian dialect).
-Your goal is to help users find services on the platform: Cars (Sale/Rent), Technicians, Tow Trucks, and Spare Parts.
+    protected $systemPrompt = "You are 'Ramouse AI' (راموسة), a DATABASE-ONLY search assistant for Ramouse.com.
+You speak ONLY Arabic (Standard or Syrian dialect).
 
-CRITICAL RULES:
-1. ONLY answer questions related to cars, automotive services, and the Ramouse platform.
-2. If asked about general topics (weather, politics, sports), politely refuse in Arabic and guide them back to cars/services.
-3. **ALWAYS USE THE PROVIDED TOOLS** to search for real data. NEVER make up or hallucinate listings.
-4. When the user asks about cars, mechanics, tow trucks, or parts, YOU MUST call the appropriate search tool.
-5. After getting tool results, present them in a friendly, concise Arabic response.
-6. When showing results, include: Price, Model/Name, Location/City.
-7. If the user wants to perform an action (Call, Buy, Book) and is NOT logged in, tell them they need to login first.
-8. Be friendly, professional, and helpful in Arabic.";
+YOUR ONLY PURPOSE: Search the Ramouse database and present results. NOTHING ELSE.
+
+ABSOLUTE RULES - NO EXCEPTIONS:
+1. You can ONLY answer questions about: Cars (Sale/Rent), Technicians, Tow Trucks, Spare Parts
+2. For ANY question about these topics, you MUST call the appropriate search tool FIRST, ALWAYS
+3. NEVER answer based on general knowledge - ONLY show results from the database search
+4. If user asks about cars (أريد سيارة, ابحث عن سيارة, عندك سيارات) → MUST call search_cars
+5. If user asks about mechanics (ميكانيكي, فني) → MUST call search_technicians
+6. If user asks about tow trucks (سطحة, ونش) → MUST call search_tow_trucks
+7. If user asks about parts (قطع غيار) → MUST call search_products
+8. If database returns EMPTY results, say: 'عذراً، لم أجد نتائج. حاول البحث بطريقة مختلفة'
+9. For off-topic questions, say: 'أنا مساعد متخصص فقط في خدمات السيارات'
+10. ALWAYS present search results with: الاسم، السعر، المدينة
+11. NEVER make up data. NEVER suggest things not in the search results.
+12. You are a DATABASE SEARCH INTERFACE. Nothing more.";
 
     /**
      * Send a message to Gemini and handle tool calls.
@@ -147,17 +152,27 @@ CRITICAL RULES:
 
         $results = $q->limit(5)->get();
 
-        return $results->map(function ($car) {
+        if ($results->isEmpty()) {
             return [
-                'id' => $car->id,
-                'title' => $car->title,
-                'price' => $car->price,
-                'year' => $car->year,
-                'city' => $car->city,
-                'slug' => $car->slug,
-                'image' => $car->photos[0] ?? null, // Simplified
+                'message' => 'لم يتم العثور على نتائج. جرب كلمات بحث مختلفة.',
+                'count' => 0,
+                'results' => []
             ];
-        })->toArray();
+        }
+
+        return [
+            'count' => $results->count(),
+            'results' => $results->map(function ($car) {
+                return [
+                    'id' => $car->id,
+                    'title' => $car->title,
+                    'price' => $car->price,
+                    'year' => $car->year,
+                    'city' => $car->city,
+                    'slug' => $car->slug,
+                ];
+            })->toArray()
+        ];
     }
 
     protected function searchTechnicians($args, $userLat, $userLng)
@@ -253,16 +268,16 @@ CRITICAL RULES:
     {
         return new FunctionDeclaration(
             name: 'search_cars',
-            description: 'Search for cars for sale or rent based on user criteria.',
+            description: 'REQUIRED TOOL: Call this for ANY user question about cars, buying, renting, or vehicles. Search the Ramouse database for cars.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
-                    'query' => new Schema(type: DataType::STRING, description: 'Keywords (brand, model)'),
-                    'type' => new Schema(type: DataType::STRING, enum: ['sale', 'rent']),
+                    'query' => new Schema(type: DataType::STRING, description: 'Keywords (brand, model). Leave empty to show all cars.'),
+                    'type' => new Schema(type: DataType::STRING, enum: ['sale', 'rent'], description: 'sale or rent'),
                     'min_price' => new Schema(type: DataType::NUMBER),
                     'max_price' => new Schema(type: DataType::NUMBER),
                 ],
-                required: ['query']
+                required: []
             )
         );
     }
@@ -271,7 +286,7 @@ CRITICAL RULES:
     {
         return new FunctionDeclaration(
             name: 'search_technicians',
-            description: 'Find mechanics and technicians.',
+            description: 'REQUIRED TOOL: Call this for ANY user question about mechanics, technicians, or car repairs. Search the Ramouse database.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
@@ -287,7 +302,7 @@ CRITICAL RULES:
     {
         return new FunctionDeclaration(
             name: 'search_tow_trucks',
-            description: 'Find tow trucks (Winch/Sat7a).',
+            description: 'REQUIRED TOOL: Call this for ANY user question about tow trucks, winch services, or sat7a. Search the Ramouse database.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
@@ -302,7 +317,7 @@ CRITICAL RULES:
     {
         return new FunctionDeclaration(
             name: 'search_products',
-            description: 'Search for spare parts and products.',
+            description: 'REQUIRED TOOL: Call this for ANY user question about spare parts, car parts, or products. Search the Ramouse database.',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
