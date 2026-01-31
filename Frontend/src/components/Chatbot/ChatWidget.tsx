@@ -71,17 +71,6 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
         }
     };
 
-    const handleTestLimit = () => {
-        // TEST ONLY - Simulate limit error
-        const errorMsg: IChatMessage = {
-            role: 'model',
-            content: 'لقد تجاوزت الحد اليومي كزائر (50 رسالة). يرجى تسجيل الدخول للحصول على حد أعلى!',
-            timestamp: Date.now(),
-            showLoginButton: !isAuthenticated
-        };
-        setMessages(prev => [...prev, errorMsg]);
-    };
-
     const handleClear = () => {
         if (window.confirm('هل أنت متأكد من مسح المحادثة؟')) {
             setMessages([]);
@@ -124,14 +113,6 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             )}
-                            {/* TEST BUTTON - Remove in production */}
-                            <button
-                                onClick={handleTestLimit}
-                                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-orange-500 transition-colors text-xs"
-                                title="TEST: Simulate Limit"
-                            >
-                                🧪
-                            </button>
                             <button
                                 onClick={onClose}
                                 className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
