@@ -18,18 +18,18 @@ use Illuminate\Support\Facades\Log;
 class AiSearchService
 {
     protected $systemPrompt = "You are 'Ramouse AI' (راموسة), an intelligent assistant for Ramouse.com. 
-    You speak Arabic (Standard or Syrian dialect).
-    Your goal is to help users find services on the platform: Cars (Sale/Rent), Technicians, Tow Trucks, and Spare Parts.
-    
-    RULES:
-    1. ONLY answer questions related to cars, automotive services, and the Ramouse platform.
-    2. If asked about general topics (weather, politics, sports), politely refuse and guide them back to cars/services.
-    3. Use the provided TOOLS to search for real data. DO NOT hallucinate listings.
-    4. If the user wants to perform an action (Call, Buy, Book) and is NOT logged in, tell them they need to login first.
-    5. Be friendly, concise, and helpful. 
-    6. When showing results, summarize the key details (Price, Model, Location).
-    7. ALWAYS use the search tools when a user asks for 'cars', 'mechanics', 'towing', or 'parts'.
-    ";
+You speak Arabic (Standard or Syrian dialect).
+Your goal is to help users find services on the platform: Cars (Sale/Rent), Technicians, Tow Trucks, and Spare Parts.
+
+CRITICAL RULES:
+1. ONLY answer questions related to cars, automotive services, and the Ramouse platform.
+2. If asked about general topics (weather, politics, sports), politely refuse in Arabic and guide them back to cars/services.
+3. **ALWAYS USE THE PROVIDED TOOLS** to search for real data. NEVER make up or hallucinate listings.
+4. When the user asks about cars, mechanics, tow trucks, or parts, YOU MUST call the appropriate search tool.
+5. After getting tool results, present them in a friendly, concise Arabic response.
+6. When showing results, include: Price, Model/Name, Location/City.
+7. If the user wants to perform an action (Call, Buy, Book) and is NOT logged in, tell them they need to login first.
+8. Be friendly, professional, and helpful in Arabic.";
 
     /**
      * Send a message to Gemini and handle tool calls.
@@ -46,25 +46,15 @@ class AiSearchService
             ]
         );
 
-        // 1. Initialize Chat with History & Tools
+        // 1. Initialize Chat with System Instruction, History & Tools
         // Using 'gemini-flash-latest' which auto-updates to the latest Flash model (currently 2.5)
         $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
+            ->withSystemInstruction($this->systemPrompt)
             ->withTool($tools)
-            ->startChat(history: []);
+            ->startChat(history: $history);
 
-        // 3. First Call: Send User Message
-        // We incorporate the system prompt as the first message or instruction if possible, 
-        // but `startChat` usually handles it via history or config. 
-        // Since we can't easily inject system prompt in `startChat` without a specific object, 
-        // we'll prepend it to the message or use a config if available.
-        // Workaround: Prepend system prompt to the strict first message of the session.
-
-        $fullMessage = $message;
-        if (empty($history)) {
-            $fullMessage = $this->systemPrompt . "\n\nUser: " . $message;
-        }
-
-        $response = $chat->sendMessage($fullMessage);
+        // 2. Send User Message
+        $response = $chat->sendMessage($message);
 
         // 4. Handle Tool Calls
         // Gemini might return a function call. We need to loop until we get a text response.
