@@ -12,12 +12,9 @@ use Illuminate\Support\Str;
 
 class ChatbotController extends Controller
 {
-    protected $aiService;
-
-    public function __construct(AiSearchService $aiService)
-    {
-        $this->aiService = $aiService;
-    }
+    // Removed Constructor Injection to prevent 500 crash on resolution
+    // protected $aiService;
+    // public function __construct(AiSearchService $aiService) ...
 
     public function sendMessage(Request $request)
     {
@@ -29,35 +26,38 @@ class ChatbotController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
-        $message = $request->input('message');
-        $sessionId = $request->input('session_id') ?? (string) Str::uuid();
-        $user = Auth::user();
-        $userId = $user ? $user->id : null;
-
-        // 2. Rate Limiting (Throttle) - 5 per minute
-        // We use the middleware in api.php usually, but can enforce here too if needed specific logic.
-        // Assuming 'throttle:60,1' is applied on route.
-
-        // 3. Daily Usage Limit
-        $limitKey = 'chat_limit_' . ($userId ? "user_{$userId}" : "ip_" . $request->ip());
-        $dailyCount = Cache::get($limitKey, 0);
-        $maxDaily = $userId ? 100 : 50; // Increased for testing (was 50/5)
-
-        if ($dailyCount >= $maxDaily) {
-            return response()->json([
-                'error' => 'Daily limit reached.',
-                'message' => $userId
-                    ? 'لقد تجاوزت الحد اليومي للرسائل (50). يرجى العودة غداً.'
-                    : 'لقد تجاوزت الحد اليومي كزائر (5). يرجى تسجيل الدخول للمتابعة.'
-            ], 429);
-        }
-
-        // Increment count (expire at midnight or 24h)
-        Cache::put($limitKey, $dailyCount + 1, now()->addDay());
-
         try {
-            // 4. Retrieve/Build Context (Simplified)
-            // Ideally fetch last 5-10 messages from ChatHistory where session_id matches
+            // Pre-check for API Key to avoid hard crash in Service
+            if (!env('GEMINI_API_KEY')) {
+                throw new \Exception("GEMINI_API_KEY is missing in .env");
+            }
+
+            // Resolve Service Manually safely
+            $aiService = app(AiSearchService::class);
+
+            $message = $request->input('message');
+            $sessionId = $request->input('session_id') ?? (string) Str::uuid();
+            $user = Auth::user();
+            $userId = $user ? $user->id : null;
+
+            // 2. Rate Limiting Logic...
+            $limitKey = 'chat_limit_' . ($userId ? "user_{$userId}" : "ip_" . $request->ip());
+            $dailyCount = Cache::get($limitKey, 0);
+            $maxDaily = $userId ? 100 : 50;
+
+            if ($dailyCount >= $maxDaily) {
+                return response()->json([
+                    'error' => 'Daily limit reached.',
+                    'message' => $userId
+                        ? 'لقد تجاوزت الحد اليومي للرسائل (100). يرجى العودة غداً.'
+                        : 'لقد تجاوزت الحد اليومي كزائر (50). يرجى تسجيل الدخول للمتابعة.'
+                ], 429);
+            }
+
+            // Increment count
+            Cache::put($limitKey, $dailyCount + 1, now()->addDay());
+
+            // 3. Context
             $history = ChatHistory::where('session_id', $sessionId)
                 ->orderBy('created_at', 'desc')
                 ->take(6)
@@ -72,15 +72,15 @@ class ChatbotController extends Controller
                 ->values()
                 ->toArray();
 
-            // 5. Call AI Service
-            $responseContent = $this->aiService->sendMessage(
+            // 4. Call Service
+            $responseContent = $aiService->sendMessage(
                 $history,
                 $message,
                 $request->input('latitude'),
                 $request->input('longitude')
             );
 
-            // 6. Save User Message
+            // 5. Save Logs
             ChatHistory::create([
                 'user_id' => $userId,
                 'session_id' => $sessionId,
@@ -88,7 +88,6 @@ class ChatbotController extends Controller
                 'content' => $message
             ]);
 
-            // 7. Save AI Response
             ChatHistory::create([
                 'user_id' => $userId,
                 'session_id' => $sessionId,
@@ -104,9 +103,10 @@ class ChatbotController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Chatbot Error: " . $e->getMessage());
+            // Return JSON error instead of 500 page
             return response()->json([
-                'error' => 'Error: ' . $e->getMessage(),
-                'message' => 'عذراً، حدث خطأ: ' . $e->getMessage()
+                'error' => 'Backend Error: ' . $e->getMessage(),
+                'message' => 'عذراً، حدث خطأ تقني: ' . $e->getMessage()
             ], 500);
         }
     }
