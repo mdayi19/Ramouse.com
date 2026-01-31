@@ -38,7 +38,9 @@ class ChatbotController extends Controller
 
             $message = $request->input('message');
             $sessionId = $request->input('session_id') ?? (string) Str::uuid();
-            $user = Auth::user();
+
+            // Explicitly check sanctum guard since route is public (not behind auth:sanctum middleware)
+            $user = auth('sanctum')->user();
             $userId = $user ? $user->id : null;
 
             // 2. Rate Limiting Logic...
