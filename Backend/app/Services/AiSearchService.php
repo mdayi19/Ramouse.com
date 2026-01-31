@@ -59,7 +59,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             $history[0]['parts'][0]['text'] = $this->systemPrompt . "\n\n" . $history[0]['parts'][0]['text'];
         }
 
-        $chat = Gemini::generativeModel(model: 'gemini-flash-latest')
+        $chat = Gemini::generativeModel(model: 'gemini-1.5-flash')
             ->withTool($tools)
             ->startChat(history: $history);
 

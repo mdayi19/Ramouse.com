@@ -67,9 +67,12 @@ class ChatbotController extends Controller
                 ->get()
                 ->reverse()
                 ->map(function ($chat) {
+                    $role = $chat->role === 'user' ? 'user' : 'model';
+                    $content = (string) ($chat->content ?? '');
+
                     return [
-                        'role' => $chat->role === 'user' ? 'user' : 'model',
-                        'parts' => [['text' => $chat->content]]
+                        'role' => $role,
+                        'parts' => [['text' => $content]]
                     ];
                 })
                 ->values()
