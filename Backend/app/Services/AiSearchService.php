@@ -216,14 +216,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
             ->limit(5)
             ->get();
 
-        return $results->map(function ($p) {
-            return [
-                'id' => $p->id,
-                'name' => $p->name,
-                'price' => $p->price,
-                'in_stock' => $p->total_stock > 0,
-            ];
-        })->toArray();
+        return $this->formatProductResults($results);
     }
 
     // --- RESULT FORMATTING METHODS ---
