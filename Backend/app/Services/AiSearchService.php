@@ -154,27 +154,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         $results = $q->limit(5)->get();
 
-        if ($results->isEmpty()) {
-            return [
-                'message' => 'لم يتم العثور على نتائج. جرب كلمات بحث مختلفة.',
-                'count' => 0,
-                'results' => []
-            ];
-        }
-
-        return [
-            'count' => $results->count(),
-            'results' => $results->map(function ($car) {
-                return [
-                    'id' => $car->id,
-                    'title' => $car->title,
-                    'price' => $car->price,
-                    'year' => $car->year,
-                    'city' => $car->city,
-                    'slug' => $car->slug,
-                ];
-            })->toArray()
-        ];
+        return $this->formatCarResults($results);
     }
 
     protected function searchTechnicians($args, $userLat, $userLng)
@@ -202,16 +182,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         $results = $q->limit(5)->get();
 
-        return $results->map(function ($tech) {
-            return [
-                'id' => $tech->id,
-                'name' => $tech->name,
-                'specialty' => $tech->specialty,
-                'rating' => $tech->average_rating,
-                'city' => $tech->city,
-                'distance' => $tech->distance ? round($tech->distance, 1) . ' km' : null
-            ];
-        })->toArray();
+        return $this->formatTechnicianResults($results);
     }
 
     protected function searchTowTrucks($args, $userLat, $userLng)
@@ -232,16 +203,7 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         $results = $q->limit(5)->get();
 
-        return $results->map(function ($tow) {
-            return [
-                'id' => $tow->id,
-                'name' => $tow->name,
-                'vehicle_type' => $tow->vehicle_type,
-                'rating' => $tow->average_rating,
-                'city' => $tow->city,
-                'distance' => $tow->distance ? round($tow->distance, 1) . ' km' : null
-            ];
-        })->toArray();
+        return $this->formatTowTruckResults($results);
     }
 
     protected function searchProducts($args)
@@ -262,6 +224,125 @@ ABSOLUTE RULES - NO EXCEPTIONS:
                 'in_stock' => $p->total_stock > 0,
             ];
         })->toArray();
+    }
+
+    // --- RESULT FORMATTING METHODS ---
+    // These methods structure search results for rich card display in the frontend
+
+    protected function formatCarResults($results)
+    {
+        if ($results->isEmpty()) {
+            return [
+                'type' => 'car_listings',
+                'message' => 'لم يتم العثور على نتائج. جرب كلمات بحث مختلفة.',
+                'count' => 0,
+                'items' => []
+            ];
+        }
+
+        return [
+            'type' => 'car_listings',
+            'count' => $results->count(),
+            'items' => $results->map(function ($car) {
+                return [
+                    'id' => $car->id,
+                    'title' => $car->title,
+                    'price' => number_format($car->price, 0) . ' $',
+                    'year' => $car->year,
+                    'mileage' => number_format($car->mileage) . ' كم',
+                    'city' => $car->city ?? 'غير محدد',
+                    'brand' => $car->brand?->name,
+                    'model' => $car->model,
+                    'image' => $car->photos[0] ?? null,
+                    'url' => "/cars/{$car->slug}",
+                    'condition' => $car->condition,
+                    'transmission' => $car->transmission,
+                ];
+            })->toArray()
+        ];
+    }
+
+    protected function formatTechnicianResults($results)
+    {
+        if ($results->isEmpty()) {
+            return [
+                'type' => 'technicians',
+                'message' => 'لم يتم العثور على فنيين. جرب تخصص أو مدينة مختلفة.',
+                'count' => 0,
+                'items' => []
+            ];
+        }
+
+        return [
+            'type' => 'technicians',
+            'count' => $results->count(),
+            'items' => $results->map(function ($tech) {
+                return [
+                    'id' => $tech->id,
+                    'name' => $tech->name,
+                    'specialty' => $tech->specialty,
+                    'rating' => $tech->average_rating,
+                    'city' => $tech->city,
+                    'distance' => $tech->distance ? round($tech->distance, 1) . ' كم' : null,
+                    'isVerified' => $tech->is_verified,
+                    'phone' => $tech->phone,
+                ];
+            })->toArray()
+        ];
+    }
+
+    protected function formatTowTruckResults($results)
+    {
+        if ($results->isEmpty()) {
+            return [
+                'type' => 'tow_trucks',
+                'message' => 'لم يتم العثور على سطحات قريبة.',
+                'count' => 0,
+                'items' => []
+            ];
+        }
+
+        return [
+            'type' => 'tow_trucks',
+            'count' => $results->count(),
+            'items' => $results->map(function ($tow) {
+                return [
+                    'id' => $tow->id,
+                    'name' => $tow->name,
+                    'vehicleType' => $tow->vehicle_type,
+                    'rating' => $tow->average_rating,
+                    'city' => $tow->city,
+                    'distance' => $tow->distance ? round($tow->distance, 1) . ' كم' : null,
+                    'phone' => $tow->phone,
+                ];
+            })->toArray()
+        ];
+    }
+
+    protected function formatProductResults($results)
+    {
+        if ($results->isEmpty()) {
+            return [
+                'type' => 'products',
+                'message' => 'لم يتم العثور على منتجات. جرب كلمات بحث مختلفة.',
+                'count' => 0,
+                'items' => []
+            ];
+        }
+
+        return [
+            'type' => 'products',
+            'count' => $results->count(),
+            'items' => $results->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => number_format($product->price, 0) . ' $',
+                    'inStock' => $product->total_stock > 0,
+                    'image' => $product->image ?? null,
+                ];
+            })->toArray()
+        ];
     }
 
     // --- TOOL DEFINITIONS (FunctionDeclarations) ---
