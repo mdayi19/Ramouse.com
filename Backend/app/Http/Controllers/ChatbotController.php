@@ -92,7 +92,7 @@ class ChatbotController extends Controller
                 ->toArray();
 
             // 4. Call Service with user context
-            \Illuminate\Support\Facades\Log::info('Sending history to Gemini: ' . json_encode($history));
+
 
             $responseContent = $aiService->sendMessage(
                 $history,
