@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
-import Icon from '../Icon';
-import { getStorageUrl } from '../../config/api';
+import { motion } from 'framer-motion';
+import { Eye, Calendar, Gauge, Plus, ToggleLeft, ToggleRight, Star, Edit3, Trash2, Printer } from 'lucide-react';
+import { getImageUrl } from '../../utils/helpers';
 import { CarProviderService } from '../../services/carprovider.service';
 
 interface UserCarListingsWidgetProps {
@@ -10,6 +9,19 @@ interface UserCarListingsWidgetProps {
     userRole: 'customer' | 'technician' | 'tow_truck';
     onNavigate?: (view: any) => void;
 }
+
+// Helper to safely extract all rates
+const getRates = (listing: any) => {
+    let daily = 0;
+    if (listing.listing_type?.toLowerCase() === 'rent') {
+        daily = Number(listing.daily_rate || 0);
+        const terms = listing.rental_terms;
+        if (terms && typeof terms === 'object' && !Array.isArray(terms)) {
+            if (terms.daily_rate !== undefined) daily = Number(terms.daily_rate);
+        }
+    }
+    return { daily };
+};
 
 const UserCarListingsWidget: React.FC<UserCarListingsWidgetProps> = ({ userId, userRole, onNavigate }) => {
     const [listings, setListings] = useState<any[]>([]);
@@ -55,18 +67,16 @@ const UserCarListingsWidget: React.FC<UserCarListingsWidgetProps> = ({ userId, u
 
     if (loading) {
         return (
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-4 px-1">
-                    <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-sky-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <span className="text-xl">🚙</span>
-                        </div>
-                        إعلانات سياراتي
-                    </h3>
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white">إعلاناتي</h2>
+                        <p className="text-slate-500 text-xs sm:text-sm">إدارة وعرض السيارات الخاصة بك</p>
+                    </div>
                 </div>
                 <div className="space-y-3">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="animate-pulse bg-slate-100 dark:bg-slate-800 h-28 rounded-2xl"></div>
+                        <div key={i} className="animate-pulse bg-slate-100 dark:bg-slate-800 h-[160px] rounded-[20px]"></div>
                     ))}
                 </div>
             </div>
@@ -75,187 +85,218 @@ const UserCarListingsWidget: React.FC<UserCarListingsWidgetProps> = ({ userId, u
 
     if (listings.length === 0) {
         return (
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-4 px-1">
-                    <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-sky-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <span className="text-xl">🚙</span>
-                        </div>
-                        إعلانات سياراتي
-                    </h3>
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white">إعلاناتي</h2>
+                        <p className="text-slate-500 text-xs sm:text-sm">إدارة وعرض السيارات الخاصة بك</p>
+                    </div>
+
                     <button
                         onClick={handleNavigateToListings}
-                        className="text-sm font-bold text-primary hover:text-primary-700 transition-colors flex items-center gap-1 group"
+                        className="px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 font-bold shadow-lg shadow-blue-600/20 text-xs sm:text-sm"
                     >
-                        <span>+ إضافة إعلان</span>
-                        <Icon name="ArrowLeft" className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+                        <Plus className="w-4 h-4" />
+                        <span className="hidden sm:inline">إضافة سيارة</span>
                     </button>
                 </div>
 
-                <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 p-8 text-center group hover:border-primary transition-all cursor-pointer" onClick={handleNavigateToListings}>
-                    {/* Decorative gradient orb */}
-                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-sky-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-500"></div>
-                    <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-500"></div>
-
-                    <div className="relative z-10">
-                        <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                            <span className="text-5xl">🚗</span>
-                        </div>
-                        <h4 className="text-lg font-black text-slate-800 dark:text-white mb-2">لا توجد إعلانات بعد</h4>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium text-sm mb-4 max-w-xs mx-auto">
-                            أضف إعلان سيارتك للبيع أو الإيجار واحصل على أفضل العروض
-                        </p>
-                        <div className="inline-flex items-center gap-2 bg-primary hover:bg-primary-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-primary/30 transition-all group-hover:scale-105">
-                            <Icon name="Plus" className="w-4 h-4" />
-                            <span>أضف إعلان جديد</span>
-                        </div>
+                <div className="bg-white dark:bg-slate-800 rounded-[20px] p-8 text-center border border-dashed border-slate-300 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-5xl">🚗</span>
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">لا توجد إعلانات</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
+                        أضف إعلان سيارتك للبيع أو الإيجار
+                    </p>
+                    <button
+                        onClick={handleNavigateToListings}
+                        className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        إضافة إعلان جديد
+                    </button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="mb-8">
-            <div className="flex justify-between items-center mb-4 px-1">
-                <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-sky-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <span className="text-xl">🚙</span>
-                    </div>
-                    إعلانات سياراتي
-                    <span className="text-sm font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">
-                        {listings.length}
-                    </span>
-                </h3>
+        <div>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white">إعلاناتي</h2>
+                    <p className="text-slate-500 text-xs sm:text-sm">إدارة وعرض السيارات الخاصة بك</p>
+                </div>
+
                 <button
                     onClick={handleNavigateToListings}
-                    className="text-sm font-bold text-primary hover:text-primary-700 transition-colors flex items-center gap-1 group"
+                    className="px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 font-bold shadow-lg shadow-blue-600/20 text-xs sm:text-sm"
                 >
-                    <span>عرض الكل</span>
-                    <Icon name="ArrowLeft" className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">إضافة سيارة</span>
                 </button>
             </div>
 
-            <div className="space-y-3">
-                {listings.map((listing, index) => (
-                    <Card
+            <div className="space-y-4">
+                {listings.map((listing) => (
+                    <motion.div
                         key={listing.id}
-                        className="p-4 shadow-sm hover:shadow-xl border-slate-100 dark:border-slate-700 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group relative overflow-hidden"
-                        onClick={handleNavigateToListings}
-                        style={{
-                            animationDelay: `${index * 100}ms`,
-                            animation: 'fadeInUp 0.5s ease-out forwards'
-                        }}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`bg-white dark:bg-slate-800 rounded-[20px] p-3 shadow-md border ${listing.is_sponsored
+                                ? 'border-amber-300 dark:border-amber-500/50 ring-1 ring-amber-100 dark:ring-amber-900/20'
+                                : 'border-slate-100 dark:border-slate-700'
+                            } relative overflow-hidden group`}
                     >
-                        {/* Gradient overlay on hover */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-sky-500/0 group-hover:from-blue-500/5 group-hover:to-sky-500/5 transition-all duration-300 pointer-events-none"></div>
+                        <div className="flex gap-3">
+                            {/* Image Section */}
+                            <div className="w-[100px] h-[100px] shrink-0 rounded-xl overflow-hidden relative bg-slate-100">
+                                <img
+                                    src={getImageUrl(listing.photos?.[0]) || '/placeholder-car.jpg'}
+                                    alt={listing.title}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60" />
 
-                        <div className="flex gap-4 relative z-10">
-                            {/* Image */}
-                            <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
-                                {listing.images && listing.images.length > 0 ? (
-                                    <img
-                                        src={getStorageUrl(listing.images[0])}
-                                        alt={listing.title}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                        <Icon name="Car" className="w-12 h-12" />
+                                {listing.is_sponsored && (
+                                    <div className="absolute top-1 right-1 bg-amber-500/90 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold shadow-sm backdrop-blur-sm flex items-center gap-0.5">
+                                        <Star className="w-2.5 h-2.5 fill-current" />
+                                        متميز
                                     </div>
                                 )}
-
-                                {/* Status badge on image */}
-                                <div className="absolute top-2 right-2">
-                                    <div className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md shadow-lg ${listing.is_active
-                                            ? 'bg-green-500/90 text-white'
-                                            : 'bg-slate-500/90 text-white'
-                                        }`}>
-                                        {listing.is_active ? '✓ نشط' : '○ غير نشط'}
-                                    </div>
-                                </div>
                             </div>
 
-                            {/* Details */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                    <h4 className="font-black text-base text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-primary transition-colors">
+                            {/* Content Section */}
+                            <div className="flex-1 min-w-0 flex flex-col pt-0.5">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="font-bold text-slate-900 dark:text-white truncate text-[15px] leading-tight flex-1 pl-2">
                                         {listing.title}
-                                    </h4>
-                                    <Badge
-                                        variant={listing.listing_type === 'sale' ? 'default' : 'secondary'}
-                                        className="text-xs shrink-0 shadow-sm font-bold"
+                                    </h3>
+
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleNavigateToListings();
+                                        }}
+                                        className={`p-1.5 rounded-lg active:scale-95 transition-all ${listing.is_hidden
+                                                ? 'bg-slate-100 text-slate-400'
+                                                : 'bg-emerald-50 text-emerald-600'
+                                            }`}
                                     >
-                                        {listing.listing_type === 'sale' ? '💰 للبيع' : '📅 للإيجار'}
-                                    </Badge>
+                                        {listing.is_hidden ? <ToggleLeft className="w-4 h-4" /> : <ToggleRight className="w-4 h-4" />}
+                                    </button>
                                 </div>
 
-                                <div className="flex items-center gap-2 mb-3 text-xs text-slate-500 dark:text-slate-400">
-                                    <div className="flex items-center gap-1">
-                                        <Icon name="CircleDot" className="w-3 h-3 text-blue-500" />
-                                        <span className="font-bold">{listing.brand?.name_ar || listing.brand?.name}</span>
+                                <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5">
+                                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700/50 px-2 py-1 rounded-lg">
+                                        <Calendar className="w-3 h-3 text-slate-400" />
+                                        <span>{listing.year}</span>
                                     </div>
-                                    <span>•</span>
-                                    <span>{listing.model}</span>
-                                    <span>•</span>
-                                    <span className="font-mono">{listing.year}</span>
+                                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700/50 px-2 py-1 rounded-lg">
+                                        <Gauge className="w-3 h-3 text-slate-400" />
+                                        <span>{typeof listing.mileage === 'number' ? listing.mileage.toLocaleString() : listing.mileage} كم</span>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-xl font-black text-primary">
-                                            {listing.listing_type === 'sale'
-                                                ? Number(listing.price || 0).toLocaleString()
-                                                : Number(listing.daily_rate || 0).toLocaleString()
+                                {/* Price */}
+                                <div className="mt-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="font-black text-blue-600 dark:text-blue-400 text-lg tracking-tight">
+                                            {listing.listing_type === 'rent'
+                                                ? <span className="flex items-baseline gap-1">{getRates(listing)?.daily?.toLocaleString() || 0} <span className="text-[10px] font-bold text-slate-400">$ / يوم</span></span>
+                                                : <span className="flex items-baseline gap-1">{Number(listing.price || 0).toLocaleString()} <span className="text-[10px] font-bold text-slate-400">$</span></span>
                                             }
-                                        </span>
-                                        <span className="text-xs font-bold text-slate-500">
-                                            {listing.listing_type === 'sale' ? 'ر.س' : 'ر.س/يوم'}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 text-xs">
-                                        <div className="flex items-center gap-1 text-slate-400">
-                                            <Icon name="Eye" className="w-3.5 h-3.5" />
-                                            <span className="font-bold">{listing.views || 0}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 text-primary">
-                                            <Icon name="ArrowLeft" className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+                                        <div className="flex items-center gap-1 text-slate-400 text-[11px]">
+                                            <Eye className="w-3.5 h-3.5" />
+                                            <span className="font-bold">{listing.views_count || 0}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </Card>
-                ))}
-            </div>
 
-            {/* Add new listing button */}
-            <button
-                onClick={handleNavigateToListings}
-                className="mt-4 w-full py-3 px-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all group flex items-center justify-center gap-2 font-bold text-slate-600 dark:text-slate-400 hover:text-primary"
-            >
-                <Icon name="Plus" className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-                <span>إضافة إعلان جديد</span>
-            </button>
+                        {/* Bottom Actions */}
+                        <div className="mt-3 grid grid-cols-1 gap-2">
+                            {/* Sponsor Button (Prominent) */}
+                            {!listing.is_sponsored ? (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleNavigateToListings();
+                                    }}
+                                    className="w-full py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white rounded-xl text-sm font-bold shadow-md shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Star className="w-4 h-4 fill-white" />
+                                    ميز إعلانك الآن
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleNavigateToListings();
+                                    }}
+                                    className="w-full py-2 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Star className="w-3.5 h-3.5 fill-current opacity-50" />
+                                    إلغاء التمييز (نشط حتى {listing.sponsored_until ? new Date(listing.sponsored_until).toLocaleDateString() : '—'})
+                                </button>
+                            )}
+
+                            {/* Secondary Actions Row */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleNavigateToListings();
+                                    }}
+                                    className="flex-1 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                                >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    تعديل التفاصيل
+                                </button>
+
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleNavigateToListings();
+                                    }}
+                                    className="w-10 h-9 flex items-center justify-center bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95"
+                                    title="طباعة"
+                                >
+                                    <Printer className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleNavigateToListings();
+                                    }}
+                                    className="w-10 h-9 flex items-center justify-center bg-red-50 dark:bg-red-900/10 text-red-500 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
+                                    title="حذف"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+
+                {/* View All Button */}
+                <button
+                    onClick={handleNavigateToListings}
+                    className="w-full py-3 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
+                >
+                    عرض جميع الإعلانات ({listings.length})
+                </button>
+            </div>
         </div>
     );
 };
-
-// Add animation keyframes
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-`;
-document.head.appendChild(style);
 
 export default UserCarListingsWidget;
