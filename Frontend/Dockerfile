@@ -28,6 +28,9 @@ ENV VITE_REVERB_PORT=$VITE_REVERB_PORT
 ENV VITE_REVERB_SCHEME=$VITE_REVERB_SCHEME
 ENV VITE_VAPID_PUBLIC_KEY=$VITE_VAPID_PUBLIC_KEY
 
+# Increase Node.js heap size for build (4GB)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Build using node_modules/.bin directly
 RUN ./node_modules/.bin/tsc && ./node_modules/.bin/vite build
 
