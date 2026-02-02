@@ -12,6 +12,7 @@ import { AnalyticsCard } from './AnalyticsCard';
 import ProviderDashboardService from '../../../services/providerDashboard.service';
 import { getImageUrl } from '../../../utils/helpers';
 import SponsorListingModal from './SponsorListingModal';
+import { useSimplePrint } from '../../../hooks/usePrint';
 
 // Helper to safely extract all rates
 const getRates = (listing: any) => {
@@ -258,9 +259,7 @@ export const ListingsView: React.FC<ListingsViewProps> = ({ showToast, userPhone
         setShowPrintPreview(true);
     };
 
-    const handleConfirmPrint = () => {
-        window.print();
-    };
+    const handleConfirmPrint = useSimplePrint();
 
     const handleDownloadPdf = async () => {
         if (!printableRef.current || !isReadyForPrint || !printListing) return;

@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Download, Printer, X, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePrint } from '../../hooks/usePrint';
+import { getDeviceInfo } from '../../utils/deviceDetection';
 
 interface PrintPreviewModalProps {
     title: string;

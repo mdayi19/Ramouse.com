@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, LayoutList, BarChart3, Star, Download, Printer, X, RefreshCw } from 'lucide-react';
+import { useSimplePrint } from '../../../hooks/usePrint';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CarProviderService } from '../../../services/carprovider.service';
 import { CarListingWizard } from '../CarListingWizard';
@@ -158,9 +159,7 @@ export const MyCarListingsView: React.FC<MyCarListingsViewProps> = ({ showToast,
         setShowPrintPreview(true);
     };
 
-    const handleConfirmPrint = () => {
-        window.print();
-    };
+    const handleConfirmPrint = useSimplePrint();
 
     const handleDownloadPdf = async () => {
         if (!printableRef.current || !isReadyForPrint || !printListing) return;

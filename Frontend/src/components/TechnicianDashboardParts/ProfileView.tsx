@@ -7,6 +7,7 @@ import Modal from '../Modal';
 import PrintableTechnicianProfile from '../PrintableTechnicianProfile';
 import { SYRIAN_CITIES } from '../../constants';
 import { api } from '../../lib/api';
+import { useSimplePrint } from '../../hooks/usePrint';
 
 interface ProfileViewProps {
     technician: Technician;
@@ -36,9 +37,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ technician, showToast, settin
         setShowPreview(true);
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    // Use simple print hook (works on all devices)
+    const handlePrint = useSimplePrint();
 
     const handleDownload = async () => {
         if (!printableProfileRef.current || !isReadyForExport) {

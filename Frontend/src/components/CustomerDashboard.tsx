@@ -160,8 +160,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = (props) => {
             <main className="flex-1 min-w-0 overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 md:rounded-l-2xl">
                 <div className="h-full overflow-y-auto custom-scrollbar scroll-smooth-mobile">
                     <Routes>
-                        <Route index element={<CustomerOverview onStartNewOrder={props.onStartNewOrder} userPhone={props.userPhone} onNavigate={handleViewChange} onGlobalNavigate={props.onNavigate} allBrands={props.allBrands} />} />
-                        <Route path="overview" element={<CustomerOverview onStartNewOrder={props.onStartNewOrder} userPhone={props.userPhone} onNavigate={handleViewChange} onGlobalNavigate={props.onNavigate} allBrands={props.allBrands} />} />
+                        <Route index element={<CustomerOverview onStartNewOrder={props.onStartNewOrder} userPhone={props.userPhone} onNavigate={handleViewChange} onGlobalNavigate={props.onNavigate} allBrands={props.allBrands} allOrders={props.allOrders} />} />
+                        <Route path="overview" element={<CustomerOverview onStartNewOrder={props.onStartNewOrder} userPhone={props.userPhone} onNavigate={handleViewChange} onGlobalNavigate={props.onNavigate} allBrands={props.allBrands} allOrders={props.allOrders} />} />
                         <Route path="orders" element={<MyOrders {...props} isDashboardView={true} currentUser={customer || undefined} />} />
                         <Route path="myCarListings" element={<MyCarListingsView showToast={props.showToast} userRole="customer" userPhone={props.userPhone} currentUser={customer} settings={props.settings} />} />
                         <Route path="store" element={customer ? <StoreView customer={customer} showToast={props.showToast} addNotificationForUser={props.addNotificationForUser} settings={props.settings} storeCategories={storeCategories} /> : <SkeletonLoader />} />

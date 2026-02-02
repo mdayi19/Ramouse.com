@@ -136,8 +136,8 @@ const TowTruckDashboard: React.FC<TowTruckDashboardProps> = (props) => {
             <main className="flex-1 min-w-0 overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 md:rounded-l-2xl">
                 <div className="h-full overflow-y-auto custom-scrollbar scroll-smooth-mobile">
                     <Routes>
-                        <Route index element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} />} />
-                        <Route path="overview" element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} />} />
+                        <Route index element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} onGlobalNavigate={onNavigate} />} />
+                        <Route path="overview" element={<OverviewView towTruck={towTruck} onNavigate={handleSetView} onStartNewOrder={onStartNewOrder} onGlobalNavigate={onNavigate} />} />
                         <Route path="profile" element={<ProfileView towTruck={towTruck} updateTowTruckData={updateTowTruckData} showToast={showToast} settings={settings} onLogout={onLogout} />} />
                         <Route path="myCarListings" element={<MyCarListingsView showToast={showToast} userRole="tow_truck" userPhone={towTruck?.phone || ''} currentUser={towTruck} settings={settings} />} />
                         <Route path="reviews" element={<ReviewsView towTruck={towTruck} showToast={showToast} />} />

@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { FlashProductBuyerRequest, Settings } from '../../types';
 import { toCanvas } from 'qrcode';
+import { usePrint } from '../../hooks/usePrint';
 
 interface CustomerStoreReceiptProps {
     request: FlashProductBuyerRequest;
@@ -12,27 +13,30 @@ interface CustomerStoreReceiptProps {
 
 export const CustomerStoreReceipt: React.FC<CustomerStoreReceiptProps> = ({ request, productName, settings, onDone }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const receiptRef = useRef<HTMLDivElement>(null);
+
+    // Use the universal print hook
+    const { handlePrint } = usePrint({
+        elementRef: receiptRef,
+        filename: `store-receipt-${request.id.slice(-8)}.pdf`,
+        pageSize: 'A4',
+        orientation: 'portrait',
+        onComplete: onDone,
+    });
 
     useEffect(() => {
         if (canvasRef.current) {
             toCanvas(canvasRef.current, request.id, { width: 100, margin: 1, color: { dark: '#000000', light: '#ffffff' } });
         }
 
-        const handleAfterPrint = () => {
-            onDone();
-            window.removeEventListener('afterprint', handleAfterPrint);
-        };
-        window.addEventListener('afterprint', handleAfterPrint);
-
         const timer = setTimeout(() => {
-            window.print();
+            handlePrint();
         }, 500);
 
         return () => {
-            window.removeEventListener('afterprint', handleAfterPrint);
             clearTimeout(timer);
         };
-    }, [onDone, request.id]);
+    }, [request.id, handlePrint]);
 
     const printStyles = `
     @media print {
@@ -47,7 +51,7 @@ export const CustomerStoreReceipt: React.FC<CustomerStoreReceiptProps> = ({ requ
     return (
         <>
             <style>{printStyles}</style>
-            <div id="store-receipt" className="bg-white text-slate-900 font-sans" dir="rtl">
+            <div ref={receiptRef} id="store-receipt" className="bg-white text-slate-900 font-sans" dir="rtl">
 
                 {/* Header */}
                 <div className="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-8">

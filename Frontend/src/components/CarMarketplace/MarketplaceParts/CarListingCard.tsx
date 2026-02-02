@@ -277,6 +277,11 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
                         <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition-colors">
                             {listing.title}
                         </h3>
+                        {/* Location - Added */}
+                        <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
+                            <MapPin className="w-3 h-3" />
+                            <span className="truncate max-w-[150px]">{listing.city || 'سوريا'}</span>
+                        </div>
                     </div>
 
                     {/* Price - Push to bottom */}

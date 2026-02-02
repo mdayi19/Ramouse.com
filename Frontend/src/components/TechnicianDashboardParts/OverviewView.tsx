@@ -3,6 +3,7 @@ import { Technician, Order, FlashProductBuyerRequest } from '../../types';
 import EmptyState from '../EmptyState';
 import Icon from '../Icon';
 import { StatusBadge, MarketplaceQuickAccess } from '../DashboardParts/Shared';
+import UserCarListingsWidget from '../DashboardParts/UserCarListingsWidget';
 import { TechnicianView } from './types';
 import { api } from '../../lib/api';
 import { Button } from '../ui/Button';
@@ -240,6 +241,9 @@ const OverviewView: React.FC<{
 
                     {/* Marketplace Quick Access */}
                     <MarketplaceQuickAccess onNavigate={onGlobalNavigate} />
+
+                    {/* User Car Listings */}
+                    <UserCarListingsWidget userId={technician.id} userRole="technician" onNavigate={onNavigate} />
 
                     {/* Public Services Section */}
                     <div className="mb-6">

@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Order, Settings } from '../types';
 import { toCanvas } from 'qrcode';
+import { usePrint } from '../hooks/usePrint';
 
 interface ShippingReceiptProps {
   order: Order;
@@ -11,6 +12,16 @@ interface ShippingReceiptProps {
 
 const ShippingReceipt: React.FC<ShippingReceiptProps> = ({ order, settings, onDone }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  // Use the universal print hook
+  const { handlePrint, isGenerating } = usePrint({
+    elementRef: receiptRef,
+    filename: `shipping-receipt-${order.orderNumber}.pdf`,
+    pageSize: 'A5',
+    orientation: 'portrait',
+    onComplete: onDone,
+  });
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -19,23 +30,15 @@ const ShippingReceipt: React.FC<ShippingReceiptProps> = ({ order, settings, onDo
       });
     }
 
-    const handleAfterPrint = () => {
-      onDone();
-      window.removeEventListener('afterprint', handleAfterPrint);
-    };
-
-    window.addEventListener('afterprint', handleAfterPrint);
-
     // Slight delay to ensure QR code is rendered and styles applied
     const timer = setTimeout(() => {
-      window.print();
+      handlePrint();
     }, 500);
 
     return () => {
-      window.removeEventListener('afterprint', handleAfterPrint);
       clearTimeout(timer);
     };
-  }, [onDone, order.orderNumber]);
+  }, [order.orderNumber, handlePrint]);
 
   const printStyles = `
     @media print {
@@ -71,7 +74,7 @@ const ShippingReceipt: React.FC<ShippingReceiptProps> = ({ order, settings, onDo
   return (
     <>
       <style>{printStyles}</style>
-      <div id="shipping-receipt" className="bg-white text-slate-900 font-sans" dir="rtl">
+      <div ref={receiptRef} id="shipping-receipt" className="bg-white text-slate-900 font-sans" dir="rtl">
 
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-6">

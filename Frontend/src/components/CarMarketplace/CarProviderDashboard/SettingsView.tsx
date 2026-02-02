@@ -9,6 +9,7 @@ import PrintableCarProviderProfile from '../PrintableCarProviderProfile';
 import { Settings } from '../../../types';
 import { SYRIAN_CITIES } from '../../../constants';
 import { PrintPreviewModal } from '../../shared/PrintPreviewModal';
+import { useSimplePrint } from '../../../hooks/usePrint';
 
 interface SettingsViewProps {
     provider: CarProvider;
@@ -33,9 +34,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ provider, showToast,
         setShowPreview(true);
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    const handlePrint = useSimplePrint();
 
     const handleDownload = async () => {
         if (!printableProfileRef.current || !isReadyForExport) {

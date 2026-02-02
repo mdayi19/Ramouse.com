@@ -8,6 +8,7 @@ import { api } from '../../lib/api';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { MarketplaceQuickAccess } from '../DashboardParts/Shared';
+import UserCarListingsWidget from '../DashboardParts/UserCarListingsWidget';
 
 interface TowTruckStats {
     averageRating: number | string;
@@ -251,6 +252,9 @@ const OverviewView: React.FC<{
 
                     {/* Marketplace Quick Access */}
                     <MarketplaceQuickAccess onNavigate={handleGlobalNavigate} />
+
+                    {/* User Car Listings */}
+                    <UserCarListingsWidget userId={towTruck.id} userRole="tow_truck" onNavigate={onNavigate} />
 
                     {/* Public Services Section */}
                     <div className="mb-6">

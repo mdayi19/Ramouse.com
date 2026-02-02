@@ -6,8 +6,9 @@ import {
     Fuel, Zap, Droplets, Gauge, Settings,
     Calendar, Banknote, Car,
     Globe, RotateCcw,
-    BadgeCheck, Sparkles, History
+    BadgeCheck, Sparkles, History, MapPin
 } from 'lucide-react';
+
 import { MarketplaceFilters as FilterType } from '../../../services/carprovider.service';
 import { cn } from '../../../lib/utils';
 import { motion } from 'framer-motion';
@@ -29,8 +30,26 @@ interface MarketplaceFiltersProps {
         originCounts: Record<string | number, number>;
         brandCounts: Record<string | number, number>;
         modelCounts: Record<string, number>;
+        cityCounts: Record<string, number>;
     };
 }
+
+const SYRIAN_CITIES = [
+    { id: 'Damascus', name: 'دمشق' },
+    { id: 'Rif Dimashq', name: 'ريف دمشق' },
+    { id: 'Aleppo', name: 'حلب' },
+    { id: 'Homs', name: 'حمص' },
+    { id: 'Latakia', name: 'اللاذقية' },
+    { id: 'Hama', name: 'حماة' },
+    { id: 'Tartus', name: 'طرطوس' },
+    { id: 'Daraa', name: 'درعا' },
+    { id: 'As-Suwayda', name: 'السويداء' },
+    { id: 'Al-Hasakah', name: 'الحسكة' },
+    { id: 'Deir ez-Zor', name: 'دير الزور' },
+    { id: 'Idlib', name: 'إدلب' },
+    { id: 'Ar-Raqqah', name: 'الرقة' },
+    { id: 'Quneitra', name: 'القنيطرة' },
+];
 
 export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
     filters,
@@ -45,6 +64,7 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
     // Collapsible sections state
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
         origin: true,
+        city: true,
         brand: true,
         model: true,
         price: true,
@@ -58,6 +78,8 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
     // Search states
     const [brandSearch, setBrandSearch] = useState('');
     const [modelSearch, setModelSearch] = useState('');
+    const [citySearch, setCitySearch] = useState('');
+
 
     // Debounced search values to reduce filtering operations
     const debouncedBrandSearch = useDebounce(brandSearch, 300);
@@ -98,6 +120,7 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
     const getSectionActiveCount = (sectionId: string): number => {
         switch (sectionId) {
             case 'origin': return filters.car_category_id ? 1 : 0;
+            case 'city': return filters.city ? 1 : 0;
             case 'brand': return filters.brand_id ? 1 : 0;
             case 'model': return filters.model ? 1 : 0;
             case 'price': return (filters.min_price || filters.max_price) ? 1 : 0;
@@ -117,6 +140,9 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
                 onFilterChange('car_category_id', '');
                 onFilterChange('brand_id', '');
                 onFilterChange('model', '');
+                break;
+            case 'city':
+                onFilterChange('city', '');
                 break;
             case 'brand':
                 onFilterChange('brand_id', '');
@@ -149,11 +175,12 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
         }
     }, [onFilterChange]);
 
-    const renderCount = (item: any, type: 'origin' | 'brand' | 'model') => {
+    const renderCount = (item: any, type: 'origin' | 'brand' | 'model' | 'city') => {
         let count = 0;
 
         if (facetCounts) {
             if (type === 'origin') count = facetCounts.originCounts[item.id] || 0;
+            else if (type === 'city') count = facetCounts.cityCounts[item.name || item.id] || 0;
             else if (type === 'brand') count = facetCounts.brandCounts[item.id] || 0;
             else if (type === 'model') count = facetCounts.modelCounts[item.name || item] || 0;
         } else {
@@ -197,6 +224,15 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
                     }
                 });
             }
+        }
+
+        if (filters.city) {
+            active.push({
+                key: 'city',
+                label: 'المدينة',
+                value: filters.city,
+                onRemove: () => onFilterChange('city', '')
+            });
         }
 
         if (filters.brand_id) {
@@ -360,6 +396,59 @@ export const MarketplaceFiltersComponent: React.FC<MarketplaceFiltersProps> = ({
                         ))}
                     </div>
                 )}
+            </FilterSection>
+
+            {/* 1.5. City Filter (NEW) */}
+            <FilterSection
+                id="city"
+                title="المدينة"
+                icon={MapPin}
+                isOpen={openSections['city']}
+                onToggle={toggleSection}
+                activeCount={getSectionActiveCount('city')}
+                onClear={clearSection}
+            >
+                <div className="relative mb-3">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="ابحث عن مدينة..."
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        className="w-full pr-10 pl-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        aria-label="البحث عن مدينة"
+                    />
+                </div>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+                    {SYRIAN_CITIES
+                        .filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))
+                        .map(city => (
+                            <button
+                                key={city.id}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    onFilterChange('city', filters.city === city.name ? '' : city.name);
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border-2 ${filters.city === city.name
+                                    ? 'border-primary bg-primary text-white'
+                                    : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-primary hover:text-primary'
+                                    }`}
+                            >
+                                {city.name} {renderCount(city, 'city')}
+                            </button>
+                        ))}
+                    {citySearch && !SYRIAN_CITIES.some(c => c.name.includes(citySearch)) && (
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onFilterChange('city', citySearch);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border-2 border-dashed border-slate-300 text-slate-600 hover:border-primary hover:text-primary`}
+                        >
+                            بحث عن "{citySearch}"
+                        </button>
+                    )}
+                </div>
             </FilterSection>
 
             {/* 2. Brand Filter - Show only if Origin is selected */}

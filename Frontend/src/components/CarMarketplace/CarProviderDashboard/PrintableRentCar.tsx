@@ -184,8 +184,10 @@ const PrintableRentCar = forwardRef<
                             </p>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <h2 className="text-2xl font-black text-blue-700 mb-1">
+
+                    {/* Big Red Heading */}
+                    <div className="flex items-center">
+                        <h2 className="text-5xl font-black text-red-600 tracking-tight">
                             سيارة للإيجار
                         </h2>
                     </div>
