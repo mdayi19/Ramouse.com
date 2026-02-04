@@ -163,7 +163,10 @@ class FeedController extends Controller
 
                 if ($photos && is_array($photos)) {
                     foreach ($photos as $photo) {
-                        $imgUrl = $baseUrl . '/storage/' . $photo;
+                        $photoPath = is_array($photo) ? ($photo['path'] ?? $photo['url'] ?? reset($photo)) : $photo;
+                        if (!is_string($photoPath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $photoPath;
                         $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$title}\" style=\"max-width: 600px; margin: 10px 0;\" />";
                     }
                 }
@@ -193,7 +196,10 @@ class FeedController extends Controller
 
                 if ($photos && is_array($photos)) {
                     foreach ($photos as $index => $photo) {
-                        $imgUrl = $baseUrl . '/storage/' . $photo;
+                        $photoPath = is_array($photo) ? ($photo['path'] ?? $photo['url'] ?? reset($photo)) : $photo;
+                        if (!is_string($photoPath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $photoPath;
                         // First photo as enclosure
                         if ($index === 0) {
                             $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
@@ -338,7 +344,10 @@ class FeedController extends Controller
 
                 if ($photos && is_array($photos)) {
                     foreach ($photos as $photo) {
-                        $imgUrl = $baseUrl . '/storage/' . $photo;
+                        $photoPath = is_array($photo) ? ($photo['path'] ?? $photo['url'] ?? reset($photo)) : $photo;
+                        if (!is_string($photoPath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $photoPath;
                         $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$title}\" style=\"max-width: 600px; margin: 10px 0;\" />";
                     }
                 }
@@ -363,7 +372,10 @@ class FeedController extends Controller
                 // Media RSS Tags
                 if ($photos && is_array($photos)) {
                     foreach ($photos as $index => $photo) {
-                        $imgUrl = $baseUrl . '/storage/' . $photo;
+                        $photoPath = is_array($photo) ? ($photo['path'] ?? $photo['url'] ?? reset($photo)) : $photo;
+                        if (!is_string($photoPath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $photoPath;
                         if ($index === 0) {
                             $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                         }
@@ -462,7 +474,10 @@ class FeedController extends Controller
 
                 if (is_array($media) && count($media) > 0) {
                     foreach ($media as $image) {
-                        $imgUrl = $baseUrl . '/storage/' . $image;
+                        $imagePath = is_array($image) ? ($image['path'] ?? $image['url'] ?? reset($image)) : $image;
+                        if (!is_string($imagePath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $imagePath;
                         $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$title}\" style=\"max-width: 600px; margin: 10px 0;\" />";
                     }
                 }
@@ -482,7 +497,10 @@ class FeedController extends Controller
                 // Media RSS Tags
                 if (is_array($media) && count($media) > 0) {
                     foreach ($media as $index => $image) {
-                        $imgUrl = $baseUrl . '/storage/' . $image;
+                        $imagePath = is_array($image) ? ($image['path'] ?? $image['url'] ?? reset($image)) : $image;
+                        if (!is_string($imagePath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $imagePath;
                         if ($index === 0) {
                             $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                         }
@@ -610,7 +628,10 @@ class FeedController extends Controller
 
                 if ($gallery && is_array($gallery)) {
                     foreach ($gallery as $image) {
-                        $imgUrl = $baseUrl . '/storage/' . $image;
+                        $imagePath = is_array($image) ? ($image['path'] ?? $image['url'] ?? reset($image)) : $image;
+                        if (!is_string($imagePath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $imagePath;
                         $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                     }
                 }
@@ -676,13 +697,15 @@ class FeedController extends Controller
                 $published = \Carbon\Carbon::parse($tech->created_at)->toIso8601String();
                 $name = htmlspecialchars($tech->name, ENT_XML1, 'UTF-8');
                 $city = htmlspecialchars($tech->city, ENT_XML1, 'UTF-8');
-                $specialty = htmlspecialchars($tech->specialty ?? 'General Mechanic', ENT_XML1, 'UTF-8');
+                $specialtyRaw = $tech->specialty ?? 'General Mechanic';
+                $specialty = is_array($specialtyRaw) ? implode(', ', $specialtyRaw) : $specialtyRaw;
+                $specialtyStr = htmlspecialchars($specialty, ENT_XML1, 'UTF-8');
 
-                $summary = htmlspecialchars("New Technician in {$city}: {$name}. Specialty: {$specialty}.", ENT_XML1, 'UTF-8');
+                $summary = htmlspecialchars("New Technician in {$city}: {$name}. Specialty: {$specialtyStr}.", ENT_XML1, 'UTF-8');
 
                 $contentHtml = "<h2>{$name}</h2>";
                 $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria" . ($tech->workshop_address ? " - " . htmlspecialchars($tech->workshop_address, ENT_XML1, 'UTF-8') : "") . "</p>";
-                $contentHtml .= "<p><strong>Specialty:</strong> {$specialty}</p>";
+                $contentHtml .= "<p><strong>Specialty:</strong> {$specialtyStr}</p>";
                 if ($tech->average_rating)
                     $contentHtml .= "<p><strong>Rating:</strong> {$tech->average_rating} / 5</p>";
 
@@ -730,13 +753,16 @@ class FeedController extends Controller
 
                 if ($gallery && is_array($gallery)) {
                     foreach ($gallery as $image) {
-                        $imgUrl = $baseUrl . '/storage/' . $image;
+                        $imagePath = is_array($image) ? ($image['path'] ?? $image['url'] ?? reset($image)) : $image;
+                        if (!is_string($imagePath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $imagePath;
                         $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                     }
                 }
                 $entry .= "<category term=\"Technician\" />";
                 $entry .= "<category term=\"Verified\" />";
-                $entry .= "<category term=\"{$specialty}\" />";
+                $entry .= "<category term=\"{$specialtyStr}\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
 
@@ -859,7 +885,10 @@ class FeedController extends Controller
 
                 if ($gallery && is_array($gallery)) {
                     foreach ($gallery as $image) {
-                        $imgUrl = $baseUrl . '/storage/' . $image;
+                        $imagePath = is_array($image) ? ($image['path'] ?? $image['url'] ?? reset($image)) : $image;
+                        if (!is_string($imagePath))
+                            continue;
+                        $imgUrl = $baseUrl . '/storage/' . $imagePath;
                         $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                     }
                 }
