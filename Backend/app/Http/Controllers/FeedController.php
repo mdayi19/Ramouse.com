@@ -19,19 +19,21 @@ class FeedController extends Controller
     private function generateFeed($key, $title, $subtitle, $selfLink, $feedLink, $itemsCallback, $entryCallback)
     {
         try {
+            $baseUrl = 'https://ramouse.com';
+
             // Updated XML building logic manually to avoid Blade issues
             $xml = '<?xml version="1.0" encoding="UTF-8"?>';
             $xml .= '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#">';
             $xml .= '<title>' . htmlspecialchars($title, ENT_XML1, 'UTF-8') . '</title>';
-            $xml .= '<link href="' . url($selfLink) . '" rel="self" />';
-            $xml .= '<link href="' . url($feedLink) . '" />';
-            $xml .= '<id>' . url($selfLink) . '</id>';
+            $xml .= '<link href="' . $baseUrl . $selfLink . '" rel="self" />';
+            $xml .= '<link href="' . $baseUrl . $feedLink . '" />';
+            $xml .= '<id>' . $baseUrl . $selfLink . '</id>';
 
             // Execute callback to get items
             $items = $itemsCallback();
 
-            $updated = $items->first() ? $items->first()->updated_at : now();
-            $xml .= '<updated>' . $updated->toAtomString() . '</updated>';
+            $updated = $items->first() ? \Carbon\Carbon::parse($items->first()->updated_at) : now();
+            $xml .= '<updated>' . $updated->toIso8601String() . '</updated>';
 
             $xml .= '<author>';
             $xml .= '<name>Ramouse.com</name>';
@@ -93,10 +95,11 @@ class FeedController extends Controller
                 });
             },
             function ($listing) {
-                $url = url('/car-listings/' . $listing->slug);
-                $id = url('/entity/car-listing/' . $listing->id);
-                $updated = $listing->updated_at->toAtomString();
-                $published = $listing->created_at->toAtomString();
+                $baseUrl = 'https://ramouse.com';
+                $url = $baseUrl . '/car-listings/' . $listing->slug;
+                $id = $baseUrl . '/entity/car-listing/' . $listing->id;
+                $updated = \Carbon\Carbon::parse($listing->updated_at)->toIso8601String();
+                $published = \Carbon\Carbon::parse($listing->created_at)->toIso8601String();
                 $title = htmlspecialchars($listing->title, ENT_XML1, 'UTF-8');
                 $condition = ucfirst($listing->condition);
                 $price = number_format($listing->price);
@@ -131,11 +134,18 @@ class FeedController extends Controller
                 $contentHtml .= "<p><strong>Doors:</strong> {$listing->doors_count} | <strong>Seats:</strong> {$listing->seats_count}</p>";
                 $contentHtml .= "<p><strong>Color:</strong> {$listing->exterior_color}</p>";
 
+                // Safely handle features
+                $features = $listing->features;
+                if (is_string($features)) {
+                    $features = json_decode($features, true);
+                }
+
                 // Features List
-                if ($listing->features && is_array($listing->features) && count($listing->features) > 0) {
+                if ($features && is_array($features) && count($features) > 0) {
                     $contentHtml .= "<h3>Key Features</h3><ul>";
-                    foreach ($listing->features as $feature) {
-                        $contentHtml .= "<li>" . htmlspecialchars($feature, ENT_XML1, 'UTF-8') . "</li>";
+                    foreach ($features as $feature) {
+                        $fStr = is_array($feature) ? (implode(' ', $feature) ?: json_encode($feature)) : $feature;
+                        $contentHtml .= "<li>" . htmlspecialchars($fStr, ENT_XML1, 'UTF-8') . "</li>";
                     }
                     $contentHtml .= "</ul>";
                 }
@@ -145,14 +155,20 @@ class FeedController extends Controller
                     $contentHtml .= "<h3>Description</h3><p>{$desc}</p>";
                 }
 
-                if ($listing->photos && is_array($listing->photos)) {
-                    foreach ($listing->photos as $photo) {
-                        $imgUrl = asset('storage/' . $photo);
+                // Safely handle photos
+                $photos = $listing->photos;
+                if (is_string($photos)) {
+                    $photos = json_decode($photos, true);
+                }
+
+                if ($photos && is_array($photos)) {
+                    foreach ($photos as $photo) {
+                        $imgUrl = $baseUrl . '/storage/' . $photo;
                         $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$title}\" style=\"max-width: 600px; margin: 10px 0;\" />";
                     }
                 }
 
-                $contentHtml .= "<p><strong>Seller:</strong> " . htmlspecialchars($listing->owner?->name, ENT_XML1, 'UTF-8') . "</p>";
+                $contentHtml .= "<p><strong>Seller:</strong> " . htmlspecialchars($listing->owner?->name ?? 'Unknown', ENT_XML1, 'UTF-8') . "</p>";
                 $contentHtml .= "<p><strong>Contact:</strong> {$listing->contact_phone}</p>";
                 if ($listing->contact_whatsapp) {
                     $contentHtml .= "<p><strong>WhatsApp:</strong> {$listing->contact_whatsapp}</p>";
@@ -168,16 +184,16 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
 
                 // Metadata Link
-                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/car-listing/{$listing->id}/metadata") . '" />';
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . $baseUrl . "/entity/car-listing/{$listing->id}/metadata" . '" />';
 
                 // Media RSS Tags
                 if ($listing->video_url) {
                     $entry .= '<media:content url="' . htmlspecialchars($listing->video_url) . '" medium="video" />';
                 }
 
-                if ($listing->photos && is_array($listing->photos)) {
-                    foreach ($listing->photos as $index => $photo) {
-                        $imgUrl = asset('storage/' . $photo);
+                if ($photos && is_array($photos)) {
+                    foreach ($photos as $index => $photo) {
+                        $imgUrl = $baseUrl . '/storage/' . $photo;
                         // First photo as enclosure
                         if ($index === 0) {
                             $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
@@ -186,13 +202,17 @@ class FeedController extends Controller
                     }
                 }
                 $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name ?? 'Unknown') . "\" />";
+                $entry .= "<category term=\"" . htmlspecialchars($listing->model) . "\" />";
+                $entry .= "<category term=\"{$listing->year}\" />";
+                $entry .= "<category term=\"{$listing->fuel_type}\" />";
+                $entry .= "<category term=\"{$listing->transmission}\" />";
+                if ($listing->exterior_color)
+                    $entry .= "<category term=\"" . htmlspecialchars($listing->exterior_color) . "\" />";
                 $entry .= "<category term=\"{$listing->city}\" />";
                 $entry .= "<category term=\"{$listing->listing_type}\" />";
                 $entry .= "<category term=\"{$listing->condition}\" />";
                 $entry .= "<category term=\"Syria\" />";
-                // GeoRSS (City level approximation if latent lat/lon not available)
-                // Since listings don't have lat/lon in model, we skip georss:point unless added to model. 
-                // Plan said: "CarListing feeds will not have exact coordinates".
+                // GeoRSS
     
                 $entry .= "</entry>";
                 return $entry;
@@ -240,10 +260,11 @@ class FeedController extends Controller
                 });
             },
             function ($listing) {
-                $url = url('/car-rentals/' . $listing->slug);
-                $id = url('/entity/car-listing/' . $listing->id);
-                $updated = $listing->updated_at->toAtomString();
-                $published = $listing->created_at->toAtomString();
+                $baseUrl = 'https://ramouse.com';
+                $url = $baseUrl . '/car-rentals/' . $listing->slug;
+                $id = $baseUrl . '/entity/car-listing/' . $listing->id;
+                $updated = \Carbon\Carbon::parse($listing->updated_at)->toIso8601String();
+                $published = \Carbon\Carbon::parse($listing->created_at)->toIso8601String();
                 $title = htmlspecialchars($listing->title, ENT_XML1, 'UTF-8');
 
                 // Fix: Check rental_terms if price is 0 (Quick Edit stores rates there)
@@ -280,11 +301,18 @@ class FeedController extends Controller
                 $contentHtml .= "<p><strong>Doors:</strong> {$listing->doors_count} | <strong>Seats:</strong> {$listing->seats_count}</p>";
                 $contentHtml .= "<p><strong>Color:</strong> {$listing->exterior_color}</p>";
 
+                // Safely handle features
+                $features = $listing->features;
+                if (is_string($features)) {
+                    $features = json_decode($features, true);
+                }
+
                 // Features List
-                if ($listing->features && is_array($listing->features) && count($listing->features) > 0) {
+                if ($features && is_array($features) && count($features) > 0) {
                     $contentHtml .= "<h3>Key Features</h3><ul>";
-                    foreach ($listing->features as $feature) {
-                        $contentHtml .= "<li>" . htmlspecialchars($feature, ENT_XML1, 'UTF-8') . "</li>";
+                    foreach ($features as $feature) {
+                        $fStr = is_array($feature) ? (implode(' ', $feature) ?: json_encode($feature)) : $feature;
+                        $contentHtml .= "<li>" . htmlspecialchars($fStr, ENT_XML1, 'UTF-8') . "</li>";
                     }
                     $contentHtml .= "</ul>";
                 }
@@ -302,14 +330,20 @@ class FeedController extends Controller
                     }
                 }
 
-                if ($listing->photos && is_array($listing->photos)) {
-                    foreach ($listing->photos as $photo) {
-                        $imgUrl = asset('storage/' . $photo);
+                // Safely handle photos
+                $photos = $listing->photos;
+                if (is_string($photos)) {
+                    $photos = json_decode($photos, true);
+                }
+
+                if ($photos && is_array($photos)) {
+                    foreach ($photos as $photo) {
+                        $imgUrl = $baseUrl . '/storage/' . $photo;
                         $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$title}\" style=\"max-width: 600px; margin: 10px 0;\" />";
                     }
                 }
 
-                $contentHtml .= "<p><strong>Provider:</strong> " . htmlspecialchars($listing->owner?->name, ENT_XML1, 'UTF-8') . "</p>";
+                $contentHtml .= "<p><strong>Provider:</strong> " . htmlspecialchars($listing->owner?->name ?? 'Unknown', ENT_XML1, 'UTF-8') . "</p>";
                 if ($listing->contact_whatsapp) {
                     $contentHtml .= "<p><strong>WhatsApp:</strong> {$listing->contact_whatsapp}</p>";
                 }
@@ -324,12 +358,12 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
 
                 // Metadata Link
-                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/car-listing/{$listing->id}/metadata") . '" />';
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . $baseUrl . "/entity/car-listing/{$listing->id}/metadata" . '" />';
 
                 // Media RSS Tags
-                if ($listing->photos && is_array($listing->photos)) {
-                    foreach ($listing->photos as $index => $photo) {
-                        $imgUrl = asset('storage/' . $photo);
+                if ($photos && is_array($photos)) {
+                    foreach ($photos as $index => $photo) {
+                        $imgUrl = $baseUrl . '/storage/' . $photo;
                         if ($index === 0) {
                             $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                         }
@@ -337,6 +371,12 @@ class FeedController extends Controller
                     }
                 }
                 $entry .= "<category term=\"" . htmlspecialchars($listing->brand?->name ?? 'Unknown') . "\" />";
+                $entry .= "<category term=\"" . htmlspecialchars($listing->model) . "\" />";
+                $entry .= "<category term=\"{$listing->year}\" />";
+                $entry .= "<category term=\"{$listing->fuel_type}\" />";
+                $entry .= "<category term=\"{$listing->transmission}\" />";
+                if ($listing->exterior_color)
+                    $entry .= "<category term=\"" . htmlspecialchars($listing->exterior_color) . "\" />";
                 $entry .= "<category term=\"{$listing->city}\" />";
                 $entry .= "<category term=\"rent\" />";
                 $entry .= "<category term=\"Syria\" />";
@@ -384,10 +424,11 @@ class FeedController extends Controller
                 });
             },
             function ($product) {
-                $url = url('/store/products/' . $product->id);
-                $id = url('/entity/product/' . $product->id);
-                $updated = $product->updated_at->toAtomString();
-                $published = $product->created_at->toAtomString();
+                $baseUrl = 'https://ramouse.com';
+                $url = $baseUrl . '/store/products/' . $product->id;
+                $id = $baseUrl . '/entity/product/' . $product->id;
+                $updated = \Carbon\Carbon::parse($product->updated_at)->toIso8601String();
+                $published = \Carbon\Carbon::parse($product->created_at)->toIso8601String();
                 $title = htmlspecialchars($product->name, ENT_XML1, 'UTF-8');
                 $price = number_format($product->price);
                 $categoryName = htmlspecialchars($product->category?->name ?? 'Uncategorized', ENT_XML1, 'UTF-8');
@@ -403,17 +444,25 @@ class FeedController extends Controller
                     $contentHtml .= "<p><strong>Rating:</strong> {$product->average_rating} / 5</p>";
                 if ($product->static_shipping_cost)
                     $contentHtml .= "<p><strong>Shipping Cost:</strong> \${$product->static_shipping_cost}</p>";
-                if ($product->shipping_size)
-                    $contentHtml .= "<p><strong>Shipping Size:</strong> " . htmlspecialchars($product->shipping_size, ENT_XML1, 'UTF-8') . "</p>";
+                if ($product->shipping_size) {
+                    $size = is_array($product->shipping_size) ? implode('x', $product->shipping_size) : $product->shipping_size;
+                    $contentHtml .= "<p><strong>Shipping Size:</strong> " . htmlspecialchars($size, ENT_XML1, 'UTF-8') . "</p>";
+                }
 
                 if ($product->description) {
                     $desc = htmlspecialchars($product->description, ENT_XML1, 'UTF-8');
                     $contentHtml .= "<h3>Description</h3><p>{$desc}</p>";
                 }
 
-                if (is_array($product->media) && count($product->media) > 0) {
-                    foreach ($product->media as $image) {
-                        $imgUrl = asset('storage/' . $image);
+                // Safely handle media
+                $media = $product->media;
+                if (is_string($media)) {
+                    $media = json_decode($media, true);
+                }
+
+                if (is_array($media) && count($media) > 0) {
+                    foreach ($media as $image) {
+                        $imgUrl = $baseUrl . '/storage/' . $image;
                         $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$title}\" style=\"max-width: 600px; margin: 10px 0;\" />";
                     }
                 }
@@ -428,12 +477,12 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
 
                 // Metadata Link
-                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/product/{$product->id}/metadata") . '" />';
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . $baseUrl . "/entity/product/{$product->id}/metadata" . '" />';
 
                 // Media RSS Tags
-                if (is_array($product->media) && count($product->media) > 0) {
-                    foreach ($product->media as $index => $image) {
-                        $imgUrl = asset('storage/' . $image);
+                if (is_array($media) && count($media) > 0) {
+                    foreach ($media as $index => $image) {
+                        $imgUrl = $baseUrl . '/storage/' . $image;
                         if ($index === 0) {
                             $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                         }
@@ -441,6 +490,7 @@ class FeedController extends Controller
                     }
                 }
                 $entry .= "<category term=\"{$categoryName}\" />";
+                $entry .= "<category term=\"" . ($product->total_stock > 0 ? 'In Stock' : 'Out of Stock') . "\" />";
                 $entry .= "<category term=\"car-parts\" />";
                 $entry .= "<category term=\"Syria\" />";
                 $entry .= "</entry>";
@@ -448,6 +498,7 @@ class FeedController extends Controller
             }
         );
     }
+
 
     /**
      * Car Providers Atom feed (latest 20)
@@ -487,10 +538,11 @@ class FeedController extends Controller
                 });
             },
             function ($provider) {
-                $url = url('/car-providers/' . $provider->id);
-                $id = url('/entity/car-provider/' . $provider->id);
-                $updated = $provider->updated_at->toAtomString();
-                $published = $provider->created_at->toAtomString();
+                $baseUrl = 'https://ramouse.com';
+                $url = $baseUrl . '/car-providers/' . $provider->id;
+                $id = $baseUrl . '/entity/car-provider/' . $provider->id;
+                $updated = \Carbon\Carbon::parse($provider->updated_at)->toIso8601String();
+                $published = \Carbon\Carbon::parse($provider->created_at)->toIso8601String();
                 $name = htmlspecialchars($provider->name, ENT_XML1, 'UTF-8');
                 $city = htmlspecialchars($provider->city, ENT_XML1, 'UTF-8');
 
@@ -516,7 +568,7 @@ class FeedController extends Controller
                 }
 
                 if ($provider->profile_photo) {
-                    $imgUrl = asset('storage/' . $provider->profile_photo);
+                    $imgUrl = $baseUrl . '/storage/' . $provider->profile_photo;
                     $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
                 }
 
@@ -541,22 +593,30 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
 
                 // Metadata Link
-                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/car-provider/{$provider->id}/metadata") . '" />';
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . $baseUrl . "/entity/car-provider/{$provider->id}/metadata" . '" />';
 
                 // Media RSS Tags
                 if ($provider->profile_photo) {
-                    $imgUrl = asset('storage/' . $provider->profile_photo);
+                    $imgUrl = $baseUrl . '/storage/' . $provider->profile_photo;
                     $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                     $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                 }
 
-                if ($provider->gallery && is_array($provider->gallery)) {
-                    foreach ($provider->gallery as $image) {
-                        $imgUrl = asset('storage/' . $image);
+                // Safely handle gallery
+                $gallery = $provider->gallery;
+                if (is_string($gallery)) {
+                    $gallery = json_decode($gallery, true);
+                }
+
+                if ($gallery && is_array($gallery)) {
+                    foreach ($gallery as $image) {
+                        $imgUrl = $baseUrl . '/storage/' . $image;
                         $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                     }
                 }
                 $entry .= "<category term=\"Car Provider\" />";
+                if ($provider->business_type)
+                    $entry .= "<category term=\"" . ucfirst($provider->business_type) . "\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
 
@@ -609,10 +669,11 @@ class FeedController extends Controller
                 });
             },
             function ($tech) {
-                $url = url('/technicians/' . $tech->id);
-                $id = url('/entity/technician/' . $tech->id);
-                $updated = $tech->updated_at->toAtomString();
-                $published = $tech->created_at->toAtomString();
+                $baseUrl = 'https://ramouse.com';
+                $url = $baseUrl . '/technicians/' . $tech->id;
+                $id = $baseUrl . '/entity/technician/' . $tech->id;
+                $updated = \Carbon\Carbon::parse($tech->updated_at)->toIso8601String();
+                $published = \Carbon\Carbon::parse($tech->created_at)->toIso8601String();
                 $name = htmlspecialchars($tech->name, ENT_XML1, 'UTF-8');
                 $city = htmlspecialchars($tech->city, ENT_XML1, 'UTF-8');
                 $specialty = htmlspecialchars($tech->specialty ?? 'General Mechanic', ENT_XML1, 'UTF-8');
@@ -631,7 +692,7 @@ class FeedController extends Controller
                 }
 
                 if ($tech->profile_photo) {
-                    $imgUrl = asset('storage/' . $tech->profile_photo);
+                    $imgUrl = $baseUrl . '/storage/' . $tech->profile_photo;
                     $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
                 }
 
@@ -652,32 +713,40 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
 
                 // Metadata Link
-                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/technician/{$tech->id}/metadata") . '" />';
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . $baseUrl . "/entity/technician/{$tech->id}/metadata" . '" />';
 
                 // Media RSS Tags
                 if ($tech->profile_photo) {
-                    $imgUrl = asset('storage/' . $tech->profile_photo);
+                    $imgUrl = $baseUrl . '/storage/' . $tech->profile_photo;
                     $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                     $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                 }
 
-                if ($tech->gallery && is_array($tech->gallery)) {
-                    foreach ($tech->gallery as $image) {
-                        $imgUrl = asset('storage/' . $image);
+                // Safely handle gallery
+                $gallery = $tech->gallery;
+                if (is_string($gallery)) {
+                    $gallery = json_decode($gallery, true);
+                }
+
+                if ($gallery && is_array($gallery)) {
+                    foreach ($gallery as $image) {
+                        $imgUrl = $baseUrl . '/storage/' . $image;
                         $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                     }
                 }
                 $entry .= "<category term=\"Technician\" />";
+                $entry .= "<category term=\"Verified\" />";
                 $entry .= "<category term=\"{$specialty}\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
 
                 // GeoRSS
-                if ($tech->location) {
-                    $loc = $tech->location;
-                    if (is_array($loc)) {
-                        $entry .= '<georss:point>' . $loc['latitude'] . ' ' . $loc['longitude'] . '</georss:point>';
-                    }
+                $loc = $tech->location;
+                if (is_string($loc)) {
+                    $loc = json_decode($loc, true);
+                }
+                if (is_array($loc) && isset($loc['latitude']) && isset($loc['longitude'])) {
+                    $entry .= '<georss:point>' . $loc['latitude'] . ' ' . $loc['longitude'] . '</georss:point>';
                 }
 
                 $entry .= "</entry>";
@@ -724,10 +793,11 @@ class FeedController extends Controller
                 });
             },
             function ($truck) {
-                $url = url('/tow-trucks/' . $truck->id);
-                $id = url('/entity/tow-truck/' . $truck->id);
-                $updated = $truck->updated_at->toAtomString();
-                $published = $truck->created_at->toAtomString();
+                $baseUrl = 'https://ramouse.com';
+                $url = $baseUrl . '/tow-trucks/' . $truck->id;
+                $id = $baseUrl . '/entity/tow-truck/' . $truck->id;
+                $updated = \Carbon\Carbon::parse($truck->updated_at)->toIso8601String();
+                $published = \Carbon\Carbon::parse($truck->created_at)->toIso8601String();
                 $name = htmlspecialchars($truck->name, ENT_XML1, 'UTF-8');
                 $city = htmlspecialchars($truck->city, ENT_XML1, 'UTF-8');
                 $vehicleType = htmlspecialchars($truck->vehicle_type ?? 'Standard Tow Truck', ENT_XML1, 'UTF-8');
@@ -737,8 +807,10 @@ class FeedController extends Controller
                 $contentHtml = "<h2>{$name}</h2>";
                 $contentHtml .= "<p><strong>Location:</strong> {$city}, Syria</p>";
                 $contentHtml .= "<p><strong>Vehicle Type:</strong> {$vehicleType}</p>";
-                if ($truck->service_area)
-                    $contentHtml .= "<p><strong>Service Area:</strong> " . htmlspecialchars($truck->service_area, ENT_XML1, 'UTF-8') . "</p>";
+                if ($truck->service_area) {
+                    $area = is_array($truck->service_area) ? implode(', ', $truck->service_area) : $truck->service_area;
+                    $contentHtml .= "<p><strong>Service Area:</strong> " . htmlspecialchars($area, ENT_XML1, 'UTF-8') . "</p>";
+                }
                 if ($truck->average_rating)
                     $contentHtml .= "<p><strong>Rating:</strong> {$truck->average_rating} / 5</p>";
 
@@ -748,7 +820,7 @@ class FeedController extends Controller
                 }
 
                 if ($truck->profile_photo) {
-                    $imgUrl = asset('storage/' . $truck->profile_photo);
+                    $imgUrl = $baseUrl . '/storage/' . $truck->profile_photo;
                     $contentHtml .= "<img src=\"{$imgUrl}\" alt=\"{$name}\" style=\"max-width: 300px; margin: 10px 0;\" />";
                 }
 
@@ -770,31 +842,39 @@ class FeedController extends Controller
                 $entry .= "<content type=\"html\"><![CDATA[{$contentHtml}]]></content>";
 
                 // Metadata Link
-                $entry .= '<link rel="alternate" type="application/ld+json" href="' . url("/entity/tow-truck/{$truck->id}/metadata") . '" />';
+                $entry .= '<link rel="alternate" type="application/ld+json" href="' . $baseUrl . "/entity/tow-truck/{$truck->id}/metadata" . '" />';
 
                 // Media RSS Tags
                 if ($truck->profile_photo) {
-                    $imgUrl = asset('storage/' . $truck->profile_photo);
+                    $imgUrl = $baseUrl . '/storage/' . $truck->profile_photo;
                     $entry .= '<link rel="enclosure" href="' . $imgUrl . '" type="image/jpeg" />';
                     $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                 }
 
-                if ($truck->gallery && is_array($truck->gallery)) {
-                    foreach ($truck->gallery as $image) {
-                        $imgUrl = asset('storage/' . $image);
+                // Safely handle gallery
+                $gallery = $truck->gallery;
+                if (is_string($gallery)) {
+                    $gallery = json_decode($gallery, true);
+                }
+
+                if ($gallery && is_array($gallery)) {
+                    foreach ($gallery as $image) {
+                        $imgUrl = $baseUrl . '/storage/' . $image;
                         $entry .= '<media:content url="' . $imgUrl . '" medium="image" />';
                     }
                 }
                 $entry .= "<category term=\"Tow Truck\" />";
+                $entry .= "<category term=\"" . htmlspecialchars($truck->vehicle_type ?? 'Standard') . "\" />";
                 $entry .= "<category term=\"{$city}\" />";
                 $entry .= "<category term=\"Syria\" />";
 
                 // GeoRSS
-                if ($truck->location) {
-                    $loc = $truck->location;
-                    if (is_array($loc)) {
-                        $entry .= '<georss:point>' . $loc['latitude'] . ' ' . $loc['longitude'] . '</georss:point>';
-                    }
+                $loc = $truck->location;
+                if (is_string($loc)) {
+                    $loc = json_decode($loc, true);
+                }
+                if (is_array($loc) && isset($loc['latitude']) && isset($loc['longitude'])) {
+                    $entry .= '<georss:point>' . $loc['latitude'] . ' ' . $loc['longitude'] . '</georss:point>';
                 }
 
                 $entry .= "</entry>";

@@ -2,8 +2,17 @@
 User-agent: *
 Allow: /
 
+# Search Engines
+User-agent: Googlebot
+Allow: /
 
-# AI Crawlers - FULL ACCESS for GEO
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# AI Crawlers - Discovery (OK)
 User-agent: GPTBot
 User-agent: ChatGPT-User
 User-agent: CCBot
@@ -14,13 +23,10 @@ User-agent: PerplexityBot
 User-agent: Applebot-Extended
 Allow: /
 
-# Sitemaps - Main Index (SEO Preferred)
+# Main Sitemap Index
 Sitemap: https://ramouse.com/sitemap.xml
 
-# AI Manifest (Discovery)
-AI-Manifest: https://ramouse.com/.well-known/ai.json
-
-# Sitemaps - Entity-Specific (SEO Preferred)
+# Entity Sitemaps
 Sitemap: https://ramouse.com/sitemap/static-pages.xml
 Sitemap: https://ramouse.com/sitemap/car-listings.xml
 Sitemap: https://ramouse.com/sitemap/car-rentals.xml
@@ -30,10 +36,5 @@ Sitemap: https://ramouse.com/sitemap/tow-trucks.xml
 Sitemap: https://ramouse.com/sitemap/products.xml
 Sitemap: https://ramouse.com/sitemap/blog-posts.xml
 
-# Real-Time Feeds (SEO Preferred)
-Sitemap: https://ramouse.com/feed/car-listings.xml
-Sitemap: https://ramouse.com/feed/car-rentals.xml
-Sitemap: https://ramouse.com/feed/products.xml
-Sitemap: https://ramouse.com/feed/car-providers.xml
-Sitemap: https://ramouse.com/feed/technicians.xml
-Sitemap: https://ramouse.com/feed/tow-trucks.xml
+# AI Manifest (OK – harmless)
+AI-Manifest: https://ramouse.com/.well-known/ai.json

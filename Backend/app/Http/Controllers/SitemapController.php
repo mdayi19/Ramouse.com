@@ -69,12 +69,12 @@ class SitemapController extends Controller
                 // SOLID FIX: Force Frontend URL
                 $xml .= '<loc>https://ramouse.com/sitemap/' . $type . '.xml</loc>';
                 if ($type === 'static-pages') {
-                    $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>";
+                    $xml .= "<lastmod>" . now()->toIso8601String() . "</lastmod>";
                 } elseif (!empty($lastMods[$type])) {
-                    $date = \Carbon\Carbon::parse($lastMods[$type])->toAtomString();
+                    $date = \Carbon\Carbon::parse($lastMods[$type])->toIso8601String();
                     $xml .= "<lastmod>{$date}</lastmod>";
                 } else {
-                    $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>";
+                    $xml .= "<lastmod>" . now()->toIso8601String() . "</lastmod>";
                 }
                 $xml .= '</sitemap>';
             }
@@ -93,7 +93,7 @@ class SitemapController extends Controller
                 $xml .= '<sitemap>';
                 // SOLID FIX: Force Frontend URL
                 $xml .= '<loc>https://ramouse.com/feed/' . $type . '.xml</loc>';
-                $xml .= "<lastmod>" . now()->toAtomString() . "</lastmod>"; // Feeds are real-time
+                $xml .= "<lastmod>" . now()->toIso8601String() . "</lastmod>"; // Feeds are real-time
                 $xml .= '</sitemap>';
             }
 
@@ -159,11 +159,11 @@ class SitemapController extends Controller
                 // but these are Frontend routes.
                 // Assuming backend and frontend are same domain in prod (ramouse.com),
                 // `url('/')` returns `https://ramouse.com`.
-                $loc = url($path);
+                $loc = 'https://ramouse.com' . ($path === '/' ? '' : $path);
 
                 $xml .= '<url>';
                 $xml .= "<loc>{$loc}</loc>";
-                $xml .= "<lastmod>" . now()->startOfDay()->toAtomString() . "</lastmod>"; // Static pages assumed updated today
+                $xml .= "<lastmod>" . now()->startOfDay()->toIso8601String() . "</lastmod>"; // Static pages assumed updated today
                 $xml .= "<changefreq>{$meta['freq']}</changefreq>";
                 $xml .= "<priority>{$meta['priority']}</priority>";
                 $xml .= '</url>';
@@ -400,8 +400,9 @@ class SitemapController extends Controller
     private function generateXml($type, $callback)
     {
         try {
-            $xml = Cache::remember("sitemap:{$type}", 3600, function () use ($type, $callback) {
+            return Cache::remember("sitemap:{$type}", 3600, function () use ($type, $callback) {
                 $items = $callback();
+                $baseUrl = 'https://ramouse.com';
 
                 $xml = '<?xml version="1.0" encoding="UTF-8"?>';
                 $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
@@ -409,69 +410,70 @@ class SitemapController extends Controller
                 foreach ($items as $item) {
                     $loc = '';
                     $images = [];
-                    $lastmod = $item->updated_at ? $item->updated_at->toAtomString() : now()->toAtomString();
+                    // Use Carbon::parse to handle potential non-Carbon update dates safely
+                    $updatedAt = $item->updated_at ? \Carbon\Carbon::parse($item->updated_at) : now();
+                    $lastmod = $updatedAt->toIso8601String();
 
                     // Logic based on type
                     switch ($type) {
                         case 'car-listings':
                         case 'car-rentals':
-                            $loc = 'https://ramouse.com/car-listings/' . $item->slug;
+                            $loc = $baseUrl . '/car-listings/' . $item->slug;
                             $photos = is_array($item->photos) ? $item->photos : [];
                             foreach ($photos as $photo) {
                                 $images[] = [
-                                    'loc' => asset('storage/' . $photo),
+                                    'loc' => $baseUrl . '/storage/' . $photo,
                                     'title' => $item->title
                                 ];
                             }
                             break;
 
                         case 'car-providers':
-                            $loc = 'https://ramouse.com/car-providers/' . $item->id;
+                            $loc = $baseUrl . '/car-providers/' . $item->id;
                             if ($item->profile_photo) {
                                 $images[] = [
-                                    'loc' => asset('storage/' . $item->profile_photo),
+                                    'loc' => $baseUrl . '/storage/' . $item->profile_photo,
                                     'title' => $item->name
                                 ];
                             }
                             break;
 
                         case 'technicians':
-                            $loc = 'https://ramouse.com/technicians/' . $item->id;
+                            $loc = $baseUrl . '/technicians/' . $item->id;
                             if ($item->profile_photo) {
                                 $images[] = [
-                                    'loc' => asset('storage/' . $item->profile_photo),
+                                    'loc' => $baseUrl . '/storage/' . $item->profile_photo,
                                     'title' => $item->name
                                 ];
                             }
                             break;
 
                         case 'tow-trucks':
-                            $loc = 'https://ramouse.com/tow-trucks/' . $item->id;
+                            $loc = $baseUrl . '/tow-trucks/' . $item->id;
                             if ($item->profile_photo) {
                                 $images[] = [
-                                    'loc' => asset('storage/' . $item->profile_photo),
+                                    'loc' => $baseUrl . '/storage/' . $item->profile_photo,
                                     'title' => $item->name
                                 ];
                             }
                             break;
 
                         case 'products':
-                            $loc = 'https://ramouse.com/store/products/' . $item->id;
+                            $loc = $baseUrl . '/store/products/' . $item->id;
                             $media = is_array($item->media) ? $item->media : [];
                             foreach ($media as $img) {
                                 $images[] = [
-                                    'loc' => asset('storage/' . $img),
+                                    'loc' => $baseUrl . '/storage/' . $img,
                                     'title' => $item->name
                                 ];
                             }
                             break;
 
                         case 'blog-posts':
-                            $loc = 'https://ramouse.com/blog/' . $item->slug;
+                            $loc = $baseUrl . '/blog/' . $item->slug;
                             if ($item->imageUrl) {
                                 $images[] = [
-                                    'loc' => asset('storage/' . $item->imageUrl), // Asset helper points to storage correctly? Usually asset() points to public.
-                                    // If asset() returns backend URL, we might need a fix here too.
+                                    'loc' => $baseUrl . '/storage/' . $item->imageUrl,
                                     'title' => $item->title
                                 ];
                             }

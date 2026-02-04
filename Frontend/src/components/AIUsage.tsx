@@ -112,6 +112,41 @@ const AIUsage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         </a>
                     </div>
 
+                    {/* Real-time Feeds Section */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                            <span className="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wider">ATOM 1.0</span>
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                تدفقات البيانات الحية
+                                <Icon name="Rss" className="w-5 h-5 text-red-500" />
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[
+                                { name: 'Car Listings', url: 'https://ramouse.com/feed/car-listings.xml', label: 'إعلانات السيارات' },
+                                { name: 'Car Rentals', url: 'https://ramouse.com/feed/car-rentals.xml', label: 'تأجير السيارات' },
+                                { name: 'Products', url: 'https://ramouse.com/feed/products.xml', label: 'قطع الغيار' },
+                                { name: 'Car Providers', url: 'https://ramouse.com/feed/car-providers.xml', label: 'صانعوا السوق' },
+                                { name: 'Technicians', url: 'https://ramouse.com/feed/technicians.xml', label: 'الفنيين والصيانة' },
+                                { name: 'Tow Trucks', url: 'https://ramouse.com/feed/tow-trucks.xml', label: 'خدمات السحب' },
+                            ].map((feed) => (
+                                <a
+                                    key={feed.name}
+                                    href={feed.url}
+                                    target="_blank"
+                                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all group"
+                                >
+                                    <Icon name="ExternalLink" className="w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors" />
+                                    <div className="text-right">
+                                        <div className="font-bold text-slate-700 dark:text-slate-200 text-sm">{feed.label}</div>
+                                        <div className="text-xs text-slate-400 font-mono mt-1" dir="ltr">{feed.name}.xml</div>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Permissions Footer */}
                     <div className="border-t border-slate-200 dark:border-slate-800 pt-8 text-center md:text-right">
                         <div className="inline-flex flex-col md:flex-row items-center gap-4 bg-green-50 dark:bg-green-900/10 px-6 py-4 rounded-xl border border-green-100 dark:border-green-900/30">
