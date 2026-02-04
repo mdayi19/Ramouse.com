@@ -9,7 +9,7 @@ import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatService, ChatMessage as IChatMessage } from '../../services/ChatService';
 import { chatStreamService } from '../../services/chat-stream.service';
 import { useChatMessages } from '../../hooks/useChatMessages';
-import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { chatConfig } from '../../config/chat.config';
 
 /**

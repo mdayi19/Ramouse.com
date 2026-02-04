@@ -374,7 +374,7 @@ class AiSearchService
 
         $results = $q->limit(5)->get();
 
-        return $this->formatCarResults($results);
+        return $this->formatCarResults($results, $type);
     }
 
     protected function searchTechnicians($args, $userLat, $userLng)
@@ -382,28 +382,66 @@ class AiSearchService
         $specialty = $args['specialty'] ?? null;
         $city = $args['city'] ?? null;
 
-        $q = Technician::query()->where('is_active', true)->where('is_verified', true);
+        // Start with active technicians only (don't require verified initially)
+        $q = Technician::query()->where('is_active', true);
 
-        if ($specialty)
+        // Apply filters
+        if ($specialty) {
             $q->where('specialty', 'like', "%$specialty%");
-        if ($city)
+        }
+
+        if ($city) {
             $q->where('city', 'like', "%$city%");
+        }
 
         // Rating filter
-        if (!empty($args['min_rating']))
+        if (!empty($args['min_rating'])) {
             $q->where('average_rating', '>=', $args['min_rating']);
+        }
 
         // Geolocation Logic - automatically use if coordinates provided
         if ($userLat && $userLng) {
             // Use MySQL spatial functions for GEOMETRY POINT type
-            // location is stored as POINT, use ST_X (longitude) and ST_Y (latitude)
             $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( ST_Y(location) ) ) * cos( radians( ST_X(location) ) - radians(?) ) + sin( radians(?) ) * sin( radians( ST_Y(location) ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
                 ->whereNotNull('location')
                 ->having('distance', '<', 50)
                 ->orderBy('distance');
+        } else {
+            // Order by rating if no location
+            $q->orderBy('average_rating', 'desc');
         }
 
-        $results = $q->limit(5)->get();
+        $results = $q->limit(10)->get();
+
+        // Fallback 1: If no results and both specialty and city were provided, try without city
+        if ($results->isEmpty() && $specialty && $city) {
+            $q = Technician::query()
+                ->where('is_active', true)
+                ->where('specialty', 'like', "%$specialty%")
+                ->orderBy('average_rating', 'desc')
+                ->limit(10);
+
+            $results = $q->get();
+        }
+
+        // Fallback 2: If still no results and specialty was provided, try broader match
+        if ($results->isEmpty() && $specialty) {
+            $q = Technician::query()
+                ->where('is_active', true)
+                ->orderBy('average_rating', 'desc')
+                ->limit(10);
+
+            $results = $q->get();
+        }
+
+        // Fallback 3: If STILL no results, just show ANY active technicians
+        if ($results->isEmpty()) {
+            $results = Technician::query()
+                ->where('is_active', true)
+                ->orderBy('average_rating', 'desc')
+                ->limit(10)
+                ->get();
+        }
 
         return $this->formatTechnicianResults($results);
     }
@@ -465,7 +503,7 @@ class AiSearchService
     // --- RESULT FORMATTING METHODS ---
     // These methods structure search results for rich card display in the frontend
 
-    protected function formatCarResults($results)
+    protected function formatCarResults($results, $type = 'sale')
     {
         if ($results->isEmpty()) {
             return [
@@ -497,7 +535,10 @@ class AiSearchService
         return [
             'type' => 'car_listings',
             'count' => $results->count(),
-            'items' => $results->map(function ($car) {
+            'items' => $results->map(function ($car) use ($type) {
+                // Use correct frontend route based on listing type
+                $urlPrefix = $type === 'rent' ? '/rent-car/' : '/car-listings/';
+
                 // Explicitly create clean array without boolean attributes
                 return [
                     'id' => (int) $car->id,
@@ -509,9 +550,11 @@ class AiSearchService
                     'brand' => $car->brand?->name ?? 'غير محدد',
                     'model' => (string) $car->model,
                     'image' => isset($car->photos[0]) ? (string) $car->photos[0] : null,
-                    'url' => "/cars/{$car->slug}",
+                    'url' => $urlPrefix . $car->slug,
+                    'slug' => $car->slug,
                     'condition' => (string) $car->condition,
                     'transmission' => (string) $car->transmission,
+                    'listing_type' => $type,
                 ];
             })->values()->toArray(),
             'suggestions' => $suggestions
@@ -525,25 +568,84 @@ class AiSearchService
                 'type' => 'technicians',
                 'message' => 'لم يتم العثور على فنيين. جرب تخصص أو مدينة مختلفة.',
                 'count' => 0,
-                'items' => []
+                'items' => [],
+                'suggestions' => [
+                    'ابحث في مدينة أخرى',
+                    'جرب تخصص مختلف',
+                    'اعرض جميع الفنيين'
+                ]
             ];
+        }
+
+        // Generate contextual suggestions
+        $suggestions = [
+            'ابحث عن قطع غيار لسيارتك',
+            'ابحث عن سيارة من نفس الفني'
+        ];
+
+        if ($results->count() > 3) {
+            $suggestions[] = 'اعرض فقط الفنيين الموثقين';
         }
 
         return [
             'type' => 'technicians',
             'count' => $results->count(),
             'items' => $results->map(function ($tech) {
+                // Parse socials JSON if it's a string
+                $socials = is_string($tech->socials)
+                    ? json_decode($tech->socials, true)
+                    : (is_array($tech->socials) ? $tech->socials : []);
+
+                // Parse gallery JSON if it's a string
+                $gallery = is_string($tech->gallery)
+                    ? json_decode($tech->gallery, true)
+                    : (is_array($tech->gallery) ? $tech->gallery : []);
+
+                // Get cover image from gallery (first item)
+                $coverImage = null;
+                if (!empty($gallery) && isset($gallery[0])) {
+                    if (isset($gallery[0]['path'])) {
+                        $coverImage = url('storage/' . $gallery[0]['path']);
+                    } elseif (isset($gallery[0]['url'])) {
+                        $coverImage = $gallery[0]['url'];
+                    }
+                }
+
                 return [
-                    'id' => $tech->id,
-                    'name' => $tech->name,
-                    'specialty' => $tech->specialty,
-                    'rating' => $tech->average_rating,
-                    'city' => $tech->city,
+                    'id' => (string) $tech->id,  // Keep as string (phone number format)
+                    'name' => (string) $tech->name,
+                    'specialty' => (string) $tech->specialty,
+                    'rating' => $tech->average_rating ?? 0,
+                    'city' => (string) $tech->city,
                     'distance' => $tech->distance ? round($tech->distance, 1) . ' كم' : null,
-                    'isVerified' => $tech->is_verified ? 1 : 0, // Convert boolean to int
-                    'phone' => $tech->phone,
+                    'isVerified' => $tech->is_verified ? 1 : 0,
+
+                    // ✅ FIX: Use id as phone (id IS the phone number)
+                    'phone' => (string) $tech->id,
+
+                    // ✅ FIX: Get whatsapp from socials JSON, fallback to id
+                    'whatsapp' => isset($socials['whatsapp'])
+                        ? (string) $socials['whatsapp']
+                        : (string) $tech->id,
+
+                    'description' => $tech->description
+                        ? mb_substr($tech->description, 0, 100)
+                        : '',
+
+                    // ✅ FIX: Format profile photo URL
+                    'profile_photo' => $tech->profile_photo
+                        ? url('storage/' . $tech->profile_photo)
+                        : null,
+
+                    // ✅ FIX: Get cover image from parsed gallery
+                    'cover_image' => $coverImage,
+
+                    // ✅ REMOVED: years_experience field doesn't exist in database
+    
+                    'url' => "/technicians/" . rawurlencode($tech->id),
                 ];
-            })->toArray()
+            })->toArray(),
+            'suggestions' => $suggestions
         ];
     }
 
@@ -552,26 +654,82 @@ class AiSearchService
         if ($results->isEmpty()) {
             return [
                 'type' => 'tow_trucks',
-                'message' => 'لم يتم العثور على سطحات قريبة.',
+                'message' => 'لم يتم العثور على سطحات قريبة. جرب البحث في منطقة أخرى.',
                 'count' => 0,
-                'items' => []
+                'items' => [],
+                'suggestions' => [
+                    'ابحث في مدينة أخرى',
+                    'جرب نوع سطحة مختلف',
+                    'عرض جميع السطحات'
+                ]
             ];
         }
+
+        // Contextual suggestions
+        $suggestions = [
+            'ابحث عن ورشة صيانة قريبة',
+            'ابحث عن قطع غيار'
+        ];
 
         return [
             'type' => 'tow_trucks',
             'count' => $results->count(),
             'items' => $results->map(function ($tow) {
+                // Parse socials JSON if it's a string
+                $socials = is_string($tow->socials)
+                    ? json_decode($tow->socials, true)
+                    : (is_array($tow->socials) ? $tow->socials : []);
+
+                // Parse gallery JSON if it's a string
+                $gallery = is_string($tow->gallery)
+                    ? json_decode($tow->gallery, true)
+                    : (is_array($tow->gallery) ? $tow->gallery : []);
+
+                // Get cover image from gallery (first item)
+                $coverImage = null;
+                if (!empty($gallery) && isset($gallery[0])) {
+                    if (isset($gallery[0]['path'])) {
+                        $coverImage = url('storage/' . $gallery[0]['path']);
+                    } elseif (isset($gallery[0]['url'])) {
+                        $coverImage = $gallery[0]['url'];
+                    }
+                }
+
                 return [
-                    'id' => $tow->id,
-                    'name' => $tow->name,
-                    'vehicleType' => $tow->vehicle_type,
-                    'rating' => $tow->average_rating,
-                    'city' => $tow->city,
+                    'id' => (string) $tow->id,
+                    'name' => (string) $tow->name,
+                    'vehicleType' => (string) $tow->vehicle_type,
+                    'rating' => $tow->average_rating ?? 0,
+                    'city' => (string) $tow->city,
                     'distance' => $tow->distance ? round($tow->distance, 1) . ' كم' : null,
-                    'phone' => $tow->phone,
+                    'isVerified' => $tow->is_verified ? 1 : 0,
+
+                    // ✅ FIX: Use id as phone
+                    'phone' => (string) $tow->id,
+
+                    // ✅ ADD: WhatsApp from socials
+                    'whatsapp' => isset($socials['whatsapp'])
+                        ? (string) $socials['whatsapp']
+                        : (string) $tow->id,
+
+                    // ✅ ADD: Description truncated
+                    'description' => $tow->description
+                        ? mb_substr($tow->description, 0, 100)
+                        : '',
+
+                    // ✅ ADD: Profile photo URL
+                    'profile_photo' => $tow->profile_photo
+                        ? url('storage/' . $tow->profile_photo)
+                        : null,
+
+                    // ✅ ADD: Cover image
+                    'cover_image' => $coverImage,
+
+                    // ✅ ADD: Profile URL
+                    'url' => "/tow-trucks/" . rawurlencode($tow->id),
                 ];
-            })->toArray()
+            })->toArray(),
+            'suggestions' => $suggestions
         ];
     }
 

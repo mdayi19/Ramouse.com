@@ -1,5 +1,6 @@
 import React from 'react';
-import { CarCard } from './CarCard';
+import { SaleCarCard } from './SaleCarCard';
+import { RentCarCard } from './RentCarCard';
 import { TechnicianCard } from './TechnicianCard';
 import { TowTruckCard } from './TowTruckCard';
 import { ProductCard } from './ProductCard';
@@ -53,9 +54,19 @@ export const ResultCards: React.FC<ResultCardsProps> = ({ results, onSuggestionC
             </div>
 
             {/* Result Cards */}
-            {results.type === 'car_listings' && results.items.map((item, index) => (
-                <CarCard key={item.id || index} {...item} />
-            ))}
+            {results.type === 'car_listings' && results.items.map((item, index) => {
+                // Detect if it's a rental listing
+                const isRental = item.listing_type === 'rent' ||
+                    item.listing_type?.toLowerCase() === 'rent' ||
+                    item.daily_rate !== undefined ||
+                    item.rental_terms !== undefined;
+
+                return isRental ? (
+                    <RentCarCard key={item.id || index} {...item} />
+                ) : (
+                    <SaleCarCard key={item.id || index} {...item} />
+                );
+            })}
 
             {results.type === 'technicians' && results.items.map((item, index) => (
                 <TechnicianCard key={item.id || index} {...item} />

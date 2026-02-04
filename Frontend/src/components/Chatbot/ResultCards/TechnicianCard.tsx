@@ -1,115 +1,255 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Phone, MapPin, Star, BadgeCheck, Wrench } from 'lucide-react';
+import {
+    Phone, MessageCircle, MapPin, Star, BadgeCheck,
+    Wrench, Heart, Share2, Eye, User
+} from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
 interface TechnicianCardProps {
-    id: number;
+    id: number | string;
     name: string;
     specialty: string;
-    rating: number;
+    rating?: number;
     city: string;
     distance?: string;
-    isVerified: boolean;
+    isVerified: boolean | number;
     phone: string;
+    whatsapp?: string;
+    description?: string;
+    profile_photo?: string;
+    cover_image?: string;
+    // Note: years_experience removed - field doesn't exist in database
+    url?: string;
 }
 
-export const TechnicianCard: React.FC<TechnicianCardProps> = ({
+/**
+ * PremiumTechnicianCard - Enhanced chatbot result card for technicians
+ * Matches the premium design of SaleCarCard and RentCarCard
+ */
+export const PremiumTechnicianCard: React.FC<TechnicianCardProps> = ({
+    id,
     name,
     specialty,
-    rating,
+    rating = 0,
     city,
     distance,
     isVerified,
-    phone
+    phone,
+    whatsapp,
+    description,
+    profile_photo,
+    cover_image,
+    url
 }) => {
+    const [isFavorited, setIsFavorited] = useState(false);
+    const verified = Boolean(isVerified);
+
+    // Handlers
+    const handleView = () => {
+        if (url) {
+            window.location.href = url;
+        }
+    };
+
     const handleCall = (e: React.MouseEvent) => {
-        e.preventDefault();
-        window.location.href = `tel:${phone}`;
+        e.stopPropagation();
+        if (phone) {
+            window.location.href = `tel:${phone}`;
+        }
     };
 
     const handleWhatsApp = (e: React.MouseEvent) => {
-        e.preventDefault();
-        window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
+        e.stopPropagation();
+        const number = whatsapp || phone;
+        if (number) {
+            const message = encodeURIComponent(`مرحباً، أنا بحاجة لخدمات ${specialty}`);
+            window.open(`https://wa.me/${number.replace(/\D/g, '')}?text=${message}`, '_blank');
+        }
+    };
+
+    const handleFavorite = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsFavorited(!isFavorited);
+        // TODO: Backend integration
+    };
+
+    const handleShare = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const shareUrl = `${window.location.origin}${url}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: name, url: shareUrl });
+            } catch { }
+        } else {
+            navigator.clipboard.writeText(shareUrl);
+        }
     };
 
     return (
-        <motion.div
+        <motion.article
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-                "rounded-2xl shadow-lg overflow-hidden transition-all duration-300",
-                "hover:shadow-xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/30",
-                "bg-white dark:bg-slate-800 flex flex-col"
+                "group flex flex-col bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer",
+                verified
+                    ? "border-emerald-400 dark:border-emerald-600 ring-1 ring-emerald-400/30"
+                    : "border-slate-200 dark:border-slate-700"
             )}
+            onClick={handleView}
         >
-            {/* Cover Image / Header */}
-            <div className="h-16 bg-gradient-to-r from-primary/20 to-primary/5 relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+            {/* Cover Image */}
+            <div className="relative w-full h-24 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 dark:from-emerald-900/30 dark:to-teal-900/30 overflow-hidden">
+                {cover_image ? (
+                    <img
+                        src={cover_image}
+                        alt="Workshop"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/20 dark:to-teal-900/20" />
+                )}
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                {/* Distance Badge */}
                 {distance && (
-                    <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-md">
+                    <div className="absolute top-2 left-2 bg-emerald-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-md backdrop-blur-sm">
                         <MapPin className="w-3 h-3" />
                         {distance}
                     </div>
                 )}
+
+                {/* Verified Badge */}
+                {verified && (
+                    <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
+                        <BadgeCheck className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
+                        <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400">موثوق</span>
+                    </div>
+                )}
             </div>
 
-            {/* Body */}
-            <div className="p-3 flex flex-col flex-grow relative -mt-8">
+            {/* Content */}
+            <div className="flex flex-col flex-1 p-3 gap-3 relative -mt-10">
+                {/* Profile Section */}
                 <div className="flex items-end gap-3">
                     {/* Avatar */}
-                    <div className="relative flex-shrink-0">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-4 ring-white dark:ring-slate-800 shadow-md">
-                            <Wrench className="w-8 h-8 text-primary" />
+                    <div className="relative flex-shrink0">
+                        {profile_photo ? (
+                            <img
+                                src={profile_photo}
+                                alt={name}
+                                className="w-20 h-20 rounded-full object-cover ring-4 ring-white dark:ring-slate-800 shadow-lg"
+                                loading="lazy"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                }}
+                            />
+                        ) : null}
+                        <div className={cn(
+                            "w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-500/30 flex items-center justify-center ring-4 ring-white dark:ring-slate-800 shadow-lg",
+                            profile_photo && "hidden"
+                        )}>
+                            <Wrench className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
                         </div>
-                        {isVerified && (
-                            <div className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full" title="فني موثوق">
-                                <BadgeCheck className="w-5 h-5 text-primary fill-primary/20" />
-                            </div>
-                        )}
                     </div>
 
                     {/* Rating */}
-                    {rating > 0 && (
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 mb-1">
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                                {rating.toFixed(1)}
-                            </span>
-                        </div>
-                    )}
+                    <div className="flex flex-col gap-1 mb-1">
+                        {rating > 0 && (
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                                    {rating.toFixed(1)}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Name & Specialty */}
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white mt-2 truncate">
-                    {name}
-                </h4>
-                <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="font-medium">{specialty}</span>
-                    <span className="text-slate-300 dark:text-slate-600">•</span>
-                    <span>{city}</span>
+                <div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {name}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <Wrench className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="font-medium">{specialty}</span>
+                        <span className="text-slate-300 dark:text-slate-600">•</span>
+                        <MapPin className="w-3 h-3" />
+                        <span>{city}</span>
+                    </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-slate-700">
-                    <button
-                        onClick={handleCall}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-xs font-bold"
-                    >
-                        <Phone className="w-3 h-3" />
-                        اتصال
-                    </button>
-                    <button
-                        onClick={handleWhatsApp}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-500 hover:text-white transition-colors text-xs font-bold"
-                    >
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.304-1.654a11.882 11.882 0 005.713 1.456h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                        </svg>
-                        واتساب
-                    </button>
+                {/* Description */}
+                {description && (
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                        {description}
+                    </p>
+                )}
+
+                {/* Footer */}
+                <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
+                    {/* Actions Row */}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
+                            <span>اضغط للتفاصيل</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleFavorite}
+                                className={cn(
+                                    "p-2 rounded-full transition-all border",
+                                    isFavorited
+                                        ? "bg-red-50 border-red-200 text-red-500"
+                                        : "border-slate-200 text-slate-400 hover:text-red-500 hover:bg-slate-50 bg-white dark:bg-slate-800 dark:border-slate-700"
+                                )}
+                                aria-label="مفضلة"
+                            >
+                                <Heart className={cn("w-4 h-4", isFavorited && "fill-current")} />
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                className="p-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 bg-white dark:bg-slate-800 transition-all"
+                                aria-label="مشاركة"
+                            >
+                                <Share2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Contact Buttons */}
+                    {(phone || whatsapp) && (
+                        <div className="grid grid-cols-2 gap-2">
+                            {phone && (
+                                <button
+                                    onClick={handleCall}
+                                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-sm transition-all"
+                                >
+                                    <Phone className="w-3.5 h-3.5" />
+                                    اتصل
+                                </button>
+                            )}
+                            {(whatsapp || phone) && (
+                                <button
+                                    onClick={handleWhatsApp}
+                                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-white text-xs font-semibold shadow-sm transition-all"
+                                >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                    واتساب
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
-        </motion.div>
+        </motion.article>
     );
 };
+
+// Keep backward compatibility with old export
+export const TechnicianCard = PremiumTechnicianCard;

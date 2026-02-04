@@ -1,4 +1,6 @@
 export { CarCard } from './CarCard';
+export { SaleCarCard } from './SaleCarCard';
+export { RentCarCard } from './RentCarCard';
 export { TechnicianCard } from './TechnicianCard';
 export { TowTruckCard } from './TowTruckCard';
 export { ProductCard } from './ProductCard';
