@@ -220,9 +220,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 20, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed z-40 bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-hidden font-sans
-                        md:bottom-24 md:right-4 md:w-[400px] md:h-[600px] md:max-h-[80vh] md:rounded-3xl md:border md:border-slate-200 md:dark:border-slate-700
-                        bottom-16 right-0 left-0 top-16 w-full h-[calc(100vh-8rem)] rounded-none"
+                    className="fixed z-[60] bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-hidden font-sans
+                        md:bottom-24 md:left-6 md:w-[400px] md:h-[600px] md:max-h-[80vh] md:rounded-3xl md:border md:border-slate-200 md:dark:border-slate-700
+                        inset-0 w-full h-[100dvh] md:h-auto md:inset-auto"
                 >
                     <ChatErrorBoundary onReset={handleErrorReset}>
                         {/* Header */}

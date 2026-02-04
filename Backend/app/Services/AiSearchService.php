@@ -560,9 +560,9 @@ class AiSearchService
 
                 // Add rental specific fields if they exist or type is rent
                 if ($type === 'rent' || $car->daily_rate || $car->weekly_rate || $car->monthly_rate) {
-                    $item['daily_rate'] = $car->daily_rate;
-                    $item['weekly_rate'] = $car->weekly_rate;
-                    $item['monthly_rate'] = $car->monthly_rate;
+                    $item['daily_rate'] = (int) $car->daily_rate;
+                    $item['weekly_rate'] = (int) $car->weekly_rate;
+                    $item['monthly_rate'] = (int) $car->monthly_rate;
                     $item['rental_terms'] = $car->rental_terms;
 
                     // Force listing_type to rent if we have rates

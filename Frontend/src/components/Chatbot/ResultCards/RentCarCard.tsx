@@ -10,9 +10,9 @@ import { cn } from '../../../lib/utils';
 interface RentCarCardProps {
     id: number;
     title: string;
-    daily_rate?: number | string;
-    weekly_rate?: number | string;
-    monthly_rate?: number | string;
+    daily_rate?: number;
+    weekly_rate?: number;
+    monthly_rate?: number;
     rental_terms?: any;
     year: number;
     mileage?: number;
@@ -55,30 +55,13 @@ const translateSpec = (term: string | undefined): string => {
         term;
 };
 
-const formatPrice = (price: number | string | undefined): string => {
+const formatPrice = (price: number | undefined): string => {
     if (!price) return 'اتصل';
-
-    // If already formatted (contains '$'), return as-is
-    if (typeof price === 'string' && price.includes('$')) {
-        return price;
-    }
-
-    // Handle European format: "13.000" -> 13000
-    let numPrice: number;
-    if (typeof price === 'string') {
-        // Remove dots and commas (thousands separators) then parse
-        const cleaned = price.replace(/[.,]/g, '');
-        numPrice = parseFloat(cleaned);
-    } else {
-        numPrice = price;
-    }
-
-    if (isNaN(numPrice)) return '—';
-    return new Intl.NumberFormat('en-US').format(numPrice) + ' $';
+    return new Intl.NumberFormat('en-US').format(price) + ' $';
 };
 
 // Rental Price Grid Component
-const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number | string; weekly?: number | string; monthly?: number | string }) => (
+const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number; weekly?: number; monthly?: number }) => (
     <div className="grid grid-cols-3 gap-2 w-full">
         {/* Daily */}
         <div className="group flex flex-col items-center justify-center p-2 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl border border-teal-100 dark:border-teal-800/50 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-800">
@@ -93,7 +76,7 @@ const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number | string; 
             </div>
         ) : (
             <div className="flex flex-col items-center justify-center p-2 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 opacity-50">
-                <span className="text-[10px] text-slate-400">—</span>
+                <span className="text-[10px] text-slate-400">-</span>
             </div>
         )}
         {/* Monthly */}
@@ -104,7 +87,7 @@ const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number | string; 
             </div>
         ) : (
             <div className="flex flex-col items-center justify-center p-2 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 opacity-50">
-                <span className="text-[10px] text-slate-400">—</span>
+                <span className="text-[10px] text-slate-400">-</span>
             </div>
         )}
     </div>
@@ -171,10 +154,10 @@ export const RentCarCard: React.FC<RentCarCardProps> = ({
         const structured = isObj ? (terms as any) : {};
 
         return {
-            dailyRate: structured.daily_rate || daily_rate,
-            weeklyRate: structured.weekly_rate || weekly_rate,
-            monthlyRate: structured.monthly_rate || monthly_rate,
-            deposit: structured.security_deposit,
+            dailyRate: Number(structured.daily_rate || daily_rate),
+            weeklyRate: Number(structured.weekly_rate || weekly_rate),
+            monthlyRate: Number(structured.monthly_rate || monthly_rate),
+            deposit: Number(structured.security_deposit || 0),
             minAge: structured.min_renter_age,
         };
     }, [rental_terms, daily_rate, weekly_rate, monthly_rate]);

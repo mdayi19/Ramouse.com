@@ -30,6 +30,7 @@ import { OfflineIndicator } from './components/PWA/OfflineIndicator';
 import Preloader from './components/Preloader';
 import { initAnalytics } from './lib/analytics';
 import RouteTracker from './components/RouteTracker';
+import ScrollToTop from './components/ScrollToTop';
 
 // Lazy loads
 const WelcomeScreen = lazy(() => import('./components/WelcomeScreen'));
@@ -668,7 +669,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className={`min-h-screen flex flex-col font-sans bg-sky-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 ${isDarkMode ? 'dark' : ''}`}>
+        <div className={`min-h-[100dvh] flex flex-col font-sans bg-sky-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 ${isDarkMode ? 'dark' : ''}`}>
             {/* Skip to content link for keyboard navigation */}
             <a
                 href="#main-content"
@@ -734,6 +735,7 @@ const App: React.FC = () => {
                 <ErrorBoundary>
                     <Suspense fallback={<PageLoader />}>
                         <RouteTracker />
+                        <ScrollToTop />
                         <Routes>
                             {/* Welcome Screen Route - Redirect authenticated users to dashboard */}
                             <Route
@@ -951,49 +953,68 @@ const App: React.FC = () => {
 
             <Suspense fallback={null}>
                 {showLogin && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70]" onClick={handleCloseLogin}>
-                        <LoginScreen
-                            onLoginSuccess={handleLoginSuccess}
-                            onClose={handleCloseLogin}
-                            settings={settings}
-                            sendMessage={sendMessage}
-                            addNotificationForUser={addNotificationForUser}
-                            showToast={showToast}
-                            onGoToTechnicianRegistration={() => { handleNavigate('technicianRegistration'); handleCloseLogin(); }}
-                            onGoToTowTruckRegistration={() => { handleNavigate('towTruckRegistration'); handleCloseLogin(); }}
-                            onGoToCarProviderRegistration={() => { handleNavigate('carProviderRegistration'); handleCloseLogin(); }}
-                        />
+                    <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/60 backdrop-blur-sm" onClick={handleCloseLogin}>
+                        <div className="flex min-h-full items-center justify-center p-4">
+                            <LoginScreen
+                                onLoginSuccess={handleLoginSuccess}
+                                onClose={handleCloseLogin}
+                                settings={settings}
+                                sendMessage={sendMessage}
+                                addNotificationForUser={addNotificationForUser}
+                                showToast={showToast}
+                                onGoToTechnicianRegistration={() => { handleNavigate('technicianRegistration'); handleCloseLogin(); }}
+                                onGoToTowTruckRegistration={() => { handleNavigate('towTruckRegistration'); handleCloseLogin(); }}
+                                onGoToCarProviderRegistration={() => { handleNavigate('carProviderRegistration'); handleCloseLogin(); }}
+                            />
+                        </div>
                     </div>
                 )}
             </Suspense>
 
-            {/* Floating Services Button (Guest Mobile) */}
-            {!isAuthenticated && isPublicView && (
+            {/* Floating Action Buttons / Dock */}
+            {/* Logic: Show always on public pages, regardless of auth */}
+            {(!isSidebarOpen && isPublicView) && (
                 <>
-                    <FloatingServicesButton
-                        onClick={() => setShowServicesPopup(true)}
-                        logoUrl={settings.logoUrl}
-                    />
-                    <FloatingChatBotButton
-                        onClick={() => setIsChatOpen(!isChatOpen)}
-                        isOpen={isChatOpen}
-                    />
-                    <ChatWidget
-                        isOpen={isChatOpen}
-                        onClose={() => setIsChatOpen(false)}
-                        isAuthenticated={isAuthenticated}
-                        onLoginClick={handleLoginClick}
-                    />
-                </>
-            )}
+                    {/* Desktop/Tablet: Stylish Glass Dock */}
+                    <div className="hidden md:flex fixed bottom-6 left-6 z-50 items-center p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 shadow-2xl transition-all hover:scale-105 hover:bg-white/90 dark:hover:bg-slate-900/90 gap-1.5">
+                        <FloatingServicesButton
+                            onClick={() => setShowServicesPopup(true)}
+                            logoUrl={settings.logoUrl}
+                            isDesktop={true}
+                        />
 
-            {/* Authenticated Floating Button (If desireable, or generally available) */}
-            {isAuthenticated && (
-                <>
-                    <FloatingChatBotButton
-                        onClick={() => setIsChatOpen(!isChatOpen)}
-                        isOpen={isChatOpen}
-                    />
+                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                        <FloatingChatBotButton
+                            onClick={() => setIsChatOpen(!isChatOpen)}
+                            isOpen={isChatOpen}
+                            isDesktop={true}
+                        />
+                    </div>
+
+                    {/* Mobile: Bottom Dock (Side-by-Side Pill Buttons) */}
+                    {/* Mobile: Bottom Dock (Side-by-Side Flush) */}
+                    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch justify-center gap-0 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+
+                        {/* ChatBot Button */}
+                        <div className="pointer-events-auto flex-1">
+                            <FloatingChatBotButton
+                                onClick={() => setIsChatOpen(!isChatOpen)}
+                                isOpen={isChatOpen}
+                                isDocked={true}
+                            />
+                        </div>
+
+                        {/* Services Button */}
+                        <div className="pointer-events-auto flex-1">
+                            <FloatingServicesButton
+                                onClick={() => setShowServicesPopup(true)}
+                                logoUrl={settings.logoUrl}
+                                isDocked={true}
+                            />
+                        </div>
+                    </div>
+
                     <ChatWidget
                         isOpen={isChatOpen}
                         onClose={() => setIsChatOpen(false)}
