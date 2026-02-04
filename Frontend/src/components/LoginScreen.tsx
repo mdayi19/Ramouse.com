@@ -360,6 +360,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       case 'enterPhone':
         return (
           <form onSubmit={handlePhoneSubmit} className={`space-y-6 ${fadeClass}`}>
+
+            <div className="text-center bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-xl p-3">
+              <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium">
+                إذا لم يكن لديك حساب، أدخل رقم هاتفك وسيصلك رمز التحقق للتسجيل فوراً.
+              </p>
+            </div>
+
             <div>
               <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">رقم الهاتف</label>
               <div className="flex mt-1 group relative">

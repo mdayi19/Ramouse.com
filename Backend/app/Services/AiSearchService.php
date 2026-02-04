@@ -539,8 +539,8 @@ class AiSearchService
                 // Use correct frontend route based on listing type
                 $urlPrefix = $type === 'rent' ? '/rent-car/' : '/car-listings/';
 
-                // Explicitly create clean array without boolean attributes
-                return [
+                // Base item data
+                $item = [
                     'id' => (int) $car->id,
                     'title' => (string) $car->title,
                     'price' => number_format($car->price, 0) . ' $',
@@ -555,7 +555,23 @@ class AiSearchService
                     'condition' => (string) $car->condition,
                     'transmission' => (string) $car->transmission,
                     'listing_type' => $type,
+                    'fuel_type' => (string) $car->fuel_type,
                 ];
+
+                // Add rental specific fields if they exist or type is rent
+                if ($type === 'rent' || $car->daily_rate || $car->weekly_rate || $car->monthly_rate) {
+                    $item['daily_rate'] = $car->daily_rate;
+                    $item['weekly_rate'] = $car->weekly_rate;
+                    $item['monthly_rate'] = $car->monthly_rate;
+                    $item['rental_terms'] = $car->rental_terms;
+
+                    // Force listing_type to rent if we have rates
+                    if ($car->daily_rate || $car->weekly_rate) {
+                        $item['listing_type'] = 'rent';
+                    }
+                }
+
+                return $item;
             })->values()->toArray(),
             'suggestions' => $suggestions
         ];

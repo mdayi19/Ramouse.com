@@ -56,7 +56,7 @@ const translateSpec = (term: string | undefined): string => {
 };
 
 const formatPrice = (price: number | string | undefined): string => {
-    if (!price) return '—';
+    if (!price) return 'اتصل';
 
     // If already formatted (contains '$'), return as-is
     if (typeof price === 'string' && price.includes('$')) {
@@ -78,7 +78,7 @@ const formatPrice = (price: number | string | undefined): string => {
 };
 
 // Rental Price Grid Component
-const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number; weekly?: number; monthly?: number }) => (
+const RentalPriceGrid = ({ daily, weekly, monthly }: { daily?: number | string; weekly?: number | string; monthly?: number | string }) => (
     <div className="grid grid-cols-3 gap-2 w-full">
         {/* Daily */}
         <div className="group flex flex-col items-center justify-center p-2 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl border border-teal-100 dark:border-teal-800/50 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-800">
@@ -155,9 +155,21 @@ export const RentCarCard: React.FC<RentCarCardProps> = ({
 
     // Parse rental info
     const rentalInfo = useMemo(() => {
-        const terms = rental_terms;
-        const isObj = typeof terms === 'object' && !Array.isArray(terms);
+        let terms = rental_terms;
+
+        // Try to parse if string
+        if (typeof terms === 'string') {
+            try {
+                terms = JSON.parse(terms);
+            } catch (e) {
+                console.error("Failed to parse rental terms", e);
+                terms = {};
+            }
+        }
+
+        const isObj = terms && typeof terms === 'object' && !Array.isArray(terms);
         const structured = isObj ? (terms as any) : {};
+
         return {
             dailyRate: structured.daily_rate || daily_rate,
             weeklyRate: structured.weekly_rate || weekly_rate,
