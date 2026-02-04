@@ -19,24 +19,87 @@ use Gemini\Data\Part;
 
 class AiSearchService
 {
-    protected $systemPrompt = "You are 'Ramouse AI' (راموسة), a DATABASE-ONLY search assistant for Ramouse.com.
-You speak ONLY Arabic (Standard or Syrian dialect).
+    protected $systemPrompt = "أنت 'راموسة AI' - مساعد بحث ذكي متخصص في منصة راموسة Ramouse.com في سوريا 🇸🇾
+تتحدث بالعربية (فصحى أو لهجة شامية سورية).
 
-YOUR ONLY PURPOSE: Search the Ramouse database and present results. NOTHING ELSE.
+🎯 مهمتك الوحيدة: البحث الذكي في قاعدة بيانات راموسة وعرض النتائج. لا شيء غير ذلك.
 
-ABSOLUTE RULES - NO EXCEPTIONS:
-1. You can ONLY answer questions about: Cars (Sale/Rent), Technicians, Tow Trucks, Spare Parts
-2. For ANY question about these topics, you MUST call the appropriate search tool FIRST, ALWAYS
-3. NEVER answer based on general knowledge - ONLY show results from the database search
-4. If user asks about cars (أريد سيارة, ابحث عن سيارة, عندك سيارات) → MUST call search_cars
-5. If user asks about mechanics (ميكانيكي, فني) → MUST call search_technicians
-6. If user asks about tow trucks (سطحة, ونش) → MUST call search_tow_trucks
-7. If user asks about parts (قطع غيار) → MUST call search_products
-8. If database returns EMPTY results, say: 'عذراً، لم أجد نتائج. حاول البحث بطريقة مختلفة'
-9. For off-topic questions, say: 'أنا مساعد متخصص فقط في خدمات السيارات'
-10. ALWAYS present search results with: الاسم، السعر، المدينة
-11. NEVER make up data. NEVER suggest things not in the search results.
-12. You are a DATABASE SEARCH INTERFACE. Nothing more.";
+📋 قواعد صارمة - بدون استثناءات:
+
+1. أنت متخصص فقط في: السيارات (بيع/إيجار), فنيي الصيانة, السطحات, قطع الغيار
+2. لأي سؤال عن هذه المواضيع: يجب استدعاء أداة البحث المناسبة أولاً, دائماً
+3. لا تجب أبداً من معرفتك العامة - فقط اعرض نتائج البحث من قاعدة البيانات
+4. إذا كانت النتائج فارغة: قل 'عذراً، ما لقيت نتائج. جرب كلمات بحث تانية أو وسّع نطاق البحث'
+5. للأسئلة خارج الموضوع: قل 'أنا مساعد متخصص بس بخدمات السيارات (بيع، إيجار، صيانة، سطحات، قطع غيار)'
+
+🔍 استخراج الفلاتر الذكي:
+
+لـ السيارات - استدعِ search_cars عندما يطلب المستخدم:
+- أي ذكر لماركة: تويوتا، هيونداي، كيا، نيسان، BMW، مرسيدس، فورد، شيفروليه، هوندا، رينو، بيجو
+- أي موديل: كامري، أكورد، سوناتا، النترا، RAV4، CRV, تاهو، لاندكروزر، سيراتو، توسان
+- سنة الصنع: 2024, 2023, 2022, 2021, 2020, أحدث من, أقدم من, موديل
+- السعر: أقل من X, أكثر من X, بين X و Y, رخيص, غالي (بالدولار)
+- المدينة: دمشق، حلب، حمص، حماة، اللاذقية، طرطوس، السويداء، درعا، دير الزور، الرقة، إدلب، القامشلي
+- الحالة: جديد، جديدة، مستعمل، مستعملة، زيرو
+- ناقل الحركة: أوتوماتيك، عادي، يدوي، مانوال
+- نوع السيارة: SUV, سيدان، شاحنة، رياضية، دفع رباعي، فان
+- نوع الإعلان: بيع، شراء، إيجار، استئجار
+
+أمثلة لاستخراج الفلاتر:
+- 'بدي تويوتا كامري 2023 بدمشق بأقل من 25 ألف دولار'
+  → query='تويوتا كامري', min_year=2023, max_year=2023, city='دمشق', max_price=25000
+  
+- 'سيارات أقل من 15000 دولار'
+  → max_price=15000
+  
+- 'SUV جديدة أوتوماتيك'
+  → query='SUV', condition='new', transmission='automatic'
+  
+- 'هيونداي مستعملة بحلب'
+  → query='هيونداي', condition='used', city='حلب'
+  
+- 'كيا سيراتو موديل 2020 باللاذقية'
+  → query='كيا سيراتو', min_year=2020, max_year=2020, city='اللاذقية'
+
+لـ الفنيين - استدعِ search_technicians عندما يطلب:
+- ميكانيكي، فني، ورشة، صيانة، إصلاح، معلم
+- تخصص: كهرباء، ميكانيك، دهان، تكييف، فحص، صبغ
+- قريب مني، بالمنطقة، بالحي
+- تقييم عالي، 5 نجوم، ممتاز، منيح
+
+أمثلة:
+- 'بدي فني كهرباء قريب مني' → specialty='كهرباء', (سيستخدم الموقع تلقائياً)
+- 'ورشة تويوتا بحمص' → specialty='تويوتا', city='حمص'
+- 'ميكانيكي ممتاز 5 نجوم' → min_rating=5
+- 'معلم صيانة BMW بدمشق' → specialty='BMW', city='دمشق'
+
+لـ السطحات - استدعِ search_tow_trucks عندما:
+- سطحة، ونش، نقل سيارة، طوارئ، نقّالة
+- قريب، الآن، عاجل، سريع
+- نوع: هيدروليك، عادية
+
+أمثلة:
+- 'بدي سطحة قريبة مني هلق' → (سيستخدم الموقع)
+- 'ونش بحلب' → city='حلب'
+- 'سطحة طوارئ بدمشق' → city='دمشق'
+
+لـ قطع الغيار - استدعِ search_products عند:
+- قطع غيار، إكسسوارات، منتجات، قطع
+
+💬 أسلوب الرد:
+- استخدم اللهجة الشامية السورية بشكل طبيعي (بدي، هلق، منيح، شو، ليش)
+- كن ودود ومساعد
+- اعرض النتائج بوضوح
+- إذا فهمت الطلب جزئياً: اطلب توضيح ('بتقصد... ولا...؟')
+- قدّم اقتراحات مفيدة بناءً على النتائج
+
+⚠️ ممنوع منعاً باتاً:
+- اختراع بيانات مش موجودة بالنتائج
+- الإجابة من معرفتك العامة
+- تقديم نصائح عامة بدون بحث بالقاعدة
+- الإجابة عن أسئلة برا نطاق السيارات والخدمات
+
+أنت واجهة بحث ذكية بقاعدة البيانات. هدفك: مساعدة المستخدم يلاقي اللي بدو ياه بسرعة ودقة.";
 
     /**
      * Build a personalized system prompt based on user preferences
@@ -332,10 +395,10 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         // Geolocation Logic - automatically use if coordinates provided
         if ($userLat && $userLng) {
-            // Simplified Haversine or similar if supported by DB, or basic ordering
-            // For standard MySQL, usually separate query or raw DB expression.
-            // Using basic approximation for this example:
-            $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
+            // Use MySQL spatial functions for GEOMETRY POINT type
+            // location is stored as POINT, use ST_X (longitude) and ST_Y (latitude)
+            $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( ST_Y(location) ) ) * cos( radians( ST_X(location) ) - radians(?) ) + sin( radians(?) ) * sin( radians( ST_Y(location) ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
+                ->whereNotNull('location')
                 ->having('distance', '<', 50)
                 ->orderBy('distance');
         }
@@ -360,7 +423,9 @@ ABSOLUTE RULES - NO EXCEPTIONS:
 
         // Geolocation Logic - automatically use if coordinates provided
         if ($userLat && $userLng) {
-            $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
+            // Use MySQL spatial functions for GEOMETRY POINT type
+            $q->selectRaw("*, ( 6371 * acos( cos( radians(?) ) * cos( radians( ST_Y(location) ) ) * cos( radians( ST_X(location) ) - radians(?) ) + sin( radians(?) ) * sin( radians( ST_Y(location) ) ) ) ) AS distance", [$userLat, $userLng, $userLat])
+                ->whereNotNull('location')
                 ->having('distance', '<', 50)
                 ->orderBy('distance');
         }
@@ -542,21 +607,37 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         return new FunctionDeclaration(
             name: 'search_cars',
-            description: 'REQUIRED TOOL: Call this for ANY user question about cars, buying, renting, or vehicles. Search the Ramouse database for cars.',
+            description: 'أداة بحث ذكية عن السيارات بسوريا. استدعها لأي سؤال عن شراء/إيجار سيارات. 
+            
+استخرج الفلاتر بذكاء من الكلام الطبيعي:
+- الماركة من: تويوتا، هيونداي، كيا، نيسان، هوندا، مرسيدس، BMW، فورد، شيفروليه، رينو، بيجو
+- الموديل من: كامري، سوناتا، أكورد، النترا، RAV4، CRV، تاهو، سيراتو، توسان
+- السعر: "بأقل من 15 ألف" → max_price=15000, "بين 10 و 20 ألف" → min_price=10000, max_price=20000
+- السنة: "2023" → min_year=2023, max_year=2023, "أحدث من 2020" → min_year=2020, "موديل 2022" → min_year=2022, max_year=2022
+- المدينة: دمشق، حلب، حمص، حماة، اللاذقية، طرطوس، السويداء، درعا، دير الزور، الرقة، إدلب، القامشلي
+- الحالة: "جديد/زيرو" → condition=new, "مستعمل" → condition=used
+- ناقل الحركة: "أوتوماتيك" → transmission=automatic, "عادي/يدوي/مانوال" → transmission=manual
+- نوع الإعلان: "إيجار/استئجار" → type=rent, "بيع/شراء" → type=sale
+
+أمثلة:
+"بدي تويوتا كامري 2023 بدمشق" → query="تويوتا كامري", min_year=2023, max_year=2023, city="دمشق"
+"سيارات أقل من 15000 دولار" → max_price=15000
+"SUV جديدة أوتوماتيك" → query="SUV", condition="new", transmission="automatic"
+"هيونداي مستعملة بحلب" → query="هيونداي", condition="used", city="حلب"',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
-                    'query' => new Schema(type: DataType::STRING, description: 'Keywords (brand, model). Leave empty to show all cars.'),
-                    'type' => new Schema(type: DataType::STRING, enum: ['sale', 'rent'], description: 'sale or rent'),
-                    'min_price' => new Schema(type: DataType::NUMBER, description: 'Minimum price in dollars'),
-                    'max_price' => new Schema(type: DataType::NUMBER, description: 'Maximum price in dollars'),
-                    'brand_id' => new Schema(type: DataType::NUMBER, description: 'Brand ID to filter by specific brand'),
-                    'min_year' => new Schema(type: DataType::NUMBER, description: 'Minimum manufacturing year (e.g. 2015)'),
-                    'max_year' => new Schema(type: DataType::NUMBER, description: 'Maximum manufacturing year (e.g. 2023)'),
-                    'transmission' => new Schema(type: DataType::STRING, enum: ['automatic', 'manual'], description: 'Transmission type'),
-                    'fuel_type' => new Schema(type: DataType::STRING, enum: ['gas', 'diesel', 'electric', 'hybrid'], description: 'Fuel type'),
-                    'condition' => new Schema(type: DataType::STRING, enum: ['new', 'used', 'certified_pre_owned'], description: 'Car condition'),
-                    'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic (e.g. دمشق, حلب)'),
+                    'query' => new Schema(type: DataType::STRING, description: 'الماركة والموديل (مثل: تويوتا كامري, هيونداي سوناتا, BMW, كيا سيراتو)'),
+                    'type' => new Schema(type: DataType::STRING, enum: ['sale', 'rent'], description: 'بيع=sale أو إيجار=rent'),
+                    'min_price' => new Schema(type: DataType::NUMBER, description: 'الحد الأدنى للسعر بالدولار'),
+                    'max_price' => new Schema(type: DataType::NUMBER, description: 'الحد الأقصى للسعر بالدولار'),
+                    'brand_id' => new Schema(type: DataType::NUMBER, description: 'معرّف الماركة (اتركه فارغاً واستخدم query بدلاً منه)'),
+                    'min_year' => new Schema(type: DataType::NUMBER, description: 'أقدم سنة صنع (مثل 2020)'),
+                    'max_year' => new Schema(type: DataType::NUMBER, description: 'أحدث سنة صنع (مثل 2024)'),
+                    'transmission' => new Schema(type: DataType::STRING, enum: ['automatic', 'manual'], description: 'أوتوماتيك=automatic, عادي/يدوي/مانوال=manual'),
+                    'fuel_type' => new Schema(type: DataType::STRING, enum: ['gasoline', 'diesel', 'electric', 'hybrid'], description: 'بنزين=gasoline, ديزل=diesel, كهرباء=electric, هجين=hybrid'),
+                    'condition' => new Schema(type: DataType::STRING, enum: ['new', 'used', 'certified_pre_owned'], description: 'جديد/زيرو=new, مستعمل=used'),
+                    'city' => new Schema(type: DataType::STRING, description: 'اسم المدينة السورية (دمشق, حلب, حمص, حماة, اللاذقية, طرطوس...)'),
                 ],
                 required: []
             )
@@ -567,13 +648,25 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         return new FunctionDeclaration(
             name: 'search_technicians',
-            description: 'REQUIRED TOOL: Call this for ANY user question about mechanics, technicians, or car repairs. Search the Ramouse database. If user asks for nearby technicians, the system will automatically use geolocation.',
+            description: 'أداة بحث ذكية عن فنيي الصيانة والميكانيكا في سوريا. استدعها لأي سؤال عن ميكانيكي/فني/ورشة/صيانة/معلم.
+            
+استخرج الفلاتر بذكاء:
+- التخصص: كهرباء، ميكانيك، دهان، تكييف، فحص، صبغ، تويوتا، BMW، مرسيدس
+- المدينة: دمشق، حلب، حمص، حماة، اللاذقية، طرطوس، السويداء، درعا، دير الزور
+- التقييم: "5 نجوم" → min_rating=5, "ممتاز/منيح" → min_rating=4
+- الموقع: "قريب مني" → سيستخدم الموقع الجغرافي تلقائياً
+
+أمثلة:
+"بدي فني كهرباء قريب مني" → specialty="كهرباء", (استخدام الموقع)
+"ورشة تويوتا بحمص" → specialty="تويوتا", city="حمص"
+"معلم صيانة منيح" → min_rating=4
+"ميكانيكي BMW بدمشق" → specialty="BMW", city="دمشق"',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
-                    'specialty' => new Schema(type: DataType::STRING, description: 'e.g. BMW, Electrician'),
-                    'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic'),
-                    'min_rating' => new Schema(type: DataType::NUMBER, description: 'Minimum average rating (1-5, e.g. 4 for 4+ stars)'),
+                    'specialty' => new Schema(type: DataType::STRING, description: 'التخصص (مثل: كهرباء، ميكانيك، دهان، صبغ، BMW، تويوتا)'),
+                    'city' => new Schema(type: DataType::STRING, description: 'اسم المدينة السورية (دمشق, حلب, حمص, حماة, اللاذقية, طرطوس...)'),
+                    'min_rating' => new Schema(type: DataType::NUMBER, description: 'الحد الأدنى للتقييم (1-5)'),
                 ]
             )
         );
@@ -583,12 +676,24 @@ ABSOLUTE RULES - NO EXCEPTIONS:
     {
         return new FunctionDeclaration(
             name: 'search_tow_trucks',
-            description: 'REQUIRED TOOL: Call this for ANY user question about tow trucks, winch services, or sat7a. Search the Ramouse database. If user asks for nearby tow trucks, the system will automatically use geolocation.',
+            description: 'أداة بحث ذكية عن السطحات والونشات في سوريا. استدعها لأي سؤال عن سطحة/ونش/نقل سيارة/طوارئ/نقّالة.
+            
+استخرج الفلاتر بذكاء:
+- نوع السطحة: سطحة، ونش، نقّالة، هيدروليك
+- المدينة: دمشق، حلب، حمص، حماة، اللاذقية، طرطوس، السويداء، درعا
+- الاستعجال: "هلق/الآن", "عاجل", "طوارئ" → ابحث عن الأقرب
+- الموقع: "قريب مني" → سيستخدم الموقع الجغرافي تلقائياً
+
+أمثلة:
+"بدي سطحة قريبة مني هلق" → (استخدام الموقع الجغرافي)
+"ونش بحلب" → city="حلب", vehicle_type="ونش"
+"سطحة طوارئ بدمشق" → city="دمشق"
+"نقّالة هيدروليك" → vehicle_type="هيدروليك"',
             parameters: new Schema(
                 type: DataType::OBJECT,
                 properties: [
-                    'city' => new Schema(type: DataType::STRING, description: 'City name in Arabic'),
-                    'vehicle_type' => new Schema(type: DataType::STRING, description: 'Type of tow truck (e.g. سطحة, ونش)'),
+                    'city' => new Schema(type: DataType::STRING, description: 'اسم المدينة السورية (دمشق, حلب, حمص, حماة, اللاذقية, طرطوس...)'),
+                    'vehicle_type' => new Schema(type: DataType::STRING, description: 'نوع السطحة (سطحة، ونش، نقّالة، هيدروليك)'),
                 ]
             )
         );

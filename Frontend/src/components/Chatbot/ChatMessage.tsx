@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { User, Sparkles, LogIn, Copy, Share2, ThumbsUp, ThumbsDown, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ResultCards } from './ResultCards';
+import { api } from '../../lib/api';
 
 interface ChatMessageProps {
     role: 'user' | 'model';
@@ -52,29 +53,23 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, timesta
     };
 
     const handleFeedback = async (isPositive: boolean) => {
+        const previousFeedback = feedbackGiven;
         setFeedbackGiven(isPositive ? 'up' : 'down');
 
         // Get session ID from ChatService
         const sessionId = localStorage.getItem('chat_session_id');
 
         try {
-            const response = await fetch('/api/chatbot/feedback', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    timestamp: timestamp,
-                    is_positive: isPositive
-                })
+            await api.post('/chatbot/feedback', {
+                session_id: sessionId,
+                timestamp: timestamp,
+                is_positive: isPositive
             });
-
-            const data = await response.json();
-            console.log('Feedback sent:', data.message);
+            console.log('Feedback sent successfully');
         } catch (error) {
             console.error('Failed to send feedback:', error);
+            // Revert feedback state on error
+            setFeedbackGiven(previousFeedback);
         }
     };
 

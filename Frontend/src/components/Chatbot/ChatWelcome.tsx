@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Car, Wrench, Truck, ShoppingBag, LogIn, Gift } from 'lucide-react';
+import { Car, Wrench, Truck, ShoppingBag, LogIn, Gift, Sparkles } from 'lucide-react';
 
 interface ChatWelcomeProps {
     onActionSelect: (text: string) => void;
@@ -8,17 +8,61 @@ interface ChatWelcomeProps {
     onLoginClick?: () => void;
 }
 
-export const ChatWelcome: React.FC<ChatWelcomeProps> = ({ onActionSelect, isAuthenticated = false, onLoginClick }) => {
-    const actions = [
-        { icon: <Car className="w-5 h-5 text-blue-500" />, label: 'شراء سيارة', query: 'أريد شراء سيارة' },
-        { icon: <Car className="w-5 h-5 text-indigo-500" />, label: 'استئجار سيارة', query: 'أريد استئجار سيارة' },
-        { icon: <Wrench className="w-5 h-5 text-orange-500" />, label: 'فني صيانة', query: 'أبحث عن ميكانيكي قريب' },
-        { icon: <Truck className="w-5 h-5 text-red-500" />, label: 'سطحة', query: 'أحتاج سطحة طوارئ' },
-        { icon: <ShoppingBag className="w-5 h-5 text-green-500" />, label: 'قطع غيار', query: 'أبحث عن قطع غيار' },
+/**
+ * ChatWelcome Component
+ * Natural language interface - users type or click suggestions
+ * AI automatically extracts filters from natural language
+ */
+export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
+    onActionSelect,
+    isAuthenticated = false,
+    onLoginClick
+}) => {
+    // Natural language quick search suggestions
+    const quickSearches = [
+        {
+            icon: <Car className="w-5 h-5 text-blue-500" />,
+            label: 'شراء سيارة',
+            examples: [
+                'بدي تويوتا كامري بدمشق',
+                'سيارات أقل من 15,000',
+                'SUV زيرو 2024',
+                'هيونداي أوتوماتيك'
+            ]
+        },
+        {
+            icon: <Car className="w-5 h-5 text-indigo-500" />,
+            label: 'إيجار سيارة',
+            examples: [
+                'بدي سيارة للإيجار بحلب',
+                'إيجار SUV شهري',
+                'سيارة صغيرة للتأجير'
+            ]
+        },
+        {
+            icon: <Wrench className="w-5 h-5 text-orange-500" />,
+            label: 'فني صيانة',
+            examples: [
+                'بدي ميكانيكي قريب مني',
+                'فني كهرباء سيارات',
+                'ورشة تويوتا بحمص',
+                'معلم صيانة منيح'
+            ]
+        },
+        {
+            icon: <Truck className="w-5 h-5 text-red-500" />,
+            label: 'سطحة',
+            examples: [
+                'بدي سطحة قريبة مني هلق',
+                'ونش طوارئ بدمشق',
+                'نقّالة صيانة'
+            ]
+        }
     ];
 
     return (
         <div className="flex flex-col items-center justify-center p-6 h-full font-sans">
+            {/* Bot Avatar */}
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -29,6 +73,7 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({ onActionSelect, isAuth
                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-4 border-white dark:border-slate-900"></div>
             </motion.div>
 
+            {/* Title */}
             <motion.h2
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -38,26 +83,42 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({ onActionSelect, isAuth
                 مرحباً بك في راموسة! 👋
             </motion.h2>
 
+            {/* Subtitle */}
             <motion.p
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-slate-500 text-sm text-center mb-6 max-w-[240px]"
+                className="text-slate-500 dark:text-slate-400 text-sm text-center mb-1 max-w-[280px]"
             >
-                أنا مساعدك الذكي. كيف يمكنني خدمتك اليوم؟
+                أنا مساعدك الذكي للبحث عن السيارات والخدمات
             </motion.p>
+
+            {/* AI Indicator */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-1.5 mb-6 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-100 dark:border-blue-800"
+            >
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                    مدعوم بالذكاء الاصطناعي
+                </span>
+            </motion.div>
 
             {/* Guest Login Banner */}
             {!isAuthenticated && onLoginClick && (
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 }}
+                    transition={{ delay: 0.35 }}
                     className="w-full mb-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-3"
                 >
                     <div className="flex items-center gap-2 mb-2">
                         <Gift className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">✨ لديك 50 رسالة مجانية يومياً</p>
+                        <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                            ✨ لديك 50 رسالة مجانية يومياً
+                        </p>
                     </div>
                     <button
                         onClick={onLoginClick}
@@ -69,25 +130,67 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({ onActionSelect, isAuth
                 </motion.div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                {actions.map((action, index) => (
-                    <motion.button
-                        key={index}
+            {/* Quick Search Categories */}
+            <div className="w-full space-y-3">
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-xs font-semibold text-slate-600 dark:text-slate-400 text-center mb-2"
+                >
+                    جرّب البحث عن:
+                </motion.p>
+
+                {quickSearches.map((category, catIndex) => (
+                    <motion.div
+                        key={catIndex}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + (index * 0.1) }}
-                        onClick={() => onActionSelect(action.query)}
-                        className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700 transition-all text-right group"
+                        transition={{ delay: 0.4 + (catIndex * 0.1) }}
+                        className="space-y-2"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            {action.icon}
+                        {/* Category Header */}
+                        <div className="flex items-center gap-2 px-2">
+                            <div className="w-7 h-7 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                                {category.icon}
+                            </div>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                {category.label}
+                            </span>
                         </div>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                            {action.label}
-                        </span>
-                    </motion.button>
+
+                        {/* Example Queries */}
+                        <div className="flex flex-wrap gap-2 px-2">
+                            {category.examples.map((example, exIndex) => (
+                                <motion.button
+                                    key={exIndex}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.5 + (catIndex * 0.1) + (exIndex * 0.05) }}
+                                    onClick={() => onActionSelect(example)}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 hover:shadow-sm transition-all transform hover:scale-105"
+                                >
+                                    {example}
+                                </motion.button>
+                            ))}
+                        </div>
+                    </motion.div>
                 ))}
             </div>
+
+            {/* AI Help Text */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="w-full mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+            >
+                <p className="text-xs text-slate-600 dark:text-slate-400 text-center leading-relaxed">
+                    💡 <span className="font-semibold">نصيحة:</span> اكتب ما تريد بشكل طبيعي!
+                    <br />
+                    مثال: "أريد تويوتا كامري 2023 في الرياض بأقل من 80 ألف"
+                </p>
+            </motion.div>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Square } from 'lucide-react';
+import { Send, Mic, Square, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceInput } from '../../hooks/useVoiceInput';
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -9,8 +10,8 @@ interface ChatInputProps {
 
 export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
     const [message, setMessage] = useState('');
+    const [voiceError, setVoiceError] = useState<string | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isListening, setIsListening] = useState(false);
 
     // Auto-resize textarea
     useEffect(() => {
@@ -19,6 +20,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
             textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
         }
     }, [message]);
+
+    // Voice input hook
+    const { isListening, isSupported, toggleListening } = useVoiceInput({
+        language: 'ar-SA',
+        onTranscript: (transcript) => {
+            setMessage(prev => prev + (prev ? ' ' : '') + transcript);
+            setVoiceError(null);
+        },
+        onError: (error) => {
+            console.error('Voice input error:', error);
+            setVoiceError(error);
+            setTimeout(() => setVoiceError(null), 3000); // Clear error after 3 seconds
+        }
+    });
 
     const handleSend = () => {
         if (!message.trim() || isLoading) return;
@@ -34,34 +49,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
         }
     };
 
-    const toggleVoice = () => {
-        // Simple Web Speech API Implementation (Placeholder logic for now)
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'ar-SA';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            if (!isListening) {
-                setIsListening(true);
-                recognition.start();
-                recognition.onresult = (event: any) => {
-                    const transcript = event.results[0][0].transcript;
-                    setMessage(prev => prev + ' ' + transcript);
-                    setIsListening(false);
-                };
-                recognition.onerror = () => setIsListening(false);
-                recognition.onend = () => setIsListening(false);
-            } else {
-                // Stop logic handled by onend usually, but can force stop
-                setIsListening(false);
-            }
-        } else {
-            alert('المتصفح لا يدعم البحث الصوتي');
-        }
-    };
-
     return (
         <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
             <div className={`
@@ -70,15 +57,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
             `}>
 
                 <button
-                    onClick={toggleVoice}
+                    onClick={toggleListening}
+                    disabled={!isSupported}
                     className={`
-                        p-2 rounded-full transition-colors flex-shrink-0
+                        p-2 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
                         ${isListening
                             ? 'bg-red-500 text-white animate-pulse'
                             : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600'
                         }
                     `}
-                    title="تسجيل صوتي"
+                    title={isSupported ? "تسجيل صوتي" : "المتصفح لا يدعم البحث الصوتي"}
+                    aria-label={isListening ? "إيقاف التسجيل" : "بدء التسجيل الصوتي"}
                 >
                     {isListening ? <Square className="w-5 h-5 fill-current" /> : <Mic className="w-5 h-5" />}
                 </button>
@@ -118,6 +107,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
             <div className="px-2 mt-1 flex justify-between items-center">
                 <span className="text-[10px] text-slate-400">يدعم العربية</span>
                 {isLoading && <span className="text-[10px] text-blue-500 animate-pulse font-medium">جاري الكتابة...</span>}
+                {voiceError && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1 text-[10px] text-red-500"
+                    >
+                        <AlertCircle className="w-3 h-3" />
+                        <span>{voiceError}</span>
+                    </motion.div>
+                )}
             </div>
         </div>
     );

@@ -1,3 +1,5 @@
+import { api } from '../lib/api';
+
 export interface StreamEvent {
     type: 'status' | 'chunk' | 'done' | 'error';
     message?: string;
@@ -32,11 +34,19 @@ export class ChatStreamService {
                 longitude
             };
 
-            const response = await fetch('/api/chatbot/stream', {
+            // Get the base URL from the API configuration
+            const baseURL = (api as any).defaults?.baseURL || '/api';
+            const streamURL = `${baseURL}/chatbot/stream`;
+
+            const response = await fetch(streamURL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'text/event-stream',
+                    // Include auth token if available
+                    ...(localStorage.getItem('auth_token') && {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    })
                 },
                 body: JSON.stringify(body),
                 signal: this.abortController.signal
