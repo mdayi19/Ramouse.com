@@ -36,5 +36,3 @@ Sitemap: https://ramouse.com/sitemap/tow-trucks.xml
 Sitemap: https://ramouse.com/sitemap/products.xml
 Sitemap: https://ramouse.com/sitemap/blog-posts.xml
 
-# AI Manifest (OK – harmless)
-AI-Manifest: https://ramouse.com/.well-known/ai.json
