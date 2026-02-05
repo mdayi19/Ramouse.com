@@ -660,6 +660,20 @@ const App: React.FC = () => {
     const isPublicView = ['welcome', 'store', 'technicianDirectory', 'technicianProfile', 'technicianRegistration', 'blog', 'blogPost', 'faq', 'privacyPolicy', 'termsOfUse', 'contact', 'towTruckDirectory', 'towTruckProfile', 'towTruckRegistration', 'car-listings', 'rent-car', 'announcements', 'auctions', 'car-providers', 'carProviderRegistration'].includes(currentView);
     const isDashboardView = ['adminDashboard', 'providerDashboard', 'customerDashboard', 'technicianDashboard', 'towTruckDashboard', 'carProviderDashboard'].includes(currentView);
 
+    const showFloatingButtons = useMemo(() => {
+        const path = location.pathname;
+        return (
+            path === '/' ||
+            path === '/technicians' ||
+            path === '/tow-trucks' ||
+            path === '/terms' ||
+            path === '/rent-car' ||
+            path === '/car-listings' ||
+            path === '/contact' ||
+            path.startsWith('/blog')
+        );
+    }, [location.pathname]);
+
     if (isLoading) {
         // We can render Preloader here if we want to block completely, OR we can render the app hidden behind it.
         // To optimize perception, let's render the app structure but cover it with Preloader.
@@ -972,8 +986,8 @@ const App: React.FC = () => {
             </Suspense>
 
             {/* Floating Action Buttons / Dock */}
-            {/* Logic: Show always on public pages, regardless of auth */}
-            {(!isSidebarOpen && isPublicView) && (
+            {/* Logic: Show only on specific public pages */}
+            {(!isSidebarOpen && showFloatingButtons) && (
                 <>
                     {/* Desktop/Tablet: Stylish Glass Dock */}
                     <div className="hidden md:flex fixed bottom-6 left-6 z-50 items-center p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 shadow-2xl transition-all hover:scale-105 hover:bg-white/90 dark:hover:bg-slate-900/90 gap-1.5">
