@@ -54,14 +54,14 @@ class ChatbotController extends Controller
             // 2. Rate Limiting Logic...
             $limitKey = 'chat_limit_' . ($userId ? "user_{$userId}" : "ip_" . $request->ip());
             $dailyCount = Cache::get($limitKey, 0);
-            $maxDaily = $userId ? 100 : 50;
+            $maxDaily = $userId ? 100 : 5;
 
             if ($dailyCount >= $maxDaily) {
                 return response()->json([
                     'error' => 'Daily limit reached.',
                     'message' => $userId
                         ? 'لقد تجاوزت الحد اليومي للرسائل (100). يرجى العودة غداً.'
-                        : 'لقد تجاوزت الحد اليومي كزائر (50). يرجى تسجيل الدخول للمتابعة.'
+                        : 'لقد وصلت للحد المجاني (5 رسائل يومياً). سجّل دخول للمتابعة والحصول على رسائل غير محدودة! 🚀'
                 ], 429);
             }
 

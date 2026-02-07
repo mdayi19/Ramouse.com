@@ -33,7 +33,7 @@ const AIUsage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 {/* Header Banner */}
                 <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-8 md:p-12 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-12 opacity-5 animate-spin-slow pointer-events-none">
-                        <Icon name="Cpu" className="w-64 h-64" />
+                        <img src="/RamouseAI.svg" alt="Ramouse AI" className="w-64 h-64" />
                     </div>
 
                     <button
@@ -77,8 +77,8 @@ const AIUsage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             </p>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center order-1 md:order-2">
-                            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-4 text-indigo-600 dark:text-indigo-400">
-                                <Icon name="Cpu" className="w-8 h-8" />
+                            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-4">
+                                <img src="/RamouseAI.svg" alt="Ramouse AI" className="w-10 h-10" />
                             </div>
                             <h3 className="font-bold text-lg mb-2">Machine Readable</h3>
                             <p className="text-sm text-slate-500">JSON-LD Structured Data</p>

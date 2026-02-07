@@ -19,6 +19,7 @@ use Gemini\Data\Part;
 
 class AiSearchService
 {
+    protected $currentSearchParams = [];
     protected $systemPrompt = "أنت 'راموسة AI' - مساعد بحث ذكي متخصص في منصة راموسة Ramouse.com في سوريا 🇸🇾
 تتحدث بالعربية (فصحى أو لهجة شامية سورية).
 
@@ -199,6 +200,103 @@ class AiSearchService
     }
 
     /**
+     * Generate contextual suggestions based on search parameters and results
+     */
+    protected function generateContextualSuggestions(array $searchParams, $results, string $type): array
+    {
+        $suggestions = [];
+        $resultCount = is_countable($results) ? $results->count() : count($results);
+
+        // Extract search context
+        $brand = $searchParams['brand'] ?? $searchParams['query'] ?? null;
+        $city = $searchParams['city'] ?? null;
+        $specialty = $searchParams['specialty'] ?? null;
+
+        switch ($type) {
+            case 'cars':
+                // Brand-specific suggestions
+                if ($brand) {
+                    if ($resultCount > 0) {
+                        $suggestions[] = "ابحث عن فني متخصص في {$brand}";
+                        $suggestions[] = "قطع غيار {$brand} أصلية";
+
+                        // If filtered by city, suggest other cities
+                        if ($city) {
+                            $suggestions[] = "نفس السيارة في مدن أخرى";
+                        } else {
+                            $suggestions[] = "عرض {$brand} في دمشق";
+                            $suggestions[] = "عرض {$brand} في حلب";
+                        }
+                    } else {
+                        // No results - suggest alternatives
+                        $suggestions[] = "ماركات مشابهة لـ {$brand}";
+                        if ($city) {
+                            $suggestions[] = "ابحث عن {$brand} في سوريا كاملة";
+                        }
+                    }
+                } else {
+                    $suggestions[] = "أكثر السيارات مبيعاً في سوريا";
+                    $suggestions[] = "سيارات اقتصادية موديل 2023-2024";
+                }
+
+                if ($resultCount > 0) {
+                    $suggestions[] = "ابحث عن تأمين للسيارة";
+                }
+                break;
+
+            case 'technicians':
+                if ($specialty) {
+                    if ($resultCount > 0) {
+                        $suggestions[] = "قطع غيار لصيانة {$specialty}";
+
+                        if ($city) {
+                            $suggestions[] = "فني {$specialty} في مدن قريبة";
+                        } else {
+                            $suggestions[] = "فني {$specialty} قريب منك";
+                        }
+
+                        $suggestions[] = "عرض أعلى تقييم بـ {$specialty}";
+                    } else {
+                        $suggestions[] = "ورش صيانة عامة";
+                        $suggestions[] = "أفضل الفنيين في سوريا";
+                    }
+                }
+
+                $suggestions[] = "ابحث عن سطحة للطوارئ";
+                if ($resultCount > 0) {
+                    $suggestions[] = "مقارنة أسعار الورش";
+                }
+                break;
+
+            case 'tow_trucks':
+                if ($city) {
+                    $suggestions[] = "فني صيانة في {$city}";
+                    $suggestions[] = "سطحات أخرى قريبة منك";
+                } else {
+                    $suggestions[] = "سطحة قريبة من موقعي";
+                }
+
+                $suggestions[] = "ورش صيانة طريق";
+                $suggestions[] = "خدمات طوارئ على الطريق";
+                break;
+
+            case 'products':
+                if ($brand || $specialty) {
+                    $context = $brand ?? $specialty;
+                    $suggestions[] = "فني تركيب قطع {$context}";
+                    $suggestions[] = "أسعار قطع {$context} الأصلية";
+                }
+
+                $suggestions[] = "قطع غيار مستعملة اقتصادية";
+                $suggestions[] = "ورش متخصصة بالتركيب";
+                break;
+        }
+
+        // Limit to 4 suggestions max
+        return array_slice($suggestions, 0, 4);
+    }
+
+    /**
      * Send a message to Gemini and handle tool calls.
      */
     public function sendMessage(array $history, string $message, ?float $userLat = null, ?float $userLng = null, ?int $userId = null)
@@ -324,6 +422,9 @@ class AiSearchService
 
     protected function searchCars($args)
     {
+        // Store params for contextual suggestions
+        $this->currentSearchParams = $args;
+
         $query = $args['query'] ?? '';
         $type = $args['type'] ?? 'sale';
         $minPrice = $args['min_price'] ?? null;
@@ -379,6 +480,9 @@ class AiSearchService
 
     protected function searchTechnicians($args, $userLat, $userLng)
     {
+        // Store params for contextual suggestions
+        $this->currentSearchParams = $args;
+
         $specialty = $args['specialty'] ?? null;
         $city = $args['city'] ?? null;
 
@@ -448,6 +552,9 @@ class AiSearchService
 
     protected function searchTowTrucks($args, $userLat, $userLng)
     {
+        // Store params for contextual suggestions
+        $this->currentSearchParams = $args;
+
         $city = $args['city'] ?? null;
 
         $q = TowTruck::query()->where('is_active', true)->where('is_verified', true);
@@ -573,7 +680,7 @@ class AiSearchService
 
                 return $item;
             })->values()->toArray(),
-            'suggestions' => $suggestions
+            'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], $results, 'cars')
         ];
     }
 
@@ -585,11 +692,7 @@ class AiSearchService
                 'message' => 'لم يتم العثور على فنيين. جرب تخصص أو مدينة مختلفة.',
                 'count' => 0,
                 'items' => [],
-                'suggestions' => [
-                    'ابحث في مدينة أخرى',
-                    'جرب تخصص مختلف',
-                    'اعرض جميع الفنيين'
-                ]
+                'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], [], 'technicians')
             ];
         }
 
@@ -633,8 +736,10 @@ class AiSearchService
                     'specialty' => (string) $tech->specialty,
                     'rating' => $tech->average_rating ?? 0,
                     'city' => (string) $tech->city,
-                    'distance' => $tech->distance ? round($tech->distance, 1) . ' كم' : null,
-                    'isVerified' => $tech->is_verified ? 1 : 0,
+                    'distance' => $tech->distance ? round($tech->distance, 1) : null,
+
+                    // ✅ CHANGED: isVerified -> verified as boolean for consistency
+                    'verified' => (bool) $tech->is_verified,
 
                     // ✅ FIX: Use id as phone (id IS the phone number)
                     'phone' => (string) $tech->id,
@@ -648,20 +753,30 @@ class AiSearchService
                         ? mb_substr($tech->description, 0, 100)
                         : '',
 
-                    // ✅ FIX: Format profile photo URL
-                    'profile_photo' => $tech->profile_photo
+                    // ✅ NEW: Service types array parsed from specialty
+                    'service_types' => $this->parseServiceTypes($tech->specialty),
+
+                    // ✅ NEW: Reviews count from approved reviews
+                    'reviews_count' => $tech->reviews()->where('status', 'approved')->count(),
+
+                    // ✅ NEW: Price range (default for now, can be enhanced later)
+                    'price_range' => '$$',
+
+                    // ✅ NEW: Availability status (default for now)
+                    'availability' => 'any',
+
+                    // 🖼️ Profile photo URL
+                    'photo' => $tech->profile_photo
                         ? url('storage/' . $tech->profile_photo)
                         : null,
 
                     // ✅ FIX: Get cover image from parsed gallery
                     'cover_image' => $coverImage,
 
-                    // ✅ REMOVED: years_experience field doesn't exist in database
-    
                     'url' => "/technicians/" . rawurlencode($tech->id),
                 ];
             })->toArray(),
-            'suggestions' => $suggestions
+            'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], $results, 'technicians')
         ];
     }
 
@@ -673,11 +788,7 @@ class AiSearchService
                 'message' => 'لم يتم العثور على سطحات قريبة. جرب البحث في منطقة أخرى.',
                 'count' => 0,
                 'items' => [],
-                'suggestions' => [
-                    'ابحث في مدينة أخرى',
-                    'جرب نوع سطحة مختلف',
-                    'عرض جميع السطحات'
-                ]
+                'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], [], 'tow_trucks')
             ];
         }
 
@@ -745,7 +856,7 @@ class AiSearchService
                     'url' => "/tow-trucks/" . rawurlencode($tow->id),
                 ];
             })->toArray(),
-            'suggestions' => $suggestions
+            'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], $results, 'tow_trucks')
         ];
     }
 
@@ -888,5 +999,90 @@ class AiSearchService
                 required: ['query']
             )
         );
+    }
+
+    /**
+     * Parse service types from specialty field
+     * Maps Arabic specialty text to service type codes for EnhancedTechnicianCard
+     * Aligned with TechnicianSpecialtySeeder.php
+     */
+    protected function parseServiceTypes(string $specialty): array
+    {
+        // Comprehensive map aligned with TechnicianSpecialtySeeder
+        $map = [
+            // 🔧 Core Mechanical Services
+            'ميكانيك' => ['general', 'mechanical'],
+            'ميكانيكي' => ['general', 'mechanical'],
+
+            // ⚡ Electrical Services
+            'كهرباء' => ['electrical'],
+            'كهربائي' => ['electrical'],
+            'كهربجي' => ['electrical'],
+
+            // 🎨 Body Work & Paint
+            'دهان' => ['paint'],
+            'صبغ' => ['paint'],
+            'دهّان' => ['paint'],
+            'صباغ' => ['paint'],
+            'صواج' => ['paint'], // Body repair (hammering)
+            'سمكري' => ['paint'], // Body repair (filling)
+
+            // ❄️ AC & Cooling
+            'تكييف' => ['ac'],
+            'مكيف' => ['ac'],
+            'مبردات' => ['ac'],
+
+            // 🔍 Inspection & Diagnostics
+            'فحص' => ['inspection'],
+            'فاحص' => ['inspection'],
+            'أكسبير' => ['inspection'],
+            'كمبيوتر' => ['inspection'],
+
+            // ⚙️ Specialized Mechanical
+            'دوزان' => ['mechanical'], // Alignment/tuning
+            'فرامل' => ['mechanical'], // Brakes
+            'ميزان' => ['mechanical'], // Balance
+            'قيرجي' => ['mechanical'], // Gearbox specialist
+            'موتورجي' => ['mechanical'], // Engine specialist
+            'تيربو' => ['mechanical'], // Turbo
+            'طرمبات' => ['mechanical'], // Pumps
+            'رشاشات' => ['mechanical'], // Injectors
+
+            // 🔧 Tires & Wheels
+            'كومجي' => ['general'], // Tire specialist
+            'دواليب' => ['general'],
+            'إطارات' => ['general'],
+
+            // 🚘 Exterior & Interior
+            'تلميع' => ['general'], // Polishing
+            'تنظيف' => ['general'], // Cleaning/wash
+            'فيميه' => ['general'], // Window tinting
+            'تظليل' => ['general'],
+            'تنجيد' => ['general'], // Upholstery
+            'زجاج' => ['general'], // Glass
+
+            // 🔐 Electronics & Security
+            'أقفال' => ['electrical'], // Locks
+            'إنذار' => ['electrical'], // Alarm
+            'صوتيات' => ['electrical'], // Audio
+
+            // 🏪 General
+            'كراجي' => ['general'], // Garage owner (all services)
+        ];
+
+        $serviceTypes = [];
+        $specialty = mb_strtolower($specialty); // Case insensitive matching
+
+        foreach ($map as $key => $types) {
+            if (mb_strpos($specialty, $key) !== false) {
+                $serviceTypes = array_merge($serviceTypes, $types);
+            }
+        }
+
+        // Remove duplicates
+        $serviceTypes = array_unique($serviceTypes);
+
+        // Default to general if no specific types found
+        return !empty($serviceTypes) ? array_values($serviceTypes) : ['general'];
     }
 }

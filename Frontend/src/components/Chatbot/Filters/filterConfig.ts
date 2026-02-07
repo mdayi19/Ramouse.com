@@ -105,14 +105,14 @@ export const carFilters: FilterGroup[] = [
         label: 'المدينة',
         type: 'single',
         options: [
-            { label: 'الرياض', value: 'riyadh' },
-            { label: 'جدة', value: 'jeddah' },
-            { label: 'الدمام', value: 'dammam' },
-            { label: 'مكة', value: 'makkah' },
-            { label: 'المدينة', value: 'madinah' },
-            { label: 'الطائف', value: 'taif' },
-            { label: 'تبوك', value: 'tabuk' },
-            { label: 'الخبر', value: 'khobar' },
+            { label: 'دمشق', value: 'damascus' },
+            { label: 'حلب', value: 'aleppo' },
+            { label: 'حمص', value: 'homs' },
+            { label: 'حماة', value: 'hama' },
+            { label: 'اللاذقية', value: 'latakia' },
+            { label: 'طرطوس', value: 'tartus' },
+            { label: 'درعا', value: 'daraa' },
+            { label: 'السويداء', value: 'sweida' },
             { label: 'جميع المدن', value: 'all' }
         ]
     }
@@ -184,11 +184,12 @@ export const technicianFilters: FilterGroup[] = [
         label: 'المدينة',
         type: 'single',
         options: [
-            { label: 'الرياض', value: 'riyadh' },
-            { label: 'جدة', value: 'jeddah' },
-            { label: 'الدمام', value: 'dammam' },
-            { label: 'مكة', value: 'makkah' },
-            { label: 'المدينة', value: 'madinah' },
+            { label: 'دمشق', value: 'damascus' },
+            { label: 'حلب', value: 'aleppo' },
+            { label: 'حمص', value: 'homs' },
+            { label: 'حماة', value: 'hama' },
+            { label: 'اللاذقية', value: 'latakia' },
+            { label: 'طرطوس', value: 'tartus' },
             { label: 'جميع المدن', value: 'all' }
         ]
     }
@@ -256,11 +257,12 @@ export const towTruckFilters: FilterGroup[] = [
         label: 'المدينة',
         type: 'single',
         options: [
-            { label: 'الرياض', value: 'riyadh' },
-            { label: 'جدة', value: 'jeddah' },
-            { label: 'الدمام', value: 'dammam' },
-            { label: 'مكة', value: 'makkah' },
-            { label: 'المدينة', value: 'madinah' },
+            { label: 'دمشق', value: 'damascus' },
+            { label: 'حلب', value: 'aleppo' },
+            { label: 'حمص', value: 'homs' },
+            { label: 'حماة', value: 'hama' },
+            { label: 'اللاذقية', value: 'latakia' },
+            { label: 'طرطوس', value: 'tartus' },
             { label: 'جميع المدن', value: 'all' }
         ]
     }
@@ -273,7 +275,7 @@ export const quickFilters = {
         { label: 'SUV', filters: { car_type: ['suv'] } },
         { label: 'تويوتا', filters: { brand: ['toyota'] } },
         { label: 'جديدة', filters: { condition: 'new' } },
-        { label: 'الرياض', filters: { city: 'riyadh' } },
+        { label: 'دمشق', filters: { city: 'damascus' } },
         { label: '2023-2024', filters: { year: '2023' } }
     ],
     technicians: [

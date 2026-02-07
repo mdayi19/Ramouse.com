@@ -1,12 +1,51 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChatMessage } from '../services/ChatService';
 
 /**
- * Custom hook for managing chat messages state
- * Provides methods to add, update, and clear messages
+ * Custom hook for managing chat messages with localStorage persistence
+ * Messages persist across page refreshes and navigation
  */
+
+const STORAGE_KEY = 'ramouse_chat_messages';
+const MAX_STORED_MESSAGES = 50; // Prevent localStorage bloat
+
 export const useChatMessages = () => {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    // Initialize from localStorage if available
+    const [messages, setMessages] = useState<ChatMessage[]>(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Validate structure
+                if (Array.isArray(parsed) && parsed.every((m: any) => m.role && m.content && m.timestamp)) {
+                    return parsed;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load chat history:', error);
+        }
+        return [];
+    });
+
+    // Save to localStorage whenever messages change
+    useEffect(() => {
+        try {
+            // Keep only last N messages to avoid quota issues
+            const toStore = messages.slice(-MAX_STORED_MESSAGES);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+        } catch (error: any) {
+            console.error('Failed to save chat history:', error);
+            // If quota exceeded, try clearing old messages
+            if (error.name === 'QuotaExceededError') {
+                const reduced = messages.slice(-20);
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(reduced));
+                } catch (e) {
+                    console.error('Failed to save even after reduction:', e);
+                }
+            }
+        }
+    }, [messages]);
 
     /**
      * Add a new message to the chat
@@ -51,10 +90,15 @@ export const useChatMessages = () => {
     }, [addMessage, updateLastMessage]);
 
     /**
-     * Clear all messages
+     * Clear all messages and remove from localStorage
      */
     const clearMessages = useCallback(() => {
         setMessages([]);
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+            console.error('Failed to clear chat history from storage:', error);
+        }
     }, []);
 
     /**

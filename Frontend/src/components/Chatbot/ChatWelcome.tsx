@@ -25,9 +25,9 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
             label: 'شراء سيارة',
             examples: [
                 'بدي تويوتا كامري بدمشق',
-                'سيارات أقل من 15,000',
-                'SUV زيرو 2024',
-                'هيونداي أوتوماتيك'
+                'هيونداي مستعملة بحلب',
+                'كيا أوتوماتيك بحمص',
+                'سيارات اقتصادية'
             ]
         },
         {
@@ -43,19 +43,19 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
             icon: <Wrench className="w-5 h-5 text-orange-500" />,
             label: 'فني صيانة',
             examples: [
-                'بدي ميكانيكي قريب مني',
-                'فني كهرباء سيارات',
-                'ورشة تويوتا بحمص',
-                'معلم صيانة منيح'
+                'بدي ميكانيكي بدمشق',
+                'فني كهرباء قريب مني',
+                'ورشة BMW بحمص',
+                'معلم صيانة تويوتا'
             ]
         },
         {
             icon: <Truck className="w-5 h-5 text-red-500" />,
-            label: 'سطحة',
+            label: 'ونش/سطحة',
             examples: [
-                'بدي سطحة قريبة مني هلق',
-                'ونش طوارئ بدمشق',
-                'نقّالة صيانة'
+                'بدي ونش قريب مني هلق',
+                'سطحة طوارئ بدمشق',
+                'ونش بحلب'
             ]
         }
     ];
@@ -69,7 +69,11 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
                 transition={{ type: 'spring', stiffness: 200 }}
                 className="w-20 h-20 bg-gradient-to-tr from-blue-100 to-indigo-100 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center mb-6 shadow-sm relative"
             >
-                <div className="text-4xl filter drop-shadow-sm">🤖</div>
+                <img
+                    src="/RamouseAI.svg"
+                    alt="Ramouse AI"
+                    className="w-12 h-12"
+                />
                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-4 border-white dark:border-slate-900"></div>
             </motion.div>
 
@@ -90,7 +94,7 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
                 transition={{ delay: 0.2 }}
                 className="text-slate-500 dark:text-slate-400 text-sm text-center mb-1 max-w-[280px]"
             >
-                أنا مساعدك الذكي للبحث عن السيارات والخدمات
+                مرحباً فيك! أنا مساعدك الذكي 👋للبحث عن السيارات والخدمات
             </motion.p>
 
             {/* AI Indicator */}
@@ -117,7 +121,7 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
                     <div className="flex items-center gap-2 mb-2">
                         <Gift className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
-                            ✨ لديك 50 رسالة مجانية يومياً
+                            ✨ لديك 5 رسائل مجانية يومياً كتجربة
                         </p>
                     </div>
                     <button
@@ -188,7 +192,7 @@ export const ChatWelcome: React.FC<ChatWelcomeProps> = ({
                 <p className="text-xs text-slate-600 dark:text-slate-400 text-center leading-relaxed">
                     💡 <span className="font-semibold">نصيحة:</span> اكتب ما تريد بشكل طبيعي!
                     <br />
-                    مثال: "أريد تويوتا كامري 2023 في الرياض بأقل من 80 ألف"
+                    مثال: "بدي تويوتا كامري 2023 بدمشق بأقل من 20 مليون ليرة"
                 </p>
             </motion.div>
         </div>

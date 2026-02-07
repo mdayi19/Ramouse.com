@@ -165,8 +165,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
             }
 
             if (error.response?.status === 429 || error.response?.data?.error === 'Daily limit reached.') {
-                errorText = 'لقد تجاوزت الحد اليومي كزائر (50 رسالة). يرجى تسجيل الدخول للحصول على حد أعلى!';
-                showLoginButton = !isAuthenticated;
+                errorText = error.response?.data?.message || 'لقد وصلت للحد المجاني (5 رسائل يومياً). سجّل دخول للمتابعة! 🚀';
+                showLoginButton = true;
             } else if (error.response?.status === 401) {
                 errorText = 'يرجى تسجيل الدخول للمتابعة.';
                 showLoginButton = true;

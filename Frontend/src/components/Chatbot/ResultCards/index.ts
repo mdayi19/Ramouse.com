@@ -1,4 +1,4 @@
-export { CarCard } from './CarCard';
+// Active chatbot result cards
 export { SaleCarCard } from './SaleCarCard';
 export { RentCarCard } from './RentCarCard';
 export { TechnicianCard } from './TechnicianCard';
