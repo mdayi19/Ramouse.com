@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2, Plus } from 'lucide-react';
+import { X, Trash2, Plus, MessageSquare } from 'lucide-react';
 
 interface ChatHeaderProps {
     /** Whether to show the clear button */
@@ -10,6 +10,12 @@ interface ChatHeaderProps {
     onClose: () => void;
     /** Whether this is mobile view */
     isMobile?: boolean;
+    /** Trial user status */
+    isTrial?: boolean;
+    /** Remaining messages for trial users */
+    remainingMessages?: number | null;
+    /** Daily message limit */
+    dailyLimit?: number;
 }
 
 /**
@@ -29,13 +35,16 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     showClearButton,
     onClear,
     onClose,
-    isMobile = false
+    isMobile = false,
+    isTrial = false,
+    remainingMessages = null,
+    dailyLimit = 5
 }) => {
     return (
         <>
             {/* Mobile Close Button */}
             {isMobile && (
-                <div className="md:hidden absolute top-4 right-4 z-50">
+                <div className="md:hidden absolute top-4 left-4 z-50">
                     <button
                         onClick={onClose}
                         className="w-10 h-10 rounded-full bg-slate-900/10 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center text-slate-700 dark:text-white hover:bg-slate-900/20 dark:hover:bg-white/20 transition-colors"

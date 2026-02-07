@@ -42,6 +42,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
     // State management
     const { messages, addMessage, updateLastMessage, clearMessages, hasMessages } = useChatMessages();
     const [isLoading, setIsLoading] = useState(false);
+
+    // Trial message counter state
+    const [remainingMessages, setRemainingMessages] = useState<number | null>(null);
+    const [dailyLimit, setDailyLimit] = useState<number>(5);
+    const [isTrial, setIsTrial] = useState<boolean>(false);
     const [aiStatus, setAiStatus] = useState<string>('');
     const [showClearDialog, setShowClearDialog] = useState(false);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
