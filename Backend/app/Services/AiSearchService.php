@@ -37,12 +37,14 @@ class AiSearchService
 
 لـ السيارات - استدعِ search_cars عندما يطلب المستخدم:
 - أي ذكر لماركة: تويوتا، هيونداي، كيا، نيسان، BMW، مرسيدس، فورد، شيفروليه، هوندا، رينو، بيجو
-- أي موديل: كامري، أكورد، سوناتا، النترا، RAV4، CRV, تاهو، لاندكروزر، سيراتو، توسان
+- السيارات الكورية: كورية، كوري (تشمل: هيونداي، كيا تلقائياً)
+- أي موديل: كامري، أكورد، سوناتا، النترا، RAV4، CRV, تاهو، لاندكروزر، سيراتو، توكسترا، توسان
 - سنة الصنع: 2024, 2023, 2022, 2021, 2020, أحدث من, أقدم من, موديل
 - السعر: أقل من X, أكثر من X, بين X و Y, رخيص, غالي (بالدولار)
 - المدينة: دمشق، حلب، حمص، حماة، اللاذقية، طرطوس، السويداء، درعا، دير الزور، الرقة، إدلب، القامشلي
 - الحالة: جديد، جديدة، مستعمل، مستعملة، زيرو
 - ناقل الحركة: أوتوماتيك، عادي، يدوي، مانوال
+- نوع الوقود: بنزين، مازوت، ديزل، هيبريد، كهرباء
 - نوع السيارة: SUV, سيدان، شاحنة، رياضية، دفع رباعي، فان
 - نوع الإعلان: بيع، شراء، إيجار، استئجار
 
@@ -50,14 +52,20 @@ class AiSearchService
 - 'بدي تويوتا كامري 2023 بدمشق بأقل من 25 ألف دولار'
   → query='تويوتا كامري', min_year=2023, max_year=2023, city='دمشق', max_price=25000
   
-- 'سيارات أقل من 15000 دولار'
-  → max_price=15000
+- 'بدي سيارة كورية' أو 'بدي سيارة كوري'
+  → brand='korean' (سيبحث عن هيونداي وكيا)
+  
+- 'بدي سيارة مازوت' أو 'سيارات ديزل'
+  → fuel_type='diesel'
+  
+- 'سيارات بنزين أقل من 15000'
+  → fuel_type='gasoline', max_price=15000
   
 - 'SUV جديدة أوتوماتيك'
   → query='SUV', condition='new', transmission='automatic'
   
-- 'هيونداي مستعملة بحلب'
-  → query='هيونداي', condition='used', city='حلب'
+- 'هيونداي مستعملة مازوت بحلب'
+  → query='هيونداي', condition='used', fuel_type='diesel', city='حلب'
   
 - 'كيا سيراتو موديل 2020 باللاذقية'
   → query='كيا سيراتو', min_year=2020, max_year=2020, city='اللاذقية'
@@ -436,6 +444,19 @@ class AiSearchService
             ->where('is_hidden', false)
             ->where('listing_type', $type);
 
+        // Handle Korean brand filter
+        if (!empty($args['brand'])) {
+            $brand = strtolower(trim($args['brand']));
+            if ($brand === 'korean' || $brand === 'كوري' || $brand === 'كورية') {
+                // Search for Korean brands (Hyundai and Kia)
+                $q->whereHas('brand', function ($b) {
+                    $b->whereIn('name', ['Hyundai', 'Kia', 'هيونداي', 'كيا']);
+                });
+            } else {
+                $q->whereHas('brand', fn($b) => $b->where('name', 'like', "%{$args['brand']}%"));
+            }
+        }
+
         if ($query) {
             $q->where(function ($sub) use ($query) {
                 $sub->where('title', 'like', "%$query%")
@@ -623,7 +644,9 @@ class AiSearchService
                     'جرب ماركات مشابهة',
                     'ارفع حد السعر',
                     'اعرض السيارات المستعملة'
-                ]
+                ],
+                'view_all_link' => $type === 'rent' ? '/rent-car' : '/car-listings',
+                'view_all_text' => $type === 'rent' ? 'شاهد جميع السيارات المتاحة للإيجار' : 'شاهد جميع السيارات المتاحة للبيع'
             ];
         }
 
@@ -680,7 +703,9 @@ class AiSearchService
 
                 return $item;
             })->values()->toArray(),
-            'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], $results, 'cars')
+            'suggestions' => $this->generateContextualSuggestions($this->currentSearchParams ?? [], $results, 'cars'),
+            'view_all_link' => $type === 'rent' ? '/rent-car' : '/car-listings',
+            'view_all_text' => $type === 'rent' ? 'شاهد جميع السيارات المتاحة للإيجار' : 'شاهد جميع السيارات المتاحة للبيع'
         ];
     }
 
