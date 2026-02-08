@@ -152,7 +152,7 @@ export const TechnicianCard: React.FC<TechnicianCardProps> = ({
                                         {renderStars()}
                                     </div>
                                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                        {rating.toFixed(1)}
+                                        {typeof rating === 'number' ? rating.toFixed(1) : parseFloat(rating || '0').toFixed(1)}
                                     </span>
                                     <span className="text-xs text-slate-500 dark:text-slate-400">
                                         ({reviews_count} تقييم)

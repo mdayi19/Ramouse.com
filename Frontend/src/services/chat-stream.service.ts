@@ -100,8 +100,14 @@ export class ChatStreamService {
                                     }
                                     return;
                             }
-                        } catch (e) {
-                            console.error('Failed to parse SSE event:', e);
+                        } catch (e: any) {
+                            // Suppress parsing errors for incomplete streaming chunks
+                            // Only log unexpected errors
+                            if (!e.message?.includes('Unterminated') &&
+                                !e.message?.includes('Unexpected end') &&
+                                !e.message?.includes('Bad Unicode')) {
+                                console.error('Failed to parse SSE event:', e);
+                            }
                         }
                     }
                 }
