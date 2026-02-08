@@ -153,6 +153,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                 const response = await ChatService.sendMessage(text, lat, lng);
                 clearTimeout(statusTimer);
 
+                // Extract rate limit info from headers
+                if (response.headers) {
+                    const remaining = response.headers['x-ratelimit-remaining'];
+                    const limit = response.headers['x-ratelimit-limit'];
+                    const isTrial = response.headers['x-ratelimit-is-trial'];
+
+                    if (remaining !== undefined) setRemainingMessages(parseInt(remaining as string));
+                    if (limit !== undefined) setDailyLimit(parseInt(limit as string));
+                    if (isTrial !== undefined) setIsTrial(isTrial === 'true');
+                }
+
                 const botMsg: IChatMessage = {
                     role: 'model',
                     content: response.response,

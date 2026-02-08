@@ -11,6 +11,7 @@ export interface ChatResponse {
     response: string;
     session_id: string;
     remaining: number;
+    headers?: any; // Response headers for rate limiting
 }
 
 const SESSION_KEY = 'chat_session_id';
@@ -38,7 +39,11 @@ export const ChatService = {
             localStorage.setItem(SESSION_KEY, response.data.session_id);
         }
 
-        return response.data;
+        // Return full response object including headers
+        return {
+            ...response.data,
+            headers: response.headers
+        };
     },
 
     getHistory: () => {

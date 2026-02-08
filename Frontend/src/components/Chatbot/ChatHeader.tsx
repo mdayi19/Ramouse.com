@@ -84,6 +84,19 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                     </div>
                 </div>
 
+                {/* Trial Message Counter */}
+                {isTrial && remainingMessages !== null && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                        <MessageSquare className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                            {remainingMessages}/{dailyLimit}
+                        </span>
+                        <span className="text-xs text-blue-600 dark:text-blue-400 hidden sm:inline">
+                            رسائل متبقية
+                        </span>
+                    </div>
+                )}
+
                 {/* Action Buttons - Mobile & Desktop */}
                 <div className="flex items-center gap-1">
                     {showClearButton && (
