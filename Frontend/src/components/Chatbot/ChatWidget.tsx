@@ -58,6 +58,21 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
         onClearChat: hasMessages ? () => setShowClearDialog(true) : undefined
     });
 
+    // Sync trial counter state with authentication status
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            // User is logged in - hide trial counter
+            setIsTrial(false);
+            setRemainingMessages(null);
+            setDailyLimit(100); // Authenticated users get 100 messages
+        } else {
+            // User is guest - show trial counter
+            setIsTrial(true);
+            setRemainingMessages(5);
+            setDailyLimit(5);
+        }
+    }, [isAuthenticated]);
+
     // Fetch User Location when Chat Opens
     React.useEffect(() => {
         if (isOpen && 'geolocation' in navigator) {
