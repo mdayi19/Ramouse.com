@@ -154,7 +154,9 @@ class ChatbotController extends Controller
                 'response' => $responseContent,
                 'session_id' => $sessionId,
                 'remaining' => $maxDaily - ($dailyCount + 1)
-            ]);
+            ])->header('X-RateLimit-Limit', (string) $maxDaily)
+                ->header('X-RateLimit-Remaining', (string) ($maxDaily - ($dailyCount + 1)))
+                ->header('X-RateLimit-Is-Trial', $userId ? 'false' : 'true');
 
         } catch (\Throwable $e) {
             Log::error("Chatbot Error: " . $e->getMessage(), [
