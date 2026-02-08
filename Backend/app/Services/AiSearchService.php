@@ -47,6 +47,10 @@ class AiSearchService
 - نوع الوقود: بنزين، مازوت، ديزل، هيبريد، كهرباء
 - نوع السيارة: SUV, سيدان، شاحنة، رياضية، دفع رباعي، فان
 - نوع الإعلان: بيع، شراء، إيجار، استئجار
+- المواصفات: محرك (2.0، 3.0، 4 سلندر، 6 سلندر، تيربو)، قوة حصانية، أبواب، مقاعد
+- المميزات: كاميرا خلفية، نظام ملاحة، فتحة سقف، شاشة لمس، حساسات، دبل، ABS، وسائد هوائية، كشافات ضباب، جنوط ألمنيوم، مثبت سرعة
+- الألوان: أبيض، أسود، فضي، رمادي، أزرق، أحمر، أخضر، بني
+- الضمان: بضمان، ضمان وكالة، بدون ضمان
 
 أمثلة لاستخراج الفلاتر:
 - 'بدي تويوتا كامري 2023 بدمشق بأقل من 25 ألف دولار'
@@ -69,6 +73,18 @@ class AiSearchService
   
 - 'كيا سيراتو موديل 2020 باللاذقية'
   → query='كيا سيراتو', min_year=2020, max_year=2020, city='اللاذقية'
+
+- 'بدي سيارة بكاميرا خلفية ونظام ملاحة'
+  → query='كاميرا خلفية ملاحة' (سيبحث في المميزات)
+
+- 'سيارة 4 سلندر اقتصادية'
+  → query='4 سلندر' أو engine='2.0'
+
+- 'سيارات بيضاء أوتوماتيك'
+  → query='أبيض', transmission='automatic'
+
+- 'سيارة بمحرك تيربو قوية'
+  → query='تيربو' (سيبحث في المميزات والوصف)
 
 لـ الفنيين - استدعِ search_technicians عندما يطلب:
 - ميكانيكي، فني، ورشة، صيانة، إصلاح، معلم
@@ -457,11 +473,25 @@ class AiSearchService
             }
         }
 
+        // SMART SEARCH: Search through ALL available car data
         if ($query) {
             $q->where(function ($sub) use ($query) {
                 $sub->where('title', 'like', "%$query%")
                     ->orWhere('description', 'like', "%$query%")
                     ->orWhere('model', 'like', "%$query%")
+                    // Search features (JSON field) - for terms like "كاميرا", "تيربو", "ملاحة"
+                    ->orWhere('features', 'like', "%$query%")
+                    // Search engine specs - for "2.0", "4 سلندر", etc.
+                    ->orWhere('engine_size', 'like', "%$query%")
+                    ->orWhere('horsepower', 'like', "%$query%")
+                    // Search colors - for "أبيض", "أسود", etc.
+                    ->orWhere('exterior_color', 'like', "%$query%")
+                    ->orWhere('interior_color', 'like', "%$query%")
+                    // Search doors/seats - for "5 مقاعد", "4 أبواب"
+                    ->orWhere('doors', 'like', "%$query%")
+                    ->orWhere(function ($q2) use ($query) {
+                        $q2->where('brand_id', 'like', "%$query%");
+                    })
                     ->orWhereHas('brand', fn($b) => $b->where('name', 'like', "%$query%"));
             });
         }
