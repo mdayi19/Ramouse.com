@@ -43,10 +43,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
     const { messages, addMessage, updateLastMessage, clearMessages, hasMessages } = useChatMessages();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Trial message counter state
-    const [remainingMessages, setRemainingMessages] = useState<number | null>(null);
+    // Trial message counter state - Initialize for guests
+    const [remainingMessages, setRemainingMessages] = useState<number | null>(!isAuthenticated ? 5 : null);
     const [dailyLimit, setDailyLimit] = useState<number>(5);
-    const [isTrial, setIsTrial] = useState<boolean>(false);
+    const [isTrial, setIsTrial] = useState<boolean>(!isAuthenticated);
     const [aiStatus, setAiStatus] = useState<string>('');
     const [showClearDialog, setShowClearDialog] = useState(false);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
