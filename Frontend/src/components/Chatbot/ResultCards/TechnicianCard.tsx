@@ -171,7 +171,7 @@ export const TechnicianCard: React.FC<TechnicianCardProps> = ({
                         <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
                             <span className="flex items-center gap-1">
                                 <MapPin className="w-3 h-3" />
-                                {distance.toFixed(1)} كم • {city}
+                                {distance != null ? distance.toFixed(1) : '0.0'} كم • {city}
                             </span>
                             <span className="flex items-center gap-1">
                                 <DollarSign className="w-3 h-3" />
