@@ -84,14 +84,29 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                     </div>
                 </div>
 
+
                 {/* Trial Message Counter */}
                 {isTrial && remainingMessages !== null && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                        <MessageSquare className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${remainingMessages === 0
+                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            : remainingMessages <= 2
+                                ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                                : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                        }`}>
+                        <MessageSquare className={`w-3 h-3 ${remainingMessages === 0 ? 'text-red-600 dark:text-red-400' :
+                                remainingMessages <= 2 ? 'text-orange-600 dark:text-orange-400' :
+                                    'text-blue-600 dark:text-blue-400'
+                            }`} />
+                        <span className={`text-xs font-semibold ${remainingMessages === 0 ? 'text-red-700 dark:text-red-300' :
+                                remainingMessages <= 2 ? 'text-orange-700 dark:text-orange-300' :
+                                    'text-blue-700 dark:text-blue-300'
+                            }`}>
                             {remainingMessages}/{dailyLimit}
                         </span>
-                        <span className="text-xs text-blue-600 dark:text-blue-400 hidden sm:inline">
+                        <span className={`text-xs hidden sm:inline ${remainingMessages === 0 ? 'text-red-600 dark:text-red-400' :
+                                remainingMessages <= 2 ? 'text-orange-600 dark:text-orange-400' :
+                                    'text-blue-600 dark:text-blue-400'
+                            }`}>
                             رسائل متبقية
                         </span>
                     </div>

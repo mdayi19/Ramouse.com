@@ -201,7 +201,12 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
             }
 
             if (error.response?.status === 429 || error.response?.data?.error === 'Daily limit reached.') {
-                errorText = error.response?.data?.message || 'لقد وصلت للحد المجاني (5 رسائل يومياً). سجّل دخول للمتابعة! 🚀';
+                // Context-aware error message based on remaining messages
+                if (remainingMessages === 0) {
+                    errorText = 'لقد استخدمت جميع رسائلك المجانية (5/5). سجّل دخول للحصول على رسائل غير محدودة! 🚀';
+                } else {
+                    errorText = error.response?.data?.message || 'لقد وصلت للحد المجاني (5 رسائل يومياً). سجّل دخول للمتابعة! 🚀';
+                }
                 showLoginButton = true;
             } else if (error.response?.status === 401) {
                 errorText = 'يرجى تسجيل الدخول للمتابعة.';
