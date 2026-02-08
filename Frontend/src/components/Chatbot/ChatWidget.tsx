@@ -43,10 +43,12 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
     const { messages, addMessage, updateLastMessage, clearMessages, hasMessages } = useChatMessages();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Trial message counter state - Initialize for guests
-    const [remainingMessages, setRemainingMessages] = useState<number | null>(!isAuthenticated ? 5 : null);
+    // Trial message counter state - Initialize for guests with strict check
+    const [remainingMessages, setRemainingMessages] = useState<number | null>(
+        isAuthenticated === false ? 5 : null
+    );
     const [dailyLimit, setDailyLimit] = useState<number>(5);
-    const [isTrial, setIsTrial] = useState<boolean>(!isAuthenticated);
+    const [isTrial, setIsTrial] = useState<boolean>(isAuthenticated === false);
     const [aiStatus, setAiStatus] = useState<string>('');
     const [showClearDialog, setShowClearDialog] = useState(false);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
@@ -60,17 +62,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
 
     // Sync trial counter state with authentication status
     React.useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated === true) {
             // User is logged in - hide trial counter
             setIsTrial(false);
             setRemainingMessages(null);
             setDailyLimit(100); // Authenticated users get 100 messages
-        } else {
+        } else if (isAuthenticated === false) {
             // User is guest - show trial counter
             setIsTrial(true);
             setRemainingMessages(5);
             setDailyLimit(5);
         }
+        // If undefined, do nothing (wait for proper value)
     }, [isAuthenticated]);
 
     // Fetch User Location when Chat Opens
@@ -176,9 +179,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
 
                     console.log('Rate limit headers:', { remaining, limit, isTrial }); // Debug
 
-                    if (remaining !== undefined) setRemainingMessages(parseInt(remaining as string));
-                    if (limit !== undefined) setDailyLimit(parseInt(limit as string));
-                    if (isTrial !== undefined) setIsTrial(isTrial === 'true');
+                    // Parse with safety checks to prevent NaN
+                    if (remaining !== undefined && remaining !== null) {
+                        const parsed = parseInt(remaining as string, 10);
+                        if (!isNaN(parsed)) setRemainingMessages(parsed);
+                    }
+                    if (limit !== undefined && limit !== null) {
+                        const parsed = parseInt(limit as string, 10);
+                        if (!isNaN(parsed)) setDailyLimit(parsed);
+                    }
+                    if (isTrial !== undefined && isTrial !== null) {
+                        setIsTrial(isTrial === 'true' || isTrial === true);
+                    }
                 }
 
                 const botMsg: IChatMessage = {

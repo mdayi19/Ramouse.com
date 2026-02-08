@@ -51,7 +51,9 @@ class ChatbotController extends Controller
             $user = auth('sanctum')->user();
             $userId = $user ? $user->id : null;
 
-            // 2. Rate Limiting Logic...
+            // 2. Rate Limiting Logic
+            // Note: Guests are tracked by IP address. Changing networks (WiFi→Mobile) will reset the counter.
+            // This is acceptable behavior - prevents abuse while being user-friendly for mobile users.
             $limitKey = 'chat_limit_' . ($userId ? "user_{$userId}" : "ip_" . $request->ip());
             $dailyCount = Cache::get($limitKey, 0);
             $maxDaily = $userId ? 100 : 5;
