@@ -247,6 +247,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                             onClear={handleClear}
                             onClose={onClose}
                             isMobile={true}
+                            isTrial={isTrial}
+                            remainingMessages={remainingMessages}
+                            dailyLimit={dailyLimit}
                         />
 
                         {/* Content Body */}
