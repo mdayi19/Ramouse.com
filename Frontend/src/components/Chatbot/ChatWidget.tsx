@@ -173,6 +173,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
             }
         } catch (error: any) {
             console.error(error);
+
+            // Clear loading states
+            setIsLoading(false);
+            setAiStatus('');
+
             let errorText = 'عذراً، حدث خطأ ما. يرجى المحاولة لاحقاً.';
             let showLoginButton = false;
 
