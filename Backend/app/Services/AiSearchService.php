@@ -464,9 +464,9 @@ class AiSearchService
         if (!empty($args['brand'])) {
             $brand = strtolower(trim($args['brand']));
             if ($brand === 'korean' || $brand === 'كوري' || $brand === 'كورية') {
-                // Search for Korean brands (Hyundai and Kia)
+                // Search for Korean brands (Hyundai and Kia) - case insensitive
                 $q->whereHas('brand', function ($b) {
-                    $b->whereIn('name', ['Hyundai', 'Kia', 'هيونداي', 'كيا']);
+                    $b->whereRaw('LOWER(name) IN (?, ?, ?, ?)', ['hyundai', 'kia', 'هيونداي', 'كيا']);
                 });
             } else {
                 $q->whereHas('brand', fn($b) => $b->where('name', 'like', "%{$args['brand']}%"));

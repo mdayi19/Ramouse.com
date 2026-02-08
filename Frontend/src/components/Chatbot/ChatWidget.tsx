@@ -174,6 +174,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose, isAuthe
                     const limit = response.headers['x-ratelimit-limit'];
                     const isTrial = response.headers['x-ratelimit-is-trial'];
 
+                    console.log('Rate limit headers:', { remaining, limit, isTrial }); // Debug
+
                     if (remaining !== undefined) setRemainingMessages(parseInt(remaining as string));
                     if (limit !== undefined) setDailyLimit(parseInt(limit as string));
                     if (isTrial !== undefined) setIsTrial(isTrial === 'true');
